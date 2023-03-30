@@ -1,0 +1,171 @@
+.post {
+  .post-container {
+    color: #002e43;
+    font-size: 15px;
+    width: calc(100% - 340px);
+    border-left: 1px solid #d0d7da;
+    padding: 60px 20px;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin-bottom: 15px;
+    }
+
+    h1:not(:first-child) {
+      margin-top: 60px;
+    }
+
+    h2:not(:first-child) {
+      margin-top: 50px;
+    }
+
+    h3:not(:first-child) {
+      margin-top: 40px;
+    }
+
+    h4:not(:first-child),
+    h5:not(:first-child),
+    h6:not(:first-child) {
+      margin-top: 30px;
+    }
+
+    .language-text {
+      border-radius: 4px;
+      background-color: rgba(38, 214, 241, 0.3);
+      text-shadow: none;
+      color: #000000;
+      font-family: 'Roboto Mono', sans-serif;
+      font-weight: 400;
+    }
+
+    .gatsby-highlight > pre {
+      margin: 35px 0;
+      padding: 20px;
+    }
+
+    ol {
+      padding-left: 25px;
+      list-style: none;
+      counter-reset: my-awesome-counter;
+
+      li {
+        counter-increment: my-awesome-counter;
+
+        &::before {
+          content: counter(my-awesome-counter) '. ';
+          position: absolute;
+          left: 15px;
+          color: #002e43;
+          font-weight: bold;
+          font-size: 19px;
+          letter-spacing: 0.2px;
+        }
+      }
+    }
+
+    ol,
+    ul {
+      li {
+        p:first-child {
+          color: #002e43;
+          font-weight: bold;
+          font-size: 19px;
+          letter-spacing: 0.2px;
+          margin-bottom: 10px;
+        }
+
+        p {
+          a {
+            color: #4668fd;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+            display: inline-block;
+          }
+
+          color: #002e43;
+          font-size: 15px;
+          margin-bottom: 30px;
+        }
+      }
+    }
+
+    .swagger-ui {
+      table {
+        table-layout: auto !important;
+      }
+    }
+
+    table {
+      width: 100%;
+      margin-bottom: 1rem;
+      table-layout: fixed;
+
+      thead {
+        th {
+          color: #002e43;
+          font-weight: bold;
+          font-size: 15px;
+          border: 1px solid #d0d7da;
+          padding: 8px 12px;
+          background-color: #fff;
+        }
+      }
+
+      tbody {
+        td {
+          color: #002e43;
+          font-size: 15px;
+          padding: 8px 12px;
+          border: 1px solid #d0d7da;
+        }
+      }
+    }
+  }
+}
+
+// Some swagger-ui styles conflict with Bootstrap
+// https://github.com/swagger-api/swagger-ui/issues/4574
+.swagger-ui {
+  table tbody td {
+    border: none !important;
+  }
+
+  .col:not(th) {
+    padding: 10px 0 0 !important;
+  }
+
+  table.headers td {
+    font-size: 12px;
+  }
+
+  .wrapper,
+  .col-12 {
+    padding: 0 !important;
+  }
+
+  .schemes {
+    padding: 0 20px !important;
+  }
+
+  button {
+    color: #333;
+  }
+}
+
+/* resolution less than 1200px */
+@media (max-width: 1199px) {
+  padding: 40px 40px 460px 106px;
+}
+
+@media (max-width: 991px) {
+  .post {
+    .post-container {
+      padding-top: 0;
+    }
+  }
+}

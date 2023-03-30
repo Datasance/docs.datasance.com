@@ -1,0 +1,26 @@
+.about {
+  padding: 60px 0;
+
+  .sections__header {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+
+    a {
+      color: #4668fd;
+      font-weight: bold;
+      font-size: 15px;
+    }
+  }
+}
+/* resolution less than 768px */
+@media (max-width: 767px) {
+  .about {
+    padding-top: 40px;
+    padding-bottom: 40px;
+
+    .sections__header {
+      text-align: center;
+    }
+  }
+}
