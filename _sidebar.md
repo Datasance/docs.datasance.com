@@ -8,7 +8,7 @@
   * [What's New In IoFog 3.0?](./iofog.org-release-3.0/content/docs/3/getting-started/whats-new)
   * [Core Concept](./tutorials/java/index)
   * [Architecture](./tutorials/java/index)
-  * [Core Concept](./tutorials/java/index)
+  * [Quick Start With Local Deployment](./tutorials/java/index)
   * [Core Concept](./tutorials/java/index)
 
 * [Tutorials](./tutorials/index)
