@@ -3,7 +3,7 @@
 
 * [HOME](./)
 
-* [IoFog Documentation]
+* IoFog Documentation
   * [Getting Started](./tutorials/tomcat/index)
     * [Cloud](./tutorials/cloud/index)
     * [Java](./tutorials/java/index)
