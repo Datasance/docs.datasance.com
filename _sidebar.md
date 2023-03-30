@@ -58,3 +58,15 @@
   * [Microservice Registry And Catalog Management](./ioFog_3.0/applications/microservice-registry-catalog)
   * [Application Templates](./ioFog_3.0/applications/application-templates)
   * [Microservice Logs](./ioFog_3.0/applications/microservice-logs)
+
+* Reference - iofogctl
+  * [Kind of Resources](./ioFog_3.0/reference-iofogctl/reference-kinds)
+  * [Control Plane YAML Specification](./ioFog_3.0/reference-iofogctl/reference-control-plane)
+  * [Agent YAML Specification](./ioFog_3.0/reference-iofogctl/reference-agent)
+  * [Application YAML Specification](./ioFog_3.0/reference-iofogctl/reference-application)
+  * [Application Template YAML Specification](./ioFog_3.0/reference-iofogctl/reference-application-template)
+  * [Route YAML Specification](./ioFog_3.0/reference-iofogctl/reference-route)
+  * [Catalog Item YAML Specification](./ioFog_3.0/reference-iofogctl/reference-catalog)
+  * [Registry YAML Specification](./ioFog_3.0/reference-iofogctl/reference-registry)
+  * [Edge Resource YAML Specification](./ioFog_3.0/reference-iofogctl/reference-edge-resources)
+  * [Template Engine for ioFog YAML Specification](./ioFog_3.0/reference-iofogctl/reference-template-engine)
