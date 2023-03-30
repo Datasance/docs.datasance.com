@@ -4,7 +4,9 @@
 * [HOME](./)
 
 * [IoFog](./)
+* 
 	* [Getting Started](./)
+	* 	W
   		* [What's New In IoFog 3.0?](./)
   		* [Core Concept](./tutorials/java/index)
 		* [Architecture](./tutorials/java/index)
