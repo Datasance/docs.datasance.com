@@ -49,3 +49,12 @@
   * [Manage Our Microservices](./ioFog_3.0/tutorial/manage-our-microservices)
   * [Create Our First Microservice - JavaScript](./ioFog_3.0/tutorial/create-our-first-microservice-javascript)
   * [Deploy Our Microservice](./ioFog_3.0/tutorial/deploy-our-microservice)
+
+* Application Management
+  * [Introduction](./ioFog_3.0/applications/introduction)
+  * [Public Services](./ioFog_3.0/applications/microservice-exposing)
+  * [Move and Rename Microservices](./ioFog_3.0/applications/microservice-move-rename)
+  * [Microservice Updates and Lifecycle](./ioFog_3.0/applications/microservice-lifecycle-management)
+  * [Microservice Registry And Catalog Management](./ioFog_3.0/applications/microservice-registry-catalog)
+  * [Application Templates](./ioFog_3.0/applications/application-templates)
+  * [Microservice Logs](./ioFog_3.0/applications/microservice-logs)
