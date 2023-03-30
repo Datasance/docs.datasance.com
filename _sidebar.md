@@ -18,7 +18,7 @@
   * [Connecting To Existing Edge Compute Networks](./ioFog_3.0/iofogctl/connect-disconnect)
   * [Legacy Commands in iofogctl](./ioFog_3.0/iofogctl/legacy)
 
-  * iofogctl
+  * Platform Deployment
   * [iofogctl - ioFog Unified Command Line Interface](./ioFog_3.0/iofogctl/introduction)
   * [Download And Install iofogctl](./ioFog_3.0/iofogctl/download)
   * [Getting Familiar With iofogctl](./ioFog_3.0/iofogctl/getting-familiar)
