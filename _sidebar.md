@@ -38,3 +38,7 @@
   * [Edge Resource](./ioFog_3.0/agent-management/edge-resources)
   * [Upgrade / Rollback](./ioFog_3.0/agent-management/upgrade-rollback)
 
+* Developing Microservices
+  * [Writing Microservices](./ioFog_3.0/developing-microservices/overview)
+  * [ioFog SDK](./ioFog_3.0/developing-microservices/sdk)
+  * [Debugging](./ioFog_3.0/developing-microservices/debugging)
