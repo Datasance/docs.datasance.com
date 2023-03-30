@@ -3,6 +3,8 @@
 
 * [HOME](./)
 
+* [IoFog Documentation]
+
 * [Tutorials](./tutorials/index)
   * [Tomcat](./tutorials/tomcat/index)
   * [Cloud](./tutorials/cloud/index)
