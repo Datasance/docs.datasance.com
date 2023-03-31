@@ -1,6 +1,6 @@
 # Legacy Agent CLI Usage
 
-Please see iofogctl for current CLI usage: [iofogctl](../iofogctl/introduction.html)
+Please see iofogctl for current CLI usage: [iofogctl](../ioFog_3.0/iofogctl/introduction)
 
 ```sh
 iofog-agent command --option <argument>
