@@ -18,3 +18,7 @@ Datasance PoT can be deployed anywhere that data is generated and operation is c
 
 ![Datasance PoT](./images/PoT2.png)
 
+<aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""> Datasance PoT is now and always be Open Source</h3>
+  <p>Please check our website <a href="https://www.datasance.com">Datasance Web Site</a> for upcoming enhancements for Datasance PoT.</p>
+</aside>
