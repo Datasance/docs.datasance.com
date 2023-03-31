@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Do you have Edge Compute Network with Agents up and running?</h3>
-  <p>In order to manage Agents, we need a working Edge Compute Network (ECN) with running Agents. The previous section on <a href="../platform-deployment/introduction.html">Platform Deployment</a> goes through ECN setup and is required in order to do Agent management.</p>
+  <p>In order to manage Agents, we need a working Edge Compute Network (ECN) with running Agents. The previous section on <a href="#/./ioFog_3.0/platform-deployment/introduction">Platform Deployment</a> goes through ECN setup and is required in order to do Agent management.</p>
 </aside>
 
 # Introduction
