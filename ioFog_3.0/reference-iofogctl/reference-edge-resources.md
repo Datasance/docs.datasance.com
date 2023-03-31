@@ -1,7 +1,7 @@
 # Edge Resources YAML Specification
 
 `iofogctl` allows users to manage a Controller's list of Edge Resources. To learn more about Edge Resources,
-please see [here](../agent-management/edge-resources.html).
+please see [here](../ioFog_3.0/agent-management/edge-resources).
 
 The Edge Resource is defined as follows:
 
