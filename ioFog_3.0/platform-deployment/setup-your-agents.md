@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Make sure your remote hosts are ready for Agent installation via iofogctl!</h3>
-  <p>Go to <a href="#/.ioFog_3.0/platform-deployment/prepare-your-remote-hosts">Prepare your Remote Hosts</a> to find out how to prepare your Agent hosts for installation.</p>
+  <p>Go to <a href="#/./ioFog_3.0/platform-deployment/prepare-your-remote-hosts">Prepare your Remote Hosts</a> to find out how to prepare your Agent hosts for installation.</p>
 </aside>
 
 # Setup Agents
@@ -89,7 +89,7 @@ spec:
 
 Upon Agent deployment, `iofogctl` will copy these scripts to `/etc/iofog/agent/`. It will then first invoke `install_deps.sh` as the entrypoint to the pre-requisites procedure. `install_deps.sh` will call `install_java.sh` and `install_docker.sh` directly. Finally, `iofogctl` will invoke `install_iofog.sh` as the Agent installation procedure.
 
-Check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent) to get started!
+Check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent/) to get started!
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
