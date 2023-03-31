@@ -185,10 +185,10 @@ spec:
 | images.x86               | Image to be used on x86 ioFog Agents.                                                                                                                                                                |
 | images.arm               | Image to be used on ARM ioFog Agents.                                                                                                                                                                |
 | images.registry          | Either `local`, `remote`, or `registryID`. Remote will pull the image from Dockerhub, local will use the local cache of the ioFog Agent. RegistryID will use the specified registry.                 |
-| images.catalogId         | Catalog item ID to be used in lieu and place of the images and the registry. (see [catalog items](../applications/microservice-registry-catalog.html))                                               |
+| images.catalogId         | Catalog item ID to be used in lieu and place of the images and the registry. (see [catalog items](../ioFog_3.0/applications/microservice-registry-catalog))                                               |
 | config                   | User-defined arbitrary object to be passed to the microservice runtime as its configuration                                                                                                          |
 | container.rootHostAccess | Set to true if the container needs to be able to access the host. This will also set the network of the container to `host`                                                                          |
-| container.ports          | List of port mapping to be provided to the container running the microservice (See [public ports](../applications/microservice-exposing.html) for a more detailed explanation of public ports)       |
+| container.ports          | List of port mapping to be provided to the container running the microservice (See [public ports](../ioFog_3.0/applications/microservice-exposing) for a more detailed explanation of public ports)       |
 | container.volumes        | List of volume mapping to be provided to the container running the microservice                                                                                                                      |
 | container.env            | List of environment variables to be provided to the container running the microservice                                                                                                               |
 | container.commands       | List of arguments passed as CMD to the container runtime                                                                                                                                             |
@@ -215,7 +215,7 @@ spec:
 
 | Field                   | Description                                                                       |
 | ----------------------- | --------------------------------------------------------------------------------- |
-| template.name           | Name of the [Application template](../reference-application-template.html) to use |
+| template.name           | Name of the [Application template](../ioFog_3.0/reference-application-template) to use |
 | template.variables      | Array of variables specifications                                                 |
 | template.variables.key  | Variable key                                                                      |
 | template.variables.name | Variable value                                                                    |
