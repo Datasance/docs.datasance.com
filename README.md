@@ -8,6 +8,12 @@ Datasance is focusing on to build ecosystem with solution partners to build Web3
 
 Datasance PoT can be deployed anywhere that data is generated and operation is crucial. Industry 4.0, Samrt Cities, Intelligent Transport & Logistics, Healthcare, Finance & Retail, there are millions of use case scenarios that can be build with Datasance PoT. 
 
+<aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""> Datasance PoT is based on Eclipse Foundation project called ioFog</h3>
+  <p>We higly encourge you to first go and read <a href="#/./ioFog_3.0/getting-started/core-concepts">Core Concepts</a> in order to understand the basis of Datasance PoT.</p>
+</aside>
+
+
 ![Datasance PoT](./images/PoT1.png)
 
 ![Datasance PoT](./images/PoT2.png)
