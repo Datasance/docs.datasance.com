@@ -1,6 +1,6 @@
 # Manage Our Microservices
 
-In this step of the tutorial we're ready to learn the basics of managing microservices inside our [Tutorial project](../tutorial/introduction.html).
+In this step of the tutorial we're ready to learn the basics of managing microservices inside our [Tutorial project](../ioFog_3.0/tutorial/introduction).
 
 ## Basic Controller CLI Interactions
 
@@ -21,7 +21,7 @@ This returns a list of microservices along with their status, the agent it is ru
 
 The tutorial consists of 3 microservices deployed on top of ioFog stack.
 
-The _Sensors_ microservice pretends to be reading data from a local hardware sensor. The data it produces is published with [the SDK](../developing-microservices/sdk.html) and routed through an AQMP Dispatch Router to the REST API microservice, so that it can be read by other microservices that only understand REST API.
+The _Sensors_ microservice pretends to be reading data from a local hardware sensor. The data it produces is published with [the SDK](../ioFog_3.0/developing-microservices/sdk) and routed through an AQMP Dispatch Router to the REST API microservice, so that it can be read by other microservices that only understand REST API.
 
 [Sensors microservice source code on Github](https://github.com/ioFog/example-microservices/tree/master/sensors-data)
 
@@ -73,7 +73,7 @@ We'll discover later on how to create and remove routes using iofogctl.
 
 Next up, we're going to create our very first microservice to run on ioFog.
 
-[Continue To Next Step: Create Our First Microservice](create-our-first-microservice-javascript.html)
+[Continue To Next Step: Create Our First Microservice](../ioFog_3.0/tutorial/create-our-first-microservice-javascript)
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Questions? Run into issues?</h3>
