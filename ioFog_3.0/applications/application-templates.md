@@ -1,6 +1,6 @@
 # Application Templates
 
-During the [Quickstart](../getting-started/quick-start-local.html) and the [tutorial](../tutorial/introduction.html), we specified the microservices list and routes for each application.
+During the [Quickstart](../ioFog_3.0/getting-started/quick-start-local) and the [tutorial](../ioFog_3.0/tutorial/introduction), we specified the microservices list and routes for each application.
 
 That was nice and easy, but what if we need to deploy the same code on a lot of Agents? We would need to details all the microservices and routes in a separate YAML document for every instance of your Application. This is tedious and error prone, as often only a few values would change from one Agent to another.
 
@@ -10,7 +10,7 @@ Currently the Application Template catalog comes in empty, so let's start by add
 
 ## Creating an Application template
 
-We can use `iofogctl` to create our own Application Templates. The YAML spec reference can be found [here](../reference-iofogctl/reference-application-template.html).
+We can use `iofogctl` to create our own Application Templates. The YAML spec reference can be found [here](../ioFog_3.0/reference-iofogctl/reference-application-template).
 
 ```bash
 echo "---
@@ -66,8 +66,8 @@ iofogctl deploy -f /tmp/my-app-template.yaml
 
 ### Key notes
 
-- The application template leverage the power of [template parametric expressions](../reference-iofogctl/reference-template-engine.html) to let you specify variables, which values will only be assigned when deploying the actual Application
-- The application part of the template has the exact same definition than any other [Application specification](../reference-iofogctl/reference-application.html)
+- The application template leverage the power of [template parametric expressions](../ioFog_3.0/reference-iofogctl/reference-template-engine) to let you specify variables, which values will only be assigned when deploying the actual Application
+- The application part of the template has the exact same definition than any other [Application specification](../ioFog_3.0/reference-iofogctl/reference-application)
 
 ## Getting your catalog
 
