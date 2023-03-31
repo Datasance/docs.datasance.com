@@ -2,7 +2,7 @@
 
 We are open to, and grateful for, any contributions made by the community.
 
-**By contributing to ioFog, you agree to abide by our [Code of Conduct](code-of-conduct.html).**
+**By contributing to ioFog, you agree to abide by our [Code of Conduct](../ioFog_3.0/contributing/code-of-conduct).**
 
 ### Bugs and Improvements
 
