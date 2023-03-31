@@ -1,6 +1,6 @@
 # Overview
 
-Since your Edge Compute Network is likely distributed—composed of many different devices across networks, each with potentially differing microservices—a piece of software called the **Controller** is used for orchestration of the different [Agents](../reference-agent/overview.html).
+Since your Edge Compute Network is likely distributed—composed of many different devices across networks, each with potentially differing microservices—a piece of software called the **Controller** is used for orchestration of the different [Agents](../ioFog_3.0/reference-agent/overview).
 
 Because the Controller daemon keeps track of all your Agents, even across complicated network configurations, you can use it to maintain the entire fleet, remotely. Small Edge Compute Networks will only need a single Controller, however, running multiple Controllers is also supported for increased resiliency.
 
@@ -8,7 +8,7 @@ The Controller can run on any compatible hardware that is network accessible by 
 
 Once your Edge Compute Network running ioFog is up and running, you'll use your Controller as the primary interface to maintaining your microservices and the nodes they run on.
 
-For full usage details see the [Controller CLI Usage](cli-usage.html) page.
+For full usage details see the [Controller CLI Usage](../ioFog_3.0/reference-controller/cli-usage) page.
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
