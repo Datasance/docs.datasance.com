@@ -76,3 +76,21 @@
   * [Legacy Controller CLI Usage](./ioFog_3.0/reference-controller/cli-usage)
   * [Controller REST API Reference](./ioFog_3.0/reference-controller/rest-api)
   * [ECN Viewer](./ioFog_3.0/reference-controller/ecn-viewer)
+
+* Reference - Agent
+  * [Overview](./ioFog_3.0/reference-agent/overview)
+  * [Legacy Agent CLI Usage](./ioFog_3.0/reference-agent/cli-usage)
+  * [Agent Local REST API Reference](./ioFog_3.0/reference-agent/rest-api)
+  * [Agent Configuration](./ioFog_3.0/reference-agent/configuration)
+  * [Agent Logs](./ioFog_3.0/reference-agent/agent-logs)
+  * [Remote Debugging Using IntelliJ](./ioFog_3.0/reference-agent/debugging)
+
+* Reference - Catalog Microservices
+  * [System: Diagnostic Microservices](./ioFog_3.0/reference-microserivces-catalog/diagnostics)
+  * [System: Hardware Abstraction Layer Microservice](./ioFog_3.0/reference-microserivces-catalog/hal)
+  * [System: Bluetooth REST API Microservice](./ioFog_3.0/reference-microserivces-catalog/rest-blue)
+  * [JSON REST API and Open Weather Map Microservices](./ioFog_3.0/reference-microserivces-catalog/jsonrestapi)
+
+* Contributing
+  * [Contributing Guidelines](./ioFog_3.0/contributing/guidelines)
+  * [Code of Conduct](./ioFog_3.0/contributing/code-of-conduct)
