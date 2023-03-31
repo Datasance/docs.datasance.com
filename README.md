@@ -2,4 +2,4 @@
 
 By leveraging the power of Open Source communities, Datasance PoT brings Hardware Trust, Cloud-Native computing capabilities, Management at scale, and True connectivity to the Edge. Datasance PoT is an Enterprise Open Source Fog Computing and Distributed Edge Intelligence Platform. 
 
-![Introduction to Datasance PoT](./images/cover.jpg)
+![Introduction to Datasance PoT](./images/datasance_PoT.png)
