@@ -49,9 +49,9 @@ spec:
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Comprehensive AgentConfig reference</h3>
-  <p>A complete reference of AgentConfig kind is available in the relevant section in <a href=../reference-iofogctl/reference-agent.html>iofogctl reference</a> documentation.</p>
+  <p>A complete reference of AgentConfig kind is available in the relevant section in <a href= #/./ioFog_3.0/reference-iofogctl/reference-agent>iofogctl reference</a> documentation.</p>
   
-  <p>Details as to what the Agent configuration files look like on Agent hosts can be found on the <a href="../reference-agent/configuration.html">Agent Reference - Configuration</a> page.</p>
+  <p>Details as to what the Agent configuration files look like on Agent hosts can be found on the <a href="#/./ioFog_3.0/reference-agent/configuration">Agent Reference - Configuration</a> page.</p>
 </aside>
 
 <aside class="notifications contribute">
