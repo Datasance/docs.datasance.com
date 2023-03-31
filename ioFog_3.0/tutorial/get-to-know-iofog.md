@@ -1,6 +1,6 @@
 # Get To Know ioFog
 
-In this step of the tutorial we'll better familiarize ourselves with the ioFog environment [we just set up](introduction.html) in the previous step and `iofogctl`.
+In this step of the tutorial we'll better familiarize ourselves with the ioFog environment [we just set up](../ioFog_3.0/tutorial/introduction) in the previous step and `iofogctl`.
 
 ## Check Your Environment
 
@@ -64,8 +64,8 @@ The Freeboard microservice doesn't know it's running locally, so it could just a
 
 Our tutorial environment has two ioFog containers:
 
-- [Agents](../reference-agent/overview.html)
-- [Controllers](../reference-controller/overview.html)
+- [Agents](../ioFog_3.0/reference-agent/overview)
+- [Controllers](../ioFog_3.0/reference-controller/overview)
 
 We can think of each of these containers as if they were deployed on separate devices. In production, our Controller is most often running on a cloud server and our Agents are each running on individual edge devices in the field. The Controller is controlling the Agent the same way it would if the devices were hundreds of miles away.
 
@@ -155,7 +155,7 @@ Available Disk Threshold                 : 90
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Learn more Agent commands</h3>
-  <p>If you want to learn about all the possible commands you can use on iofog-agent checkout the <a href="../reference-agent/cli-usage.html">CLI Usage guide</a>.</p>
+  <p>If you want to learn about all the possible commands you can use on iofog-agent checkout the <a href="#/./ioFog_3.0/reference-agent/cli-usage">CLI Usage guide</a>.</p>
 </aside>
 
 #### Controller's Container
@@ -203,7 +203,7 @@ This should give us a JSON response containing a list of edge nodes already regi
 
 Now that we know our way around a bit, let's learn how to manage and launch microservices!
 
-[Continue To Next Step: Manage Our Microservices](manage-our-microservices.html).
+[Continue To Next Step: Manage Our Microservices](../ioFog_3.0/tutorial/manage-our-microservices).
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Questions? Run into issues?</h3>
