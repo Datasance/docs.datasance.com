@@ -2,13 +2,13 @@
 
 ioFog is a platform for running distributed applications on Edge Compute Networks. A distributed application is made up of some number of microservices.
 
-We can specify distributed applications in YAML through iofogctl's [Application kind](../reference-iofogctl/reference-application.html#application). We can then deploy an entire distributed application through iofogctl by using this specification:
+We can specify distributed applications in YAML through iofogctl's [Application kind](../ioFog_3.0/reference-iofogctl/reference-application). We can then deploy an entire distributed application through iofogctl by using this specification:
 
 ```bash
 iofogctl deploy -f application.yaml
 ```
 
-We can also deploy individual microservices if we wish. The iofogctl [Microservice kind](../reference-iofogctl/reference-application.html#microservices) allows us to do this.
+We can also deploy individual microservices if we wish. The iofogctl [Microservice kind](../ioFog_3.0/reference-iofogctl/reference-application) allows us to do this.
 
 ```bash
 iofogctl deploy -f microservice.yaml
