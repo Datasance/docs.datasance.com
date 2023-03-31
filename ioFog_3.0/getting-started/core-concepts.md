@@ -6,7 +6,7 @@ Imagine a world where you can choose self-contained pieces of code (called micro
 
 Edge computing extends cloud computing to the edge of an enterprise's network to perform computation, storage, and networking services locally. Operated directly on (or near) edge devices instead of relying exclusively on data centers. We call this an **Edge Compute Network** or ECN. This provides resiliency, fault tolerance, security, and low-latency connections between edge devices, providing the scaling properties necessary for large deployments, such as with Internet of Things (IoT).
 
-The term Edge Computing is sometimes known as Fog Computing or simply fogging. Cisco Systems, ARM Holdings, Dell, Intel, Microsoft, and Princeton University, founded the [OpenFog Consortium](https://www.openfogconsortium.org/), to promote interests and development in fog computing.
+The term Edge Computing is sometimes known as Fog Computing or simply fogging. Cisco Systems, ARM Holdings, Dell, Intel, Microsoft, and Princeton University, founded the [OpenFog Consortium](https://www.iiconsortium.org/pdf/OpenFog_Reference_Architecture_2_09_17.pdf), to promote interests and development in fog computing.
 
 ## Use Cases of Edge Computing
 
@@ -43,8 +43,8 @@ If your microservices need to communicate with other nodes in your network, ioFo
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Ready for more?</h3>
   <p>If you want to know more about all the ioFog components and learn how ioFog Edge Compute Network work, head to <a href="architecture.html">Architecture overview</a>.</p>
-  <p>If instead you want to get started right away, you can check out the <a href="quick-start-local.html">Quick Start guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../platform-deployment/introduction.html">Remote deployment</a> or <a href="../platform-deployment/kubernetes-prepare-cluster.html">Kubernetes deployment</a>.</p>
-  <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction.html">Learn how to use ioFog and build microservices</a></p>
+  <p>If instead you want to get started right away, you can check out the <a href="quick-start-local.html">Quick Start guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../ioFog_3.0/platform-deployment/introduction.html">Remote deployment</a> or <a href="../ioFog_3.0/platform-deployment/kubernetes-prepare-cluster.html">Kubernetes deployment</a>.</p>
+  <p>You can also head to our tutorial for developers to <a href="../ioFog_3.0/tutorial/introduction.html">Learn how to use ioFog and build microservices</a></p>
 </aside>
 
 <aside class="notifications contribute">
