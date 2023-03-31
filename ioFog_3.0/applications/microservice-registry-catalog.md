@@ -1,6 +1,6 @@
 # Microservice Registry and Catalog Management
 
-During the [Quickstart](../getting-started/quick-start-local.html) and the [tutorial](../tutorial/introduction.html), we specified images to be used for each microservice, for each type of Agent.
+During the [Quickstart](../ioFog_3.0/getting-started/quick-start-local) and the [tutorial](../ioFog_3.0/tutorial/introduction), we specified images to be used for each microservice, for each type of Agent.
 
 That was nice and easy, but what if we need to deploy the same code on a lot of Agents? We would need to specify the images for each Microservice. Wouldn't it be nice to have a way to specify the images to be used for each type of Agent once and then reuse this configuration? That's where the Controller Microservice catalog comes into play!
 
@@ -112,7 +112,7 @@ spec:
 
 ## Create our own Catalog Items
 
-We can also use iofogctl to create our own Catalog Items. The YAML spec reference can be found [here](../reference-iofogctl/reference-catalog.html).
+We can also use iofogctl to create our own Catalog Items. The YAML spec reference can be found [here](../ioFog_3.0/reference-iofogctl/reference-catalog).
 
 ```bash
 echo "---
@@ -144,7 +144,7 @@ We used grep to filter the ouput, but the columns are the same as above. You can
 
 # Registries
 
-During the [tutorial](../tutorial/introduction.html), we saw that the images are being pulled from a repository specified in the YAML. The two values we have used so far are `remote` (public docker hub) and `local` (image locally present on the Agent). There is a third value available, which is a `repository ID`.
+During the [tutorial](../ioFog_3.0/tutorial/introduction), we saw that the images are being pulled from a repository specified in the YAML. The two values we have used so far are `remote` (public docker hub) and `local` (image locally present on the Agent). There is a third value available, which is a `repository ID`.
 
 NB: `remote` and `local` are aliases for values `1` and `2`, which are the repository seeded in your Controller database.
 
@@ -156,7 +156,7 @@ ID              URL                     USERNAME        PRIVATE         SECURE
 2               from_cache                              false           true
 ```
 
-We can add a new registry using the `Registry` [deploy kind](../reference-iofogctl/reference-registry.html)
+We can add a new registry using the `Registry` [deploy kind](../ioFog_3.0/reference-iofogctl/reference-registry)
 
 ```bash
 echo "---
@@ -171,7 +171,7 @@ spec:
 iofogctl deploy -f /tmp/my-private-registry.yaml
 ```
 
-After running this, you should now have 3 registries and you can use the `ID` in the [microservice images registry field](../reference-iofogctl/reference-application.html#microservices)
+After running this, you should now have 3 registries and you can use the `ID` in the [microservice images registry field](../ioFog_3.0/reference-iofogctl/reference-application)
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
