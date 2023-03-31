@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Want to deploy on Kubernetes cluster instead?</h3>
-  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a single Linux remote host. Go to <a href="kubernetes-prepare-cluster.html">Kubernetes - Prepare A Cluster</a> to deploy the Control Plane on Kubernetes Cluster instead.</p>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a single Linux remote host. Go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a> to deploy the Control Plane on Kubernetes Cluster instead.</p>
 </aside>
 
 # Remote Host - Deploy Control Plane
@@ -11,7 +11,7 @@ In this guide, our Control Plane will deploy a single Controller instance on a r
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">We use YAML to define ioFog resources</h3>
-  <p>The following procedures will define resources in YAML for iofogctl to consume. Specification of those YAML resources can be found <a href=../reference-iofogctl/reference-control-plane.html>here</a>.</p>
+  <p>The following procedures will define resources in YAML for iofogctl to consume. Specification of those YAML resources can be found <a href= #/./ioFog_3.0/reference-iofogctl/reference-control-plane>here</a>.</p>
 </aside>
 
 ## Deploy a Control Plane on a Remote Host
@@ -64,7 +64,7 @@ iofogctl describe controlplane
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
-  <p>Having our Control Plane up and running, we can now go to <a href="setup-your-agents.html">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+  <p>Having our Control Plane up and running, we can now go to <a href="#/./ioFog_3.0/platfomr-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
 </aside>
 
 <aside class="notifications contribute">
