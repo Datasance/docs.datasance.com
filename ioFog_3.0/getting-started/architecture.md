@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt=""> Do you know the core concepts of ioFog?</h3>
-  <p>If you haven't done so, you should first go and read <a href="../ioFog_3.0/getting-started/core-concepts">Core Concepts</a> in order to understand what ioFog is and what is its purpose.</p>
+  <p>If you haven't done so, you should first go and read <a href="#/./ioFog_3.0/getting-started/core-concepts">Core Concepts</a> in order to understand what ioFog is and what is its purpose.</p>
 </aside>
 
 # Architecture
