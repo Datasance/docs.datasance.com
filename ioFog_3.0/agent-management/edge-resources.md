@@ -23,7 +23,7 @@ Microservices running on your ioFog Agents. Using `iofogctl` (or the Controller 
 `Edge Resources` and `attach` those resources
 to 1..N ioFog Agents.
 
-Microservices can query their ioFog Agent, using the [ioFog SDKs](../developing-microservices/sdk.html)
+Microservices can query their ioFog Agent, using the [ioFog SDKs](../ioFog_3.0/developing-microservices/sdk)
 (or directly using the Agent local API) to retrieve the list of Edge Resources currently attached to their ioFog Agent.
 
 ## What is an Edge Resource composed of?
@@ -39,7 +39,7 @@ Edge Resources are uniquely identified by a composite of their `name` and their 
 ## Creating an Edge Resource
 
 We can use `iofogctl` to create our own Edge Resources. The YAML spec reference can be found
-[here](../reference-iofogctl/reference-edge-resources.html).
+[here](../ioFog_3.0/reference-iofogctl/reference-edge-resources).
 
 ```bash
 echo "---
