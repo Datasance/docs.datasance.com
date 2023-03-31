@@ -172,8 +172,8 @@ iofogctl move agent agent-1 namespace-2 -n namespace-1
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Next steps?</h3>
   <ul>
-    <li><a href="./resource-management.html">Resources management with iofogctl.</a></li>
-    <li><a href="../reference-iofogctl/reference-kinds.html">iofogctl reference.</a></li>
+    <li><a href="#/./ioFog_3.0/iofogctl/resource-management">Resources management with iofogctl.</a></li>
+    <li><a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference.</a></li>
   <ul>
 </aside>
 
