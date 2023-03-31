@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt=""> Do you know the core concepts of ioFog?</h3>
-  <p>If you haven't done so, you should first go and read <a href="core-concepts.html">Core Concepts</a> in order to understand what ioFog is and what is its purpose.</p>
+  <p>If you haven't done so, you should first go and read <a href="ioFog_3.0/getting-started/core-concepts.html">Core Concepts</a> in order to understand what ioFog is and what is its purpose.</p>
 </aside>
 
 # Architecture
@@ -19,8 +19,8 @@ It is also possible to have a Controller hidden behind HTTP Ingress service, sin
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about ioFog Controller?</h3>
-  <p>If you want to learn advanced features, how to configure the Controller or how to directly use it, go to <a href="../reference-controller/overview.html">Controller reference documentation</a>.</p>
-  <p>To deploy and use the Controller via iofogctl, go to <a href="../platform-deployment/introduction.html">platform deployment documentation</a>.</p>
+  <p>If you want to learn advanced features, how to configure the Controller or how to directly use it, go to <a href="../ioFog_3.0/reference-controller/overview.html">Controller reference documentation</a>.</p>
+  <p>To deploy and use the Controller via iofogctl, go to <a href="../ioFog_3.0/platform-deployment/introduction.html">platform deployment documentation</a>.</p>
   <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/Controller">eclipse-iofog/Controller github repository</a>.</p>
 </aside>
 
@@ -36,8 +36,8 @@ While the Agent daemon itself has a CLI, after setting things up a majority of y
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about ioFog Agent?</h3>
-  <p>If you want to learn advanced features, how to configure the Agent or how to directly use it, go to <a href="../reference-agent/overview.html">Agent reference documentation</a>.</p>
-  <p>To deploy and use the Agent via iofogctl, go to <a href="../agent-management/introduction.html">Agent management documentation</a>.</p>
+  <p>If you want to learn advanced features, how to configure the Agent or how to directly use it, go to <a href="../ioFog_3.0/reference-agent/overview.html">Agent reference documentation</a>.</p>
+  <p>To deploy and use the Agent via iofogctl, go to <a href="../ioFog_3.0/agent-management/introduction.html">Agent management documentation</a>.</p>
   <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/Agent">eclipse-iofog/Agent github repository</a>.</p>
 </aside>
 
@@ -47,8 +47,8 @@ The last absolutely essential components in edge computing are microservices. Th
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about microservices?</h3>
-  <p>If you want to know more about managing microservices in ioFog, head to <a href="../applications/applications.html">Microservice management</a>.</p>
-  <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction.html">Learn how to use ioFog and build microservices</a></p>
+  <p>If you want to know more about managing microservices in ioFog, head to <a href="../ioFog_3.0/applications/applications.html">Microservice management</a>.</p>
+  <p>You can also head to our tutorial for developers to <a href="../ioFog_3.0/tutorial/introduction.html">Learn how to use ioFog and build microservices</a></p>
 </aside>
 
 ## Edge Compute Network - Bare Bones
@@ -74,7 +74,7 @@ For advanced users, it is possible to configure the topology manually, such as s
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about Router?</h3>
-  <p>If you want to learn advanced features, how to configure the Router or how to setup custom topologies, go to <a href="../reference-router/overview.html">Router reference documentation</a>.</p>
+  <p>If you want to learn advanced features, how to configure the Router or how to setup custom topologies, go to <a href="../ioFog_3.0/reference-router/overview.html">Router reference documentation</a>.</p>
   <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/router">eclipse-iofog/Router github repository</a>.</p>
 </aside>
 
@@ -150,15 +150,15 @@ Iofogctl works by interacting directly with Controller using REST API, with Agen
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about iofogctl?</h3>
-  You will be working with iofogctl for majority of the documentation. To go through the basic introduction to the tool, see <a href="../iofogctl/introduction.html">basic iofogctl documentation</a>.
-  <p>If you want to check detailed reference of all iofogctl features, go to <a href="../reference-iofogctl/reference-kinds.html">iofogctl reference documentation</a>.</p>
+  You will be working with iofogctl for majority of the documentation. To go through the basic introduction to the tool, see <a href="../ioFog_3.0/iofogctl/introduction.html">basic iofogctl documentation</a>.
+  <p>If you want to check detailed reference of all iofogctl features, go to <a href="../ioFog_3.0/reference-iofogctl/reference-kinds.html">iofogctl reference documentation</a>.</p>
   <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/iofogctl">eclipse-iofog/iofogctl github repository</a>.</p>
 </aside>
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt=""> Where to go from here?</h3>
-  <p>If you want to get started right away, you can check out the <a href="quick-start-local.html">Quick Start Locally guide</a> to deploy ioFog locally on your computer, or the <a href="quick-start-minikube.html">Quick Start With Minikube guide</a>, or go through production deployment in <a href="../platform-deployment/introduction.html">Platform deployment</a> for both remote and Kubernetes deployments.</p>
-  <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction.html">Learn how to use ioFog and build microservices</a></p>
+  <p>If you want to get started right away, you can check out the <a href="ioFog_3.0/getting-started/quick-start-local.html">Quick Start Locally guide</a> to deploy ioFog locally on your computer, or the <a href="ioFog_3.0/getting-started/quick-start-minikube.html">Quick Start With Minikube guide</a>, or go through production deployment in <a href="../ioFog_3.0/platform-deployment/introduction.html">Platform deployment</a> for both remote and Kubernetes deployments.</p>
+  <p>You can also head to our tutorial for developers to <a href="../ioFog_3.0/tutorial/introduction.html">Learn how to use ioFog and build microservices</a></p>
 </aside>
 
 <aside class="notifications contribute">
