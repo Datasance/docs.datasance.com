@@ -4,7 +4,7 @@ In this tutorial we will use a tutorial project to set up a local ECN with a set
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Familiar with the Core Concepts?</h3>
-  <p>If you aren't already familiar with the core concepts of ioFog, you'll want to check out <a href="../getting-started/core-concepts.html">our Core Concepts</a> section.</p>
+  <p>If you aren't already familiar with the core concepts of ioFog, you'll want to check out <a href="#/./ioFog_3.0/getting-started/core-concepts">our Core Concepts</a> section.</p>
 </aside>
 
 ## Prerequisites
@@ -19,7 +19,7 @@ Supported operating systems:
 Required tools:
 
 - `Docker 1.10+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
-- `iofogctl 3.0.0+`: CLI tool and a one-stop-shop for all your ioFog needs. ([installation instructions](../getting-started/quick-start-local.html))
+- `iofogctl 3.0.0+`: CLI tool and a one-stop-shop for all your ioFog needs. ([installation instructions](..ioFog_3.0/getting-started/quick-start-local))
 
 Make sure to follow the Docker [post-installation instructions](https://docs.docker.com/install/linux/linux-postinstall/) so that the Docker daemon can work without `sudo`. Otherwise, the commands in this guide will not work.
 
@@ -49,14 +49,14 @@ We can optionally verify the ioFog stack is provisioned correctly. The automated
 ```
 
 <aside class="notifications note">
-  <p>Under the hood, those shell scripts are using iofogctl and YAML files to set up your environment. You'll get to use iofogctl directly in the next few sections. Impatient to know more? Dive directly into its <a href="../iofogctl/introduction.html" target="_blank">documentation</a>.</p>
+  <p>Under the hood, those shell scripts are using iofogctl and YAML files to set up your environment. You'll get to use iofogctl directly in the next few sections. Impatient to know more? Dive directly into its <a href="#/./ioFog_3.0//iofogctl/introduction" target="_blank">documentation</a>.</p>
 </aside>
 
 ## Get To Know ioFog
 
 With a working ioFog environment set up, we're now ready to get to know ioFog.
 
-[Continue To Next Step: Get To Know ioFog](get-to-know-iofog.html).
+[Continue To Next Step: Get To Know ioFog](../ioFog_3.0/tutorial/get-to-know-iofog).
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Questions? Run into issues?</h3>
