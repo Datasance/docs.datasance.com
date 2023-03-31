@@ -20,14 +20,14 @@ where I want to get the output of the config command from my agent, named iofog-
 
 To determine what legacy commands you wish to use, please see the legacy cli documentation for each component at the following links:
 
-[Agent](../reference-agent/cli-usage.html)
+[Agent](../ioFog_3.0/reference-agent/cli-usage)
 
-[Controller](../reference-controller/cli-usage.html)
+[Controller](../ioFog_3.0/reference-controller/cli-usage)
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Next steps?</h3>
   <ul>
-    <li><a href="../reference-iofogctl/reference-kinds.html">iofogctl reference.</a></li>
+    <li><a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference.</a></li>
   <ul>
 </aside>
 
