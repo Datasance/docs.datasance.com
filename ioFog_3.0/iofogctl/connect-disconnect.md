@@ -84,8 +84,8 @@ iofogctl disconnect
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Next steps?</h3>
   <ul>
-    <li><a href="./legacy.html">Legacy commands.</a></li>
-    <li><a href="../reference-iofogctl/reference-kinds.html">iofogctl reference.</a></li>
+    <li><a href="#/./ioFog_3.0/iofogctl/legacy">Legacy commands.</a></li>
+    <li><a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference.</a></li>
   <ul>
 </aside>
 
