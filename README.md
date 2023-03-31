@@ -1,5 +1,5 @@
 # Welcome to the Documentation Page for Datasance PoT!
 
-This site was created using [**Docsify**](https://docsify.js.org), which is an open source documentation site generator, and imported in GitHub page. This site was created for [**Opensource.com**](https://opensource.com) demo.
+By leveraging the power of Open Source communities, Datasance PoT brings Hardware Trust, Cloud-Native computing capabilities, Management at scale, and True connectivity to the Edge. Datasance PoT is an Enterprise Open Source Fog Computing and Distributed Edge Intelligence Platform. 
 
-![Welcome to Opensource.com](./images/datasance-PoT.png)
+![Introduction to Datasance PoT](./images/datasance-PoT.png)
