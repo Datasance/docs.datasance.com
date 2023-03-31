@@ -4,7 +4,12 @@
   /swagger/3.0.0/controller/swagger.yaml
 </swagger-ui>
 
+<swagger-ui>
+  /swagger/3.0.0/controller/openapi.json
+</swagger-ui>
+
 [swagger](http://iofog.staging.edgeworx.io/swagger/3.0.0/controller/swagger.yaml)
+[swagger](../swagger/3.0.0/controller/openapi.json)
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
