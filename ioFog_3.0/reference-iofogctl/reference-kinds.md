@@ -49,7 +49,7 @@ spec:
         port: 22
 ```
 
-To learn more about the `ControlPlane` kind, please see [Iofogctl Platform YAML Specification](../reference-iofogctl/reference-control-plane.html#remote-control-plane).
+To learn more about the `ControlPlane` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
 
 ## KubernetesControlPlane
 
@@ -70,7 +70,7 @@ spec:
   config: ~/.kube/config
 ```
 
-To learn more about the `KubernetesControlPlane` kind, please see [Iofogctl Platform YAML Specification](../reference-iofogctl/reference-control-plane.html#kubernetes-control-plane).
+To learn more about the `KubernetesControlPlane` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
 
 ## LocalControlPlane
 
@@ -92,7 +92,7 @@ spec:
       image: iofog/controller:3.0.0
 ```
 
-To learn more about the `LocalControlPlane` kind, please see [Iofogctl Platform YAML Specification](../reference-iofogctl/reference-control-plane.html#local-control-plane).
+To learn more about the `LocalControlPlane` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
 
 ## Controller
 
@@ -112,7 +112,7 @@ spec:
     port: 22
 ```
 
-To learn more about the `Controller` kind, please see [Iofogctl Platform YAML Specification](../reference-iofogctl/reference-control-plane.html#remote-controller).
+To learn more about the `Controller` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
 
 ## Agent
 
@@ -132,7 +132,7 @@ spec:
     port: 22
 ```
 
-To learn more about the `Agent` kind, please see [Iofogctl Agent YAML Specification](../reference-iofogctl/reference-agent.html).
+To learn more about the `Agent` kind, please see [Iofogctl Agent YAML Specification](../ioFog_3.0/reference-iofogctl/reference-agent).
 
 ## LocalAgent
 
@@ -148,7 +148,7 @@ spec:
     image: iofog/agent:3.0.0
 ```
 
-To learn more about the `LocalAgent` kind, please see the [Quick Start](../getting-started/quick-start-local.html).
+To learn more about the `LocalAgent` kind, please see the [Quick Start](../ioFog_3.0/getting-started/quick-start-local).
 
 ## AgentConfig
 
@@ -193,7 +193,7 @@ spec:
   availableDiskThreshold: 90
 ```
 
-To learn more about the `AgentConfig` kind, please see the [Agent management section](../agent-management/agent-configuration.html) and [Iofogctl Agent YAML specification](../reference-iofogctl/reference-agent.html).
+To learn more about the `AgentConfig` kind, please see the [Agent management section](../ioFog_3.0/agent-management/agent-configuration) and [Iofogctl Agent YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent).
 
 ## CatalogItem
 
@@ -213,7 +213,7 @@ spec:
   configExample: '{"key": "value"}'
 ```
 
-To learn more about the `CatalogItem` kind, please see [Iofogctl Catalog Item YAML specification](../reference-iofogctl/reference-catalog.html).
+To learn more about the `CatalogItem` kind, please see [Iofogctl Catalog Item YAML specification](../ioFog_3.0/reference-iofogctl/reference-catalog).
 
 ## Application
 
@@ -267,7 +267,7 @@ spec:
       to: heart-rate-viewer
 ```
 
-To learn more about the `Application` kind, please see [Iofogctl Application YAML specification](../reference-iofogctl/reference-application.html).
+To learn more about the `Application` kind, please see [Iofogctl Application YAML specification](../ioFog_3.0/reference-iofogctl/reference-application).
 
 ## Microservice
 
@@ -303,7 +303,7 @@ spec:
     data_label: Anonymous_Person_2
 ```
 
-To learn more about the `Microservice` kind, please see [Iofogctl Application YAML specification](../reference-iofogctl/reference-application.html#microservices).
+To learn more about the `Microservice` kind, please see [Iofogctl Application YAML specification](../ioFog_3.0/reference-iofogctl/reference-application).
 
 ## Volume
 
@@ -322,7 +322,7 @@ spec:
     - agent-2
 ```
 
-To learn more about the `Volume` kind, please see [Volume Management](../agent-management/volumes.html).
+To learn more about the `Volume` kind, please see [Volume Management](../ioFog_3.0/agent-management/volumes).
 
 ## Registry
 
@@ -340,7 +340,7 @@ spec:
   certificate: ''
 ```
 
-To learn more about the `Registry` kind, please see [Registry and Catalog Management](../applications/microservice-registry-catalog.html).
+To learn more about the `Registry` kind, please see [Registry and Catalog Management](../ioFog_3.0/applications/microservice-registry-catalog).
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
