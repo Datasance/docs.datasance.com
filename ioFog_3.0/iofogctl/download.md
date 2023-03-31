@@ -44,8 +44,8 @@ Run `iofogctl version` to verify you have successfully installed the CLI.
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Next steps?</h3>
   <ul>
-    <li><a href="./getting-familiar.html">Getting familiar with iofogctl.</a></li>
-    <li><a href="../reference-iofogctl/reference-kinds.html">iofogctl reference.</a></li>
+    <li><a href="#/./ioFog_3.0/getting-familiar.html">Getting familiar with iofogctl.</a></li>
+    <li><a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference.</a></li>
   <ul>
 </aside>
 
