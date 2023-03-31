@@ -32,11 +32,11 @@ We can achieve this by editing the sudoers file by first running `su visudo` on 
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
-  <p>Now we are ready to deploy the Controller! If we want to deploy it directly on a remote host, go to <a href="./remote-control-plane.html">Remote - Deploy Control Plane</a>.</p>
+  <p>Now we are ready to deploy the Controller! If we want to deploy it directly on a remote host, go to <a href="#/./ioFog_3.0/platfomr-deployment/remote-control-plane">Remote - Deploy Control Plane</a>.</p>
   
-  <p>Otherwise, to deploy on Kubernetes cluster, go to <a href="./kubernetes-prepare-cluster.html">Kubernetes - Prepare A Cluster</a>, which is a series of steps needed to deploy ioFog on Kubernetes clusters.</p>
+  <p>Otherwise, to deploy on Kubernetes cluster, go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a>, which is a series of steps needed to deploy ioFog on Kubernetes clusters.</p>
   
-  <p>Both of these path eventually join when deploying Agents in <a href="setup-your-agents.html">Setup Agents</a> guide. But note that at this point, we cannot deploy Agents yet, because the have no Control Plane.</p>
+  <p>Both of these path eventually join when deploying Agents in <a href="#/./ioFog_3.0/platfomr-deployment/setup-your-agents">Setup Agents</a> guide. But note that at this point, we cannot deploy Agents yet, because the have no Control Plane.</p>
 </aside>
 
 <aside class="notifications contribute">
