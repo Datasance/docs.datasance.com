@@ -1,7 +1,7 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Not interested in using Kubernetes?</h3>
-  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="remote-control-plane.html">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
-  <p>Also, this guide will use iofogctl to deploy the Control Plane on the cluster. To use Helm instead, go to <a href="kubernetes-helm.html"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="#/./ioFog_3.0/platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
+  <p>Also, this guide will use iofogctl to deploy the Control Plane on the cluster. To use Helm instead, go to <a href="#/./ioFog_3.0/platform-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
 </aside>
 
 # Kubernetes - Deploy Control Plane Using iofogctl
@@ -12,7 +12,7 @@ In this guide, our Control Plane will deploy a single Controller instance.
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">We use YAML to define ioFog resources</h3>
-  <p>The following procedures will define resources in YAML for iofogctl to consume. Specification of those YAML resources can be found <a href=../reference-iofogctl/reference-control-plane.html>here</a>.</p>
+  <p>The following procedures will define resources in YAML for iofogctl to consume. Specification of those YAML resources can be found <a href=#/./ioFog_3.0/reference-iofogctl/reference-control-plane>here</a>.</p>
 </aside>
 
 ## Deploy a Control Plane on Kubernetes
@@ -68,7 +68,7 @@ iofogctl describe controlplane
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
-  <p>Having our Control Plane up and running, we can now go to <a href="setup-your-agents.html">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+  <p>Having our Control Plane up and running, we can now go to <a href="#/./ioFog_3.0/platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
 </aside>
 
 <aside class="notifications contribute">
