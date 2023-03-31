@@ -22,7 +22,7 @@ iofogctl deploy -f application.yaml
 
 Specifications of the ioFog platform YAML types can be found [here](../ioFog_3.0/reference-iofogctl/reference-control-plane).
 
-Specifications of the ioFog application YAML types can be found [here](../ioFog_3.0reference-iofogctl/reference-application).
+Specifications of the ioFog application YAML types can be found [here](../ioFog_3.0/reference-iofogctl/reference-application).
 
 ## Delete Components of Edge Compute Networks
 
