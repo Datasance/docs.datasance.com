@@ -105,7 +105,7 @@ spec:
       to: rest-api
 ```
 
-This yaml file has been used to describe to `iofogctl` what our set of microservices (application) should look like, and how they are configured. You can find a complete description of the YAML format [here](../reference-iofogctl/reference-application.html), but for now let's focus on the main parts.
+This yaml file has been used to describe to `iofogctl` what our set of microservices (application) should look like, and how they are configured. You can find a complete description of the YAML format [here](..ioFog_3.0/reference-iofogctl/reference-application), but for now let's focus on the main parts.
 
 - The file describes an application, named `tutorial`.
 - It has 3 microservices.
@@ -232,7 +232,7 @@ You will notice a few minor changes compared to the description we provided when
 - We now have an `application` field. This is required for iofogctl to know which application the microservice is part of.
 - We have many more fields related to the required configuration of the ioFog Agent.
 
-Find the complete yaml description [here](../reference-iofogctl/reference-application.html#microservice)
+Find the complete yaml description [here](../ioFog_3.0/reference-iofogctl/reference-application)
 
 Now let's say we want to update the configuration of our microservice!
 
@@ -269,7 +269,7 @@ Have a look at new output of the [Freeboard dashboard](http://localhost:10102/?l
 
 The magic about microservices and ioFog is that none of those microservice is specifically designed or requires to work with the other microservice. Using ioFog, you can create smart and secure communication channels between independant microservices and easily manage a fleet of Edge devices and microservices.
 
-Congratulations! You've now have the fundamentals of ioFog. Next, try developing Microservices on an ECN deployed on remote hosts. See this [guide](../platform-deployment/introduction.html) for deploying remotely.
+Congratulations! You've now have the fundamentals of ioFog. Next, try developing Microservices on an ECN deployed on remote hosts. See this [guide](../ioFog_3.0/platform-deployment/introduction) for deploying remotely.
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Questions? Run into issues?</h3>
