@@ -1,7 +1,7 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Not interested in using Kubernetes?</h3>
-  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="remote-control-plane.html">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
-  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use iofogctl instead, go to <a href="kubernetes-iofogctl.html"> Kubernetes - Deploy Control Plane Using iofogctl</a>.</p>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="#/./ioFog_3.0/platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
+  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use iofogctl instead, go to <a href="#/./ioFog_3.0/pltform-deployment/kubernetes-iofogctl"> Kubernetes - Deploy Control Plane Using iofogctl</a>.</p>
 </aside>
 
 # Kubernetes - Deploy Control Plane Using Helm
@@ -90,7 +90,7 @@ helm --namespace my-ns delete my-ecn
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
-  <p>Having our Control Plane up and running, we can now go to <a href="setup-your-agents.html">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+  <p>Having our Control Plane up and running, we can now go to <a href="#/./ioFog_3.0/platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
 </aside>
 
 <aside class="notifications contribute">
