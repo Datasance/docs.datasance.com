@@ -20,16 +20,16 @@ Your microservices can do anything a Docker container can do, from interacting w
 
 But because most Edge Compute Networks contain multiple, sometimes even hundreds or thousands, of nodes running in a distributed fashion, ioFog provides an SDK library you can use to ease the burden of communicating between them. The SDK also provides the ability to receive dynamic configuration in your microservice so you don't have to bake them into your containers.
 
-[View Available SDKs](sdk.html)
+[View Available SDKs](../ioFog_3.0/developing-microservices/sdk)
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Want to run through a tutorial?</h3>
-  <p>If you'd like to learn more about creating and managing microservices on ioFog, <a href="../tutorial/introduction.html">check out our Tutorial</a></p>
+  <p>If you'd like to learn more about creating and managing microservices on ioFog, <a href="#/./ioFog_3.0/tutorial/introduction.html">check out our Tutorial</a></p>
 </aside>
 
 ## Dynamic Configuration
 
-Using [the SDK](sdk.html) microservices can receive any arbitrary custom configuration JSON remotely, from the Controller. This allows you to change configuration of your microservices at runtime through the Controller, but also prevents you from needing to bake secrets and other keys into your microservice.
+Using [the SDK](../ioFog_3.0/developing-microservices/sdk) microservices can receive any arbitrary custom configuration JSON remotely, from the Controller. This allows you to change configuration of your microservices at runtime through the Controller, but also prevents you from needing to bake secrets and other keys into your microservice.
 
 Updating a microservice's configuration can then be done using `iofogctl`:
 
@@ -76,7 +76,7 @@ The high-level process of creating a new microservice is:
 - (Optional) Add the registered image to your Controller's catalog
 - Deploy the microservice using iofogctl
 
-It is detailed in our [tutorial](../tutorial/introduction.html)
+It is detailed in our [tutorial](#/./ioFog_3.0/tutorial/introduction)
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
