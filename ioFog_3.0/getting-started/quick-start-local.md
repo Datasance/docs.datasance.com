@@ -57,7 +57,7 @@ We can use `iofogctl deploy` to install and provision ECN components. Here we wi
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about iofogctl?</h3>
-  <p>We aren't going into detail about iofogctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full iofogctl documentation <a href="../iofogctl/introduction.html">here</a>.</p>
+  <p>We aren't going into detail about iofogctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full iofogctl documentation <a href="../ioFog_3.0/iofogctl/introduction.html">here</a>.</p>
 </aside>
 
 Go ahead and paste the following commands into the terminal:
@@ -119,9 +119,9 @@ ROUTE           SOURCE MSVC     DEST MSVC
 
 **NB:** The Agent status might say `UNKNOWN` for up to 30s. It is the time for the agent to report back its liveness to the controller.
 
-The `Controller` acts as a control plane, it will be our main point of access and communication with our ECN. If we want to find out more about Controller, please read <a href="../reference-controller/overview.html">this</a>.
+The `Controller` acts as a control plane, it will be our main point of access and communication with our ECN. If we want to find out more about Controller, please read <a href="../ioFog_3.0/reference-controller/overview.html">this</a>.
 
-The `Agent` is the component that is meant to run on our edge devices. Once it has registered itself with a Controller, the Agent will be in charge of actually pulling the microservices images and starting / stopping the microservices on our edge device. If we want to find out more about Agent, please read <a href="../reference-agent/overview.html">this</a>.
+The `Agent` is the component that is meant to run on our edge devices. Once it has registered itself with a Controller, the Agent will be in charge of actually pulling the microservices images and starting / stopping the microservices on our edge device. If we want to find out more about Agent, please read <a href="../ioFog_3.0/reference-agent/overview.html">this</a>.
 
 Those components are all currently running as separate Docker containers on our local machine. We can list the active containers by running:
 
@@ -224,9 +224,9 @@ iofogctl delete all
 
 ## Next Steps
 
-Now that you have seen what ioFog is about, you can create a real ECN with remote hosts. Instructions are found [here](../platform-deployment/introduction.html).
+Now that you have seen what ioFog is about, you can create a real ECN with remote hosts. Instructions are found [here](../ioFog_3.0/platform-deployment/introduction.html).
 
-We can also try deploying other Microservices on the local ECN. We can find instructions on writing our own Microservice [here](../developing-microservices/overview.html) and a step-by-step [tutorial](../tutorial/introduction.html).
+We can also try deploying other Microservices on the local ECN. We can find instructions on writing our own Microservice [here](../ioFog_3.0/developing-microservices/overview.html) and a step-by-step [tutorial](../ioFog_3.0/tutorial/introduction.html).
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
