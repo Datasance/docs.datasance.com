@@ -9,8 +9,8 @@ This section will explain key aspects of `iofogctl's` design and functionality f
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt=""> Next steps?</h3>
   <ul>
-    <li><a href="./download.html">Download and installation.</a></li>
-    <li><a href="../reference-iofogctl/reference-kinds.html">iofogctl reference.</a></li>
+    <li><a href="#/./ioFog_3.0/iofogctl/download">Download and installation.</a></li>
+    <li><a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference.</a></li>
   <ul>
 </aside>
 
