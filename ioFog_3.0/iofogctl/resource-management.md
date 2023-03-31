@@ -20,9 +20,9 @@ iofogctl deploy -f application.yaml
 
 `iofogctl` deploy commands are designed to be idempotent. Feel free to spam these commands as much as you like - the end result will always be the same. If anything goes wrong with your deployment, run the relevant deploy commands again and you should be good to go.
 
-Specifications of the ioFog platform YAML types can be found [here](#/./ioFog_3.0/reference-iofogctl/reference-control-plane).
+Specifications of the ioFog platform YAML types can be found [here](../ioFog_3.0/reference-iofogctl/reference-control-plane).
 
-Specifications of the ioFog application YAML types can be found [here](#/./ioFog_3.0reference-iofogctl/reference-application).
+Specifications of the ioFog application YAML types can be found [here](../ioFog_3.0reference-iofogctl/reference-application).
 
 ## Delete Components of Edge Compute Networks
 
@@ -52,7 +52,7 @@ iofogctl delete namespace zoo-1 --force
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Next steps?</h3>
   <ul>
-    <li><a href="#/./ioFog_3.0/connect-disconnect">Connecting to an existing ECN.</a></li>
+    <li><a href="#/./ioFog_3.0/iofogctl/connect-disconnect">Connecting to an existing ECN.</a></li>
     <li><a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference.</a></li>
   <ul>
 </aside>
