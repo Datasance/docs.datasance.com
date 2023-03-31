@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Deployed a local ECN first?</h3>
-  <p>We recommened going through the <a href=../getting-started/quick-start-local.html>Quick Start Guide</a> before continuing on here. In this guide we also assume we are up and running with iofogctl, if that is not the case download and be at least marginally familiar with <a href=../iofogctl/download.html>iofogctl</a>.</p>
+  <p>We recommened going through the <a href=#/./ioFog_3.0/getting-started/quick-start-local.>Quick Start Guide</a> before continuing on here. In this guide we also assume we are up and running with iofogctl, if that is not the case download and be at least marginally familiar with <a href=#/./ioFog_3.0/iofogctl/download>iofogctl</a>.</p>
 </aside>
 
 # Introduction
@@ -13,7 +13,7 @@ In this section, we will go through two deployment options of an ioFog ECN. The 
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
-  <p>Regardless of the type of deployment we need, now is the time to <a href=prepare-your-network.html>setup our network</a>.</p>
+  <p>Regardless of the type of deployment we need, now is the time to <a href=#/./ioFog_3.0/platform-deployment/prepare-your-network>setup our network</a>.</p>
 </aside>
 
 <aside class="notifications contribute">
