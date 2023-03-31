@@ -2,7 +2,7 @@
 
 ## Microservice Updates
 
-We can modify Microservices through the same [Microservice kind](../reference-iofogctl/reference-application.html#microservices) that we deploy them with.
+We can modify Microservices through the same [Microservice kind](../ioFog_3.0/reference-iofogctl/reference-application) that we deploy them with.
 
 To help us with this, a Microservice YAML spec of a deployed Microservice can be retrieved using the `describe` command:
 
