@@ -44,7 +44,7 @@ It is available by default on the standard HTTP port of `Controller` (80).
 
 [Find out more!](../ioFog_3.0/reference-controller/ecn-viewer)
 
-[Find out more](../ioFog_3.0/platform-deployment/setup-your-agents.html#customize-agent-installation) and check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent.html#installation-plugin-fields)!
+[Find out more](../ioFog_3.0/platform-deployment/setup-your-agents.html) and check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent)!
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
