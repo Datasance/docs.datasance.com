@@ -22,7 +22,7 @@
 * Platform Deployment
   * [Introduction](./ioFog_3.0/platform-deployment/introduction)
   * [Prepare Network](./ioFog_3.0/platform-deployment/prepare-your-network)
-  * [Prepare Remote Host](/.ioFog_3.0/platform-deployment/prepare-your-remote-hosts)
+  * [Prepare Remote Host](./ioFog_3.0/platform-deployment/prepare-your-remote-hosts)
   * [Remote Host - Deploy Control Plane Using iofogctl](./ioFog_3.0/platform-deployment/remote-control-plane)
   * [Kubernetes - Prepare A Cluster](./ioFog_3.0/platform-deployment/kubernetes-prepare-cluster)
   * [Kubernetes-Deploy Control Plane Using iofogctl](./ioFog_3.0/platform-deployment/kubernetes-iofogctl)
