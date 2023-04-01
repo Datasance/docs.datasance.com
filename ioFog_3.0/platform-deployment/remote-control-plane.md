@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Want to deploy on Kubernetes cluster instead?</h3>
-  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a single Linux remote host. Go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a> to deploy the Control Plane on Kubernetes Cluster instead.</p>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a single Linux remote host. Go to <a href="#/./ioFog_3.0/platform-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a> to deploy the Control Plane on Kubernetes Cluster instead.</p>
 </aside>
 
 # Remote Host - Deploy Control Plane
