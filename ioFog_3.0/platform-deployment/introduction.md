@@ -1,6 +1,6 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Deployed a local ECN first?</h3>
-  <p>We recommened going through the <a href=#/./ioFog_3.0/getting-started/quick-start-local.>Quick Start Guide</a> before continuing on here. In this guide we also assume we are up and running with iofogctl, if that is not the case download and be at least marginally familiar with <a href=#/./ioFog_3.0/iofogctl/download>iofogctl</a>.</p>
+  <p>We recommened going through the <a href=#/./ioFog_3.0/getting-started/quick-start-local>Quick Start Guide</a> before continuing on here. In this guide we also assume we are up and running with iofogctl, if that is not the case download and be at least marginally familiar with <a href=#/./ioFog_3.0/iofogctl/download>iofogctl</a>.</p>
 </aside>
 
 # Introduction
