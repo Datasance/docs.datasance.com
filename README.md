@@ -17,5 +17,5 @@ Datasance PoT can be deployed anywhere that data is generated and operation is c
 
 ![Datasance PoT](./images/PoT1.png)
 
-![Datasance PoT](./images/PoT2.png)
+![Datasance PoT](./images/PoT2.png) 
 
