@@ -1,6 +1,6 @@
 # Get To Know ioFog
 
-In this step of the tutorial we'll better familiarize ourselves with the ioFog environment [we just set up](../ioFog_3.0/tutorial/introduction) in the previous step and `iofogctl`.
+In this step of the tutorial we'll better familiarize ourselves with the ioFog environment [we just set up](../ioFog_3.0/tutorial/introduction) in the previous step and `potctl`.
 
 ## Check Your Environment
 
@@ -13,7 +13,7 @@ You can have a comprehensive view of your Edge Cloud Network (ECN) and the runni
 Or you can manually verify that the ioFog stack containers are correctly started. Note that it may take a minute or two for ioFog to start the tutorial microservices. The output should look like the following.
 
 ```console
-iofogctl get all
+potctl get all
 
 NAMESPACE
 default
@@ -53,7 +53,7 @@ For example, there's a microservice running an instance of [Freeboard](https://g
 Wait for the microservices to be in a `RUNNING` state. It may take a few minutes as the images need to be pulled.
 
 ```bash
-watch iofogctl get microservices
+watch potctl get microservices
 ```
 
 Go ahead and try the web app out at http://localhost:10102/?load=dashboard.json
@@ -69,22 +69,22 @@ Our tutorial environment has two ioFog containers:
 
 We can think of each of these containers as if they were deployed on separate devices. In production, our Controller is most often running on a cloud server and our Agents are each running on individual edge devices in the field. The Controller is controlling the Agent the same way it would if the devices were hundreds of miles away.
 
-### iofogctl vs component CLIs
+### potctl vs component CLIs
 
-We are currently in the process of migrating all our management system into one tool to rule them all: `iofogctl` !
+We are currently in the process of migrating all our management system into one tool to rule them all: `potctl` !
 
-However, this process is still ongoing and even though you can do everything you need for this tutorial (and much more...) in iofogctl, you must know that every ioFog component (Agent and Controller) has its local CLI (iofog-agent, iofog-controller) that can prove itself useful.
+However, this process is still ongoing and even though you can do everything you need for this tutorial (and much more...) in potctl, you must know that every ioFog component (Agent and Controller) has its local CLI (iofog-agent, iofog-controller) that can prove itself useful.
 
-In the following sections we will us `iofogctl legacy ...` commands to use the older component CLIs. Note that, because we have a local ECN, we could also use `docker exec` instead.
+In the following sections we will us `potctl legacy ...` commands to use the older component CLIs. Note that, because we have a local ECN, we could also use `docker exec` instead.
 
 #### Agent's Container
 
-Let's start by using `iofogctl` to retrieve a detailed description of our Agent.
+Let's start by using `potctl` to retrieve a detailed description of our Agent.
 
 ```console
-iofogctl describe agent local-agent
+potctl describe agent local-agent
 
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: AgentConfig
 metadata:
   name: local-agent
@@ -105,7 +105,7 @@ spec:
 Let's see how we can use the legacy `iofog-agent` CLI to find out its status.
 
 ```console
-iofogctl legacy agent local-agent status
+potctl legacy agent local-agent status
 
 ioFog daemon                : RUNNING
 Memory Usage                : about 51.19 MiB
@@ -123,7 +123,7 @@ System Total CPU            : 32.58 %
 There's also the legacy `info` command, used to view this Agent's settings:
 
 ```console
-iofogctl legacy agent local-agent info
+potctl legacy agent local-agent info
 
 Iofog UUID                               : VB78m6tLdrtWNDgdr73VrmCxZ3ZRkxjB
 IP Address                               : 10.138.0.41
@@ -160,10 +160,10 @@ Available Disk Threshold                 : 90
 
 #### Controller's Container
 
-Let's list all the configured ioFog nodes using `iofogctl`.
+Let's list all the configured ioFog nodes using `potctl`.
 
 ```console
-iofogctl get agents
+potctl get agents
 
 NAMESPACE
 default
@@ -175,7 +175,7 @@ local-agent	RUNNING  15m38s  15m38s  104.196.255.116  3.0.0
 Now, let's try listing all the preconfigured ioFog nodes using the Controller CLI.
 
 ```console
-iofogctl legacy controller local-controller iofog list
+potctl legacy controller local-controller iofog list
 
 {
   "fogs": [

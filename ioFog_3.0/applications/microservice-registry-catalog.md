@@ -4,10 +4,10 @@ During the [Quickstart](../ioFog_3.0/getting-started/quick-start-local) and the 
 
 That was nice and easy, but what if we need to deploy the same code on a lot of Agents? We would need to specify the images for each Microservice. Wouldn't it be nice to have a way to specify the images to be used for each type of Agent once and then reuse this configuration? That's where the Controller Microservice catalog comes into play!
 
-Each ioFog Controller comes with a built-in microservice catalog. You can see the list of preconfigured Microservices images using `iofogctl`:
+Each ioFog Controller comes with a built-in microservice catalog. You can see the list of preconfigured Microservices images using `potctl`:
 
 ```bash
-iofogctl get catalog
+potctl get catalog
 ```
 
 ```console
@@ -33,13 +33,13 @@ Instead of specifying the images for each Agent type, we can refer to catalog ID
 
 ```bash
 echo "---
-apiVersion: 'iofog.org/v2'
+apiVersion: 'datasance.com/v1'
 kind: Application
 metadata:
         name: hello-web
 spec:
 ---
-apiVersion: 'iofog.org/v2'
+apiVersion: 'datasance.com/v1'
 kind: Microservice # Or application, as application uses the same spec for its microservices
 metadata:
   name: hello-web
@@ -58,7 +58,7 @@ spec:
   config: {}
   application: hello-web
 " > /tmp/hello-web-catalog.yaml
-iofogctl deploy microservice -f /tmp/hello-web-catalog.yaml
+potctl deploy microservice -f /tmp/hello-web-catalog.yaml
 ```
 
 Note that this YAML snippet assumes we have a running ECN in the current Namespace with an Agent called `my-agent-name`.
@@ -66,11 +66,11 @@ Note that this YAML snippet assumes we have a running ECN in the current Namespa
 We can check that the expected images have been used by describing our Microservice with iofogct:
 
 ```bash
-iofogctl describe microservice hello-web
+potctl describe microservice hello-web
 ```
 
 ```plain
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Microservice
 metadata:
   name: hello-web
@@ -112,11 +112,11 @@ spec:
 
 ## Create our own Catalog Items
 
-We can also use iofogctl to create our own Catalog Items. The YAML spec reference can be found [here](../ioFog_3.0/reference-iofogctl/reference-catalog).
+We can also use potctl to create our own Catalog Items. The YAML spec reference can be found [here](../ioFog_3.0/reference-potctl/reference-catalog).
 
 ```bash
 echo "---
-apiVersion: 'iofog.org/v2'
+apiVersion: 'datasance.com/v1'
 kind: CatalogItem
 metadata:
   name: 'my-multiplatform-microservice'
@@ -127,13 +127,13 @@ spec:
   registry: 'remote'
 
 " > /tmp/my-catalog-item.yaml
-iofogctl deploy -f /tmp/my-catalog-item.yaml
+potctl deploy -f /tmp/my-catalog-item.yaml
 ```
 
 We can verify that our new Catalog Item was added to the Catalog:
 
 ```bash
-iofogctl get catalog | grep my-multiplatform-microservice
+potctl get catalog | grep my-multiplatform-microservice
 ```
 
 ```plain
@@ -148,7 +148,7 @@ During the [tutorial](../ioFog_3.0/tutorial/introduction), we saw that the image
 
 NB: `remote` and `local` are aliases for values `1` and `2`, which are the repository seeded in your Controller database.
 
-We can list our current registries using `iofogctl get registries`
+We can list our current registries using `potctl get registries`
 
 ```plain
 ID              URL                     USERNAME        PRIVATE         SECURE
@@ -156,11 +156,11 @@ ID              URL                     USERNAME        PRIVATE         SECURE
 2               from_cache                              false           true
 ```
 
-We can add a new registry using the `Registry` [deploy kind](../ioFog_3.0/reference-iofogctl/reference-registry)
+We can add a new registry using the `Registry` [deploy kind](../ioFog_3.0/reference-potctl/reference-registry)
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Registry
 spec:
   url: registry.hub.docker.com # This will create a registry that can download your private docker hub images
@@ -168,10 +168,10 @@ spec:
   password: q1u45ic9kst563art
   email: user@domain.com
 " > /tmp/my-private-registry.yaml
-iofogctl deploy -f /tmp/my-private-registry.yaml
+potctl deploy -f /tmp/my-private-registry.yaml
 ```
 
-After running this, you should now have 3 registries and you can use the `ID` in the [microservice images registry field](../ioFog_3.0/reference-iofogctl/reference-application)
+After running this, you should now have 3 registries and you can use the `ID` in the [microservice images registry field](../ioFog_3.0/reference-potctl/reference-application)
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>

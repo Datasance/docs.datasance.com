@@ -1,5 +1,5 @@
 <aside class="notifications tip">
-  <h3><img src="/images/icos/ico-tip.svg" alt="">Make sure your remote hosts are ready for Agent installation via iofogctl!</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt="">Make sure your remote hosts are ready for Agent installation via potctl!</h3>
   <p>Go to <a href="#/./ioFog_3.0/platform-deployment/prepare-your-remote-hosts">Prepare your Remote Hosts</a> to find out how to prepare your Agent hosts for installation.</p>
 </aside>
 
@@ -13,7 +13,7 @@ Create a template of agent.yaml like so:
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Agent
 metadata:
   name: zebra-1
@@ -29,7 +29,7 @@ Make sure to edit the `host`, `ssh.user`, and `ssh.keyFile` fields to correspond
 Once we have edited the fields to our liking, go ahead and run:
 
 ```bash
-iofogctl deploy -f /tmp/agent.yaml
+potctl deploy -f /tmp/agent.yaml
 ```
 
 ## Verify the Deployment
@@ -37,18 +37,18 @@ iofogctl deploy -f /tmp/agent.yaml
 We can use the following commands to verify the Agent is up and running:
 
 ```bash
-iofogctl get agents
+potctl get agents
 ```
 
 ```bash
-iofogctl describe agent zebra-1
+potctl describe agent zebra-1
 ```
 
 # Customize Agent Installation
 
-`iofogctl` can install ioFog Agent on a number of Linux distributions out of the box. However, the list of supported distributions is finite; in order to allow the community to add support for any host environment, `iofogctl` provides the ability to run user-defined installation scripts for Agent and its dependancies.
+`potctl` can install ioFog Agent on a number of Linux distributions out of the box. However, the list of supported distributions is finite; in order to allow the community to add support for any host environment, `potctl` provides the ability to run user-defined installation scripts for Agent and its dependancies.
 
-`iofogctl` requires 3 scripts for this purpose: one for installing pre-requisites, one for installing ioFog Agent, and one for uninstalling ioFog Agent. Users can bundle any number of scripts but must provide scripts as entrypoints to the pre-requisite, installation, and unininstallation procedures if they wish to override them. Users can override any subset of the 3 procedures - they need not override all 3.
+`potctl` requires 3 scripts for this purpose: one for installing pre-requisites, one for installing ioFog Agent, and one for uninstalling ioFog Agent. Users can bundle any number of scripts but must provide scripts as entrypoints to the pre-requisite, installation, and unininstallation procedures if they wish to override them. Users can override any subset of the 3 procedures - they need not override all 3.
 
 Here is an example of what a custom set of scripts might look like:
 
@@ -66,7 +66,7 @@ uninstall_iofog.sh
 And here is an example of what the corresponding Agent YAML spec would look like.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Agent
 metadata:
   name: meerkat-1
@@ -87,9 +87,9 @@ spec:
       entrypoint: uninstall_iofog.sh
 ```
 
-Upon Agent deployment, `iofogctl` will copy these scripts to `/etc/iofog/agent/`. It will then first invoke `install_deps.sh` as the entrypoint to the pre-requisites procedure. `install_deps.sh` will call `install_java.sh` and `install_docker.sh` directly. Finally, `iofogctl` will invoke `install_iofog.sh` as the Agent installation procedure.
+Upon Agent deployment, `potctl` will copy these scripts to `/etc/iofog/agent/`. It will then first invoke `install_deps.sh` as the entrypoint to the pre-requisites procedure. `install_deps.sh` will call `install_java.sh` and `install_docker.sh` directly. Finally, `potctl` will invoke `install_iofog.sh` as the Agent installation procedure.
 
-Check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent/) to get started!
+Check out the [YAML specification](../ioFog_3.0/reference-potctl/reference-agent/) to get started!
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>

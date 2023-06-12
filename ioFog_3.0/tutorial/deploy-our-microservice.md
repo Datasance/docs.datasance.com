@@ -10,10 +10,10 @@ With our Docker image from the previous step in hand, it's time to publish it to
 
 While we can use a custom registry (or the public [Docker Hub](https://hub.docker.com/)), the Controller also comes with a built-in private registry that represents the local cache on the ioFog edge compute nodes.
 
-To get a list of the container registries, we can use `iofogctl get registries`
+To get a list of the container registries, we can use `potctl get registries`
 
 ```bash
-iofogctl get registries
+potctl get registries
 
 NAMESPACE
 default
@@ -26,7 +26,7 @@ ID              URL                     USERNAME        PRIVATE         SECURE
 or the legacy Controller CLI `registry list` command:
 
 ```bash
-iofogctl legacy controller local-controller registry list
+potctl legacy controller local-controller registry list
 ```
 
 We should see two registries. The first is [Docker Hub](https://hub.docker.com/) and the second is the built-in private registry, which we're going to use.
@@ -49,14 +49,14 @@ The unique ID for the built-in registry is always `2`, and always `1` for Docker
 
 ## Add Our Microservice
 
-The Docker image containing our microservice code is registered with our local image cache. We can spin up new copies of it using the Controller through `iofogctl`.
+The Docker image containing our microservice code is registered with our local image cache. We can spin up new copies of it using the Controller through `potctl`.
 
 If you spent some time looking around the folder structure, you might have noticed the file `init/tutorial/config.yaml`
 
 ```yaml
 cat init/tutorial/config.yaml
 ---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application
 metadata:
   name: tutorial
@@ -105,7 +105,7 @@ spec:
       to: rest-api
 ```
 
-This yaml file has been used to describe to `iofogctl` what our set of microservices (application) should look like, and how they are configured. You can find a complete description of the YAML format [here](..ioFog_3.0/reference-iofogctl/reference-application), but for now let's focus on the main parts.
+This yaml file has been used to describe to `potctl` what our set of microservices (application) should look like, and how they are configured. You can find a complete description of the YAML format [here](..ioFog_3.0/reference-potctl/reference-application), but for now let's focus on the main parts.
 
 - The file describes an application, named `tutorial`.
 - It has 3 microservices.
@@ -153,16 +153,16 @@ Which will effectively create the following pipeline for our data `Sensor` -> `m
 
 ## Update the application
 
-Now that our config YAML file is ready and describes the new state of our application, we can use `iofogctl` to deploy our application.
+Now that our config YAML file is ready and describes the new state of our application, we can use `potctl` to deploy our application.
 
 ```bash
-iofogctl deploy -f init/tutorial/config.yaml
+potctl deploy -f init/tutorial/config.yaml
 ```
 
 Verify that the application got updated as expected
 
 ```console
-iofogctl get microservices
+potctl get microservices
 
 MICROSERVICE	STATUS		AGENT		CONFIG		ROUTES		   VOLUMES		PORTS
 Sensors		    RUNNING		local-agent	{}		    moving-average
@@ -172,22 +172,22 @@ moving-average  QUEUED      local-agent {}          rest-api
 
 ```
 
-It will take some time for the ioFog Agent to spin up the new microservice. You can monitor the status of our newly created microservice using `iofogctl get microservices`.
+It will take some time for the ioFog Agent to spin up the new microservice. You can monitor the status of our newly created microservice using `potctl get microservices`.
 
-If you don't have access to the YAML file describing your application, you can always retrieve it using iofogctl and running: `iofogctl describe application APPLICATION_NAME [-o config.yaml]`
+If you don't have access to the YAML file describing your application, you can always retrieve it using potctl and running: `potctl describe application APPLICATION_NAME [-o config.yaml]`
 
 ## Update a Microservice
 
 Once a microservice is up and running, we will probably need to modify it later, which we can also do with the Controller.
 
-You can either redeploy the entire application using the same steps we just did. Iofogctl is smart enough to only patch the required changes to an existing application.
+You can either redeploy the entire application using the same steps we just did. potctl is smart enough to only patch the required changes to an existing application.
 
-But you can also directly deploy a microservice! First, let's use `iofogctl` to retrieve the microservice configuration for our `moving-average` microservice.
+But you can also directly deploy a microservice! First, let's use `potctl` to retrieve the microservice configuration for our `moving-average` microservice.
 
 ```console
-iofogctl describe microservice moving-average -o moving-average.yaml && cat moving-average.yaml
+potctl describe microservice moving-average -o moving-average.yaml && cat moving-average.yaml
 
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Microservice
 metadata:
   name: moving-average
@@ -229,10 +229,10 @@ spec:
 
 You will notice a few minor changes compared to the description we provided when we deployed the microservice as part of our application:
 
-- We now have an `application` field. This is required for iofogctl to know which application the microservice is part of.
+- We now have an `application` field. This is required for potctl to know which application the microservice is part of.
 - We have many more fields related to the required configuration of the ioFog Agent.
 
-Find the complete yaml description [here](../ioFog_3.0/reference-iofogctl/reference-application)
+Find the complete yaml description [here](../ioFog_3.0/reference-potctl/reference-application)
 
 Now let's say we want to update the configuration of our microservice!
 
@@ -243,16 +243,16 @@ config:
   maxWindowSize: 100
 ```
 
-Then you can use iofogctl to deploy your microservice
+Then you can use potctl to deploy your microservice
 
 ```console
-iofogctl deploy -f moving-average.yaml
+potctl deploy -f moving-average.yaml
 ```
 
 And see the result with
 
 ```console
-iofogctl get microservices
+potctl get microservices
 
 MICROSERVICE	STATUS		AGENT		CONFIG		ROUTES		   VOLUMES		PORTS
 Sensors		    RUNNING		local-agent	{}		    moving-average

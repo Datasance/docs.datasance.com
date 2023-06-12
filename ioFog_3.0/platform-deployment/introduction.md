@@ -1,13 +1,13 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Deployed a local ECN first?</h3>
-  <p>We recommened going through the <a href=#/./ioFog_3.0/getting-started/quick-start-local>Quick Start Guide</a> before continuing on here. In this guide we also assume we are up and running with iofogctl, if that is not the case download and be at least marginally familiar with <a href=#/./ioFog_3.0/iofogctl/download>iofogctl</a>.</p>
+  <p>We recommened going through the <a href=#/./ioFog_3.0/getting-started/quick-start-local>Quick Start Guide</a> before continuing on here. In this guide we also assume we are up and running with potctl, if that is not the case download and be at least marginally familiar with <a href=#/./ioFog_3.0/potctl/download>potctl</a>.</p>
 </aside>
 
 # Introduction
 
 Edge Compute Networks ('ECNs') are complicated things. At a high level, they are composed of a Control Plane and a set of Agents.
 
-Setting up and managing an ECN out of an arbitrary set of remote hosts can seem like a daunting task. That's why we are going to use `iofogctl`. `iofogctl` is a CLI that simplifies the orchestration of ECNs as well as the deployment of microservices on those ECNs. In this guide, we will step through the process of creating a real, distributed ECN across a set of remote hosts.
+Setting up and managing an ECN out of an arbitrary set of remote hosts can seem like a daunting task. That's why we are going to use `potctl`. `potctl` is a CLI that simplifies the orchestration of ECNs as well as the deployment of microservices on those ECNs. In this guide, we will step through the process of creating a real, distributed ECN across a set of remote hosts.
 
 In this section, we will go through two deployment options of an ioFog ECN. The first option is a remote deployment on a standalone host. This deployment requires us to setup the network and prepare the Controller and Agent hosts for SSH access. The second option is a deployment onto a Kubernetes cluster. In this case, we also need to setup the network, but we only need to prepare the Agent hosts for SSH access.
 

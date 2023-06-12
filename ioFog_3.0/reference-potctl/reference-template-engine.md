@@ -33,7 +33,7 @@ The engine in the background is [liquidjs](https://liquidjs.com/index.html), to 
 
 ```yaml
 ---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application # What are we deploying
 metadata:
   name: edai-smartbuilding-rules-engine # Application name
@@ -258,7 +258,7 @@ name: '{{my-variable}}' # This will behave as expected
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-iofogctl/reference-template-engine.md"
+  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-potctl/reference-template-engine.md"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>

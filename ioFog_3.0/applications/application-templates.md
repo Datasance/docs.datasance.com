@@ -10,11 +10,11 @@ Currently the Application Template catalog comes in empty, so let's start by add
 
 ## Creating an Application template
 
-We can use `iofogctl` to create our own Application Templates. The YAML spec reference can be found [here](../ioFog_3.0/reference-iofogctl/reference-application-template).
+We can use `potctl` to create our own Application Templates. The YAML spec reference can be found [here](../ioFog_3.0/reference-potctl/reference-application-template).
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: ApplicationTemplate
 metadata:
   name: heartrate
@@ -61,20 +61,20 @@ spec:
               internal: 80
 
 " > /tmp/my-app-template.yaml
-iofogctl deploy -f /tmp/my-app-template.yaml
+potctl deploy -f /tmp/my-app-template.yaml
 ```
 
 ### Key notes
 
-- The application template leverage the power of [template parametric expressions](../ioFog_3.0/reference-iofogctl/reference-template-engine) to let you specify variables, which values will only be assigned when deploying the actual Application
-- The application part of the template has the exact same definition than any other [Application specification](../ioFog_3.0/reference-iofogctl/reference-application)
+- The application template leverage the power of [template parametric expressions](../ioFog_3.0/reference-potctl/reference-template-engine) to let you specify variables, which values will only be assigned when deploying the actual Application
+- The application part of the template has the exact same definition than any other [Application specification](../ioFog_3.0/reference-potctl/reference-application)
 
 ## Getting your catalog
 
 We can verify that our new Application Template was added to the Catalog:
 
 ```bash
-iofogctl get application-templates
+potctl get application-templates
 ```
 
 ```plain
@@ -86,7 +86,7 @@ Instead of specifying the entire Application each time, we can refer to the Appl
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application
 metadata:
   name: heartrate-demo
@@ -99,19 +99,19 @@ spec:
     - key: username
       value: Alex
 " > /tmp/hello-web-catalog.yaml
-iofogctl deploy microservice -f /tmp/hello-web-catalog.yaml
+potctl deploy microservice -f /tmp/hello-web-catalog.yaml
 ```
 
 Note that this YAML snippet assumes we have a running ECN in the current Namespace with an Agent called `my-agent-name`.
 
-We can check that the expected Application has been deployed using iofogctl
+We can check that the expected Application has been deployed using potctl
 
 ```bash
-iofogctl describe application heartrate-demo
+potctl describe application heartrate-demo
 ```
 
 ```plain
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application
 metadata:
   name: heartrate-demo

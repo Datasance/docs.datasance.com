@@ -10,10 +10,10 @@ The **config** for the container should look in the following way:
 {\"buffersize\":3,\"contentdataencoding\":\"utf8\",\"contextdataencoding\":\"utf8\",\"outputfields\":{\"publisher\":\"source\",\"contentdata\":\"temperature\",\"timestamp\":\"time\"}}
 ```
 
-Which translates to the following [YAML microservice file](../ioFog_3.0/reference-iofogctl/reference-application) :
+Which translates to the following [YAML microservice file](../ioFog_3.0/reference-potctl/reference-application) :
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Microservice
 metadata:
   name: json-rest-api
@@ -56,10 +56,10 @@ The **config** for the container should look in the following way:
 {\"citycode\":\"5391997\",\"apikey\":\"6141811a6136148a00133488eadff0fb\",\"frequency\":1000}
 ```
 
-Which translates to the following [YAML microservice file](../ioFog_3.0/reference-iofogctl/reference-application) :
+Which translates to the following [YAML microservice file](../ioFog_3.0/reference-potctl/reference-application) :
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Microservice
 metadata:
   name: open-weather-map

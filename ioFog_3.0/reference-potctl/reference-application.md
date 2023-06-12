@@ -1,12 +1,12 @@
 # Application YAML Specification
 
-`iofogctl` allows users to deploy sets of Microservices to Edge Compute Networks ('ECNs'). The various components of Microservices are specified within YAML files for `iofogctl` to consume.
+`potctl` allows users to deploy sets of Microservices to Edge Compute Networks ('ECNs'). The various components of Microservices are specified within YAML files for `potctl` to consume.
 
 An application is a set of Microservices working together to achieve one specific purpose.
 
-An application is defined by a YAML file. This file is passed as a parameter to the deploy command: `iofogctl deploy -f <path-to-yaml>`
+An application is defined by a YAML file. This file is passed as a parameter to the deploy command: `potctl deploy -f <path-to-yaml>`
 
-An application YAML file definition can be retrieved with the describe command: `iofogctl describe application <NAME> [-o <path-to-yaml>]`
+An application YAML file definition can be retrieved with the describe command: `potctl describe application <NAME> [-o <path-to-yaml>]`
 
 Don't panic if this seems like a lot to digest, the [microservice yaml definition](#microservices) is explained in more details further down.
 The main take away is that an application is defined by: a `name`, a set of `microservices` and a set of `routes`.
@@ -14,11 +14,11 @@ The main take away is that an application is defined by: a `name`, a set of `mic
 ## Deploying an application
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application # What are we deploying
 metadata:
   name: health-care-wearable # Application name
-  namespace: default # (Optional) iofogctl namespace to use
+  namespace: default # (Optional) potctl namespace to use
 
 # Specifications of the application
 spec:
@@ -80,16 +80,16 @@ spec:
 
 Microservices configuration and set up are defined using YAML files.
 
-Those YAML definitions can be used inside an application YAML file, or by themselves when deploying a microservice to an existing application: `iofogctl deploy microservice -f <path-to-microservice.yaml>`
+Those YAML definitions can be used inside an application YAML file, or by themselves when deploying a microservice to an existing application: `potctl deploy microservice -f <path-to-microservice.yaml>`
 
-A microservice YAML definition file can be retrieved using the describe command: `iofogctl describe microservice <NAME> [-o microservice.yaml]`
+A microservice YAML definition file can be retrieved using the describe command: `potctl describe microservice <NAME> [-o microservice.yaml]`
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Microservice # What are we deploying
 metadata:
   name: heart-rate-monitor # Microservice name
-  namespace: default # (Optional) iofogctl namespace to use
+  namespace: default # (Optional) potctl namespace to use
 
 # Specifications of the microservice
 spec:
@@ -198,11 +198,11 @@ spec:
 ## Using a template
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application # What are we deploying
 metadata:
   name: health-care-wearable # Application name
-  namespace: default # (Optional) iofogctl namespace to use
+  namespace: default # (Optional) potctl namespace to use
 
 # Specifications of the application
 spec:
@@ -222,7 +222,7 @@ spec:
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-iofogctl/reference-application.md"
+  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-potctl/reference-application.md"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>

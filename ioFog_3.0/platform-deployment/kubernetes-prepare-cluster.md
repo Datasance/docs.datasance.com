@@ -5,7 +5,7 @@
 
 # Prepare your Kubernetes Cluster
 
-Some components of an Edge Compute Network ('ECN') can be deployed on Kubernetes. These component include Controllers. `iofogctl` will also install ioFog Operator to assist in the Kubernetes deployed Control Plane. Resources for routing will also be deployed.
+Some components of an Edge Compute Network ('ECN') can be deployed on Kubernetes. These component include Controllers. `potctl` will also install ioFog Operator to assist in the Kubernetes deployed Control Plane. Resources for routing will also be deployed.
 
 The ioFog platform can be installed easily on a managed Kubernetes Cluster provided by e.g. AWS, GCP, or Azure. Minikube is supported as well.
 
@@ -15,11 +15,11 @@ Using lightweight Kubernetes implementations such as MicroK8s or K3s are not ful
 
 If we are familiar with `kubectl`, we will know that it relies on a configuration file typically found in `~/.kube/config` which contains credentials for it to connect to the Kubernetes API Server.
 
-`iofogctl` similarly relies on this configuration file. We need to make sure it is present on the host that we intend to use `iofogctl` from. The file can be saved anywhere on the host but it is recommended to keep it in `~/.kube/config` because all of this guide's examples assume it to be there.
+`potctl` similarly relies on this configuration file. We need to make sure it is present on the host that we intend to use `potctl` from. The file can be saved anywhere on the host but it is recommended to keep it in `~/.kube/config` because all of this guide's examples assume it to be there.
 
 ## RBAC
 
-In order for `iofogctl` or Helm to do its thing with our Kubernetes cluster, we will have to make sure we have the right [RBAC permissions](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
+In order for `potctl` or Helm to do its thing with our Kubernetes cluster, we will have to make sure we have the right [RBAC permissions](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
 
 The way we add these permissions will depend on our respective Kubernetes provider. Ultimately, we need the User Account associated with our `~/.kube/config` configuration file to have at least the following permissions:
 
@@ -51,7 +51,7 @@ gcloud container clusters get-credentials <NAME> --region <REGION>
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Where to go from here?</h3>
-  <p>Now that we have the cluster up, we need to deploy the Control Plane onto the cluster. There are two ways to do this, either using iofogctl, or Helm. To use iofogctl, go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-iofogctl">Kubernetes - Deploy Control Plane Using iofogctl</a>, or to use Helm, go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
+  <p>Now that we have the cluster up, we need to deploy the Control Plane onto the cluster. There are two ways to do this, either using potctl, or Helm. To use potctl, go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-potctl">Kubernetes - Deploy Control Plane Using potctl</a>, or to use Helm, go to <a href="#/./ioFog_3.0/platfomr-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
 </aside>
 
 <aside class="notifications note">

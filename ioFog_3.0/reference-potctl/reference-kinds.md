@@ -2,26 +2,26 @@
 
 ## Common Header YAML Specification
 
-The most important commands of `iofogctl` consume YAML files as input. A YAML file consists of one or more resources.
+The most important commands of `potctl` consume YAML files as input. A YAML file consists of one or more resources.
 
 Every resource contains a header section and a spec section. The header section contains fields common to all supported kinds.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: ControlPlane
 metadata:
   name: buffalo
-  namespace: default # Optional, defaults to value specified by iofogctl namespace flag
+  namespace: default # Optional, defaults to value specified by potctl namespace flag
 spec: ...
 ```
 
 | Field              | Description                                                                                                                                                                                                                                                                     |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| apiVersion         | ioFog YAML schema version. Currently `iofog.org/v2`                                                                                                                                                                                                                             |
+| apiVersion         | ioFog YAML schema version. Currently `datasance.com/v1`                                                                                                                                                                                                                             |
 | kind               | String representing what type of resource we want to deploy. The available values are `ControlPlane`, `KubernetesControlPlane`, `LocalControlPlane`, `Controller`, `Agent`, `LocalAgent`, `AgentConfig`, `Registry`, `CatalogItem`, `Application`, `Microservice` and `Volume`. |
 | metadata           | Object containing metadata about the resource                                                                                                                                                                                                                                   |
 | metadata.name      | User defined, unique identifier of the resource in its namespace.                                                                                                                                                                                                               |
-| metadata.namespace | Optional. Will force iofogctl to work in this specific namespace                                                                                                                                                                                                                |
+| metadata.namespace | Optional. Will force potctl to work in this specific namespace                                                                                                                                                                                                                |
 | spec               | Object containing the deployment specifications, different for each resource                                                                                                                                                                                                    |
 
 ## ControlPlane
@@ -29,7 +29,7 @@ spec: ...
 The `ControlPlane` kind specifies all the details required to deploy the ioFog Control Plane on a set of remote hosts.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: ControlPlane
 metadata:
   name: buffalo
@@ -49,14 +49,14 @@ spec:
         port: 22
 ```
 
-To learn more about the `ControlPlane` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
+To learn more about the `ControlPlane` kind, please see [potctl Platform YAML Specification](../ioFog_3.0/reference-potctl/reference-control-plane).
 
 ## KubernetesControlPlane
 
 The `KubernetesControlPlane` kind specifies all the details required to deploy the ioFog Control Plane on a Kubernetes cluster.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: KubernetesControlPlane
 metadata:
   name: buffalo
@@ -70,14 +70,14 @@ spec:
   config: ~/.kube/config
 ```
 
-To learn more about the `KubernetesControlPlane` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
+To learn more about the `KubernetesControlPlane` kind, please see [potctl Platform YAML Specification](../ioFog_3.0/reference-potctl/reference-control-plane).
 
 ## LocalControlPlane
 
 The `LocalControlPlane` kind specifies all the details required to deploy the ioFog Control Plane locally as a docker container.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: LocalControlPlane
 metadata:
   name: ecn
@@ -92,14 +92,14 @@ spec:
       image: iofog/controller:3.0.0
 ```
 
-To learn more about the `LocalControlPlane` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
+To learn more about the `LocalControlPlane` kind, please see [potctl Platform YAML Specification](../ioFog_3.0/reference-potctl/reference-control-plane).
 
 ## Controller
 
 We can expand a Remote Control Plane by deploying a new Controller via the `Controller` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Controller
 metadata:
   name: alpaca
@@ -112,14 +112,14 @@ spec:
     port: 22
 ```
 
-To learn more about the `Controller` kind, please see [Iofogctl Platform YAML Specification](../ioFog_3.0/reference-iofogctl/reference-control-plane).
+To learn more about the `Controller` kind, please see [potctl Platform YAML Specification](../ioFog_3.0/reference-potctl/reference-control-plane).
 
 ## Agent
 
 Once a Control Plane is set up, we can deploy Agents to remote hosts via the `Agent` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Agent
 metadata:
   name: meerkat
@@ -132,14 +132,14 @@ spec:
     port: 22
 ```
 
-To learn more about the `Agent` kind, please see [Iofogctl Agent YAML Specification](../ioFog_3.0/reference-iofogctl/reference-agent).
+To learn more about the `Agent` kind, please see [potctl Agent YAML Specification](../ioFog_3.0/reference-potctl/reference-agent).
 
 ## LocalAgent
 
 Once a Control Plane is set up, we can deploy Agents as a local container via the `LocalAgent` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: LocalAgent
 metadata:
   name: local
@@ -155,7 +155,7 @@ To learn more about the `LocalAgent` kind, please see the [Quick Start](../ioFog
 We can modify Agent behaviour dynamically via the `AgentConfig` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: AgentConfig
 metadata:
   name: agent-1 # ioFog Agent name
@@ -193,14 +193,14 @@ spec:
   availableDiskThreshold: 90
 ```
 
-To learn more about the `AgentConfig` kind, please see the [Agent management section](../ioFog_3.0/agent-management/agent-configuration) and [Iofogctl Agent YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent).
+To learn more about the `AgentConfig` kind, please see the [Agent management section](../ioFog_3.0/agent-management/agent-configuration) and [potctl Agent YAML specification](../ioFog_3.0/reference-potctl/reference-agent).
 
 ## CatalogItem
 
 Microservice Catalogs can be created via the `CatalogItem` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: CatalogItem
 metadata:
   name: my-multiplatform-microservice
@@ -213,14 +213,14 @@ spec:
   configExample: '{"key": "value"}'
 ```
 
-To learn more about the `CatalogItem` kind, please see [Iofogctl Catalog Item YAML specification](../ioFog_3.0/reference-iofogctl/reference-catalog).
+To learn more about the `CatalogItem` kind, please see [potctl Catalog Item YAML specification](../ioFog_3.0/reference-potctl/reference-catalog).
 
 ## Application
 
 A set of Microservices can be deployed via the `Application` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application
 metadata:
   name: health-care-wearable
@@ -267,14 +267,14 @@ spec:
       to: heart-rate-viewer
 ```
 
-To learn more about the `Application` kind, please see [Iofogctl Application YAML specification](../ioFog_3.0/reference-iofogctl/reference-application).
+To learn more about the `Application` kind, please see [potctl Application YAML specification](../ioFog_3.0/reference-potctl/reference-application).
 
 ## Microservice
 
 Individual Microservices can be deployed and configured via the `Microservice` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Microservice
 metadata:
   name: func-msvc
@@ -303,14 +303,14 @@ spec:
     data_label: Anonymous_Person_2
 ```
 
-To learn more about the `Microservice` kind, please see [Iofogctl Application YAML specification](../ioFog_3.0/reference-iofogctl/reference-application).
+To learn more about the `Microservice` kind, please see [potctl Application YAML specification](../ioFog_3.0/reference-potctl/reference-application).
 
 ## Volume
 
 Directories can be pushed to Agent hosts so that Microservice volume requirements are fulfilled via the `Volume` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Volume
 spec:
   name: secret
@@ -329,7 +329,7 @@ To learn more about the `Volume` kind, please see [Volume Management](../ioFog_3
 Private container image registries for Microservices can be set up via the `Registry` kind.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Registry
 spec:
   url:
@@ -344,7 +344,7 @@ To learn more about the `Registry` kind, please see [Registry and Catalog Manage
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-iofogctl/reference-kinds.md"
+  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-potctl/reference-kinds.md"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>

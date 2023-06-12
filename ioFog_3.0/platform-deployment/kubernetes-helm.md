@@ -1,7 +1,7 @@
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt="">Not interested in using Kubernetes?</h3>
   <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="#/./ioFog_3.0/platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
-  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use iofogctl instead, go to <a href="#/./ioFog_3.0/pltform-deployment/kubernetes-iofogctl"> Kubernetes - Deploy Control Plane Using iofogctl</a>.</p>
+  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use potctl instead, go to <a href="#/./ioFog_3.0/pltform-deployment/kubernetes-potctl"> Kubernetes - Deploy Control Plane Using potctl</a>.</p>
 </aside>
 
 # Kubernetes - Deploy Control Plane Using Helm
@@ -74,10 +74,10 @@ The following is a complete list of all user configurable properties for the ioF
 
 ### Connection to Installed ioFog
 
-Once the installation is complete, you will be able to connect to the ioFog Controller on K8s using [iofogctl](../iofogctl/introduction.html). Make sure the `--namespace` here matches the one used during `helm install` step, so `iofogctl` can find the correct ECN using your kubeconfig file.
+Once the installation is complete, you will be able to connect to the ioFog Controller on K8s using [potctl](../potctl/introduction.html). Make sure the `--namespace` here matches the one used during `helm install` step, so `potctl` can find the correct ECN using your kubeconfig file.
 
 ```bash
-iofogctl --namespace my-ns connect --kube ~/.kube/config --email user@domain.com --pass H23fkidf9hoibf2nlk
+potctl --namespace my-ns connect --kube ~/.kube/config --email user@domain.com --pass H23fkidf9hoibf2nlk
 ```
 
 ## Uninstall ioFog Stack

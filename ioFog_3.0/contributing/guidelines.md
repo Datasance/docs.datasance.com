@@ -12,7 +12,7 @@ We use different issue trackers for individual pieces of the ioFog community.
 
 - [Agent](https://github.com/ioFog/Agent/issues)
 - [Controller](https://github.com/ioFog/Controller/issues)
-- [iofogctl](https://github.com/eclipse-iofog/iofogctl/issues)
+- [potctl](https://github.com/eclipse-iofog/potctl/issues)
 - [Kubernetes Operator](https://github.com/eclipse-iofog/iofog-operator/issues)
 - [Port Manager](https://github.com/eclipse-iofog/port-manager/issues)
 - [iofog.org documentation](https://github.com/ioFog/iofog.org/issues) (this site)

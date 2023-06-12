@@ -2,18 +2,18 @@
 
 ## Microservice Updates
 
-We can modify Microservices through the same [Microservice kind](../ioFog_3.0/reference-iofogctl/reference-application) that we deploy them with.
+We can modify Microservices through the same [Microservice kind](../ioFog_3.0/reference-potctl/reference-application) that we deploy them with.
 
 To help us with this, a Microservice YAML spec of a deployed Microservice can be retrieved using the `describe` command:
 
 ```bash
-iofogctl describe microservice msvc-1 -o /tmp/msvc.yaml
+potctl describe microservice msvc-1 -o /tmp/msvc.yaml
 ```
 
 With the msvc.yaml file generated for us, we can make changes to the spec and run deploy again to make modifications to the existing Microservice.
 
 ```bash
-iofogctl deploy -f /tmp/msvc.yaml
+potctl deploy -f /tmp/msvc.yaml
 ```
 
 ## Microservice States
@@ -25,7 +25,7 @@ The Microservice could be in one of various states including starting, pulling, 
 We can view this status by running:
 
 ```bash
-iofogctl get microservices
+potctl get microservices
 ```
 
 ```plain

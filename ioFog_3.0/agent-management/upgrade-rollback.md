@@ -1,19 +1,19 @@
 # Agent Upgrade / Rollback
 
-`iofogctl` provides a means to upgrade your Agents to the latest version and rollback to the previous version following an upgrade.
+`potctl` provides a means to upgrade your Agents to the latest version and rollback to the previous version following an upgrade.
 
 To upgrade, run the following command:
 
 ```bash
-iofogctl upgrade agent agent-1
+potctl upgrade agent agent-1
 ```
 
-The Agent will spend a few minutes upgrading at this point. If the version doesn't change (e.g. via `iofogctl get agents`), then it is possible something went wrong. Review the contents of `/var/log/iofog-agent-upgrade.log` to find the output of the upgrade process on the Agent.
+The Agent will spend a few minutes upgrading at this point. If the version doesn't change (e.g. via `potctl get agents`), then it is possible something went wrong. Review the contents of `/var/log/iofog-agent-upgrade.log` to find the output of the upgrade process on the Agent.
 
 To revert the upgrade, run the rollback command:
 
 ```bash
-iofogctl rollback agent agent-1
+potctl rollback agent agent-1
 ```
 
 <aside class="notifications contribute">

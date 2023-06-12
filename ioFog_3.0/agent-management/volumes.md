@@ -2,10 +2,10 @@
 
 Often our Microservices will require some external data to be mounted into their container environments.
 
-With iofogctl, we can push directories to our Agents so that they can be mounted into Microservice containers as volumes. To do this, we can specify a Volume in YAML like so:
+With potctl, we can push directories to our Agents so that they can be mounted into Microservice containers as volumes. To do this, we can specify a Volume in YAML like so:
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Volume
 spec:
   name: secret
@@ -20,14 +20,14 @@ spec:
 To push the data to our Agents, we run:
 
 ```bash
-iofogctl deploy -f volume.yaml
+potctl deploy -f volume.yaml
 ```
 
 With the above example, the `/tmp/` directory and all of its subdirectories will be pushed to `/tmp/secrets/` in `agent-1` and `agent-2`.
 
-Once the Volume has been deployed, we can deploy Microservices that depend on it. The YAML specification for doing this can be found [here](../ioFog_3.0/reference-iofogctl/reference-application).
+Once the Volume has been deployed, we can deploy Microservices that depend on it. The YAML specification for doing this can be found [here](../ioFog_3.0/reference-potctl/reference-application).
 
-Volumes can be listed, described, and deleted like all other iofogctl resources.
+Volumes can be listed, described, and deleted like all other potctl resources.
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>

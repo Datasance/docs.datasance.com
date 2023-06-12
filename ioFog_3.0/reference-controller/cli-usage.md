@@ -1,6 +1,6 @@
 # Legacy Controller CLI Usage
 
-Please see iofogctl for current CLI usage: [iofogctl](../tools/iofogctl/introduction.html)
+Please see potctl for current CLI usage: [potctl](../tools/potctl/introduction.html)
 
 ```sh
 iofog-controller <command> <action> <options>
@@ -202,7 +202,7 @@ iofog-controller config <options>
 
 ## Config Locations
 
-Config files are located in project `src/config/<file>.json`. When installed using iofogctl resolves to `/opt/iofog/controller/lib/node_modules/iofogcontroller/src/config/`. There are 3 config files:
+Config files are located in project `src/config/<file>.json`. When installed using potctl resolves to `/opt/iofog/controller/lib/node_modules/iofogcontroller/src/config/`. There are 3 config files:
 
 #### default.json (general data that is used for default values)
 

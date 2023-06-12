@@ -30,7 +30,7 @@ Deploying such a configuration would result in port 5001 being opened on the Con
 The public address can be retrieved using:
 
 ```bash
-iofogctl describe microservice msvc-1
+potctl describe microservice msvc-1
 ```
 
 The outputted YAML will contain a `publicLink` key, with the value set to the URL of the public port.

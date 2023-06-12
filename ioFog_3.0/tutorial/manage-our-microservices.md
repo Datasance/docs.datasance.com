@@ -6,10 +6,10 @@ In this step of the tutorial we're ready to learn the basics of managing microse
 
 The Agent daemon runs microservices on our edge nodes locally, but it is controlled remotely by the Controller. Let's learn some of the most common Controller commands.
 
-This tutorial includes 3 microservices already running. We can view any configured microservices using `iofogctl`:
+This tutorial includes 3 microservices already running. We can view any configured microservices using `potctl`:
 
 ```console
-iofogctl get microservices
+potctl get microservices
 
 MICROSERVICE	STATUS		AGENT		CONFIG		ROUTES		VOLUMES		PORTS
 Sensors		    RUNNING		local-agent	{}		    Rest API
@@ -40,10 +40,10 @@ The Sensors and REST API microservices are generic. They are not hardcoded to ta
 
 To connect microservices together, the Controller has the concept of routes.
 
-Routes can be listed from the `iofogctl get routes` or `iofogctl describe route <name>` commands. We can see that a route has already been set up for us: the Sensors microservice has its destination (output) directed to the REST API microservice.
+Routes can be listed from the `potctl get routes` or `potctl describe route <name>` commands. We can see that a route has already been set up for us: the Sensors microservice has its destination (output) directed to the REST API microservice.
 
 ```console
-iofogctl get routes
+potctl get routes
 
 NAMESPACE
 default
@@ -54,9 +54,9 @@ sensor-to-rest  Sensors       Rest API
 ```
 
 ```console
-iofogctl describe route sensor-to-rest
+potctl describe route sensor-to-rest
 
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Route
 metadata:
   name: sensor-to-rest
@@ -67,7 +67,7 @@ spec:
   to: Rest API
 ```
 
-We'll discover later on how to create and remove routes using iofogctl.
+We'll discover later on how to create and remove routes using potctl.
 
 ## Create Our First Microservice
 

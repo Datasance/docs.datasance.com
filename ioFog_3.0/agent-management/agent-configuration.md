@@ -1,15 +1,15 @@
 # Agent Configuration
 
-`iofogctl` provides an `AgentConfig` resource for dynamic management of Agents.
+`potctl` provides an `AgentConfig` resource for dynamic management of Agents.
 
 `AgentConfig` is usually deployed after an `Agent` in order to modify its behaviour. Note that the `Agent` kind also contains configuration details in the same way that `AgentConfig` does which means that you can specify custom configuration of Agents at deploy-time.
 
-An Agent Configuration can be retrieved using `iofogctl describe agent-config <AGENT_NAME>`.
+An Agent Configuration can be retrieved using `potctl describe agent-config <AGENT_NAME>`.
 
-An Agent Configuration can be deployed using `iofogctl deploy -f agent-config.yaml`. The following is a sample of `AgentConfig` YAML content:
+An Agent Configuration can be deployed using `potctl deploy -f agent-config.yaml`. The following is a sample of `AgentConfig` YAML content:
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: AgentConfig
 metadata:
   name: agent-1 # ioFog Agent name
@@ -49,7 +49,7 @@ spec:
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Comprehensive AgentConfig reference</h3>
-  <p>A complete reference of AgentConfig kind is available in the relevant section in <a href= #/./ioFog_3.0/reference-iofogctl/reference-agent>iofogctl reference</a> documentation.</p>
+  <p>A complete reference of AgentConfig kind is available in the relevant section in <a href= #/./ioFog_3.0/reference-potctl/reference-agent>potctl reference</a> documentation.</p>
   
   <p>Details as to what the Agent configuration files look like on Agent hosts can be found on the <a href="#/./ioFog_3.0/reference-agent/configuration">Agent Reference - Configuration</a> page.</p>
 </aside>

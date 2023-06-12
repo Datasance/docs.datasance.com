@@ -1,10 +1,10 @@
 # What's New in ioFog 3.0.0?
 
-- [Template parametric expressions](../ioFog_3.0/reference-iofogctl/reference-template-engine) are now available.
+- [Template parametric expressions](../ioFog_3.0/reference-potctl/reference-template-engine) are now available.
 - [Application Templates](../ioFog_3.0/applications/application-templates) which simplify and improve management of your microservices.
 - [Edge Resources](../ioFog_3.0/agent-management/edge-resources), let your microservices know what their Agent is capable of.
-- [Agent Installation Plugins](../ioFog_3.0/platform-deployment/setup-your-agents) added to `iofogctl` .
-- [Commands for upgrade and rollback of Agents](../ioFog_3.0/agent-management/upgrade-rollback) added to `iofogctl`.
+- [Agent Installation Plugins](../ioFog_3.0/platform-deployment/setup-your-agents) added to `potctl` .
+- [Commands for upgrade and rollback of Agents](../ioFog_3.0/agent-management/upgrade-rollback) added to `potctl`.
 - [ECN Viewer](../ioFog_3.0/reference-controller/ecn-viewer) added to `Controller`.
 
 ## Template parametric expressions
@@ -13,7 +13,7 @@ Variables, filter and template "queries" can now be used as values for any field
 
 Those variables allow you to reference the same document, or any resource preexisting on your Controller, adding a lot of flexibility in your deployments.
 
-[Find out more](../ioFog_3.0/reference-iofogctl/reference-template-engine)!
+[Find out more](../ioFog_3.0/reference-potctl/reference-template-engine)!
 
 ## Application Templates
 
@@ -21,7 +21,7 @@ What if we need to deploy the same code on a lot of Agents? We would need to det
 
 Wouldn't it be nice to have a way to specify the skeleton (template) of an Application and then reuse the same template over an over again, only modifying a few variables? That's where the Controller Application Template catalog comes into play!
 
-[Find out more!](../ioFog_3.0/applications/application-templates) and check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-application-template)!
+[Find out more!](../ioFog_3.0/applications/application-templates) and check out the [YAML specification](../ioFog_3.0/reference-potctl/reference-application-template)!
 
 ## Edge Resources
 
@@ -33,9 +33,9 @@ Edge Resources are Digital Twins that allow you to define an interface for your 
 
 ## Agent Installation Plugins
 
-`iofogctl` can install ioFog Agent on a number of Linux distributions out of the box. However, the list of supported distributions is finite; in order to allow the community to add support for any host environment, `iofogctl` has been updated with the ability to run user-defined installation scripts for Agent and its dependancies.
+`potctl` can install ioFog Agent on a number of Linux distributions out of the box. However, the list of supported distributions is finite; in order to allow the community to add support for any host environment, `potctl` has been updated with the ability to run user-defined installation scripts for Agent and its dependancies.
 
-[Find out more!](../ioFog_3.0/platform-deployment/setup-your-agents) and check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent)!
+[Find out more!](../ioFog_3.0/platform-deployment/setup-your-agents) and check out the [YAML specification](../ioFog_3.0/reference-potctl/reference-agent)!
 
 ## ECN Viewer
 
@@ -44,7 +44,7 @@ It is available by default on the standard HTTP port of `Controller` (80).
 
 [Find out more!](../ioFog_3.0/reference-controller/ecn-viewer)
 
-[Find out more](../ioFog_3.0/platform-deployment/setup-your-agents.html) and check out the [YAML specification](../ioFog_3.0/reference-iofogctl/reference-agent)!
+[Find out more](../ioFog_3.0/platform-deployment/setup-your-agents.html) and check out the [YAML specification](../ioFog_3.0/reference-potctl/reference-agent)!
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>

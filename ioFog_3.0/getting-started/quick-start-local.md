@@ -10,61 +10,61 @@ In this guide we will:
 
 - `Docker 1.10+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
 
-#### Install iofogctl on Mac
+#### Install potctl on Mac
 
 Mac users can use Homebrew:
 
 ```bash
-brew tap eclipse-iofog/iofogctl
-brew install iofogctl@3.0
+brew tap eclipse-iofog/potctl
+brew install potctl@3.0
 ```
 
-#### Install iofogctl on Windows
+#### Install potctl on Windows
 
-The Windows binary can be downloaded from https://storage.googleapis.com/iofogctl/win/3.0/iofogctl.exe.
+The Windows binary can be downloaded from https://storage.googleapis.com/potctl/win/3.0/potctl.exe.
 
 ##### Prepare Windows
 
-In order to use `iofogctl` to deploy an ECN locally on Windows we will need to configure Docker to run Linux containers:
+In order to use `potctl` to deploy an ECN locally on Windows we will need to configure Docker to run Linux containers:
 
 - Install [docker desktop for windows](https://download.docker.com/win/stable/Docker%20Desktop%20Installer.exe)
 - Enable Hyper-V in Powershell `Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart`
 - Ensure that docker is running with [Linux containers mode](https://docs.docker.com/docker-for-windows/#switch-between-windows-and-linux-containers)
 
-#### Install iofogctl on Linux
+#### Install potctl on Linux
 
 The Debian package can be installed like so:
 
 ```bash
-curl https://packagecloud.io/install/repositories/iofog/iofogctl/script.deb.sh | sudo bash
-sudo apt-get install iofogctl=3.0.0-alpha1
+curl https://packagecloud.io/install/repositories/iofog/potctl/script.deb.sh | sudo bash
+sudo apt-get install potctl=3.0.0-alpha1
 ```
 
 And similarly, the RPM package can be installed like so:
 
 ```bash
-curl https://packagecloud.io/install/repositories/iofog/iofogctl/script.rpm.sh | sudo bash
-sudo yum install iofogctl-3.0.0-alpha1-1.x86_64
+curl https://packagecloud.io/install/repositories/iofog/potctl/script.rpm.sh | sudo bash
+sudo yum install potctl-3.0.0-alpha1-1.x86_64
 ```
 
-#### Verify iofogctl Installation
+#### Verify potctl Installation
 
-Run `iofogctl version` to verify we have successfully installed the CLI.
+Run `potctl version` to verify we have successfully installed the CLI.
 
 ## Deploy ioFog Locally
 
-We can use `iofogctl deploy` to install and provision ECN components. Here we will deploy a containerized ECN locally.
+We can use `potctl deploy` to install and provision ECN components. Here we will deploy a containerized ECN locally.
 
 <aside class="notifications note">
-  <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about iofogctl?</h3>
-  <p>We aren't going into detail about iofogctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full iofogctl documentation <a href="#/./ioFog_3.0/iofogctl/introduction">here</a>.</p>
+  <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about potctl?</h3>
+  <p>We aren't going into detail about potctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full potctl documentation <a href="#/./ioFog_3.0/potctl/introduction">here</a>.</p>
 </aside>
 
 Go ahead and paste the following commands into the terminal:
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: LocalControlPlane
 metadata:
   name: ecn
@@ -78,7 +78,7 @@ spec:
     container:
       image: iofog/controller:3.0.0
 ---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: LocalAgent
 metadata:
   name: local-agent
@@ -86,13 +86,13 @@ spec:
   container:
     image: iofog/agent:3.0.0
 " > /tmp/quick-start.yaml
-iofogctl deploy -f /tmp/quick-start.yaml
+potctl deploy -f /tmp/quick-start.yaml
 ```
 
 After the deployment has successfully completed, we can verify the resources we specified in the YAML file are running on our local machine.
 
 ```bash
-iofogctl get all
+potctl get all
 ```
 
 Which should output something similar to:
@@ -144,7 +144,7 @@ Now that our local ECN is up, lets put it to use. The following commands will de
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application
 metadata:
   name: health-care-wearable
@@ -186,23 +186,23 @@ spec:
   - name: monitor-to-viewer
     from: heart-rate-monitor
     to: heart-rate-viewer" > /tmp/quick-start-app.yaml
-iofogctl deploy -f /tmp/quick-start-app.yaml
+potctl deploy -f /tmp/quick-start-app.yaml
 ```
 
 This deploys two microservices: `heart-rate-monitor` and `heart-rate-viewer`. The former generates mock heart rate data that would normally be generated with a physical heart monitoring device, and the latter is a web application that offers a live visualisation of the generated data.
 
-After `iofogctl deploy -f /tmp/quick-start-app.yaml` has completed, the agent will have to download each microservice image and start them.
+After `potctl deploy -f /tmp/quick-start-app.yaml` has completed, the agent will have to download each microservice image and start them.
 
 You can follow the progress by running the command:
 
 ```bash
-watch iofogctl get microservices
+watch potctl get microservices
 ```
 
 Which will output something similar to:
 
 ```plain
-Every 2.0s: iofogctl get microservices                                                                                                                     Nehas-MacBook-Pro.local: Tue Apr  7 11:18:43 2020
+Every 2.0s: potctl get microservices                                                                                                                     Nehas-MacBook-Pro.local: Tue Apr  7 11:18:43 2020
 
 NAMESPACE
 default
@@ -219,7 +219,7 @@ Once both microservice status are 'RUNNING', the microservices have started. We 
 To remove our ECN and any microservices deployed on it, we can run the following command:
 
 ```bash
-iofogctl delete all
+potctl delete all
 ```
 
 ## Next Steps

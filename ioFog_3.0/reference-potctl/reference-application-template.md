@@ -1,13 +1,13 @@
 # Application Template YAML Specification
 
-In order to simplify the management and deployment of distributed applications, `iofogctl` provides the `ApplicationTemplate` kind.
+In order to simplify the management and deployment of distributed applications, `potctl` provides the `ApplicationTemplate` kind.
 
 Application Templates allow users to specify an Application once and deploy it many times with different variables. Application Templates do this by allowing users to create Template Variables which can be modified every time an Application is deployed.
 
-To deploy Applications from a Template, first an Application Template must be deployed through `iofogctl deploy -f template.yaml`. An Application Template YAML spec contains an Application spec with Templated Variables.
+To deploy Applications from a Template, first an Application Template must be deployed through `potctl deploy -f template.yaml`. An Application Template YAML spec contains an Application spec with Templated Variables.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: ApplicationTemplate
 metadata:
   name: my-template
@@ -42,7 +42,7 @@ spec:
 Once an Application Template has been created, the following Application YAML can be used to deploy an Application from the Template with the requisite variables specified:
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Application
 metadata:
   name: my-app
@@ -64,7 +64,7 @@ spec:
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/2/reference-iofogctl/reference-application.md"
+  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/2/reference-potctl/reference-application.md"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>

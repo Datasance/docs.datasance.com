@@ -3,7 +3,7 @@
 Agents are components of an ECN which run on edge nodes. They communicate with Controllers to allow your edge nodes to host Microservices.
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: Agent
 metadata:
   name: meerkat
@@ -61,15 +61,15 @@ The following fields are necessary for every Agent YAML specification.
 
 | Field       | Description                                                                                                                                                         |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name        | User-defined unique identifier of Agent instance within an iofogctl namespace. Must start and end with lowercase alphanumeric character. Can include '-' character. |
-| host        | Hostname of remote host that iofogctl must SSH into to install Agent service.                                                                                       |
-| ssh.user    | Username of remote host that iofogctl must SSH into to install Agent service.                                                                                       |
-| ssh.keyFile | Path to private SSH key that iofogctl must use to SSH into remote host to install Agent service.                                                                    |
+| name        | User-defined unique identifier of Agent instance within an potctl namespace. Must start and end with lowercase alphanumeric character. Can include '-' character. |
+| host        | Hostname of remote host that potctl must SSH into to install Agent service.                                                                                       |
+| ssh.user    | Username of remote host that potctl must SSH into to install Agent service.                                                                                       |
+| ssh.keyFile | Path to private SSH key that potctl must use to SSH into remote host to install Agent service.                                                                    |
 | ssh.port    | Port to use with SSH. Optional (default: 22).                                                                                                                       |
 
 #### Installation Plugin Fields
 
-Agents can be specified to require user-defined installation scripts to be executed instead of the default `iofogctl` installation procedures.
+Agents can be specified to require user-defined installation scripts to be executed instead of the default `potctl` installation procedures.
 
 Custom installation scripts are specified through the optional `scripts` field in the Agent YAML.
 
@@ -127,12 +127,12 @@ Configuration details are specified through the optional `config` field in the A
 
 Agent Configuration YAML files let you configure an ioFog Agent provisioned with your Controller. You can use Agent Configuration to modify the behaviour of an Agent after it is deployed.
 
-An Agent Configuration can be retrieved using `iofogctl describe agent-config <AGENT_NAME>`
+An Agent Configuration can be retrieved using `potctl describe agent-config <AGENT_NAME>`
 
-An Agent Configuration can be deployed using `iofogctl deploy -f agent-config.yaml`
+An Agent Configuration can be deployed using `potctl deploy -f agent-config.yaml`
 
 ```yaml
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: AgentConfig
 metadata:
   name: agent-1 # ioFog Agent name
@@ -172,7 +172,7 @@ spec:
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-iofogctl/reference-agent.md"
+  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-potctl/reference-agent.md"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>

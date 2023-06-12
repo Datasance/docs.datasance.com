@@ -23,9 +23,9 @@
   * [Introduction](./ioFog_3.0/platform-deployment/introduction)
   * [Prepare Network](./ioFog_3.0/platform-deployment/prepare-your-network)
   * [Prepare Remote Host](./ioFog_3.0/platform-deployment/prepare-your-remote-hosts)
-  * [Remote Host - Deploy Control Plane Using iofogctl](./ioFog_3.0/platform-deployment/remote-control-plane)
+  * [Remote Host - Deploy Control Plane Using potctl](./ioFog_3.0/platform-deployment/remote-control-plane)
   * [Kubernetes - Prepare A Cluster](./ioFog_3.0/platform-deployment/kubernetes-prepare-cluster)
-  * [Kubernetes-Deploy Control Plane Using iofogctl](./ioFog_3.0/platform-deployment/kubernetes-iofogctl)
+  * [Kubernetes-Deploy Control Plane Using potctl](./ioFog_3.0/platform-deployment/kubernetes-potctl)
   * [Kubernetes - Deploy Control Plane Using Helm](./ioFog_3.0/platform-deployment/kubernetes-helm)
   * [Setup Agents](./ioFog_3.0/platform-deployment/setup-your-agents)
 
@@ -59,17 +59,17 @@
   * [Application Templates](./ioFog_3.0/applications/application-templates)
   * [Microservice Logs](./ioFog_3.0/applications/microservice-logs)
 
-* Reference - iofogctl
-  * [Kind of Resources](./ioFog_3.0/reference-iofogctl/reference-kinds)
-  * [Control Plane YAML Specification](./ioFog_3.0/reference-iofogctl/reference-control-plane)
-  * [Agent YAML Specification](./ioFog_3.0/reference-iofogctl/reference-agent)
-  * [Application YAML Specification](./ioFog_3.0/reference-iofogctl/reference-application)
-  * [Application Template YAML Specification](./ioFog_3.0/reference-iofogctl/reference-application-template)
-  * [Route YAML Specification](./ioFog_3.0/reference-iofogctl/reference-route)
-  * [Catalog Item YAML Specification](./ioFog_3.0/reference-iofogctl/reference-catalog)
-  * [Registry YAML Specification](./ioFog_3.0/reference-iofogctl/reference-registry)
-  * [Edge Resource YAML Specification](./ioFog_3.0/reference-iofogctl/reference-edge-resources)
-  * [Template Engine for ioFog YAML Specification](./ioFog_3.0/reference-iofogctl/reference-template-engine)
+* Reference - potctl
+  * [Kind of Resources](./ioFog_3.0/reference-potctl/reference-kinds)
+  * [Control Plane YAML Specification](./ioFog_3.0/reference-potctl/reference-control-plane)
+  * [Agent YAML Specification](./ioFog_3.0/reference-potctl/reference-agent)
+  * [Application YAML Specification](./ioFog_3.0/reference-potctl/reference-application)
+  * [Application Template YAML Specification](./ioFog_3.0/reference-potctl/reference-application-template)
+  * [Route YAML Specification](./ioFog_3.0/reference-potctl/reference-route)
+  * [Catalog Item YAML Specification](./ioFog_3.0/reference-potctl/reference-catalog)
+  * [Registry YAML Specification](./ioFog_3.0/reference-potctl/reference-registry)
+  * [Edge Resource YAML Specification](./ioFog_3.0/reference-potctl/reference-edge-resources)
+  * [Template Engine for ioFog YAML Specification](./ioFog_3.0/reference-potctl/reference-template-engine)
 
 * Reference - Controller
   * [Overview](./ioFog_3.0/reference-controller/overview)

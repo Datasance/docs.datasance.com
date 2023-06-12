@@ -20,7 +20,7 @@ It is also possible to have a Controller hidden behind HTTP Ingress service, sin
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about ioFog Controller?</h3>
   <p>If you want to learn advanced features, how to configure the Controller or how to directly use it, go to <a href="#/./ioFog_3.0/reference-controller/overview">Controller reference documentation</a>.</p>
-  <p>To deploy and use the Controller via iofogctl, go to <a href="#/./ioFog_3.0/platform-deployment/introduction">platform deployment documentation</a>.</p>
+  <p>To deploy and use the Controller via potctl, go to <a href="#/./ioFog_3.0/platform-deployment/introduction">platform deployment documentation</a>.</p>
   <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/Controller">eclipse-iofog/Controller github repository</a>.</p>
 </aside>
 
@@ -37,7 +37,7 @@ While the Agent daemon itself has a CLI, after setting things up a majority of y
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about ioFog Agent?</h3>
   <p>If you want to learn advanced features, how to configure the Agent or how to directly use it, go to <a href="#/./ioFog_3.0/reference-agent/overview">Agent reference documentation</a>.</p>
-  <p>To deploy and use the Agent via iofogctl, go to <a href="#/./ioFog_3.0/agent-management/introduction">Agent management documentation</a>.</p>
+  <p>To deploy and use the Agent via potctl, go to <a href="#/./ioFog_3.0/agent-management/introduction">Agent management documentation</a>.</p>
   <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/Agent">eclipse-iofog/Agent github repository</a>.</p>
 </aside>
 
@@ -108,7 +108,7 @@ Next, we are going to transition to the Kubernetes world and show how ECNs look 
 
 This is the ioFog Operator for Kubernetes, which takes care of managing Kubernetes Custom Resources. In ioFog, we support Custom Resource Definitions for a control plane and for applications.
 
-When deploying ioFog on Kubernetes using iofogctl or Helm, the ioFog Operator would be the first things deployed in the namespace. When a new control plane Custom Resource is then created, ioFog Operator picks up on that and deploys an ECN in the same Kubernetes namespace.
+When deploying ioFog on Kubernetes using potctl or Helm, the ioFog Operator would be the first things deployed in the namespace. When a new control plane Custom Resource is then created, ioFog Operator picks up on that and deploys an ECN in the same Kubernetes namespace.
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about ioFog Operator?</h3>
@@ -137,22 +137,22 @@ Note that there is currently no way in ioFog to schedule microservices on the Ku
 
 And that should be it for the basic ioFog architecture. There are of course more ways ioFog can be deployed in production environments, however these are power user features and the available options are documented in the rest of the documentation.
 
-## iofogctl
+## potctl
 
-So far we have assumed that control over ioFog is only handled using Controller's REST API and both Controller's and Agent's CLI. In reality, most users will use exclusively `iofogctl`, a multi platform CLI tool designed to manage ECNs and Agent deployments.
+So far we have assumed that control over ioFog is only handled using Controller's REST API and both Controller's and Agent's CLI. In reality, most users will use exclusively `potctl`, a multi platform CLI tool designed to manage ECNs and Agent deployments.
 
-Iofogctl works by interacting directly with Controller using REST API, with Agents over SSH, or with Kubernetes clusters using `kubeconfig` access configuration, similarly to how `kubectl` handles connections to Kubernetes clusters.
+potctl works by interacting directly with Controller using REST API, with Agents over SSH, or with Kubernetes clusters using `kubeconfig` access configuration, similarly to how `kubectl` handles connections to Kubernetes clusters.
 
 <figure>
-  <img src="/images/docs/iofog-architecture-iofogctl.png" alt="">
-  <figcaption>Iofogctl interacts with hosts via SSH or with Kubernetes to install ioFog components, and then directly with Controller to manage ECNs.</figcaption>
+  <img src="/images/docs/iofog-architecture-potctl.png" alt="">
+  <figcaption>potctl interacts with hosts via SSH or with Kubernetes to install ioFog components, and then directly with Controller to manage ECNs.</figcaption>
 </figure>
 
 <aside class="notifications note">
-  <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about iofogctl?</h3>
-  You will be working with iofogctl for majority of the documentation. To go through the basic introduction to the tool, see <a href="#/./ioFog_3.0/iofogctl/introduction">basic iofogctl documentation</a>.
-  <p>If you want to check detailed reference of all iofogctl features, go to <a href="#/./ioFog_3.0/reference-iofogctl/reference-kinds">iofogctl reference documentation</a>.</p>
-  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/iofogctl">eclipse-iofog/iofogctl github repository</a>.</p>
+  <h3><img src="/images/icos/ico-note.svg" alt="">Want to know more about potctl?</h3>
+  You will be working with potctl for majority of the documentation. To go through the basic introduction to the tool, see <a href="#/./ioFog_3.0/potctl/introduction">basic potctl documentation</a>.
+  <p>If you want to check detailed reference of all potctl features, go to <a href="#/./ioFog_3.0/reference-potctl/reference-kinds">potctl reference documentation</a>.</p>
+  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/potctl">eclipse-iofog/potctl github repository</a>.</p>
 </aside>
 
 <aside class="notifications tip">

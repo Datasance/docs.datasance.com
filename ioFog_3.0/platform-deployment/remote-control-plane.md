@@ -11,7 +11,7 @@ In this guide, our Control Plane will deploy a single Controller instance on a r
 
 <aside class="notifications note">
   <h3><img src="/images/icos/ico-note.svg" alt="">We use YAML to define ioFog resources</h3>
-  <p>The following procedures will define resources in YAML for iofogctl to consume. Specification of those YAML resources can be found <a href= #/./ioFog_3.0/reference-iofogctl/reference-control-plane>here</a>.</p>
+  <p>The following procedures will define resources in YAML for potctl to consume. Specification of those YAML resources can be found <a href= #/./ioFog_3.0/reference-potctl/reference-control-plane>here</a>.</p>
 </aside>
 
 ## Deploy a Control Plane on a Remote Host
@@ -20,7 +20,7 @@ Create a template of controlplane.yaml like so:
 
 ```bash
 echo "---
-apiVersion: iofog.org/v2
+apiVersion: datasance.com/v1
 kind: ControlPlane
 metadata:
   name: albatros
@@ -43,7 +43,7 @@ Make sure to edit the `host`, `ssh.user`, and `ssh.keyFile` fields to correspond
 Once we have edited the fields to our liking, go ahead and run:
 
 ```bash
-iofogctl deploy -f /tmp/controlplane.yaml
+potctl deploy -f /tmp/controlplane.yaml
 ```
 
 ## Verify the Deployment
@@ -51,15 +51,15 @@ iofogctl deploy -f /tmp/controlplane.yaml
 We can use the following commands to verify the Control Plane is up and running:
 
 ```bash
-iofogctl get controllers
+potctl get controllers
 ```
 
 ```bash
-iofogctl describe controller alpaca-1
+potctl describe controller alpaca-1
 ```
 
 ```bash
-iofogctl describe controlplane
+potctl describe controlplane
 ```
 
 <aside class="notifications tip">

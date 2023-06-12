@@ -19,7 +19,7 @@ To make ioFog a more fully featured platform we are interested in bringing the p
 ## How does it work?
 
 An Edge resource is meant to be a Digital Twin of a piece of hardware (or software) that is available to your
-Microservices running on your ioFog Agents. Using `iofogctl` (or the Controller REST API directly), you can define
+Microservices running on your ioFog Agents. Using `potctl` (or the Controller REST API directly), you can define
 `Edge Resources` and `attach` those resources
 to 1..N ioFog Agents.
 
@@ -38,12 +38,12 @@ Edge Resources are uniquely identified by a composite of their `name` and their 
 
 ## Creating an Edge Resource
 
-We can use `iofogctl` to create our own Edge Resources. The YAML spec reference can be found
-[here](../ioFog_3.0/reference-iofogctl/reference-edge-resources).
+We can use `potctl` to create our own Edge Resources. The YAML spec reference can be found
+[here](../ioFog_3.0/reference-potctl/reference-edge-resources).
 
 ```bash
 echo "---
-apiVersion: iofog.org/v3
+apiVersion: datasance.com/v1
 kind: EdgeResource
 metadata:
   name: smart-door
@@ -68,15 +68,15 @@ spec:
     name: Smart Door
     icon: accessible-forward
 " > /tmp/my-edge-resource.yaml
-iofogctl deploy -f /tmp/my-edge-resource.yaml
+potctl deploy -f /tmp/my-edge-resource.yaml
 ```
 
 ## Listing / Describing Edge Resources
 
-We can use `iofogctl` to list our Edge resources
+We can use `potctl` to list our Edge resources
 
 ```bash
-$> iofogctl get edge-resources
+$> potctl get edge-resources
 
 EDGE RESOURCE   PROTOCOL    VERSIONS
 smart-door      https       v1.0.0
@@ -85,9 +85,9 @@ smart-door      https       v1.0.0
 Or, if we need more details:
 
 ```bash
-$> iofogctl describe edge-resource smart-door v1.0.0
+$> potctl describe edge-resource smart-door v1.0.0
 
-apiVersion: iofog.org/v3
+apiVersion: datasance.com/v1
 kind: EdgeResource
 metadata:
   name: smart-door
@@ -119,15 +119,15 @@ spec:
 
 ## Attaching / Detaching Edge Resources
 
-We can use `iofogctl` to attach or detach Edge resources from ioFog Agents
+We can use `potctl` to attach or detach Edge resources from ioFog Agents
 
 ```bash
-$> iofogctl attach edge-resource smart-door v1.0.0 my-agent-name
+$> potctl attach edge-resource smart-door v1.0.0 my-agent-name
 ✔ Successfully attached EdgeResource smart-door/v1.0.0 to Agent my-agent-name
 ```
 
 ```bash
-$> iofogctl detach edge-resource smart-door v1.0.0 my-agent-name
+$> potctl detach edge-resource smart-door v1.0.0 my-agent-name
 ✔ Successfully detached smart-door/v1.0.0
 ```
 

@@ -66,10 +66,10 @@ Please refer to the [catalog overview](../ioFog_3.0/applications/microservice-re
 
 ## Diagnostics output is the detailed logs about system functionality.
 
-You can retrieve the console logs of any microservice by running `iofogctl logs microservice MICROSERVICE_NAME`
+You can retrieve the console logs of any microservice by running `potctl logs microservice MICROSERVICE_NAME`
 
 ```console
-$ iofogctl logs microservice Diagnostic
+$ potctl logs microservice Diagnostic
 ```
 
 <aside class="notifications contribute">

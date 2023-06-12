@@ -19,7 +19,7 @@ Supported operating systems:
 Required tools:
 
 - `Docker 1.10+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
-- `iofogctl 3.0.0+`: CLI tool and a one-stop-shop for all your ioFog needs. ([installation instructions](..ioFog_3.0/getting-started/quick-start-local))
+- `potctl 3.0.0+`: CLI tool and a one-stop-shop for all your ioFog needs. ([installation instructions](..ioFog_3.0/getting-started/quick-start-local))
 
 Make sure to follow the Docker [post-installation instructions](https://docs.docker.com/install/linux/linux-postinstall/) so that the Docker daemon can work without `sudo`. Otherwise, the commands in this guide will not work.
 
@@ -49,7 +49,7 @@ We can optionally verify the ioFog stack is provisioned correctly. The automated
 ```
 
 <aside class="notifications note">
-  <p>Under the hood, those shell scripts are using iofogctl and YAML files to set up your environment. You'll get to use iofogctl directly in the next few sections. Impatient to know more? Dive directly into its <a href="#/./ioFog_3.0//iofogctl/introduction" target="_blank">documentation</a>.</p>
+  <p>Under the hood, those shell scripts are using potctl and YAML files to set up your environment. You'll get to use potctl directly in the next few sections. Impatient to know more? Dive directly into its <a href="#/./ioFog_3.0//potctl/introduction" target="_blank">documentation</a>.</p>
 </aside>
 
 ## Get To Know ioFog

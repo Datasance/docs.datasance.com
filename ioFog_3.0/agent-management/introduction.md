@@ -7,7 +7,7 @@
 
 Once we have deployed an ioFog Control Plane and some set of Agents, there are certain day-to-day operations we will want to perform on our Agents.
 
-This section will canvas those operations with the use of iofogctl.
+This section will canvas those operations with the use of potctl.
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>

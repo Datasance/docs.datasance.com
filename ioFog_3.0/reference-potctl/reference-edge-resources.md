@@ -1,12 +1,12 @@
 # Edge Resources YAML Specification
 
-`iofogctl` allows users to manage a Controller's list of Edge Resources. To learn more about Edge Resources,
+`potctl` allows users to manage a Controller's list of Edge Resources. To learn more about Edge Resources,
 please see [here](../ioFog_3.0/agent-management/edge-resources).
 
 The Edge Resource is defined as follows:
 
 ```yaml
-apiVersion: iofog.org/v3
+apiVersion: datasance.com/v1
 kind: EdgeResource
 metadata:
   name: smart-door
@@ -61,7 +61,7 @@ spec:
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-iofogctl/reference-edge-resources.md"
+  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-potctl/reference-edge-resources.md"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>

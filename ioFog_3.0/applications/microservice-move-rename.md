@@ -2,12 +2,12 @@
 
 ## Move Microservices
 
-We can move a deployed Microservice between Agents within the same iofogctl Namespace. Remember that a Namespace corresponds to a single Edge Compute Network.
+We can move a deployed Microservice between Agents within the same potctl Namespace. Remember that a Namespace corresponds to a single Edge Compute Network.
 
 If we wanted to move `msvc-1` to `agent-2` we could run:
 
 ```bash
-iofogctl move microservice msvc-1 agent-2
+potctl move microservice msvc-1 agent-2
 ```
 
 ## Rename Microservices
@@ -17,7 +17,7 @@ We can change Microservice names after they have been deployed.
 If we wanted to rename `msvc-1` to `new-msvc-1` we could run:
 
 ```plain
-iofogctl rename msvc-1 new-msvc-1
+potctl rename msvc-1 new-msvc-1
 ```
 
 Microservice names must be unique within a single Namespace. The above command would fail if `new-msvc-1` already existed in the corresponding Namespace.
