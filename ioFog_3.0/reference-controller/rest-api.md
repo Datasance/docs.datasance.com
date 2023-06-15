@@ -1,16 +1,6 @@
 # Controller REST API Reference
-[swagger](http://petstore.swagger.io/v2/swagger.json)
+[swagger](./swagger/3.0.0/controller/openapi.json)
 
-
-<swagger-ui>
-  /swagger/3.0.0/controller/swagger.yaml
-</swagger-ui>
-
-<swagger-ui>
-  /swagger/3.0.0/controller/openapi.json
-</swagger-ui>
-
-[swagger](http://iofog.staging.edgeworx.io/swagger/3.0.0/controller/swagger.json)
 
 
 <aside class="notifications contribute">
