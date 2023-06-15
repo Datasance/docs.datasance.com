@@ -1,4 +1,6 @@
 # Controller REST API Reference
+[swagger](http://petstore.swagger.io/v2/swagger.json)
+
 
 <swagger-ui>
   /swagger/3.0.0/controller/swagger.yaml
