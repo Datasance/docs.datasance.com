@@ -1,0 +1,37 @@
+{
+    "name": "docs.datasance.com",
+    "version": "1.0.2",
+    "description": "Datasance Documentation.",
+    "main": "dist/docsify-swagger.min.js",
+    "unpkg": "dist/docsify-swagger.min.js",
+    "scripts": {
+      "build": "webpack --config webpack.config.js",
+      "dev": "webpack-dev-server --config webpack.dev.config.js",
+      "publish": "yarn build && yarn publish --no-git-tag-version --no-push"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+ssh://git@github.com/datasance/docs.datasance.com.git"
+    },
+    "files": [
+      "src",
+      "dist"
+    ],
+    "keywords": [
+      "docsify",
+      "plugin",
+      "swagger"
+    ],
+    "author": "Emirhan Durmus",
+    "license": "MIT",
+    "devDependencies": {
+      "html-webpack-plugin": "4.2.0",
+      "terser-webpack-plugin": "2.3.5",
+      "webpack": "4.42.1",
+      "webpack-cli": "3.3.6",
+      "webpack-dev-server": "3.10.3"
+    },
+    "dependencies": {
+      "extend": "3.0.2"
+    }
+  }

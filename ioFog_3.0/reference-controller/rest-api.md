@@ -1,5 +1,5 @@
 # Controller REST API Reference
-[swagger](/docs.datasance.com/swagger/3.0.0/controller/openapi.json)
+[swagger](/src/swagger/3.0.0/controller/openapi.json)
 
 
 
