@@ -1,5 +1,5 @@
 # Controller REST API Reference
-[swagger](https://petstore.swagger.io/v2/swagger.json)
+[swagger]()
 
 
 
