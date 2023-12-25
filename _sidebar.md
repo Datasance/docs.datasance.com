@@ -74,7 +74,7 @@
 * Reference - Controller
   * [Overview](./ioFog_3.0/reference-controller/overview)
   * [Legacy Controller CLI Usage](./ioFog_3.0/reference-controller/cli-usage)
-  * [Controller REST API Reference](./ioFog_3.0/reference-controller/rest-api)
+  * [Controller REST API Reference](http://api.datasance.com/)
   * [ECN Viewer](./ioFog_3.0/reference-controller/ecn-viewer)
 
 * Reference - Agent
