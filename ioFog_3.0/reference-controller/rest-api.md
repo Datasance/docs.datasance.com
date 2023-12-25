@@ -1,11 +1,11 @@
 # Controller REST API Reference
-[swagger](http://iofog.staging.edgeworx.io/swagger/3.0.0/controller/swagger.yaml)
+[swagger]()
 
 
 
 <aside class="notifications contribute">
   <h3><img src="/images/icos/ico-github.svg" alt="">See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-controller/rest-api.md"
+  <a href="http://api.datasance.com"
     target="_blank">
     <p>Edit this page on Github!</p>
   </a>
