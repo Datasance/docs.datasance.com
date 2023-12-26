@@ -13,9 +13,6 @@ Datasance is focusing on to build ecosystem with solution partners to build Web3
 
 Datasance PoT can be deployed anywhere that data is generated and operation is crucial. Industry 4.0, Samrt Cities, Intelligent Transport & Logistics, Healthcare, Finance & Retail, there are millions of use case scenarios that can be build with Datasance PoT. 
 
-![Datasance PoT](./images/PoT3.png)
+![Datasance PoT](./images/PoT4.png)
 
-![Datasance PoT](./images/PoT1.png)
-
-![Datasance PoT](./images/PoT2.png) 
 
