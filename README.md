@@ -4,7 +4,7 @@ By leveraging the power of Open Source communities, Datasance PoT brings Hardwar
 
 Datasance is focusing on to build ecosystem with solution partners to build Web3.0 and Digital Twin enabled industries for more efficient,  sustanaible and carbon neutral future.
 
-![Introduction to Datasance PoT](./images/datasance_PoT.png)
+![Introduction to Datasance PoT]
 
 <aside class="notifications tip">
   <h3><img src="/images/icos/ico-tip.svg" alt=""> Datasance PoT is based on Eclipse Foundation project called ioFog</h3>
