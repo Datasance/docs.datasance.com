@@ -23,46 +23,46 @@
           {
             "title": "Quick Start With Local Deployment",
             "entry": "./getting-started/quick-start-local.md",
-            "description": "Getting started with iofog, iofogctl by deploying an ioFog local stack."
+            "description": "Getting started with iofog, potctl by deploying an ioFog local stack."
           },
           {
             "title": "Quick Start On Minikube and Vagrant",
             "entry": "./getting-started/quick-start-minikube.md",
-            "description": "Getting started with iofog, iofogctl by deploying an ioFog local stack on Kubernetes minikube."
+            "description": "Getting started with iofog, potctl by deploying an ioFog local stack on Kubernetes minikube."
           }
         ]
       },
       {
-        "title": "iofogctl",
+        "title": "potctl",
         "subMenus": [
           {
-            "title": "iofogctl - ioFog Unified Command Line Interface",
-            "entry": "./iofogctl/introduction.md",
-            "description": "Getting started with iofogctl. Overview of available commands like deploy, connect, namespaces, update, delete"
+            "title": "potctl - ioFog Unified Command Line Interface",
+            "entry": "./potctl/introduction.md",
+            "description": "Getting started with potctl. Overview of available commands like deploy, connect, namespaces, update, delete"
           },
           {
-            "title": "Download And Install iofogctl",
-            "entry": "./iofogctl/download.md",
+            "title": "Download And Install potctl",
+            "entry": "./potctl/download.md",
             "description": ""
           },
           {
-            "title": "Getting Familiar With iofogctl",
-            "entry": "./iofogctl/getting-familiar.md",
+            "title": "Getting Familiar With potctl",
+            "entry": "./potctl/getting-familiar.md",
             "description": ""
           },
           {
-            "title": "iofogctl Resource Management",
-            "entry": "./iofogctl/resource-management.md",
+            "title": "potctl Resource Management",
+            "entry": "./potctl/resource-management.md",
             "description": ""
           },
           {
             "title": "Connecting To Existing Edge Compute Networks",
-            "entry": "./iofogctl/connect-disconnect.md",
+            "entry": "./potctl/connect-disconnect.md",
             "description": ""
           },
           {
-            "title": "Legacy Commands in iofogctl",
-            "entry": "./iofogctl/legacy.md",
+            "title": "Legacy Commands in potctl",
+            "entry": "./potctl/legacy.md",
             "description": ""
           }
         ]

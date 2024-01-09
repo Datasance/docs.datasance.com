@@ -11,13 +11,13 @@
   * [Quick Start With Local Deployment](./ioFog_3.0/getting-started/quick-start-local)
   * [Quick Start On Minikube and Vagrant](./ioFog_3.0/getting-started/quick-start-minikube)
 
-* iofogctl
-  * [iofogctl - ioFog Unified Command Line Interface](./ioFog_3.0/iofogctl/introduction)
-  * [Download And Install iofogctl](./ioFog_3.0/iofogctl/download)
-  * [Getting Familiar With iofogctl](./ioFog_3.0/iofogctl/getting-familiar)
-  * [iofogctl Resource Management](./ioFog_3.0/iofogctl/resource-management)
-  * [Connecting To Existing Edge Compute Networks](./ioFog_3.0/iofogctl/connect-disconnect)
-  * [Legacy Commands in iofogctl](./ioFog_3.0/iofogctl/legacy)
+* potctl
+  * [potctl - ioFog Unified Command Line Interface](./ioFog_3.0/potctl/introduction)
+  * [Download And Install potctl](./ioFog_3.0/potctl/download)
+  * [Getting Familiar With potctl](./ioFog_3.0/potctl/getting-familiar)
+  * [potctl Resource Management](./ioFog_3.0/potctl/resource-management)
+  * [Connecting To Existing Edge Compute Networks](./ioFog_3.0/potctl/connect-disconnect)
+  * [Legacy Commands in potctl](./ioFog_3.0/potctl/legacy)
 
 * Platform Deployment
   * [Introduction](./ioFog_3.0/platform-deployment/introduction)
