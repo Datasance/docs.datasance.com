@@ -80,7 +80,7 @@
 * Reference - Agent
   * [Overview](./ioFog_3.0/reference-agent/overview)
   * [Legacy Agent CLI Usage](./ioFog_3.0/reference-agent/cli-usage)
-  * [Agent Local REST API Reference](./ioFog_3.0/reference-agent/rest-api)
+  * [Agent Local API Reference](./ioFog_3.0/reference-agent/rest-api)
   * [Agent Configuration](./ioFog_3.0/reference-agent/configuration)
   * [Agent Logs](./ioFog_3.0/reference-agent/agent-logs)
   * [Remote Debugging Using IntelliJ](./ioFog_3.0/reference-agent/debugging)
