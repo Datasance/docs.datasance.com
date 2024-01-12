@@ -4,13 +4,13 @@ To list all available commands, just run `potctl` without any arguments. The av
 
 ```console
 $ potctl
-     _       ____                 __  __
-    (_)___  / __/___  ____  _____/ /_/ /
-   / / __ \/ /_/ __ \/ __ `/ ___/ __/ /
-  / / /_/ / __/ /_/ / /_/ / /__/ /_/ /
- /_/\____/_/  \____/\__, /\___/\__/_/
-                   /____/
-
+██████╗  ██████╗ ████████╗ ██████╗████████╗██╗     
+██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝╚══██╔══╝██║     
+██████╔╝██║   ██║   ██║   ██║        ██║   ██║     
+██╔═══╝ ██║   ██║   ██║   ██║        ██║   ██║     
+██║     ╚██████╔╝   ██║   ╚██████╗   ██║   ███████╗
+╚═╝      ╚═════╝    ╚═╝    ╚═════╝   ╚═╝   ╚══════╝
+                                                   
 
 
 Welcome to the cool new potctl Cli!
@@ -23,12 +23,12 @@ Usage:
   potctl [command]
 
 Available Commands:
-  attach        Attach an existing ioFog resource to an ECN
-  configure     Configure potctl or SSH details an existing resource
-  connect       Connect to an existing ioFog cluster
+  attach        Attach an existing ioFog resource to Control Plane
+  configure     Configure potctl or ioFog resources
+  connect       Connect to an existing Control Plane
   create        Create a resource
   delete        Delete an existing ioFog resource
-  deploy        Deploy ioFog platform or components on existing infrastructure
+  deploy        Deploy Edge Compute Network components on existing infrastructure
   describe      Get detailed information of existing resources
   detach        Detach an existing ioFog resource from its ECN
   disconnect    Disconnect from an ioFog cluster
@@ -36,7 +36,7 @@ Available Commands:
   help          Help about any command
   legacy        Execute commands using legacy CLI
   logs          Get log contents of deployed resource
-  move          Move an existing resources inside the current ECN
+  move          Move an existing resources inside the current Namespace
   prune         prune ioFog resources
   rename        Rename the iofog resources that are currently deployed
   start         Starts a resource
