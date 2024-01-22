@@ -144,7 +144,7 @@ So far we have assumed that control over ioFog is only handled using Controller'
 potctl works by interacting directly with Controller using REST API, with Agents over SSH, or with Kubernetes clusters using `kubeconfig` access configuration, similarly to how `kubectl` handles connections to Kubernetes clusters.
 
 <figure>
-  <img src="/images/docs/iofog-architecture-potctl.png" alt="">
+  <img src="/images/docs/iofog-architecture-iofogctl.png" alt="">
   <figcaption>potctl interacts with hosts via SSH or with Kubernetes to install ioFog components, and then directly with Controller to manage ECNs.</figcaption>
 </figure>
 
