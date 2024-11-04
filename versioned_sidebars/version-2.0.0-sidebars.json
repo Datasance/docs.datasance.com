@@ -1,0 +1,412 @@
+{
+    "version-2.0.0": [
+      {
+        "type": "category",
+        "label": "IoFog 3.0 Getting Started",
+        "items": [
+          {
+            "type": "doc",
+            "label": "What's New in ioFog 3.0.0?",
+            "id": "getting-started/whats-new"
+          },
+          {
+            "type": "doc",
+            "label": "Core Concepts",
+            "id": "getting-started/core-concepts"
+          },
+          {
+            "type": "doc",
+            "label": "Architecture",
+            "id": "getting-started/architecture"
+          },
+          {
+            "type": "doc",
+            "label": "Quick Start With Local Deployment",
+            "id": "getting-started/quick-start-local"
+          },
+          {
+            "type": "doc",
+            "label": "Quick Start On Minikube and Vagrant",
+            "id": "getting-started/quick-start-minikube"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "potctl",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Introduction",
+            "id": "potctl/introduction"
+          },
+          {
+            "type": "doc",
+            "label": "Download",
+            "id": "potctl/download"
+          },
+          {
+            "type": "doc",
+            "label": "Getting Familiar",
+            "id": "potctl/getting-familiar"
+          },
+          {
+            "type": "doc",
+            "label": "Resource Management",
+            "id": "potctl/resource-management"
+          },
+          {
+            "type": "doc",
+            "label": "Connect/Disconnect",
+            "id": "potctl/connect-disconnect"
+          },
+          {
+            "type": "doc",
+            "label": "Legacy",
+            "id": "potctl/legacy"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Platform Deployment",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Introduction",
+            "id": "platform-deployment/introduction"
+          },
+          {
+            "type": "doc",
+            "label": "Prepare Your Network",
+            "id": "platform-deployment/prepare-your-network"
+          },
+          {
+            "type": "doc",
+            "label": "Prepare Your Remote Hosts",
+            "id": "platform-deployment/prepare-your-remote-hosts"
+          },
+          {
+            "type": "doc",
+            "label": "Remote Control Plane",
+            "id": "platform-deployment/remote-control-plane"
+          },
+          {
+            "type": "doc",
+            "label": "Kubernetes Prepare Cluster",
+            "id": "platform-deployment/kubernetes-prepare-cluster"
+          },
+          {
+            "type": "doc",
+            "label": "Kubernetes potctl",
+            "id": "platform-deployment/kubernetes-potctl"
+          },
+          {
+            "type": "doc",
+            "label": "Kubernetes Helm",
+            "id": "platform-deployment/kubernetes-helm"
+          },
+          {
+            "type": "doc",
+            "label": "Setup Your Agents",
+            "id": "platform-deployment/setup-your-agents"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Agent Management",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Introduction",
+            "id": "agent-management/introduction"
+          },
+          {
+            "type": "doc",
+            "label": "Agent Configuration",
+            "id": "agent-management/agent-configuration"
+          },
+          {
+            "type": "doc",
+            "label": "Attach/Detach",
+            "id": "agent-management/attach-detach"
+          },
+          {
+            "type": "doc",
+            "label": "Volumes",
+            "id": "agent-management/volumes"
+          },
+          {
+            "type": "doc",
+            "label": "Docker Image Pruning",
+            "id": "agent-management/docker-image-pruning"
+          },
+          {
+            "type": "doc",
+            "label": "Edge Resources",
+            "id": "agent-management/edge-resources"
+          },
+          {
+            "type": "doc",
+            "label": "Upgrade/Rollback",
+            "id": "agent-management/upgrade-rollback"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Developing Microservices",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Overview",
+            "id": "developing-microservices/overview"
+          },
+          {
+            "type": "doc",
+            "label": "SDK",
+            "id": "developing-microservices/sdk"
+          },
+          {
+            "type": "doc",
+            "label": "Debugging",
+            "id": "developing-microservices/debugging"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Tutorial - Our First Microservices",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Introduction",
+            "id": "tutorial/introduction"
+          },
+          {
+            "type": "doc",
+            "label": "Get to Know ioFog",
+            "id": "tutorial/get-to-know-iofog"
+          },
+          {
+            "type": "doc",
+            "label": "Manage Our Microservices",
+            "id": "tutorial/manage-our-microservices"
+          },
+          {
+            "type": "doc",
+            "label": "Create Our First Microservice (JavaScript)",
+            "id": "tutorial/create-our-first-microservice-javascript"
+          },
+          {
+            "type": "doc",
+            "label": "Deploy Our Microservice",
+            "id": "tutorial/deploy-our-microservice"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Application Management",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Introduction",
+            "id": "applications/introduction"
+          },
+          {
+            "type": "doc",
+            "label": "Application Templates",
+            "id": "applications/application-templates"
+          },
+          {
+            "type": "doc",
+            "label": "Microservice Exposing",
+            "id": "applications/microservice-exposing"
+          },
+          {
+            "type": "doc",
+            "label": "Microservice Lifecycle Management",
+            "id": "applications/microservice-lifecycle-management"
+          },
+          {
+            "type": "doc",
+            "label": "Microservice Logs",
+            "id": "applications/microservice-logs"
+          },
+          {
+            "type": "doc",
+            "label": "Microservice Move/Rename",
+            "id": "applications/microservice-move-rename"
+          },
+          {
+            "type": "doc",
+            "label": "Microservice Registry Catalog",
+            "id": "applications/microservice-registry-catalog"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Reference - potctl",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Reference Kinds",
+            "id": "reference-potctl/reference-kinds"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Control Plane",
+            "id": "reference-potctl/reference-control-plane"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Agent",
+            "id": "reference-potctl/reference-agent"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Application",
+            "id": "reference-potctl/reference-application"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Application Template",
+            "id": "reference-potctl/reference-application-template"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Route",
+            "id": "reference-potctl/reference-route"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Catalog",
+            "id": "reference-potctl/reference-catalog"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Registry",
+            "id": "reference-potctl/reference-registry"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Edge Resources",
+            "id": "reference-potctl/reference-edge-resources"
+          },
+          {
+            "type": "doc",
+            "label": "Reference Template Engine",
+            "id": "reference-potctl/reference-template-engine"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Reference - Controller",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Overview",
+            "id": "reference-controller/overview"
+          },
+          {
+            "type": "doc",
+            "label": "CLI Usage",
+            "id": "reference-controller/cli-usage"
+          },
+          {
+            "type": "doc",
+            "label": "REST API",
+            "id": "reference-controller/rest-api"
+          },
+          {
+            "type": "doc",
+            "label": "ECN Viewer",
+            "id": "reference-controller/ecn-viewer"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Reference - Agent",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Overview",
+            "id": "reference-agent/overview"
+          },
+          {
+            "type": "doc",
+            "label": "CLI Usage",
+            "id": "reference-agent/cli-usage"
+          },
+          {
+            "type": "doc",
+            "label": "REST API",
+            "id": "reference-agent/rest-api"
+          },
+          {
+            "type": "doc",
+            "label": "Configuration",
+            "id": "reference-agent/configuration"
+          },
+          {
+            "type": "doc",
+            "label": "Agent Logs",
+            "id": "reference-agent/agent-logs"
+          },
+          {
+            "type": "doc",
+            "label": "Debugging",
+            "id": "reference-agent/debugging"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Reference - Catalog Microservices",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Diagnostics",
+            "id": "reference-microserivces-catalog/diagnostics"
+          },
+          {
+            "type": "doc",
+            "label": "HAL",
+            "id": "reference-microserivces-catalog/hal"
+          },
+          {
+            "type": "doc",
+            "label": "REST Blue",
+            "id": "reference-microserivces-catalog/rest-blue"
+          },
+          {
+            "type": "doc",
+            "label": "JSON REST API",
+            "id": "reference-microserivces-catalog/jsonrestapi"
+          }
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Contributing",
+        "items": [
+          {
+            "type": "doc",
+            "label": "Guidelines",
+            "id": "contributing/guidelines"
+          },
+          {
+            "type": "doc",
+            "label": "Code of Conduct",
+            "id": "contributing/code-of-conduct"
+          }
+        ]
+      }      
+    ]
+  }
+  

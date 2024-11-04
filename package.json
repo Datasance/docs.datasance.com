@@ -1,37 +1,48 @@
 {
-    "name": "docs.datasance.com",
-    "version": "1.0.2",
-    "description": "Datasance Documentation.",
-    "main": "dist/docsify-swagger.min.js",
-    "unpkg": "dist/docsify-swagger.min.js",
-    "scripts": {
-      "build": "webpack --config webpack.config.js",
-      "dev": "webpack-dev-server --config webpack.dev.config.js",
-      "publish": "yarn build && yarn publish --no-git-tag-version --no-push"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+ssh://git@github.com/datasance/docs.datasance.com.git"
-    },
-    "files": [
-      "src",
-      "dist"
+  "name": "datasancedocusaurus",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.5.2",
+    "@docusaurus/preset-classic": "3.5.2",
+    "@mdx-js/react": "^3.0.0",
+    "clsx": "^2.0.0",
+    "prism-react-renderer": "^2.3.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "redocusaurus": "^2.1.2"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.5.2",
+    "@docusaurus/tsconfig": "3.5.2",
+    "@docusaurus/types": "3.5.2",
+    "typescript": "~5.5.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
     ],
-    "keywords": [
-      "docsify",
-      "plugin",
-      "swagger"
-    ],
-    "author": "Emirhan Durmus",
-    "license": "MIT",
-    "devDependencies": {
-      "html-webpack-plugin": "4.2.0",
-      "terser-webpack-plugin": "2.3.5",
-      "webpack": "4.42.1",
-      "webpack-cli": "3.3.6",
-      "webpack-dev-server": "3.10.3"
-    },
-    "dependencies": {
-      "extend": "3.0.2"
-    }
+    "development": [
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0"
   }
+}

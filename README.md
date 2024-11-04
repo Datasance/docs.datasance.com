@@ -1,18 +1,41 @@
-# Welcome to the Documentation Page for Datasance PoT!
+# Website
 
-By leveraging the power of Open Source communities, Datasance PoT brings Hardware Trust, Cloud-Native computing capabilities, Management at scale, and True connectivity to the Edge. Datasance PoT is an Enterprise Open Source Fog Computing and Distributed Edge Intelligence Platform. 
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
+### Installation
 
+```
+$ yarn
+```
 
-![Introduction to Datasance PoT]
+### Local Development
 
-<aside class="notifications tip">
-  <h3><img src="/images/icos/ico-tip.svg" alt=""> Datasance PoT is based on Eclipse Foundation project called ioFog</h3>
-  <p>We higly encourge you to start from reading <a href="#/./ioFog_3.0/getting-started/core-concepts">Core Concepts</a> in order to understand the basis of Datasance PoT.</p>
-</aside>
+```
+$ yarn start
+```
 
-Datasance PoT can be deployed anywhere that data is generated and operation is crucial. Industry 4.0, Samrt Cities, Intelligent Transport & Logistics, Healthcare, Finance & Retail, there are millions of use case scenarios that can be build with Datasance PoT. 
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-![Datasance PoT](./images/PoT4.png)
+### Build
 
+```
+$ yarn build
+```
 
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+### Deployment
+
+Using SSH:
+
+```
+$ USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
