@@ -33,13 +33,13 @@ Instead of specifying the images for each Agent type, we can refer to catalog ID
 
 ```bash
 echo "---
-apiVersion: 'datasance.com/v1'
+apiVersion: 'datasance.com/v3'
 kind: Application
 metadata:
         name: hello-web
 spec:
 ---
-apiVersion: 'datasance.com/v1'
+apiVersion: 'datasance.com/v3'
 kind: Microservice # Or application, as application uses the same spec for its microservices
 metadata:
   name: hello-web
@@ -70,7 +70,7 @@ potctl describe microservice hello-web
 ```
 
 ```plain
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Microservice
 metadata:
   name: hello-web
@@ -116,7 +116,7 @@ We can also use potctl to create our own Catalog Items. The YAML spec reference 
 
 ```bash
 echo "---
-apiVersion: 'datasance.com/v1'
+apiVersion: 'datasance.com/v3'
 kind: CatalogItem
 metadata:
   name: 'my-multiplatform-microservice'
@@ -160,7 +160,7 @@ We can add a new registry using the `Registry` [deploy kind](../reference-potctl
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Registry
 spec:
   url: registry.hub.docker.com # This will create a registry that can download your private docker hub images

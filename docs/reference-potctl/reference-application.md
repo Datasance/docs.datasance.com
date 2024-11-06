@@ -14,7 +14,7 @@ The main take away is that an application is defined by: a `name`, a set of `mic
 ## Deploying an application
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application # What are we deploying
 metadata:
   name: health-care-wearable # Application name
@@ -85,7 +85,7 @@ Those YAML definitions can be used inside an application YAML file, or by themse
 A microservice YAML definition file can be retrieved using the describe command: `potctl describe microservice <NAME> [-o microservice.yaml]`
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Microservice # What are we deploying
 metadata:
   name: heart-rate-monitor # Microservice name
@@ -198,7 +198,7 @@ spec:
 ## Using a template
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application # What are we deploying
 metadata:
   name: health-care-wearable # Application name

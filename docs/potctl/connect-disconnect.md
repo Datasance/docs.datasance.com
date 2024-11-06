@@ -6,7 +6,7 @@ Note that we must always specify an empty or non-existent namespace when we use 
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ControlPlane
 metadata:
   name: albatros
@@ -29,7 +29,7 @@ Or for Kubernetes Control Planes, we can use Kube Config to connect. Keep in min
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: KubernetesControlPlane
 metadata:
   name: albatros

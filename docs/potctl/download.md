@@ -11,7 +11,7 @@ brew install potctl
 
 ## Install potctl on Windows
 
-The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.2.5/potctl.exe).
+The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.3.0/potctl.exe).
 
 ### Prepare Windows
 

@@ -5,7 +5,7 @@
 The registry has a very simple definition
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Registry
 spec:
   url: registry.hub.docker.com # This will create a registry that can download your private docker hub images

@@ -3,7 +3,7 @@
 Agents are components of an ECN which run on edge nodes. They communicate with Controllers to allow your edge nodes to host Microservices.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Agent
 metadata:
   name: meerkat
@@ -132,7 +132,7 @@ An Agent Configuration can be retrieved using `potctl describe agent-config <AGE
 An Agent Configuration can be deployed using `potctl deploy -f agent-config.yaml`
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: AgentConfig
 metadata:
   name: agent-1 # ioFog Agent name

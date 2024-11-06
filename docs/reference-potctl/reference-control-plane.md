@@ -12,7 +12,7 @@
 The Kubernetes Control Plane specifies all the resources required to deploy the ioFog Control Plane on a Kubernetes cluster.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: KubernetesControlPlane
 metadata:
   name: buffalo
@@ -36,7 +36,7 @@ spec:
 The Remote Control Plane component specifies all the resources required to deploy the ioFog Control Plane on a set of remote hosts.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ControlPlane
 metadata:
   name: buffalo
@@ -71,7 +71,7 @@ spec:
 The Local Control Plane component specifies all the resources required to deploy the ioFog Control Plane as a local docker container.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: LocalControlPlane
 metadata:
   name: buffalo
@@ -98,7 +98,7 @@ spec:
 We can expand a Remote Control Plane by deploying a new Controller.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Controller
 metadata:
   name: alpaca
@@ -127,7 +127,7 @@ Multiple resources can be incorporated into a single YAML file using `---` as a 
 
 ```yaml
 ---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ControlPlane
 metadata:
   name: buffalo
@@ -150,7 +150,7 @@ spec:
         user: john
         keyFile: ~/.ssh/id_rsa
 ---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Agent
 metadata:
   name: hippo-1
@@ -161,7 +161,7 @@ spec:
     user: john
     keyFile: ~/.ssh/id_rsa
 ---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Agent
 metadata:
   name: hippo-2

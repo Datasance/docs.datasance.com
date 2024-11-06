@@ -22,7 +22,7 @@ The **config** for the container should look in the following way:
 Which translates to the following [YAML microservice file](../reference-potctl/reference-application) :
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Microservice
 metadata:
   name: json-rest-api
@@ -72,7 +72,7 @@ The **config** for the container should look in the following way:
 Which translates to the following [YAML microservice file](../reference-potctl/reference-application) :
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Microservice
 metadata:
   name: open-weather-map

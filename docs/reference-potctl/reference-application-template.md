@@ -7,7 +7,7 @@ Application Templates allow users to specify an Application once and deploy it m
 To deploy Applications from a Template, first an Application Template must be deployed through `potctl deploy -f template.yaml`. An Application Template YAML spec contains an Application spec with Templated Variables.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ApplicationTemplate
 metadata:
   name: my-template
@@ -42,7 +42,7 @@ spec:
 Once an Application Template has been created, the following Application YAML can be used to deploy an Application from the Template with the requisite variables specified:
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application
 metadata:
   name: my-app

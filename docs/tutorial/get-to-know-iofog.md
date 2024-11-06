@@ -84,7 +84,7 @@ Let's start by using `potctl` to retrieve a detailed description of our Agent.
 ```console
 potctl describe agent local-agent
 
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: AgentConfig
 metadata:
   name: local-agent

@@ -43,7 +43,7 @@ We can use `potctl` to create our own Edge Resources. The YAML spec reference ca
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: EdgeResource
 metadata:
   name: smart-door
@@ -87,7 +87,7 @@ Or, if we need more details:
 ```bash
 $> potctl describe edge-resource smart-door v1.0.0
 
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: EdgeResource
 metadata:
   name: smart-door

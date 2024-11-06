@@ -5,7 +5,7 @@
 The route has a very simple definition
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Route
 metadata:
   name: my-route

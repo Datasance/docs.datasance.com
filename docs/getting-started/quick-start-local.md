@@ -64,7 +64,7 @@ Go ahead and paste the following commands into the terminal:
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: LocalControlPlane
 metadata:
   name: ecn
@@ -78,7 +78,7 @@ spec:
     container:
       image: iofog/controller:3.0.0
 ---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: LocalAgent
 metadata:
   name: local-agent
@@ -144,7 +144,7 @@ Now that our local ECN is up, lets put it to use. The following commands will de
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application
 metadata:
   name: health-care-wearable

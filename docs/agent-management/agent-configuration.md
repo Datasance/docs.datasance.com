@@ -21,7 +21,7 @@ An Agent Configuration can be deployed using `potctl deploy -f agent-config.yaml
 
 ```yaml
 
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: AgentConfig
 metadata:
 name: agent-1  \# ioFog Agent name

@@ -5,7 +5,7 @@
 The catalog item has a very simple definition
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: CatalogItem
 metadata:
   name: my-multiplatform-microservice

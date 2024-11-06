@@ -56,7 +56,7 @@ sensor-to-rest  Sensors       Rest API
 ```console
 potctl describe route sensor-to-rest
 
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Route
 metadata:
   name: sensor-to-rest

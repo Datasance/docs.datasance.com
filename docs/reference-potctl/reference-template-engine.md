@@ -33,7 +33,7 @@ The engine in the background is [liquidjs](https://liquidjs.com/index.html), to 
 
 ```yaml
 ---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application # What are we deploying
 metadata:
   name: edai-smartbuilding-rules-engine # Application name

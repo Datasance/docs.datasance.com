@@ -7,7 +7,7 @@ The most important commands of `potctl` consume YAML files as input. A YAML file
 Every resource contains a header section and a spec section. The header section contains fields common to all supported kinds.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ControlPlane
 metadata:
   name: buffalo
@@ -17,7 +17,7 @@ spec: ...
 
 | Field              | Description                                                                                                                                                                                                                                                                     |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| apiVersion         | ioFog YAML schema version. Currently `datasance.com/v1`                                                                                                                                                                                                                             |
+| apiVersion         | ioFog YAML schema version. Currently `datasance.com/v3`                                                                                                                                                                                                                             |
 | kind               | String representing what type of resource we want to deploy. The available values are `ControlPlane`, `KubernetesControlPlane`, `LocalControlPlane`, `Controller`, `Agent`, `LocalAgent`, `AgentConfig`, `Registry`, `CatalogItem`, `Application`, `Microservice` and `Volume`. |
 | metadata           | Object containing metadata about the resource                                                                                                                                                                                                                                   |
 | metadata.name      | User defined, unique identifier of the resource in its namespace.                                                                                                                                                                                                               |
@@ -29,7 +29,7 @@ spec: ...
 The `ControlPlane` kind specifies all the details required to deploy the ioFog Control Plane on a set of remote hosts.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ControlPlane
 metadata:
   name: buffalo
@@ -56,7 +56,7 @@ To learn more about the `ControlPlane` kind, please see [potctl Platform YAML Sp
 The `KubernetesControlPlane` kind specifies all the details required to deploy the ioFog Control Plane on a Kubernetes cluster.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: KubernetesControlPlane
 metadata:
   name: buffalo
@@ -77,7 +77,7 @@ To learn more about the `KubernetesControlPlane` kind, please see [potctl Platfo
 The `LocalControlPlane` kind specifies all the details required to deploy the ioFog Control Plane locally as a docker container.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: LocalControlPlane
 metadata:
   name: ecn
@@ -99,7 +99,7 @@ To learn more about the `LocalControlPlane` kind, please see [potctl Platform YA
 We can expand a Remote Control Plane by deploying a new Controller via the `Controller` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Controller
 metadata:
   name: alpaca
@@ -119,7 +119,7 @@ To learn more about the `Controller` kind, please see [potctl Platform YAML Spec
 Once a Control Plane is set up, we can deploy Agents to remote hosts via the `Agent` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Agent
 metadata:
   name: meerkat
@@ -139,7 +139,7 @@ To learn more about the `Agent` kind, please see [potctl Agent YAML Specificatio
 Once a Control Plane is set up, we can deploy Agents as a local container via the `LocalAgent` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: LocalAgent
 metadata:
   name: local
@@ -155,7 +155,7 @@ To learn more about the `LocalAgent` kind, please see the [Quick Start](../getti
 We can modify Agent behaviour dynamically via the `AgentConfig` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: AgentConfig
 metadata:
   name: agent-1 # ioFog Agent name
@@ -200,7 +200,7 @@ To learn more about the `AgentConfig` kind, please see the [Agent management sec
 Microservice Catalogs can be created via the `CatalogItem` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: CatalogItem
 metadata:
   name: my-multiplatform-microservice
@@ -220,7 +220,7 @@ To learn more about the `CatalogItem` kind, please see [potctl Catalog Item YAML
 A set of Microservices can be deployed via the `Application` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application
 metadata:
   name: health-care-wearable
@@ -274,7 +274,7 @@ To learn more about the `Application` kind, please see [potctl Application YAML 
 Individual Microservices can be deployed and configured via the `Microservice` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Microservice
 metadata:
   name: func-msvc
@@ -310,7 +310,7 @@ To learn more about the `Microservice` kind, please see [potctl Application YAML
 Directories can be pushed to Agent hosts so that Microservice volume requirements are fulfilled via the `Volume` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Volume
 spec:
   name: secret
@@ -329,7 +329,7 @@ To learn more about the `Volume` kind, please see [Volume Management](../agent-m
 Private container image registries for Microservices can be set up via the `Registry` kind.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Registry
 spec:
   url:

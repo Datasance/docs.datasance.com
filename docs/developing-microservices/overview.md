@@ -38,7 +38,7 @@ Updating a microservice's configuration can then be done using `potctl`:
 # $ potctl describe microservice MICROSERVICE_NAME -o my-microservice.yaml
 
 # Edit the YAML file
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Microservice
 metadata:
   name: my-microservice

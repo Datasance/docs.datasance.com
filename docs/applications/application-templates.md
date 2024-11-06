@@ -14,7 +14,7 @@ We can use `potctl` to create our own Application Templates. The YAML spec refer
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: ApplicationTemplate
 metadata:
   name: heartrate
@@ -86,7 +86,7 @@ Instead of specifying the entire Application each time, we can refer to the Appl
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application
 metadata:
   name: heartrate-demo
@@ -111,7 +111,7 @@ potctl describe application heartrate-demo
 ```
 
 ```plain
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Application
 metadata:
   name: heartrate-demo

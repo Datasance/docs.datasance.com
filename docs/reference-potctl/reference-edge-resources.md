@@ -6,7 +6,7 @@ please see [here](../agent-management/edge-resources).
 The Edge Resource is defined as follows:
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: EdgeResource
 metadata:
   name: smart-door

@@ -21,7 +21,7 @@ Create a template of controlplane.yaml like so:
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: KubernetesControlPlane
 metadata:
   name: albatros-1

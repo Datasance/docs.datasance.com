@@ -13,7 +13,7 @@ Create a template of agent.yaml like so:
 
 ```bash
 echo "---
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Agent
 metadata:
   name: zebra-1
@@ -66,7 +66,7 @@ uninstall_iofog.sh
 And here is an example of what the corresponding Agent YAML spec would look like.
 
 ```yaml
-apiVersion: datasance.com/v1
+apiVersion: datasance.com/v3
 kind: Agent
 metadata:
   name: meerkat-1
