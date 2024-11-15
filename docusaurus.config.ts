@@ -85,12 +85,12 @@ const config: Config = {
     image: 'img/docusaurus-social-card.jpg',
     algolia: {
       // The application ID provided by Algolia
-      appId: '8LRUVPG5G7',
+      appId: 'TELSEYYP4A',
 
       // Public API key: it is safe to commit it
-      apiKey: '80533f24eafe8661c901bb94db7b2304',
+      apiKey: 'defb41f96bd809c802a7f3533eeb91ef',
 
-      indexName: 'alpaslan-datasanceio',
+      indexName: 'datasance',
 
       // Optional: see doc section below
       contextualSearch: true,
@@ -100,7 +100,7 @@ const config: Config = {
 
       // Optional: Replace parts of the item URLs from Algolia. Useful when using the same search index for multiple deployments using a different baseUrl. You can use regexp or string in the `from` param. For example: localhost:3000 vs myCompany.com/docs
       replaceSearchResultPathname: {
-        from: '/docs/', // or as RegExp: /\/docs\//
+        from: '//', // or as RegExp: /\/docs\//
         to: '/',
       },
 
