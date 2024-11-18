@@ -148,7 +148,7 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://tr.linkedin.com/in/emirhandurmus',
+          href: 'https://www.linkedin.com/company/datasance',
           label: 'LinkedIn',
           position: 'right',
         },
@@ -183,7 +183,7 @@ const config: Config = {
             },
             {
               label: 'LinkedIn',
-              href: 'https://tr.linkedin.com/in/emirhandurmus',
+              href: 'https://www.linkedin.com/company/datasance',
             },
           ],
         },
