@@ -116,10 +116,11 @@ const config: Config = {
       //... other Algolia params
     },
     navbar: {
-      title: 'Datasance',
+      title: '',
       logo: {
         alt: 'Datasance',
         src: 'img/logo.svg',
+        srcDark: 'img/logo-white.svg',
       },
       items: [
         {
