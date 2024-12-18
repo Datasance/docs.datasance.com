@@ -373,7 +373,7 @@ const sidebars: SidebarsConfig = {
         },
         {
           "type": "doc",
-          "label": "LOCAL API",
+          "label": "Local API",
           "id": "reference-agent/local-api"
         },
         {
