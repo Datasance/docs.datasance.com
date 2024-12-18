@@ -98,7 +98,7 @@ iofog.init('iofog', 54321, null, main);
 });
 ```
 
-For the curious, the first argument is the host name of the [Agent's Local API](../reference-agent/rest-api), the second is the port number of the SDK, and the third can be the container's ID, though it is not required.
+For the curious, the first argument is the host name of the [Agent's Local API](../reference-agent/local-api), the second is the port number of the SDK, and the third can be the container's ID, though it is not required.
 
 #### iofog.getConfig()
 
@@ -172,7 +172,7 @@ iofog.wsSendMessage(output);
 
 <aside class="notifications note">
   <h3><img src="/static/images/icos/ico-note.svg" alt=""/> More about ioMessages?</h3>
-  <p>ioMessages can contain a number of options and fields not described here. To learn more, check out the <a href="../reference-agent/rest-api">Local API Reference</a>.</p>
+  <p>ioMessages can contain a number of options and fields not described here. To learn more, check out the <a href="../reference-agent/local-api">Local API Reference</a>.</p>
 </aside>
 
 ## Putting The Moving Average Together
