@@ -9,3 +9,19 @@
   height: 200px;
   width: 200px;
 }
+
+div[class*="tableOfContents"] ul:first-child::before {
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%234a4a4a" stroke-width="2"><path d="M2.44434 12.6665H13.5554" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.44434 3.3335H13.5554" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.44434 8H7.33323" stroke-linecap="round" stroke-linejoin="round"></path></svg>') " On this page";
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4a4a4a;
+  margin-bottom: 1rem;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] div[class*="tableOfContents"] ul:first-child::before {
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%23ffffff" stroke-width="2"><path d="M2.44434 12.6665H13.5554" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.44434 3.3335H13.5554" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.44434 8H7.33323" stroke-linecap="round" stroke-linejoin="round"></path></svg>') " On this page";
+  color: #ffffff;
+}
+
