@@ -1,5 +1,5 @@
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Make sure your remote hosts are ready for Agent installation via potctl!</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Make sure your remote hosts are ready for Agent installation via potctl!</h3>
   <p>Go to <a href="../platform-deployment/prepare-your-remote-hosts">Prepare your Remote Hosts</a> to find out how to prepare your Agent hosts for installation.</p>
 </aside>
 
@@ -92,16 +92,16 @@ Upon Agent deployment, `potctl` will copy these scripts to `/etc/iofog/agent/`. 
 Check out the [YAML specification](../reference-potctl/reference-agent/) to get started!
 
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
   <p>Now we are ready to start deploying Microservices to our new ECN! We explored how to do this in the <a href="../getting-started/quick-start-local">Quick Start With Local Deployment</a> already. We can now try deploying the same microservice on our new ECN. To learn more about microservice management, get started at <a href="../applications/applications">Microservice Management - Distributed Applications</a>.</p>
   
   <p>To get going with our own Microservices, start by looking at the tutorial on creating our own Microservices at <a href="../tutorial/introduction">Tutorial - Our First Microservice</a>.</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/platform-deployment/setup-your-agents.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/platform-deployment/setup-your-agents.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

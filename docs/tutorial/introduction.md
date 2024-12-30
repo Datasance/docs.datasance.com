@@ -3,7 +3,7 @@
 In this tutorial we will use a tutorial project to set up a local ECN with a set of example Microservices.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Familiar with the Core Concepts?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Familiar with the Core Concepts?</h3>
   <p>If you aren't already familiar with the core concepts of ioFog, you'll want to check out <a href="../getting-started/core-concepts">our Core Concepts</a> section.</p>
 </aside>
 
@@ -18,8 +18,8 @@ Supported operating systems:
 
 Required tools:
 
-- `Docker 1.10+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
-- `potctl 1.0.0+`: CLI tool and a one-stop-shop for all your ioFog needs. ([installation instructions](../getting-started/quick-start-local))
+- `Docker 25.00+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
+- `potctl 1.3.3+`: CLI tool and a one-stop-shop for all your ioFog needs. ([installation instructions](../getting-started/quick-start-local))
 
 Make sure to follow the Docker [post-installation instructions](https://docs.docker.com/install/linux/linux-postinstall/) so that the Docker daemon can work without `sudo`. Otherwise, the commands in this guide will not work.
 
@@ -59,14 +59,14 @@ With a working ioFog environment set up, we're now ready to get to know ioFog.
 [Continue To Next Step: Get To Know ioFog](../tutorial/get-to-know-iofog).
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you run into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/tutorial/introduction.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/tutorial/introduction.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

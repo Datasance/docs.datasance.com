@@ -26,9 +26,9 @@ potctl move agent agent-1 namespace-2 -n namespace-1
 ```
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/agent-management/attach-detach.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/agent-management/attach-detach.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

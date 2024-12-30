@@ -1,5 +1,5 @@
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/> Do you know the core concepts of ioFog?</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/> Do you know the core concepts of ioFog?</h3>
   <p>If you haven't done so, you should first go and read <a href="../getting-started/core-concepts">Core Concepts</a> in order to understand what ioFog is and what is its purpose.</p>
 </aside>
 
@@ -18,10 +18,10 @@ Controller can run on any compatible hardware that is network accessible by all 
 It is also possible to have a Controller hidden behind HTTP Ingress service, since the Controller is fully functional using its REST API only.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Controller?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Controller?</h3>
   <p>If you want to learn advanced features, how to configure the Controller or how to directly use it, go to <a href="../reference-controller/overview">Controller reference documentation</a>.</p>
   <p>To deploy and use the Controller via potctl, go to <a href="../platform-deployment/introduction">platform deployment documentation</a>.</p>
-  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/Controller">eclipse-iofog/Controller github repository</a>.</p>
+  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/Datasance/Controller">Datasance/Controller github repository</a>.</p>
 </aside>
 
 ## Agent
@@ -35,10 +35,10 @@ Agents would be typically deployed on the edge as native daemons. Multiple archi
 While the Agent daemon itself has a CLI, after setting things up a majority of your management tasks will instead be done indirectly using the [Controller](#controller), which controls the Agent on your behalf, remotely. This allows you to deploy and maintain microservices without needing to SSH directly onto every edge node device. In fact, you will never need to SSH into your agents yourself.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Agent?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Agent?</h3>
   <p>If you want to learn advanced features, how to configure the Agent or how to directly use it, go to <a href="../reference-agent/overview">Agent reference documentation</a>.</p>
   <p>To deploy and use the Agent via potctl, go to <a href="../agent-management/introduction">Agent management documentation</a>.</p>
-  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/Agent">eclipse-iofog/Agent github repository</a>.</p>
+  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/Datasance/Agent">Datasance/Agent github repository</a>.</p>
 </aside>
 
 ## Microservices
@@ -46,7 +46,7 @@ While the Agent daemon itself has a CLI, after setting things up a majority of y
 The last absolutely essential components in edge computing are microservices. They are essentially small applications running as Docker containers on ioFog Agents. Many of these microservices can run on a single Agent. This is very similar to how you would run microservices in Kubernetes, except in ioFog you have a very granular control of microservice deployment to selected Agents.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about microservices?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about microservices?</h3>
   <p>If you want to know more about managing microservices in ioFog, head to <a href="../applications/applications">Microservice management</a>.</p>
   <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction">Learn how to use ioFog and build microservices</a></p>
 </aside>
@@ -56,7 +56,7 @@ The last absolutely essential components in edge computing are microservices. Th
 We are now able to have a very basic version of ioFog ECN. All we need is to deploy a Controller and an Agent, where the Agent must be able to access the Controller.
 
 <figure>
-  <img src="/static/images/docs/iofog-architecture-ecn.png" alt=""/>
+  <img src="/images/docs/iofog-architecture-ecn.png" alt=""/>
   <figcaption>Simple Edge Compute Network (ECN) deployed with one Controller and Agent.</figcaption>
 </figure>
 
@@ -73,9 +73,9 @@ Each Controller and each Agent would have their own Router instance by default. 
 For advanced users, it is possible to configure the topology manually, such as sharing Edge Routers between Agents, or hosting Interior routers on Agents instead of Controller. It is also possible to have a direct Agent communication using these Edge Routers on the same network, or accessible from other Agents. All these advanced features are out of the scope of this document, and most of these will be available in subsequent minor ioFog releases.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about Router?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about Router?</h3>
   <p>If you want to learn advanced features, how to configure the Router or how to setup custom topologies, go to <a href="../reference-router/overview">Router reference documentation</a>.</p>
-  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/router">eclipse-iofog/Router github repository</a>.</p>
+  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/Datasance/router">Datasance/Router github repository</a>.</p>
 </aside>
 
 ## Proxy
@@ -85,8 +85,8 @@ The Proxy microservice is an internal component on ioFog routing network. Its pu
 When exposing a microservice, one Proxy will be created on the router, where the service is to be accessed from outside, and another proxy will be created on the router to which a target microservice is connected.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about Proxy?</h3>
-  <p>As an internal part of the ioFog stack, proxy is not a separately manageable component. However, feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/skupper-proxy">skupper-proxy github repository</a>.</p>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about Proxy?</h3>
+  <p>As an internal part of the ioFog stack, proxy is not a separately manageable component. However, feel free to also explore and potentially contribute at the <a href="https://github.com/Datasance/skupper-proxy">skupper-proxy github repository</a>.</p>
 </aside>
 
 ## Edge Compute Network - Routers and Exposed Ports
@@ -94,7 +94,7 @@ When exposing a microservice, one Proxy will be created on the router, where the
 Having introduced the Router and Proxy, we can now extend our ECN from the previous example with microservice communication and microservice public port exposure.
 
 <figure>
-  <img src="/static/images/docs/iofog-architecture-ecn-router.png" alt=""/>
+  <img src="/images/docs/iofog-architecture-ecn-router.png" alt=""/>
   <figcaption>Edge Compute Network showing default Router layout and communication pattern between microservices deployed on two different Agents.</figcaption>
 </figure>
 
@@ -111,8 +111,8 @@ This is the ioFog Operator for Kubernetes, which takes care of managing Kubernet
 When deploying ioFog on Kubernetes using potctl or Helm, the ioFog Operator would be the first things deployed in the namespace. When a new control plane Custom Resource is then created, ioFog Operator picks up on that and deploys an ECN in the same Kubernetes namespace.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Operator?</h3>
-   <p>As an internal part of the ioFog stack, the Operator is not a separately manageable component. However, feel free to explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/iofog-operator">eclipse-iofog/iofog-operator github repository</a>.</p>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Operator?</h3>
+   <p>As an internal part of the ioFog stack, the Operator is not a separately manageable component. However, feel free to explore and potentially contribute at the <a href="https://github.com/Datasance/iofog-operator">Datasance/iofog-operator github repository</a>.</p>
 </aside>
 
 ## Port Manager
@@ -120,8 +120,8 @@ When deploying ioFog on Kubernetes using potctl or Helm, the ioFog Operator woul
 The last major component of ioFog on Kubernetes. The Port Manager is responsible for deploying Proxies on the cluster as necessary for exposing microservices on external public ports. It does so by exposing these ports as a Kubernetes service with a global Load Balancer and opening appropriate ports.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Port Manager?</h3>
-   <p>As an internal part of the ioFog stack, the Port Manager is not a separately manageable component. However, feel free to explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/port-manager">eclipse-iofog/port-manager github repository</a>.</p>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about ioFog Port Manager?</h3>
+   <p>As an internal part of the ioFog stack, the Port Manager is not a separately manageable component. However, feel free to explore and potentially contribute at the <a href="https://github.com/Datasance/port-manager">Datasance/port-manager github repository</a>.</p>
 </aside>
 
 ## Edge Compute Network - On Kubernetes
@@ -131,7 +131,7 @@ The last example we are going to show is ioFog ECN deployed on Kubernetes. In fa
 Note that there is currently no way in ioFog to schedule microservices on the Kubernetes cluster itself, i.e. the cluster nodes acting as ioFog agents.
 
 <figure>
-  <img src="/static/images/docs/iofog-architecture-k8s.png" alt=""/>
+  <img src="/images/docs/iofog-architecture-k8s.png" alt=""/>
   <figcaption>Edge Compute Network with the control plane deployed exclusively on Kubernetes.</figcaption>
 </figure>
 
@@ -144,27 +144,33 @@ So far we have assumed that control over ioFog is only handled using Controller'
 potctl works by interacting directly with Controller using REST API, with Agents over SSH, or with Kubernetes clusters using `kubeconfig` access configuration, similarly to how `kubectl` handles connections to Kubernetes clusters.
 
 <figure>
-  <img src="/static/images/docs/iofog-architecture-iofogctl.png" alt=""/>
+  <img src="/images/docs/iofog-architecture-iofogctl.png" alt=""/>
   <figcaption>potctl interacts with hosts via SSH or with Kubernetes to install ioFog components, and then directly with Controller to manage ECNs.</figcaption>
 </figure>
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about potctl?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about potctl?</h3>
   You will be working with potctl for majority of the documentation. To go through the basic introduction to the tool, see <a href="../potctl/introduction">basic potctl documentation</a>.
   <p>If you want to check detailed reference of all potctl features, go to <a href="../reference-potctl/reference-kinds">potctl reference documentation</a>.</p>
-  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/eclipse-iofog/potctl">eclipse-iofog/potctl github repository</a>.</p>
+  <p>Feel free to also explore and potentially contribute at the <a href="https://github.com/Datasance/potctl">Datasance/potctl github repository</a>.</p>
 </aside>
 
-<aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/> Where to go from here?</h3>
+<!-- <aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/> Where to go from here?</h3>
   <p>If you want to get started right away, you can check out the <a href="../getting-started/quick-start-local">Quick Start Locally guide</a> to deploy ioFog locally on your computer, or the <a href="../getting-started/quick-start-minikube">Quick Start With Minikube guide</a>, or go through production deployment in <a href="../platform-deployment/introduction">Platform deployment</a> for both remote and Kubernetes deployments.</p>
+  <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction">Learn how to use ioFog and build microservices</a></p>
+</aside> -->
+
+<aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/> Where to go from here?</h3>
+  <p>If you want to get started right away, you can check out the <a href="../getting-started/quick-start-local">Quick Start Locally guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../platform-deployment/introduction">Platform deployment</a> for both remote and Kubernetes deployments.</p>
   <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction">Learn how to use ioFog and build microservices</a></p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/getting-started/architecture.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/getting-started/architecture.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

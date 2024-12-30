@@ -1,7 +1,12 @@
+<!-- <aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
+  <p>Also, this guide will use potctl to deploy the Control Plane on the cluster. To use Helm instead, go to <a href="../platform-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
+</aside> -->
+
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
-  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="/docs/platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
-  <p>Also, this guide will use potctl to deploy the Control Plane on the cluster. To use Helm instead, go to <a href="/docs/platform-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
 </aside>
 
 # Kubernetes - Deploy Control Plane Using potctl
@@ -11,8 +16,8 @@ Every Edge Compute Network ('ECN') starts with a Control Plane that allows us to
 In this guide, our Control Plane will deploy a single Controller instance.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>We use YAML to define ioFog resources</h3>
-  <p>The following procedures will define resources in YAML for potctl to consume. Specification of those YAML resources can be found <a href="/docs/reference-potctl/reference-control-plane">here</a>.</p>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>We use YAML to define ioFog resources</h3>
+  <p>The following procedures will define resources in YAML for potctl to consume. Specification of those YAML resources can be found <a href="../reference-potctl/reference-control-plane">here</a>.</p>
 </aside>
 
 ## Deploy a Control Plane on Kubernetes
@@ -31,7 +36,73 @@ spec:
     surname: Bar
     email: user@domain.com
     password: iht234g9afhe
-  config: ~/.kube/config" > /tmp/controlplane.yaml
+  config: ~/.kube/config
+  replicas:
+    controller: 2
+  database:
+    provider: mysql/postgres
+    user: 
+    host: 
+    port: 
+    password: 
+    databaseName: pot
+  auth:
+    url: https://example.com/
+    realm: realm-name
+    realmKey:
+    ssl: external
+    controllerClient: pot-controller
+    controllerSecret: 
+    viewerClient: ecn-viewer
+  images:
+    pullSecret: pull-srect
+    operator: ghcr.io/datasance//operator:3.4.12
+    controller: ghcr.io/datasance/controller:3.4.6
+    portManager: ghcr.io/datasance/port-manager:3.1.5
+    proxy: ghcr.io/datasance/proxy:3.1.0
+    router: ghcr.io/datasance/router:3.2.4
+  services:
+    controller:
+      type:  LoadBalancer/ClusterIP
+      # annotations:
+      #  service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    proxy:
+      type:  LoadBalancer/oadBalancer
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    router:
+      type:  LoadBalancer/ClusterIP
+      # annotations:
+      #  service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+  controller:
+    ecnViewerUrl: https://
+    https: true
+    secretName:
+    ecnViewerPort: 8008
+  router:
+    internalSecret: 
+    amqpsSecret: 
+    requireSsl: "yes"
+    saslMechanisms: EXTERNAL
+    authenticatePeer: "yes"
+  proxy:
+    serverName: 
+    transport: tls
+  ingresses:
+    controller:
+      annotations:
+        # cert-manager.io/cluster-issuer: letsencrypt
+        # nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+        # nginx.ingress.kubernetes.io/backend-protocol: "https"
+      ingressClassName: nginx
+      host: 
+      secretName:
+    router:
+      address: 
+      messagePort: 5672
+      interiorPort: 55672
+      edgePort: 45672" > /tmp/controlplane.yaml
+
 ```
 
 Make sure to specify the correct value for the `config` field. Here we implicitly use the default namespace. Note that potctl will deploy to the Kubernetes namespace that it is configured to use through the `-n` flag or to the default namespace we set via `potctl configure current-namespace ...`. This means that by following these examples, we end up installing the Control Plane in `default` namespace on the cluster. Therefore it is recommended to use a namespace instead.
@@ -67,6 +138,6 @@ potctl describe controlplane
 ```
 
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
-  <p>Having our Control Plane up and running, we can now go to <a href="/docs/platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <p>Having our Control Plane up and running, we can now go to <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
 </aside>

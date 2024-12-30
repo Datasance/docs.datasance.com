@@ -23,16 +23,16 @@ The tutorial consists of 3 microservices deployed on top of ioFog stack.
 
 The _Sensors_ microservice pretends to be reading data from a local hardware sensor. The data it produces is published with [the SDK](../developing-microservices/sdk) and routed through an AQMP Dispatch Router to the REST API microservice, so that it can be read by other microservices that only understand REST API.
 
-[Sensors microservice source code on Github](https://github.com/ioFog/example-microservices/tree/master/sensors-data)
+[Sensors microservice source code on Github](https://github.com/eclipse-iofog/example-microservices/tree/master/sensors-data)
 
 The _REST API_ is a generic microservice that provides a REST API web server, allowing access to any arbitrary data source connected using the Controller.
 
-[REST API microservice source code on Github](https://github.com/ioFog/example-microservices/tree/master/json-rest-api-cors-enabled)
+[REST API microservice source code on Github](https://github.com/eclipse-iofog/example-microservices/tree/master/json-rest-api-cors-enabled)
 
 _Freeboard_ is the last microservice that provides an HTML dashboard to view the real-time results coming from a rest API data source. In the case of our tutorial, the source of the data is our REST API microservice.
 
 Currently, loading the [freeboard dashboard](http://localhost:10102/?load=dashboard.json) should look similar to this:
-<img src="/static/images/Freeboard_1.png" />
+<img src="/images/Freeboard_1.png" />
 
 ## Routes
 
@@ -76,14 +76,14 @@ Next up, we're going to create our very first microservice to run on ioFog.
 [Continue To Next Step: Create Our First Microservice](../tutorial/create-our-first-microservice-javascript)
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/tutorial/manage-our-microservices.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/tutorial/manage-our-microservices.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

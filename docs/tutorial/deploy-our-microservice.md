@@ -265,21 +265,21 @@ moving-average  RUNNING     local-agent {}          rest-api
 ## Conclusion
 
 Have a look at new output of the [Freeboard dashboard](http://localhost:10102/?load=dashboard.json). This should now display the values modified by moving average and look similar to this:
-<img src="/static/images/Freeboard_2.png" />
+<img src="/images/Freeboard_2.png" />
 
 The magic about microservices and ioFog is that none of those microservice is specifically designed or requires to work with the other microservice. Using ioFog, you can create smart and secure communication channels between independant microservices and easily manage a fleet of Edge devices and microservices.
 
 Congratulations! You've now have the fundamentals of ioFog. Next, try developing Microservices on an ECN deployed on remote hosts. See this [guide](../platform-deployment/introduction) for deploying remotely.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/tutorial/deploy-our-microservice.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/tutorial/deploy-our-microservice.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

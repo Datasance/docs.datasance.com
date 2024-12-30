@@ -10,7 +10,7 @@ All messages passing through the Local API must be in the [ioMessage format](#io
 If a message InfoFormat is actually base64, then it will be encoded again during transmission as JSON. While this is not very efficient, it is sustainable as a practice. Neither the ioFog Local API nor the containers need to examine messages to determine the type of encoding. They both simply decode arriving messages and encode messages before sending (just the ContextData and ContentData fields).
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> SDKs are available!</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> SDKs are available!</h3>
   <p>While this API is public, it is a relatively low-level. We have SDK libraries for many popular languages to make it easier <a href="sdk"></a> View Available SDKs.</p>
 </aside>
 
@@ -1031,9 +1031,9 @@ Success
 ```
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-agent/local-api.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/reference-agent/local-api.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

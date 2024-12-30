@@ -31,18 +31,18 @@ In order to prevent `potctl` from failing its SSH sessions, we need to ensure th
 We can achieve this by editing the sudoers file by first running `su visudo` on the remote host. This will open up the sudoers file for editing. Make sure this line is present in the file `%sudo ALL=(ALL) NOPASSWD:ALL`.
 
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
-  <p>Now we are ready to deploy the Controller! If we want to deploy it directly on a remote host, go to <a href="../platfomr-deployment/remote-control-plane">Remote - Deploy Control Plane</a>.</p>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <p>Now we are ready to deploy the Controller! If we want to deploy it directly on a remote host, go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a>.</p>
   
-  <p>Otherwise, to deploy on Kubernetes cluster, go to <a href="../platfomr-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a>, which is a series of steps needed to deploy ioFog on Kubernetes clusters.</p>
+  <p>Otherwise, to deploy on Kubernetes cluster, go to <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a>, which is a series of steps needed to deploy ioFog on Kubernetes clusters.</p>
   
-  <p>Both of these path eventually join when deploying Agents in <a href="../platfomr-deployment/setup-your-agents">Setup Agents</a> guide. But note that at this point, we cannot deploy Agents yet, because the have no Control Plane.</p>
+  <p>Both of these path eventually join when deploying Agents in <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide. But note that at this point, we cannot deploy Agents yet, because the have no Control Plane.</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/platform-deployment/prepare-your-remote-hosts.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/platform-deployment/prepare-your-remote-hosts.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

@@ -201,9 +201,9 @@ Once an application has been deployed based on a template, it behaves exactly li
 Any further update to the Application Template will NOT modify the Application.
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/applications/application-templates.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/applications/application-templates.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

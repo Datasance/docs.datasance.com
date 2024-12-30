@@ -41,8 +41,8 @@ const config: Config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: '3.0.0',
-              path: '3.0.0',
+              label: 'v1.3.3',
+              path: 'v1.3.3',
             },
           },
 
@@ -85,7 +85,7 @@ const config: Config = {
     image: 'img/docusaurus-social-card.jpg',
     tableOfContents: {
       minHeadingLevel: 2,
-      maxHeadingLevel: 5,
+      maxHeadingLevel: 4,
     },
     algolia: {
       // The application ID provided by Algolia
@@ -138,7 +138,7 @@ const config: Config = {
           position: 'left',
           items: [
             {
-              label: 'Datasance PoT-ioFog Controller (1.0.0)',
+              label: 'Datasance PoT Controller REST-API v3.4.6',
               to: '/api',
             }
           ]

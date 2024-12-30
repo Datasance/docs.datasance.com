@@ -8,43 +8,46 @@ In this guide we will:
 
 ## Prerequisites
 
-- `Docker 1.10+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
+- `Docker v26.0+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
 
 #### Install potctl on Mac
 
 Mac users can use Homebrew:
 
 ```bash
-brew tap eclipse-iofog/potctl
-brew install potctl@3.0
+brew tap datasance/potctl
+brew install potctl@1.3.3
 ```
 
 #### Install potctl on Windows
 
-The Windows binary can be downloaded from https://storage.googleapis.com/potctl/win/3.0/potctl.exe.
+The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.3.3/potctl.exe).
 
 ##### Prepare Windows
 
 In order to use `potctl` to deploy an ECN locally on Windows we will need to configure Docker to run Linux containers:
 
-- Install [docker desktop for windows](https://download.docker.com/win/stable/Docker%20Desktop%20Installer.exe)
-- Enable Hyper-V in Powershell `Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart`
-- Ensure that docker is running with [Linux containers mode](https://docs.docker.com/docker-for-windows/#switch-between-windows-and-linux-containers)
+- Install [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install/)
+- Follow the guidelines for using WSL2 or Hyper-V backend [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
+- Ensure that docker is running with [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
 
 #### Install potctl on Linux
 
 The Debian package can be installed like so:
 
 ```bash
-curl https://packagecloud.io/install/repositories/iofog/potctl/script.deb.sh | sudo bash
-sudo apt-get install potctl=3.0.0-alpha1
+wget -qO- https://downloads.datasance.com/datasance.gpg | sudo tee /etc/apt/trusted.gpg.d/datasance.gpg >/dev/null
+echo "deb [arch=all signed-by=/etc/apt/trusted.gpg.d/datasance.gpg] https://downloads.datasance.com/deb stable main" | sudo tee /etc/apt/sources.list.d/datansance.list >/dev/null
+sudo apt update
+sudo apt install potctl -y
 ```
 
 And similarly, the RPM package can be installed like so:
 
 ```bash
-curl https://packagecloud.io/install/repositories/iofog/potctl/script.rpm.sh | sudo bash
-sudo yum install potctl-3.0.0-alpha1-1.x86_64
+cd /etc/yum.repos.d ; curl https://downloads.datasance.com/datasance.repo -LO
+sudo yum update
+sudo yum install potctl -y
 ```
 
 #### Verify potctl Installation
@@ -56,7 +59,7 @@ Run `potctl version` to verify we have successfully installed the CLI.
 We can use `potctl deploy` to install and provision ECN components. Here we will deploy a containerized ECN locally.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Want to know more about potctl?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about potctl?</h3>
   <p>We aren't going into detail about potctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full potctl documentation <a href="../potctl/introduction">here</a>.</p>
 </aside>
 
@@ -74,9 +77,17 @@ spec:
     surname: Start
     email: user@domain.com
     password: q1u45ic9kst563art
+  auth:
+    url: https://example.com/
+    realm: realm-name
+    realmKey: realm-key
+    ssl: exter
+    controllerClient: pot-controller
+    controllerSecret:
+    viewerClient: ecn-viewer
   controller:
     container:
-      image: iofog/controller:3.0.0
+      image: ghcr.io/datasance/controller:3.4.6
 ---
 apiVersion: datasance.com/v3
 kind: LocalAgent
@@ -84,7 +95,7 @@ metadata:
   name: local-agent
 spec:
   container:
-    image: iofog/agent:3.0.0
+    image: ghcr.io/datasance/agent:3.3.0
 " > /tmp/quick-start.yaml
 potctl deploy -f /tmp/quick-start.yaml
 ```
@@ -229,9 +240,9 @@ Now that you have seen what ioFog is about, you can create a real ECN with remot
 We can also try deploying other Microservices on the local ECN. We can find instructions on writing our own Microservice [here](../developing-microservices/overview) and a step-by-step [tutorial](../tutorial/introduction).
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/getting-started/quick-start-local.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/getting-started/quick-start-local.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

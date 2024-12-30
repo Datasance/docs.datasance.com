@@ -2,7 +2,7 @@
 
 We are open to, and grateful for, any contributions made by the community.
 
-**By contributing to ioFog, you agree to abide by our [Code of Conduct](../contributing/code-of-conduct).**
+**By contributing to PoT, you agree to abide by our [Code of Conduct](../contributing/code-of-conduct).**
 
 ### Bugs and Improvements
 
@@ -10,12 +10,12 @@ Before opening an issue, please search the issue tracker to make sure your issue
 
 We use different issue trackers for individual pieces of the ioFog community.
 
-- [Agent](https://github.com/ioFog/Agent/issues)
-- [Controller](https://github.com/ioFog/Controller/issues)
-- [potctl](https://github.com/eclipse-iofog/potctl/issues)
-- [Kubernetes Operator](https://github.com/eclipse-iofog/iofog-operator/issues)
-- [Port Manager](https://github.com/eclipse-iofog/port-manager/issues)
-- [iofog.org documentation](https://github.com/ioFog/iofog.org/issues) (this site)
+- [Agent](https://github.com/Datasance/Agent/issues)
+- [Controller](https://github.com/Datasance/Controller/issues)
+- [potctl](https://github.com/Datasance/potctl/issues)
+- [Kubernetes Operator](https://github.com/Datasance/iofog-operator/issues)
+- [Port Manager](https://github.com/Datasance/port-manager/issues)
+- [Datasance PoT documentation](https://github.com/Datasance/docs.datasance.com/issues) (this site)
 
 ### Getting Help
 
@@ -31,7 +31,7 @@ In general, the contribution workflow looks like this:
 
 - Open a new issue in the issue tracker.
 - Fork the repo.
-- Create a new feature branch based off the `develop` branch.
+- Create a new feature branch based off the `main` branch.
 - Make sure all tests pass and there are no linting errors.
 - Submit a pull request, referencing any issues it addresses.
 
@@ -43,14 +43,14 @@ Thank you for contributing!
 
 ### Docs
 
-You can find the source code for iofog.org (this site) here: <a href="https://github.com/ioFog/iofog.org" alt="" />
+You can find the source code for docs.datasance.com (this site) here: [Docs](https://github.com/Datasance/docs.datasance.com)
 
-Improvements to the documentation are always welcome. Currently it is powered by Gatsby, which is a static site builder that uses React.
+Improvements to the documentation are always welcome. Currently it is powered by Docusarus hosted on Github Pages.
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/contributing/guidelines.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/contributing/guidelines.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

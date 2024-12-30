@@ -7,7 +7,7 @@ It can be used to remotely manage multiple different clusters from a single host
 This section will explain key aspects of `potctl's` design and functionality for the purposes of understanding the CLI in greater detail.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Next steps?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Next steps?</h3>
   <ul>
     <li><a href="../potctl/download">Download and installation.</a></li>
     <li><a href="../reference-potctl/reference-kinds">potctl reference.</a></li>
@@ -15,9 +15,9 @@ This section will explain key aspects of `potctl's` design and functionality for
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/v2/potctl/introduction.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/potctl/introduction.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

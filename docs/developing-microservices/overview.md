@@ -7,7 +7,7 @@ Microservices are an architectural style that structures an application as a col
 Popularized by companies like Amazon, Netflix, and Twitter, the philosophy has now become mainstream and adopted by countless organizations.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> A word on monoliths</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> A word on monoliths</h3>
   <p>Not every project need to adhere to a strict no-monolith policy. In fact, monoliths are still popular for good reason!</p>
   <p>So while you're encouraged to build and deploy these services as interchangeable pieces that together achieve your goals—true microservices—you absolutely are welcome to instead build a single monolithic service that contains all of your necessary business logic, if that better aligns to your needs or preferences.</p>
 </aside>
@@ -23,7 +23,7 @@ But because most Edge Compute Networks contain multiple, sometimes even hundreds
 [View Available SDKs](../developing-microservices/sdk)
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Want to run through a tutorial?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Want to run through a tutorial?</h3>
   <p>If you'd like to learn more about creating and managing microservices on ioFog, <a href="../tutorial/introduction.html">check out our Tutorial</a></p>
 </aside>
 
@@ -62,7 +62,7 @@ $ potctl deploy -f my-microservice.yaml
 Microservices on ioFog are packaged as Linux container images, usually using Docker.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Ready for more?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Ready for more?</h3>
   <p>If you're new to containers and Docker, you'll want to check out their official <a href="https://docs.docker.com/get-started/">Getting Started guide</a> which walks you through the different pieces of putting together a Docker container image.</p>
 </aside>
 
@@ -79,9 +79,9 @@ The high-level process of creating a new microservice is:
 It is detailed in our [tutorial](../tutorial/introduction)
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/developing-microservices/overview.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/developing-microservices/overview.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

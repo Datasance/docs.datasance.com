@@ -4,6 +4,7 @@ To list all available commands, just run `potctl` without any arguments. The av
 
 ```console
 $ potctl
+
 ██████╗  ██████╗ ████████╗ ██████╗████████╗██╗     
 ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝╚══██╔══╝██║     
 ██████╔╝██║   ██║   ██║   ██║        ██║   ██║     
@@ -55,7 +56,7 @@ Use "potctl [command] --help" for more information about a command.
 
 ```
 
-You can also find all available commands, and a detailled documentation of their usage on [our github repository](https://github.com/eclipse-iofog/potctl/blob/release/3.0/docs/md/potctl.md).
+You can also find all available commands, and a detailled documentation of their usage on [our github repository](https://github.com/Datasance/potctl/blob/main/docs/md/potctl.md).
 
 You can use the `--help` flag on every command to learn more. Go ahead and try some of the following:
 
@@ -170,7 +171,7 @@ potctl move agent agent-1 namespace-2 -n namespace-1
 ```
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
   <ul>
     <li><a href="../potctl/resource-management">Resources management with potctl.</a></li>
     <li><a href="../reference-potctl/reference-kinds">potctl reference.</a></li>
@@ -178,9 +179,9 @@ potctl move agent agent-1 namespace-2 -n namespace-1
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/potctl/getting-familiar.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/potctl/getting-familiar.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

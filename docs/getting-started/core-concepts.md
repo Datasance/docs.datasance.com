@@ -41,16 +41,16 @@ Because the Controller daemon keeps track of all your Agents automatically, even
 If your microservices need to communicate with other nodes in your network, ioFog includes an optional daemon called the **Skupper AMQP Dispatch routers**.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Ready for more?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Ready for more?</h3>
   <p>If you want to know more about all the ioFog components and learn how ioFog Edge Compute Network work, head to <a href="architecture.html">Architecture overview</a>.</p>
-  <p>If instead you want to get started right away, you can check out the <a href="..quick-start-local">Quick Start guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../platform-deployment/introduction">Remote deployment</a> or <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes deployment</a>.</p>
+  <p>If instead you want to get started right away, you can check out the <a href="../getting-started/quick-start-local">Quick Start guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../platform-deployment/introduction">Remote deployment</a> or <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes deployment</a>.</p>
   <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction">Learn how to use ioFog and build microservices</a></p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/getting-started/core-concepts.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/getting-started/core-concepts.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

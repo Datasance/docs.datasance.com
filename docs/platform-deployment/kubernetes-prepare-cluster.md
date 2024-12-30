@@ -1,5 +1,5 @@
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
   <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
 </aside>
 
@@ -49,7 +49,12 @@ When using GKE to host our Kubernetes cluster, we need to ensure the [gcloud](ht
 gcloud container clusters get-credentials <NAME> --region <REGION>
 ```
 
+<!-- <aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <p>Now that we have the cluster up, we need to deploy the Control Plane onto the cluster. There are two ways to do this, either using potctl, or Helm. To use potctl, go to <a href="../platform-deployment/kubernetes-potctl">Kubernetes - Deploy Control Plane Using potctl</a>, or to use Helm, go to <a href="../platform-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
+</aside> -->
+
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
-  <p>Now that we have the cluster up, we need to deploy the Control Plane onto the cluster. There are two ways to do this, either using potctl, or Helm. To use potctl, go to <a href="../platfomr-deployment/kubernetes-potctl">Kubernetes - Deploy Control Plane Using potctl</a>, or to use Helm, go to <a href="../platfomr-deployment/kubernetes-helm"> Kubernetes - Deploy Control Plane Using Helm</a>.</p>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <p>Now that we have the cluster up, we need to deploy the Control Plane onto the cluster. There are two ways to do this, either using potctl, or Helm. To use potctl, go to <a href="../platform-deployment/kubernetes-potctl">Kubernetes - Deploy Control Plane Using potctl</a>.</p>
 </aside>

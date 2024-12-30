@@ -47,9 +47,9 @@ It is available by default on the standard HTTP port of `Controller` (80).
 [Find out more](../platform-deployment/setup-your-agents) and check out the [YAML specification](../reference-potctl/reference-agent)!
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/getting-started/whats-new.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/getting-started/whats-new.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

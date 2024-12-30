@@ -11,15 +11,15 @@ brew install potctl
 
 ## Install potctl on Windows
 
-The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.3.2/potctl.exe).
+The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.3.3/potctl.exe).
 
-### Prepare Windows
+#### Prepare Windows
 
 In order to use `potctl` to deploy an ECN locally on Windows we will need to configure Docker to run Linux containers:
 
-- Install [docker desktop for windows](https://download.docker.com/win/stable/Docker%20Desktop%20Installer.exe)
-- Enable Hyper-V in Powershell `Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart`
-- Ensure that docker is running with [Linux containers mode](https://docs.docker.com/docker-for-windows/#switch-between-windows-and-linux-containers)
+- Install [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install/)
+- Follow the guidelines for using WSL2 or Hyper-V backend [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
+- Ensure that docker is running with [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
 
 ## Install potctl on Linux
 
@@ -46,7 +46,7 @@ sudo yum install potctl
 Run `potctl version` to verify you have successfully installed the CLI.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Next steps?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Next steps?</h3>
   <ul>
     <li><a href="../getting-familiar.html">Getting familiar with potctl.</a></li>
     <li><a href="../reference-potctl/reference-kinds">potctl reference.</a></li>
@@ -54,9 +54,9 @@ Run `potctl version` to verify you have successfully installed the CLI.
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/potctl/download.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/potctl/download.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

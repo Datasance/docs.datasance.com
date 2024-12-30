@@ -65,9 +65,9 @@ availableDiskThreshold: 90
 
 <h3><img  src="/images/icos/ico-note.svg"  alt=""/>Comprehensive AgentConfig reference</h3>
 
-<p>A complete reference of AgentConfig kind is available in the relevant section in <a  href="/docs/reference-potctl/reference-agent">potctl reference</a> documentation.</p>
+<p>A complete reference of AgentConfig kind is available in the relevant section in <a  href="../reference-potctl/reference-agent">potctl reference</a> documentation.</p>
 
-<p>Details as to what the Agent configuration files look like on Agent hosts can be found on the <a href="/docs/reference-agent/configuration">Agent Reference - Configuration</a> page.</p>
+<p>Details as to what the Agent configuration files look like on Agent hosts can be found on the <a href="../reference-agent/configuration">Agent Reference - Configuration</a> page.</p>
 
 </aside>
 
@@ -75,12 +75,8 @@ availableDiskThreshold: 90
 
 <aside  class="notifications contribute">
 
-<h3><img  src="/static//images/icos/ico-github.svg"  alt=""/>See anything wrong with the document? Help us improve it!</h3>
+<h3><img  src="/images/icos/ico-github.svg"  alt=""/>See anything wrong with the document? Help us improve it!</h3>
 
-<a  href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/agent-management/agent-configuration.md" target="_blank">
-
-
-
-</a>
+<a  href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/agent-management/agent-configuration.md" target="_blank"></a>
 
 </aside>

@@ -154,7 +154,7 @@ Available Disk Threshold                 : 90
 ```
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Learn more Agent commands</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Learn more Agent commands</h3>
   <p>If you want to learn about all the possible commands you can use on iofog-agent checkout the <a href="../reference-agent/cli-usage">CLI Usage guide</a>.</p>
 </aside>
 
@@ -206,14 +206,14 @@ Now that we know our way around a bit, let's learn how to manage and launch micr
 [Continue To Next Step: Manage Our Microservices](../tutorial/manage-our-microservices).
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/tutorial/get-to-know-iofog.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/tutorial/get-to-know-iofog.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

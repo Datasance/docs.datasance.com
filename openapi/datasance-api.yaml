@@ -1,7 +1,7 @@
 openapi : "3.0.0"
 info:
-  version: 1.0.0
-  title: Datasance PoT Controller
+  version: 3.4.4
+  title: Datasance PoT Controller REST-API
 paths:
   /status:
     get:

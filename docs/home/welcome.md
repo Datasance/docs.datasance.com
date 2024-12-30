@@ -1,0 +1,52 @@
+# Welcome
+
+Welcome to Datasance’s official documentation site. This site is your comprehensive resource for understanding, deploying, and managing Datasance PoT (Platform of Things), our Enterprise Open Source Fog and Distributed Edge Computing Platform.
+
+## About
+
+Datasance PoT is built on the foundation of Eclipse ioFog, enhanced with enterprise-level features, scalability, and support. Our platform enables seamless edge device management, Kubernetes-native control, and traditional and WebAssembly containers support, all tailored for enterprise needs.
+
+<aside class="notifications tip">
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Source Code</h3>
+  <p>Below is a detailed table showing the original versions of the components and their corresponding Datasance versions.</p>
+</aside>
+
+| Community        | Component        | Source Version   | Datasance Compnent | Datasance Version |
+| ---------------- | ---------------- | ---------------- | ------------------ | ----------------- |
+| Eclipse ioFog    | iofogctl         | v3.0.0           | potctl             | v1.3.3            |
+| Eclipse ioFog    | Agent            | v3.0.1           | Agent              | v3.3.0            |
+| CNCF Containerd  | Runwasi          | v0.7.0           | Runwasi            | v0.7.0            |
+| Eclipse ioFog    | Controller       | v3.0.4           | Controller         | v3.4.6            |
+| Eclipse ioFog    | Router           | v3.0.0           | Router             | v3.2.4            |
+| RedHat Skupper   | Skupper-Router   | v3.1.0           | Router             | v3.2.4            |
+| Eclipse ioFog    | Proxy            | v3.0.0           | Proxy              | v3.1.0            |
+| Eclipse ioFog    | Operator         | v3.2.0           | Operator           | v3.4.12           |
+| Eclipse ioFog    | Port Manager     | v3.0.0           | Port Manager       | v3.1.5            |
+| Eclipse ioFog    | iofog-go-sdk     | v3.3.0           | iofog-go-sdk       | v3.4.15           |
+| Eclipse ioFog    | iofog-nodejs-sdk | v3.0.0           | iofog-nodejs-sdk   | v3.0.1            |
+| CNCF NATS        | nats-server      | v2.10.22         | iofog-nodejs-sdk   | v2.10.22-2        |
+
+
+## Key Features of Datasance PoT
+
+- **Enterprise Open Source**: Built for organizations seeking reliable, vendor-neutral solutions.
+- **Kubernetes Native**: Seamlessly integrates with Kubernetes for control plane management.
+- **Edge Computing and Fog**: Facilitates distributed computing with both traditional and WebAssembly containers support.
+- **Built-in Scalability**: High availability and scalability for enterprise-grade deployments.
+- **CLI Tool (potctl)**: Simplified deployment and management through command-line operations.
+- **Enhanced IAM**: Enterprise-grade identity and access management with Keycloak.
+- **Vendor-Agnostic Hardware Support**: Flexible deployment across diverse edge devices.
+
+Explore the documentation to learn how Datasance PoT can empower your edge computing needs and streamline operations.
+
+## Getting Support
+
+We’re here to help! For any inquiries, support, or collaboration opportunities, feel free to reach out to us via email:
+
+- **General Inquiries**: [contact@datasance.com](mailto:contact@datasance.com)
+- **Technical Support**: [support@datasance.com](mailto:support@datasance.com)
+- **Service Requests**: [service@datasance.com](mailto:service@datasance.com)
+- **Sales**: [sales@datasance.com](mailto:sales@datasance.com)
+- **Partnership Opportunities**: [partners@datasance.com](mailto:partners@datasance.com)
+
+Our team will respond promptly to assist you.

@@ -11,9 +11,9 @@ Once your Edge Compute Network running ioFog is up and running, you'll use your 
 For full usage details see the [Controller CLI Usage](../reference-controller/cli-usage) page.
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-controller/overview.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/reference-controller/overview.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

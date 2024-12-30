@@ -30,13 +30,29 @@ const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     {
       "type": "category",
-      "label": "IoFog 3.0 Getting Started",
+      "label": "Home",
       "items": [
         {
           "type": "doc",
-          "label": "What's New in ioFog 3.0.0?",
-          "id": "getting-started/whats-new"
+          "label": "Welcome",
+          "id": "home/welcome"
         },
+        {
+          "type": "doc",
+          "label": "What's New in PoT",
+          "id": "home/whats-new"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Getting Started",
+      "items": [
+        // {
+        //   "type": "doc",
+        //   "label": "What's New in ioFog 3.0.0?",
+        //   "id": "getting-started/whats-new"
+        // },
         {
           "type": "doc",
           "label": "Core Concepts",
@@ -51,12 +67,12 @@ const sidebars: SidebarsConfig = {
           "type": "doc",
           "label": "Quick Start With Local Deployment",
           "id": "getting-started/quick-start-local"
-        },
-        {
-          "type": "doc",
-          "label": "Quick Start On Minikube and Vagrant",
-          "id": "getting-started/quick-start-minikube"
         }
+        // {
+        //   "type": "doc",
+        //   "label": "Quick Start On Minikube and Vagrant",
+        //   "id": "getting-started/quick-start-minikube"
+        // }
       ]
     },
     {
@@ -129,11 +145,11 @@ const sidebars: SidebarsConfig = {
           "label": "Kubernetes potctl",
           "id": "platform-deployment/kubernetes-potctl"
         },
-        {
-          "type": "doc",
-          "label": "Kubernetes Helm",
-          "id": "platform-deployment/kubernetes-helm"
-        },
+        // {
+        //   "type": "doc",
+        //   "label": "Kubernetes Helm",
+        //   "id": "platform-deployment/kubernetes-helm"
+        // },
         {
           "type": "doc",
           "label": "Setup Your Agents",
@@ -397,6 +413,11 @@ const sidebars: SidebarsConfig = {
       "type": "category",
       "label": "Reference - Catalog Microservices",
       "items": [
+        {
+          "type": "doc",
+          "label": "NATs",
+          "id": "reference-microserivces-catalog/nats"
+        },
         {
           "type": "doc",
           "label": "Diagnostics",

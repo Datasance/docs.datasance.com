@@ -7,20 +7,20 @@ The following is an exhaustive list of the ingress firewall rules required for a
 | Component  | Protocol/Port | Description                                                       |
 | ---------- | ------------- | ----------------------------------------------------------------- |
 | Controller | tcp:51121     | Controller API to be accessible from Agents and potctl.         |
-| Controller | http:80       | ECN Viewer to be accessible by ECN admins or users.               |
+| Controller | http:8008       | ECN Viewer to be accessible by ECN admins or users.               |
 | potctl   | tcp:22        | SSH access to install ioFog Controller and Agent on remote hosts. |
 
 Please keep in mind that once we start [exposing microservices using public ports](../applications/microservice-exposing) in our ECNs, there will be additional ports that we expect to be accessible from outside of the network.
 
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
-  <p>Regardless of the type of deployment we need, next we have to <a href="/docs/platfomr-deployment/prepare-your-remote-hosts">prepare remote hosts</a> for Controller and Agents (in case of remote deployment), or just for Agents (in case of Kubernetes deployment).</p>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <p>Regardless of the type of deployment we need, next we have to <a href="../platform-deployment/prepare-your-remote-hosts">prepare remote hosts</a> for Controller and Agents (in case of remote deployment), or just for Agents (in case of Kubernetes deployment).</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/platform-deployment/prepare-your-network.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/platform-deployment/prepare-your-network.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

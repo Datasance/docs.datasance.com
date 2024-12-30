@@ -129,9 +129,9 @@ potctl deploy -f /tmp/agent.yaml -v
 Congratulations, you are all set to deploy applications on your local minikube and vagrant setup! Keep in mind that there is absolutely no difference, as far as ioFog and potctl are concerned, between this local setup and an actual production setup on a cloud based Kubernetes cluster and an Agent running on a remote device!
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/getting-started/quick-start-minikube.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/getting-started/quick-start-minikube.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

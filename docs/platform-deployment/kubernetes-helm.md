@@ -1,5 +1,5 @@
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Not interested in using Kubernetes?</h3>
   <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
   <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use potctl instead, go to <a href="../pltform-deployment/kubernetes-potctl"> Kubernetes - Deploy Control Plane Using potctl</a>.</p>
 </aside>
@@ -89,14 +89,14 @@ helm --namespace my-ns delete my-ecn
 ```
 
 <aside class="notifications tip">
-  <h3><img src="/static/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
+  <h3><img src="/images/icos/ico-tip.svg" alt=""/>Where to go from here?</h3>
   <p>Having our Control Plane up and running, we can now go to <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/platform-deployment/kubernetes-helm.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/platform-deployment/kubernetes-helm.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

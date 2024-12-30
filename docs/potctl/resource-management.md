@@ -50,7 +50,7 @@ potctl delete namespace zoo-1 --force
 ```
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
   <ul>
     <li><a href="../potctl/connect-disconnect">Connecting to an existing ECN.</a></li>
     <li><a href="../reference-potctl/reference-kinds">potctl reference.</a></li>
@@ -58,9 +58,9 @@ potctl delete namespace zoo-1 --force
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/potctl/resource-management.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/potctl/resource-management.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

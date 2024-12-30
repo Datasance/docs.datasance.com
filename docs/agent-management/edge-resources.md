@@ -32,7 +32,7 @@ Edge Resources are meant to be a definition of the communication interface that 
 certain actions against the specified resource. The model has been built to be extensible, and currently HTTP, HTTPS,
 WS, and WSS are supported as protocols.
 
-We welcome any contributing PR if you would like to improve [ioFog Controller](https://github.com/eclipse-iofog/Controller).
+We welcome any contributing PR if you would like to improve [ioFog Controller](https://github.com/Datasance/Controller).
 
 Edge Resources are uniquely identified by a composite of their `name` and their `version`.
 
@@ -132,9 +132,9 @@ $> potctl detach edge-resource smart-door v1.0.0 my-agent-name
 ```
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt="" />See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/agent-management/edge-resources.md"
+  <h3><img src="/images/icos/ico-github.svg" alt="" />See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/agent-management/edge-resources.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

@@ -7,14 +7,14 @@ While the Agent daemon is a CLI, after setting things up a majority of your mana
 For full usage details see the [Agent CLI Usage](../reference-agent/cli-usage) page.
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Learn more about microservices</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Learn more about microservices</h3>
   <p>The Agent is what gives your edge nodes the ability to spawn microservices. If you'd like to learn more about them, check out the <a href="../developing-microservices/overview">Microservices Overview</a></p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/reference-agent/overview.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/reference-agent/overview.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>

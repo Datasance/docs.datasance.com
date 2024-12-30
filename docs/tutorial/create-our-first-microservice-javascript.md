@@ -5,7 +5,7 @@
 [Node.js](https://nodejs.org/) is a JavaScript runtime built on Google Chrome's V8 JavaScript engine. In this step we're going to build a simple microservice using Node.js and the [ioFog SDK](../developing-microservices/sdk).
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> New to Node.js?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> New to Node.js?</h3>
   <p>This tutorial assumes a working knowledge of Node.js and modern JavaScript.</p>
 </aside>
 
@@ -69,7 +69,7 @@ The `package.json` file should look something like this now:
 
 Before we start writing the code for our microservice, lets take a look at the SDK's APIs.
 
-The [ioFog Node.js SDK](https://github.com/ioFog/iofog-nodejs-sdk) has a number of APIs, but in this tutorial we're most interested in these ones:
+The [ioFog Node.js SDK](https://github.com/Datasance/iofog-nodejs-sdk) has a number of APIs, but in this tutorial we're most interested in these ones:
 
 - [`iofog.init()`](#iofoginit)
 - [`iofog.getConfig()`](#iofoggetconfig)
@@ -87,7 +87,7 @@ const iofog = require('@iofog/nodejs-sdk');
 #### iofog.init()
 
 <aside class="notifications danger">
-  <h3><img src="/static/images/icos/ico-danger.svg" alt=""/> Use this as our entry point</h3>
+  <h3><img src="/images/icos/ico-danger.svg" alt=""/> Use this as our entry point</h3>
   <p>The callback we provide should be treated for mostly as a pseudo entry point of our microservice. We have to make sure we don't call any SDK APIs before this function has been called!</p>
 </aside>
 
@@ -171,7 +171,7 @@ iofog.wsSendMessage(output);
 ```
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> More about ioMessages?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> More about ioMessages?</h3>
   <p>ioMessages can contain a number of options and fields not described here. To learn more, check out the <a href="../reference-agent/local-api">Local API Reference</a>.</p>
 </aside>
 
@@ -438,14 +438,14 @@ We now want to see this code in action, so let's go ahead and learn how to deplo
 [Continue To Next Step: Deploy Our Microservice](../tutorial/deploy-our-microservice).
 
 <aside class="notifications note">
-  <h3><img src="/static/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
+  <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>
 
 <aside class="notifications contribute">
-  <h3><img src="/static/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
-  <a href="https://github.com/eclipse-iofog/iofog.org/edit/develop/content/docs/3.0/tutorial/create-our-first-microservice-javascript.md"
+  <h3><img src="/images/icos/ico-github.svg" alt=""/>See anything wrong with the document? Help us improve it!</h3>
+  <a href="https://github.com/Datasance/docs.datasance.com/edit/main/docs/tutorial/create-our-first-microservice-javascript.md"
     target="_blank">
-    
+    <p>Edit this page on Github!</p>
   </a>
 </aside>
