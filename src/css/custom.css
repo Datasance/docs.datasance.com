@@ -1,10 +1,4 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
-
-/* You can override the default Infima variables here. */
+/* Keep initial root and dark theme colors */
 :root {
   --ifm-color-primary: #2e8555;
   --ifm-color-primary-dark: #29784c;
@@ -13,11 +7,20 @@
   --ifm-color-primary-light: #33925d;
   --ifm-color-primary-lighter: #359962;
   --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
+  --ifm-code-font-size: 90%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  /* Custom aside colors */
+  --ifm-color-success: #644a9245;
+  --ifm-color-success-dark: #644A92;
+  --ifm-color-info: #10253d68;
+  --ifm-color-info-dark: #10253D;
+  --ifm-color-warning: #6abec160;
+  --ifm-color-warning-dark: #6ABEC1;
+  --ifm-color-danger: #e7646609;
+  --ifm-color-danger-dark: #E76467;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: #21af90;
@@ -27,176 +30,69 @@
   --ifm-color-primary-lighter: #32d8b4;
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  /* Custom aside colors for dark theme */
+  --ifm-color-success: #644a9245;
+  --ifm-color-success-dark: #644A92;
+  --ifm-color-info: #10253d68;
+  --ifm-color-info-dark: #10253D;
+  --ifm-color-warning: #6abec160;
+  --ifm-color-warning-dark: #6ABEC1;
+  --ifm-color-danger: #e7646609;
+  --ifm-color-danger-dark: #E76467;
 }
 
-
-/* body {
-  font-family: 'Averta', sans-serif;
-  color: #002e43;
-  line-height: 1.55;
-} */
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: bold;
-}
-
-h1 {
-  font-size: 46px;
-}
-
-h2 {
-  font-size: 37px;
-  letter-spacing: -0.2px;
-}
-
-h3 {
-  font-size: 29px;
-}
-
-h4 {
-  font-size: 23px;
-}
-
-h5 {
-  font-size: 19px;
-}
-
-h6 {
-  font-size: 15px;
-}
-
-.bg-grey {
-  background-color: #fafcff;
-}
-
-/* a {
-  text-decoration: none !important;
-  color: #4668fd;
-} */
-
-/* button:focus,
-*:focus {
-  outline: rgba(16, 37, 61, 1) solid 2px;
-} */
-
-button:focus,
-*:active {
-  outline: none;
-}
-
-hr {
-  margin: 70px 0;
-  border: none;
-  border-bottom: 1px solid #c5cae8;
-}
-
-h1,
-h2,
-h3 {
-  & + hr {
-    margin-top: -16px;
-    margin-bottom: 30px;
-  }
-}
-
-/* sticky footer */
-.page-wrapper {
-  min-width: 320px;
-  min-height: 100vh;
-  display: flex;
-  flex-flow: column nowrap;
-  justify-content: stretch;
-
-  .header {
-    flex: 0 0 auto;
-  }
-
-  .container {
-    flex: 1 1 100%;
-  }
-
-  .footer {
-    flex: 0 0 auto;
-  }
-}
-/* sections */
-.sections {
-  &__header {
-    h6 {
-      color: #57687d;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.9px;
-      margin-bottom: 15px;
-    }
-
-    h2 {
-      margin-bottom: 15px;
-    }
-
-    p {
-      font-size: 15px;
-    }
-
-    a.button {
-      margin-top: 15px;
-    }
-  }
-}
-/* entry */
-.entry {
-  padding-top: 60px;
-  padding-bottom: 30px;
-
-  .discourse-button img {
-    width: 164px;
-    display: block;
-    margin: 0 auto;
-    margin-bottom: 20px;
-  }
-
-  &__header {
-    max-width: 670px;
-    margin: 0 auto;
-    text-align: center;
-
-    h6 {
-      color: #57687d;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.9px;
-      margin-bottom: 15px;
-    }
-
-    h2 {
-      margin-bottom: 15px;
-    }
-
-    p {
-      font-size: 19px;
-    }
-  }
-}
-/* common */
-.button {
+aside.notifications {
   border-radius: 4px;
-  background-color: #6abec15d;
-  display: inline-block;
-  padding: 12px 21px;
-  color: #fff;
-  font-weight: bold;
-  font-size: 14px;
+  padding: 30px;
+  margin: 25px 0;
 
-  &:hover {
-    transition: 0.6s all ease;
-    background-color: #6abec17d;
+  & > h3 {
+    font-size: 16px;
+    letter-spacing: 0.2px;
+    margin: 0 0 10px;
+
+    img {
+      margin: -5px 10px 0 0;
+    }
   }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  ul:last-child {
+    margin-bottom: 0;
+  }
+
+  /* General properties that are common */
 }
+
+aside.notifications.note {
+  border-left: 6px solid var(--ifm-color-success-dark);
+  background-color: var(--ifm-color-success);
+}
+
+aside.notifications.info {
+  border-left: 6px solid var(--ifm-color-warning-dark);
+  background-color: var(--ifm-color-warning);
+}
+
+aside.notifications.danger {
+  border-left: 6px solid var(--ifm-color-danger-dark);
+  background-color: var(--ifm-color-danger);
+}
+
+aside.notifications.tip {
+  border-left: 6px solid var(--ifm-color-warning-dark);
+  background-color: var(--ifm-color-warning);
+}
+
+aside.notifications.contribute {
+  border-left: 6px solid var(--ifm-color-info-dark);
+  background-color: var(--ifm-color-info);
+}
+
 /* resolution less than 992px */
 @media (max-width: 991px) {
   .page-wrapper {
@@ -239,64 +135,3 @@ h3 {
 .emoji-icon {
   vertical-align: initial;
 }
-
-aside.notifications {
-  border-radius: 4px;
-  background-color: #6abec163;
-  border-left: 6px solid #6ABEC1;
-  padding: 30px;
-  margin: 25px 0;
-
-  & > h3 {
-    /* color: #002e43; */
-    font-weight: bold;
-    font-size: 19px;
-    letter-spacing: 0.2px;
-    margin: 0 0 10px;
-
-    img {
-      margin: -5px 10px 0 0;
-    }
-  }
-
-  p:last-child {
-    margin-bottom: 0;
-  }
-
-  &.note {
-    border-left: 6px solid #6ABEC1;
-    background-color: #6abec160;
-  }
-
-  &.danger {
-    border-left: 6px solid #E76467;
-    background-color: #e7646609;
-  }
-
-  &.tip {
-    border-left: 6px solid #644A92;
-    background-color: #644a9245;
-  }
-
-  &.contribute {
-    border-left: 6px solid #10253D;
-    background-color: #10253d68;
-  }
-
-  ul:last-child {
-    margin-bottom: 0;
-  }
-}
-
-figure {
-  margin: 3rem 0 3rem 2rem;
-}
-
-figure > img {
-  margin: 0 0 1rem 0;
-}
-
-figure > figcaption {
-  font-style: italic;
-}
-

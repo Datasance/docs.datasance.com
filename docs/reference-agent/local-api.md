@@ -9,7 +9,7 @@ All messages passing through the Local API must be in the [ioMessage format](#io
 
 If a message InfoFormat is actually base64, then it will be encoded again during transmission as JSON. While this is not very efficient, it is sustainable as a practice. Neither the ioFog Local API nor the containers need to examine messages to determine the type of encoding. They both simply decode arriving messages and encode messages before sending (just the ContextData and ContentData fields).
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> SDKs are available!</h3>
   <p>While this API is public, it is a relatively low-level. We have SDK libraries for many popular languages to make it easier <a href="sdk"></a> View Available SDKs.</p>
 </aside>

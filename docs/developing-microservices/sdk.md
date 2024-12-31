@@ -9,7 +9,7 @@ The ioFog SDK is an _optional_ library. It provides an easy way for your edge no
 - [JavaScript (Node.js)](https://github.com/Datasance/iofog-nodejs-sdk)
 - [Python](https://github.com/eclipse-iofog/iofog-python-sdk)
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Don't see your language?</h3>
   <p>If you don't need to communicate directly between your fog nodes, you might not need the SDK. But if you do, you still have options!</p>
   <p>Under the hood, the SDK uses the <a href="..//reference-agent/local-api">Agent Local API</a> which, while more low-level, is considered a public API you can call directly too.</p>

@@ -271,7 +271,7 @@ The magic about microservices and ioFog is that none of those microservice is sp
 
 Congratulations! You've now have the fundamentals of ioFog. Next, try developing Microservices on an ECN deployed on remote hosts. See this [guide](../platform-deployment/introduction) for deploying remotely.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>

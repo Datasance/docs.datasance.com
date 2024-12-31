@@ -2,7 +2,7 @@
 
 In this tutorial we will use a tutorial project to set up a local ECN with a set of example Microservices.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Familiar with the Core Concepts?</h3>
   <p>If you aren't already familiar with the core concepts of ioFog, you'll want to check out <a href="../getting-started/core-concepts">our Core Concepts</a> section.</p>
 </aside>
@@ -48,7 +48,7 @@ We can optionally verify the ioFog stack is provisioned correctly. The automated
 ./test.sh
 ```
 
-<aside class="notifications note">
+<aside class="notifications info">
   <p>Under the hood, those shell scripts are using potctl and YAML files to set up your environment. You'll get to use potctl directly in the next few sections. Impatient to know more? Dive directly into its <a href="..//potctl/introduction" target="_blank">documentation</a>.</p>
 </aside>
 
@@ -58,7 +58,7 @@ With a working ioFog environment set up, we're now ready to get to know ioFog.
 
 [Continue To Next Step: Get To Know ioFog](../tutorial/get-to-know-iofog).
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you run into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>

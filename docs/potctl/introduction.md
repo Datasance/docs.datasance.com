@@ -6,7 +6,7 @@ It can be used to remotely manage multiple different clusters from a single host
 
 This section will explain key aspects of `potctl's` design and functionality for the purposes of understanding the CLI in greater detail.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Next steps?</h3>
   <ul>
     <li><a href="../potctl/download">Download and installation.</a></li>

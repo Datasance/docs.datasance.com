@@ -153,7 +153,7 @@ Available Disk Threshold                 : 90
 
 ```
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Learn more Agent commands</h3>
   <p>If you want to learn about all the possible commands you can use on iofog-agent checkout the <a href="../reference-agent/cli-usage">CLI Usage guide</a>.</p>
 </aside>
@@ -205,7 +205,7 @@ Now that we know our way around a bit, let's learn how to manage and launch micr
 
 [Continue To Next Step: Manage Our Microservices](../tutorial/manage-our-microservices).
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>

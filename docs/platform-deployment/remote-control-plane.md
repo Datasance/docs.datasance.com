@@ -9,7 +9,7 @@ Every Edge Compute Network ('ECN') starts with a Control Plane that allows us to
 
 In this guide, our Control Plane will deploy a single Controller instance on a remote host.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/>We use YAML to define ioFog resources</h3>
   <p>The following procedures will define resources in YAML for potctl to consume. Specification of those YAML resources can be found <a href= "/docs/reference-potctl/reference-control-plane">here</a>.</p>
 </aside>

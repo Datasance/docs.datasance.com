@@ -40,7 +40,7 @@ Because the Controller daemon keeps track of all your Agents automatically, even
 
 If your microservices need to communicate with other nodes in your network, ioFog includes an optional daemon called the **Skupper AMQP Dispatch routers**.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Ready for more?</h3>
   <p>If you want to know more about all the ioFog components and learn how ioFog Edge Compute Network work, head to <a href="architecture.html">Architecture overview</a>.</p>
   <p>If instead you want to get started right away, you can check out the <a href="../getting-started/quick-start-local">Quick Start guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../platform-deployment/introduction">Remote deployment</a> or <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes deployment</a>.</p>

@@ -45,7 +45,7 @@ sudo yum install potctl
 
 Run `potctl version` to verify you have successfully installed the CLI.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Next steps?</h3>
   <ul>
     <li><a href="../getting-familiar.html">Getting familiar with potctl.</a></li>

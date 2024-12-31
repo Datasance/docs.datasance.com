@@ -170,7 +170,7 @@ We can also move Agents between Namespaces with a single command. The following 
 potctl move agent agent-1 namespace-2 -n namespace-1
 ```
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
   <ul>
     <li><a href="../potctl/resource-management">Resources management with potctl.</a></li>

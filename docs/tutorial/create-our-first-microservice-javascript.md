@@ -4,7 +4,7 @@
 
 [Node.js](https://nodejs.org/) is a JavaScript runtime built on Google Chrome's V8 JavaScript engine. In this step we're going to build a simple microservice using Node.js and the [ioFog SDK](../developing-microservices/sdk).
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> New to Node.js?</h3>
   <p>This tutorial assumes a working knowledge of Node.js and modern JavaScript.</p>
 </aside>
@@ -170,7 +170,7 @@ const output = iofog.ioMessage({
 iofog.wsSendMessage(output);
 ```
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> More about ioMessages?</h3>
   <p>ioMessages can contain a number of options and fields not described here. To learn more, check out the <a href="../reference-agent/local-api">Local API Reference</a>.</p>
 </aside>
@@ -437,7 +437,7 @@ We now want to see this code in action, so let's go ahead and learn how to deplo
 
 [Continue To Next Step: Deploy Our Microservice](../tutorial/deploy-our-microservice).
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>

@@ -75,7 +75,7 @@ Next up, we're going to create our very first microservice to run on ioFog.
 
 [Continue To Next Step: Create Our First Microservice](../tutorial/create-our-first-microservice-javascript)
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Questions? Run into issues?</h3>
   <p>If you ran into an issue, have a question, or just want to get plugged into the community, head over to our <a href="https://discuss.iofog.org/">Discussion Forum</a>. We'd love to have you!</p>
 </aside>

@@ -49,7 +49,7 @@ or, if we also want to delete the namespace, we can run:
 potctl delete namespace zoo-1 --force
 ```
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
   <ul>
     <li><a href="../potctl/connect-disconnect">Connecting to an existing ECN.</a></li>

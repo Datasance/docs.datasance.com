@@ -81,7 +81,7 @@ When we are finished working with the cluster, we can disconnect from it and rel
 potctl disconnect
 ```
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
   <ul>
     <li><a href="../potctl/legacy">Legacy commands.</a></li>

@@ -6,7 +6,7 @@ While the Agent daemon is a CLI, after setting things up a majority of your mana
 
 For full usage details see the [Agent CLI Usage](../reference-agent/cli-usage) page.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/> Learn more about microservices</h3>
   <p>The Agent is what gives your edge nodes the ability to spawn microservices. If you'd like to learn more about them, check out the <a href="../developing-microservices/overview">Microservices Overview</a></p>
 </aside>

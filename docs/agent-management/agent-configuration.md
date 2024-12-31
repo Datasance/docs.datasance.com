@@ -61,7 +61,7 @@ availableDiskThreshold: 90
 
   
 
-<aside  class="notifications note">
+<aside  class="notifications info">
 
 <h3><img  src="/images/icos/ico-note.svg"  alt=""/>Comprehensive AgentConfig reference</h3>
 

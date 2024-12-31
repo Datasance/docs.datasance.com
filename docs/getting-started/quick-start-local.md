@@ -58,7 +58,7 @@ Run `potctl version` to verify we have successfully installed the CLI.
 
 We can use `potctl deploy` to install and provision ECN components. Here we will deploy a containerized ECN locally.
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/>Want to know more about potctl?</h3>
   <p>We aren't going into detail about potctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full potctl documentation <a href="../potctl/introduction">here</a>.</p>
 </aside>

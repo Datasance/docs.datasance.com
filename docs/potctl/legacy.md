@@ -24,7 +24,7 @@ To determine what legacy commands you wish to use, please see the legacy cli doc
 
 [Controller](../reference-controller/cli-usage)
 
-<aside class="notifications note">
+<aside class="notifications info">
   <h3><img src="/images/icos/ico-note.svg" alt=""/>Next steps?</h3>
   <ul>
     <li><a href="../reference-potctl/reference-kinds">potctl reference.</a></li>
