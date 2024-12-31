@@ -24,7 +24,7 @@ Datasance PoT is built on the foundation of Eclipse ioFog, enhanced with enterpr
 | Eclipse ioFog    | Port Manager     | v3.0.0           | Port Manager       | v3.1.5            |
 | Eclipse ioFog    | iofog-go-sdk     | v3.3.0           | iofog-go-sdk       | v3.4.15           |
 | Eclipse ioFog    | iofog-nodejs-sdk | v3.0.0           | iofog-nodejs-sdk   | v3.0.1            |
-| CNCF NATS        | nats-server      | v2.10.22         | iofog-nodejs-sdk   | v2.10.22-2        |
+| CNCF NATS        | nats-server      | v2.10.22         | nats-server        | v2.10.22-2        |
 
 
 ## Key Features of Datasance PoT
