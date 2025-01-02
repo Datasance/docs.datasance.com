@@ -1,0 +1,77 @@
+:::tip[Want to deploy on Kubernetes cluster instead?]
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a single Linux remote host. Go to <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a> to deploy the Control Plane on Kubernetes Cluster instead.</p>
+:::
+
+# Remote Host - Deploy Control Plane
+
+Every Edge Compute Network ('ECN') starts with a Control Plane that allows us to manage ECN's resources.
+
+In this guide, our Control Plane will deploy a single Controller instance on a remote host.
+
+:::info[We use YAML to define ioFog resources]
+  <p>The following procedures will define resources in YAML for potctl to consume. Specification of those YAML resources can be found <a href= "/docs/reference-potctl/reference-control-plane">here</a>.</p>
+:::
+
+## Deploy a Control Plane on a Remote Host
+
+Create a template of controlplane.yaml like so:
+
+```bash
+echo "---
+apiVersion: datasance.com/v3
+kind: ControlPlane
+metadata:
+  name: albatros
+spec:
+  iofogUser:
+    name: Foo
+    surname: Bar
+    email: user@domain.com
+    password: iht234g9afhe
+  auth:
+    url: https://example.com/
+    realm: realm-name
+    realmKey: realm-key
+    ssl: exter
+    controllerClient: pot-controller
+    controllerSecret:
+    viewerClient: ecn-viewer
+  controllers:
+  - name: alpaca-1
+    host: 38.101.23.2
+    ssh:
+      user: bar
+      keyFile: ~/.ssh/id_rsa" > /tmp/controlplane.yaml
+```
+
+Make sure to edit the `host`, `ssh.user`, and `ssh.keyFile` fields to correspond with the remote host we are deploying to.
+
+Once we have edited the fields to our liking, go ahead and run:
+
+```bash
+potctl deploy -f /tmp/controlplane.yaml
+```
+
+## Verify the Deployment
+
+We can use the following commands to verify the Control Plane is up and running:
+
+```bash
+potctl get controllers
+```
+
+```bash
+potctl describe controller alpaca-1
+```
+
+```bash
+potctl describe controlplane
+```
+
+:::tip[Where to go from here?]
+<p>Having our Control Plane up and running, we can now go to <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

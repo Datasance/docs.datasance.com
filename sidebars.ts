@@ -113,6 +113,22 @@ const sidebars: SidebarsConfig = {
     },
     {
       "type": "category",
+      "label": "Platform IAM and RBAC",
+      "items": [
+        {
+          "type": "doc",
+          "label": "Introduction",
+          "id": "platform-iam/introduction"
+        },
+        {
+          "type": "doc",
+          "label": "Keycloak Deployment",
+          "id": "platform-iam/keycloak-deployment"
+        }
+      ]
+    },
+    {
+      "type": "category",
       "label": "Platform Deployment",
       "items": [
         {

@@ -1,0 +1,50 @@
+# Microservice Public Ports
+
+As we are dealing with the Edge nodes running outside traditional datacenters, isolating Edge node's traffic from both public and backend probably the first think that must be done to avoid security threats. However for some use-cases your backend services or external shareholders might require acces to  `tcp` or `http` endpoints of your Edge microservices. 
+
+Public Ports allow your microservices to securely expose public endpoints without opening ports on your Agents.
+
+When deploying Applications and Microservices, you can now specify extra fields on `public` block (`protocol`, `schemes` and `router`) when configuring the port mappings of your container.
+
+If `public` options are specified, this will open a tunnel that will forward all traffic incoming onto the port exposed by the container. Once it is enabled `Controller`automatically creates Proxy microservice on both `Agent` and `ControlPlane` side. 
+
+
+`protocol` lets you decide between `http` and `tcp`. It tells the public port which type of traffic to forward. the default value is `http`.
+
+`router` specifications are optional. `host` allows you to specify the name of router you would lilke to pass the traffic out which can be the name of Agent that runs with `interior` router mode or `default-router`that runs on ControlPlane, if it is not provided default value is `default-router`. `port` allows you to choose which port of the Proxy you would like to pass traffic out. Default public port range is `6001-7000`, If `port` is not defined, `Controller` automatically assign one of the avaliable port from the port range.
+
+
+```yaml
+...
+name: msvc-1
+agent:
+ name: agent-1
+container:
+ ...
+ ports:
+   - internal: 80
+     external: 5000
+     protocol: tcp
+     public:
+      protocol: http
+      schemes:
+        - http
+      router:
+        port: 6005
+        host: default-router
+...
+```
+
+Deploying such a configuration would result in automatically creating Proxy microservices on ControlPlane and Agent side. Port 6005 being opened on the Controller host if your cluster is `RemoteControlPlane`or K8S LoadBalancer endpoint if  your cluster is `KubernetesControlPlane`, and all incoming tcp traffic would be tunneled to agent-1, port 6005.
+
+The public address can be retrieved using:
+
+```bash
+potctl describe microservice msvc-1
+```
+
+The outputted YAML will contain a `publicLink` key, with the value set to the URL of the public port.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

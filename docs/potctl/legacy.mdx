@@ -1,0 +1,35 @@
+# Legacy Commands in potctl
+
+We can use legacy CLI of each component i.e Controller and Agent.
+
+## Using Legacy Commands
+
+To use legacy commands from potctl, preface any legacy command you want with:
+
+```bash
+potctl legacy <component> <component-name> command -n <namespace of component>
+```
+
+e.g.
+
+```bash
+potctl legacy agent iofog-agent config -n default
+```
+
+where I want to get the output of the config command from my agent, named iofog-agent
+
+To determine what legacy commands you wish to use, please see the legacy cli documentation for each component at the following links:
+
+[Agent](../reference-agent/cli-usage)
+
+[Controller](../reference-controller/cli-usage)
+
+:::info[Next steps?]
+  <ul>
+    <li><a href="../reference-potctl/reference-kinds">potctl reference.</a></li>
+  </ul>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
