@@ -5,10 +5,10 @@
 You can download preconfigured realm import json for Datasance PoT with below command. Replace `newRealmValue` with the you would like to give for your realm.
 
 ```bash
-wget -q -O - "https://example.com/data.json" | sed 's/\$realm/newRealmValue/g' > datasance-pot-ralm.json
+wget -q -O - "https://raw.githubusercontent.com/Datasance/keycloak/refs/heads/main/datasance-realm_template.json" | sed 's/\$realm/newRealmValue/g' > datasance-pot-ralm.json
 ```
 ##### Example
 
-```bash title="Download preconfigured Datasance PoT realm configuration and assing realm-name: foo "
-wget -q -O - "https://example.com/data.json" | sed 's/\$realm/foo/g' > datasance-pot-ralm.json
+```bash title="Download preconfigured Datasance PoT realm configuration and assing realm-name: test "
+wget -q -O - "https://raw.githubusercontent.com/Datasance/keycloak/refs/heads/main/datasance-realm_template.json" | sed 's/\$realm/test/g' > datasance-pot-realm.json
 ```
