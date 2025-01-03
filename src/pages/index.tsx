@@ -27,7 +27,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout
       title={`${siteConfig.title}`}
-      description="Datasance Documents <head />">
+      description="Datasance Documentation">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
