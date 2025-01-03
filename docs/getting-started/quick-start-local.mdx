@@ -178,6 +178,10 @@ spec:
       registry: remote
     container:
       rootHostAccess: false
+      runAsUser: ''
+      platform: ''
+      runtime: ''
+      cdiDevices: []
       ports: []
     config:
       test_mode: true
@@ -191,10 +195,18 @@ spec:
       registry: remote
     container:
       rootHostAccess: false
+      runAsUser: ''
+      platform: ''
+      runtime: ''
+      cdiDevices: []
       ports:
         - external: 5000
           internal: 80
-          public: 5000
+          protocol: tcp
+          public:
+            protocol: http
+            schemes:
+              - http
       env:
         - key: BASE_URL
           value: http://localhost:8080/data

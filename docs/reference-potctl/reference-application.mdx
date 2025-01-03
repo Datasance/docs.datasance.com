@@ -34,6 +34,10 @@ spec:
         # registry: remote
       container:
         rootHostAccess: false
+        runAsUser: ''
+        platform: ''
+        runtime: ''
+        cdiDevices: []
         ports: []
       config:
         test_mode: true
@@ -52,11 +56,19 @@ spec:
         registry: remote
       container:
         rootHostAccess: false
+        runAsUser: ''
+        platform: ''
+        runtime: ''
+        cdiDevices: []
         ports:
           - internal: 80
             external: 5000
-            public: 5001
             protocol: tcp
+            public:
+              protocol: http
+              schemes:
+                - http
+        extraHosts: [] 
         env:
           - key: BASE_URL
             value: http://localhost:8080/data
@@ -138,6 +150,14 @@ spec:
   container:
     # Requires root host access on the agent ?
     rootHostAccess: false
+    # Specify which user you would like to run contianer
+    runAsUser: ''
+    # The platform for the container image
+    platform: ''
+    # Which runtime you would like to run container
+    runtime: ''
+    # Map CDI devices to your container runtime
+    cdiDevices: []
     # Microservice container volume mapping list on the agent
     volumes:
       # This will create a volume mapping between the agent '/tmp/msvc' volume and the microservice container volume '/data'
@@ -145,7 +165,8 @@ spec:
         containerDestination: /data
         accessMode: 'rw' # ReadWrite access to the mounted volume
         type: 'bind' # Accepts 'bind' or 'volume'. Default is 'bind'
-
+    # Define extra host for your container
+    extraHosts: [] 
     # Microservice container environment variable list on the agent
     env:
       # This will create an environment variable inside the microservice container with the key 'BASE_URL' and the value 'http://localhost:8080/data'
@@ -156,9 +177,13 @@ spec:
       # This will create a mapping between the port 80 of the microservice container and the port 5000 of the agent
       - internal: 80
         external: 5000
-        public: 5001 # This will create a HTTP proxy tunnel between the port 5001 on the default router, and the port 5000 on the Agent
-        host: default-router # Target for the public port (use Agent name, defaults to `default-router`)
-        protocol: http # Protocol for the proxy tunnel (Either tcp or http, defaults to http)
+        public: # This will create a HTTP proxy tunnel between the port 6005 on the default router, and the port 5000 on the Agent
+          protocol: http # Protocol for the proxy tunnel (Either tcp or http, defaults to http)
+          schemes:
+            - http
+          router:
+            port: 6005
+            host: default-router
     commands:
       # This will result in the container being started as `docker run <image> <options> dbhost localhost:27017`
       - 'dbhost'
@@ -188,12 +213,41 @@ spec:
 | images.catalogId         | Catalog item ID to be used in lieu and place of the images and the registry. (see [catalog items](../applications/microservice-registry-catalog))                                               |
 | config                   | User-defined arbitrary object to be passed to the microservice runtime as its configuration                                                                                                          |
 | container.rootHostAccess | Set to true if the container needs to be able to access the host. This will also set the network of the container to `host`                                                                          |
+| container.runAsUSer      | Set which user you would like to run your microservice |
+| container.platform       | Define platform option for your container iamge |
+| container.runtime        | Define which runtime you would like to run your container |
+| container.cdiDevices     | Map CDI devices to your microservice runtime |
 | container.ports          | List of port mapping to be provided to the container running the microservice (See [public ports](../applications/microservice-exposing) for a more detailed explanation of public ports)       |
 | container.volumes        | List of volume mapping to be provided to the container running the microservice                                                                                                                      |
+| container.extraHosts     | Define extra host for your containers. Like passing `--add-host` argument while running container.|
 | container.env            | List of environment variables to be provided to the container running the microservice                                                                                                               |
 | container.commands       | List of arguments passed as CMD to the container runtime                                                                                                                                             |
 | application              | Unique identifier of the Application the microservice is part of                                                                                                                                     |
 | rebuild                  | Boolean instructing the ioFog Agent to rebuild the microservice container after update. Use this flag if you updated the content of the docker image but didn't change the image name and/or tag.    |
+
+##### Extra Hosts
+
+By default ioFog `Agent` pass it's timezone configuration as a `TZ` env variable for each microservice in order to let developers easyly configure their microservices on different timezone and locations.
+On the other hand, ioFog `Agent` also automatically define `iofog` ExtraHost with Àgent` IP adress for each microservice if they are not configured with `rootHostAccess` enabled. Which helps microservices to talk with Àgent` Local-API.
+You can also define additinal Extra Hosts for your microservices with èxtraHosts`options. You can just define some literral IP adress as a extraHost or you can also define a query and let `Controller` to define IP adress according to your query.
+
+```yaml
+...
+    volumes: [] 
+    extraHosts:
+      - name: literalHost 
+        address: "192.168.0.120" # Directly assign an IP address
+      - name: agentHost
+        address: "${Agents.foo}"  # Assigns the IP adress of the Agent with name `foo`
+      - name: appHostLocal
+        address: "${Apps.foo.bar.local}" #Assigns the IP adress of the microservice named `bar` inside  the application named `foo`
+      - name: appHostPublic
+        address: "${Apps.foo.bar.public.port}"
+    env:
+
+...
+```
+
 
 ## Using a template
 

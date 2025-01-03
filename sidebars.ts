@@ -436,18 +436,28 @@ const sidebars: SidebarsConfig = {
         },
         {
           "type": "doc",
-          "label": "Diagnostics",
-          "id": "reference-microserivces-catalog/diagnostics"
-        },
-        {
-          "type": "doc",
           "label": "HAL",
           "id": "reference-microserivces-catalog/hal"
         },
         {
           "type": "doc",
+          "label": "EdgeGuard",
+          "id": "reference-microserivces-catalog/Edgeguard"
+        },
+        {
+          "type": "doc",
           "label": "REST Blue",
           "id": "reference-microserivces-catalog/rest-blue"
+        },
+        {
+          "type": "doc",
+          "label": "Proxus IIoT Platform",
+          "id": "reference-microserivces-catalog/Proxus-IIoT"
+        },
+        {
+          "type": "doc",
+          "label": "Diagnostics",
+          "id": "reference-microserivces-catalog/diagnostics"
         },
         {
           "type": "doc",

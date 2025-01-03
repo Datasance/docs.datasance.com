@@ -1,0 +1,186 @@
+# Proxus IIoT Platform
+
+
+Proxus IIoT Platform
+
+
+```bash
+potctl deploy -f proxus-edge-template.yaml -n $namespace
+```
+
+:::info[Create Application Template]
+
+::: 
+
+```yaml title="proxus-edge-template.yaml"
+---
+apiVersion: datasance.com/v3
+kind: ApplicationTemplate
+metadata:
+  name: proxus-edge
+spec:
+    description: This is an application template for Proxus Edge deployments.
+    variables:
+    - key: gateway-name
+      description: Name of Proxus Gateway to deploy Microservices to
+    - key: agent-name
+      description: Name of Agent to deploy Microservices to
+    - key: account
+      description: NATS account
+    - key: password
+      description: NATS password
+    - key: domain
+      description: NATS domain
+    - key: port
+      description: NATS port
+    - key: url
+      description: NATS url
+    - key: url-protocol
+      description: NATS url-protocol
+    - key: user
+      description: NATS user
+    - key: ca-cert
+      description: Base64 encoded CA Cert 
+    - key: tls-cert
+      description: Base64 encoded TLS Cert 
+    - key: tls-key
+      description: Base64 encoded TLS Key 
+    - key: proxus-log-level
+      description: proxus-log-level
+    - key: proxus-gateway-id
+      description: proxus-gateway-id
+    application:
+      microservices:
+      - name: "{{gateway-name}}-nats"
+        agent:
+          name: "{{agent-name}}"
+        config:
+          accounts:
+            - accountName: "{{account}}"
+              users:
+                - userName: "{{user}}"
+                  password: "{{password}}"
+              jetstream: true
+          natsServer:
+            serverName: "{{user}}-leaf"
+            port: 4222
+            jsDomain: "{{domain}}"
+            leafNodes:
+              remotes:
+                urlProtocol: "{{url-protocol}}"
+                url: "{{url}}"
+                user: "{{user}}"
+                password: "{{password}}"
+                account: "{{account}}"
+                tls:
+                  CaCert: "{{ca-cert}}"
+                  TlsCert: "{{tls-cert}}"
+                  TlsKey: "{{tls-key}}"
+        images:
+          x86: ghcr.io/datasance/nats:latest
+          arm: ghcr.io/datasance/nats:latest
+          registry: remote
+        container:
+          rootHostAccess: false
+          volumes:
+            - hostDestination: nats-data
+              containerDestination: /store_leaf
+              accessMode: rw
+              type: volume
+          ports:
+            - internal: 4222
+              external: 4222
+              protocol: tcp
+          env: []
+      - name: "{{gateway-name}}-proxus"
+        agent:
+          name: "{{agent-name}}"
+        config: {}
+        images:
+          x86: proxusplatform/proxus-server:1.1.1.0-x64
+          arm: proxusplatform/proxus-server:1.1.1.0-arm64
+          registry: remote
+        container:
+          runAsUser: "0"
+          volumes:
+            - hostDestination: proxus-config
+              containerDestination: /app/config
+              accessMode: rw
+              type: volume
+          ports:
+            - internal: 8083
+              external: 8083
+              protocol: tcp
+            - internal: 1883
+              external: 1883
+              protocol: tcp 
+          env:
+            - key: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - key: ASPNETCORE_URLS
+              value: http://+:8083
+            - key: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+              value: 'false'
+            - key: TZ
+              value: Europe/Istanbul
+          commands:
+            - ./Proxus.Server
+            - EdgeMode=Proxus
+            - Loglevel="{{proxus-log-level}}"
+            - GatewayID="{{proxus-gateway-id}}"
+            - GatewayName="{{gateway-name}}"
+            - BrokerUrl=nats://iofog:4222
+            - BrokerUser="{{user}}"
+            - BrokerPassword="{{password}}"
+```
+
+```bash
+potctl deploy -f proxus-edge.yaml -n $namespace
+```
+:::info[Deploy Proxu IIoT Edge from Application Template]
+
+::: 
+
+```yaml title="proxus-edge.yaml"
+---
+apiVersion: datasance.com/v3
+kind: Application
+metadata:
+  name: proxus-edge # name of application
+spec:
+  template:
+    name: proxus-edge
+    variables:
+      - key: gateway-name # name of proxus gateway
+        value: "
+      - key: agent-name # name of agent you would like to deploy the application
+        value: "
+      - key: account # nats-account
+        value: ""
+      - key: user # nats-user
+        value: ""
+      - key: password # nats-user-password
+        value: ""
+      - key: domain   # nats jetsream domain
+        value: "hub"
+      - key: port
+        value: 4222
+      - key: url
+        value: "NATS-URL:443"
+      - key: url-protocol  # nats remote protocols `nats` or `ws`
+        value: nats
+      - key: proxus-log-level
+        value: "2"
+      - key: proxus-gateway-id # proxus gateway id
+        value: "1"
+      - key: ca-cert # ssl/tls base64 encoded certificates for nats tls configuration
+        value: $ca-cert 
+      - key: tls-cert # ssl/tls base64 encoded certificates for nats tls configuration
+        value: $tls-cert
+      - key: tls-key # ssl/tls base64 encoded certificates for nats tls configuration
+        value: $tls-key
+```
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

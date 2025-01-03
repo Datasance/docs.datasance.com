@@ -235,6 +235,10 @@ spec:
         x86: edgeworx/healthcare-heart-rate:x86-v1
       container:
         rootHostAccess: false
+        runAsUser: ''
+        platform: ''
+        runtime: ''
+        cdiDevices: []
         ports: []
       config:
         test_mode: true
@@ -252,6 +256,10 @@ spec:
         registry: remote
       container:
         rootHostAccess: false
+        runAsUser: ''
+        platform: ''
+        runtime: ''
+        cdiDevices: []
         ports:
           - external: 5000
             internal: 80
@@ -287,6 +295,10 @@ spec:
     registry: remote # public docker
   container:
     rootHostAccess: false
+    runAsUser: ''
+    platform: ''
+    runtime: ''
+    cdiDevices: []
     volumes:
       - hostDestination: /tmp/microservice
         containerDestination: /tmp

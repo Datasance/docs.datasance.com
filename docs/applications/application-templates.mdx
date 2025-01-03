@@ -40,7 +40,11 @@ spec:
           x86: edgeworx/healthcare-heart-rate:x86-v1
           registry: remote # public docker
         container:
-          rootHostAccess: false
+          roothostaccess: false
+          runAsUser: ''
+          platform: ''
+          runtime: ''
+          cdiDevices: []
           ports: []
         config:
           test_mode: true
@@ -55,6 +59,10 @@ spec:
           registry: remote
         container:
           rootHostAccess: false
+          runAsUser: ''
+          platform: ''
+          runtime: ''
+          cdiDevices: []
           ports:
             # The ui will be listening on port 80 (internal).
             - external: 5001
@@ -149,6 +157,10 @@ spec:
       extraHosts: []
       ports: []
       rootHostAccess: false
+      runAsUser: ''
+      platform: ''
+      runtime: ''
+      cdiDevices: []
     config:
       data_label: Alex
       test_mode: true
@@ -185,6 +197,10 @@ spec:
       - internal: 80
         external: 5001
       rootHostAccess: false
+      runAsUser: ''
+      platform: ''
+      runtime: ''
+      cdiDevices: []
     config: {}
     application: heartrate-demo
   routes:
