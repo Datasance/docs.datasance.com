@@ -151,7 +151,7 @@ Which should output something similar to:
 CONTAINER ID        IMAGE                          COMMAND                  CREATED             STATUS              PORTS                                                          NAMES
 71927882293f        iofog/router:3.0.1             "/qpid-dispatch/laun…"   15 minutes ago      Up 15 minutes       0.0.0.0:5672->5672/tcp, 0.0.0.0:56721-56722->56721-56722/tcp   iofog_PJFbk3ZHjX3RkNWxwcRqzDXnKV6mLHmq
 8454ca70755b        iofog/agent:3.0.0              "sh /start.sh"           15 minutes ago      Up 15 minutes                                                                      iofog-agent
-dc7568ad1708        iofog/controller:3.0.0         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
+dc7568ad1708        ghcr.io/datasance/controller:3.4.6         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
 ```
 
 ## Deploy Microservices
