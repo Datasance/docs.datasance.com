@@ -12,6 +12,8 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
   --alert-highlight: rgba(230, 100, 102, 0.2);
   --alert-foreground: #10253D ;
+
+
 }
 
 [data-theme='light'] {
@@ -40,6 +42,7 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
   --alert-highlight: rgba(230, 100, 102, 0.2);
   --alert-foreground: #ebedf0 ;
+
 
 }
 
@@ -124,4 +127,14 @@
 
 .emoji-icon {
   vertical-align: initial;
+}
+
+.button {
+  color: #fff; /* Text color */
+  padding: 5px 15px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: bold;
+  background-color: #644A92;
+  border-color: #e7646609;
 }

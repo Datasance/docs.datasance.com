@@ -157,6 +157,12 @@ const config: Config = {
           label: 'LinkedIn',
           position: 'right',
         },
+        {
+          href: 'https://www.datasance.com/trial',
+          label: 'Trial Request',
+          position: 'right',
+          class: 'button button--primary button--small'
+        },
       ],
     },
     footer: {
