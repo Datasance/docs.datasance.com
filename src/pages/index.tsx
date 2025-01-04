@@ -12,7 +12,7 @@ function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <header className={styles.heroBanner}>
-      <Redirect to="/v1.3.3/home/welcome" />;
+      <Redirect to="/home/welcome" />;
     </header>
   );
 }
@@ -21,7 +21,7 @@ export default function Home(): JSX.Element {
   const {siteConfig} = useDocusaurusContext();
 
   useEffect(() => {
-    <Redirect to="/v1.3.3/home/welcome" />;
+    <Redirect to="/home/welcome" />;
   }, [])
   
   return (

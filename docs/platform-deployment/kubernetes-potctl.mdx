@@ -18,6 +18,16 @@ In this guide, our Control Plane will deploy a single Controller instance.
 
 ## Deploy a Control Plane on Kubernetes
 
+:::warning[Prepare your Keycloak Realms for Datasance PoT]
+  <p>We recommened going through the <a href="../platform-iam/introduction">Keycloak Installation Guide</a> before continuing on here.</p>
+:::
+
+:::warning[Setup your db for production environment]
+Datasance PoT support both `mysql` and `postgres` as an external databases.
+If you must provide external db configuration if you want to deploy `Controller` with replica > 1
+<p>We recommened going through the <a href="../platform-iam/database">Database Installation Guide</a> before continuing on here.</p>
+::: 
+
 Create a template of controlplane.yaml like so:
 
 ```bash

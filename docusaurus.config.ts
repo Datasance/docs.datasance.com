@@ -18,7 +18,7 @@ const config: Config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'Datasance', // Usually your GitHub org/user name.
-  projectName: 'datasance.com', // Usually your repo name.
+  projectName: 'docs.datasance.com', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -31,6 +31,16 @@ const config: Config = {
     locales: ['en'],
   },
 
+  plugins: [
+    [
+        '@docusaurus/plugin-google-gtag',
+        {
+            trackingID: 'G-KGPCD08K90',
+            anonymizeIP: false,
+        },
+    ],
+],
+
   presets: [
     [
       'classic',
@@ -42,7 +52,7 @@ const config: Config = {
           versions: {
             current: {
               label: 'v1.3.3',
-              path: 'v1.3.3',
+              // path: 'v1.3.3',
             },
           },
 

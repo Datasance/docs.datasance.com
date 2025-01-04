@@ -122,6 +122,11 @@ const sidebars: SidebarsConfig = {
         },
         {
           "type": "doc",
+          "label": "Database Deployment",
+          "id": "platform-iam/database"
+        },
+        {
+          "type": "doc",
           "label": "Keycloak Deployment",
           "id": "platform-iam/keycloak-deployment"
         }
