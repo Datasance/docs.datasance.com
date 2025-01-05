@@ -458,17 +458,17 @@ const sidebars: SidebarsConfig = {
           "type": "doc",
           "label": "Proxus IIoT Platform",
           "id": "reference-microservices-catalog/Proxus-IIoT"
-        },
-        {
-          "type": "doc",
-          "label": "Diagnostics",
-          "id": "reference-microservices-catalog/diagnostics"
-        },
-        {
-          "type": "doc",
-          "label": "JSON REST API",
-          "id": "reference-microservices-catalog/jsonrestapi"
         }
+        // {
+        //   "type": "doc",
+        //   "label": "Diagnostics",
+        //   "id": "reference-microservices-catalog/diagnostics"
+        // },
+        // {
+        //   "type": "doc",
+        //   "label": "JSON REST API",
+        //   "id": "reference-microservices-catalog/jsonrestapi"
+        // }
       ]
     },
     {

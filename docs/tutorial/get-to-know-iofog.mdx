@@ -43,7 +43,7 @@ CONTAINER ID        IMAGE                                          COMMAND      
 1fc59ab19b71        iofog/sensors:latest                           "docker-entrypoint.s…"   12 minutes ago      Up 12 minutes                                                                                           iofog_6VLjktywfnJt8NwjQf9PcF29TbLN9HRM
 a2fb3fa95c94        quay.io/interconnectedcloud/qdrouterd:latest   "/home/qdrouterd/bin…"   13 minutes ago      Up 13 minutes       5671/tcp, 0.0.0.0:5672->5672/tcp, 55672/tcp, 0.0.0.0:56721-56722->56721-56722/tcp   iofog_rrkXQJMdvJZ8tPVhvMhvR9jWMDctYBPv
 82e539cf4b88        iofog/agent:3.0.0                              "sh /start.sh"           14 minutes ago      Up 14 minutes                                                                                           iofog-agent
-72fd11ff5d8d        ghcr.io/datasance/controller:3.4.6                         "node /usr/local/lib…"   14 minutes ago      Up 14 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                                      iofog-controller
+72fd11ff5d8d        ghcr.io/datasance/controller:3.4.7                         "node /usr/local/lib…"   14 minutes ago      Up 14 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                                      iofog-controller
 ```
 
 We can also see that in the PORTS column some of these containers have published [port mappings](https://docs.docker.com/config/containers/container-networking/):
