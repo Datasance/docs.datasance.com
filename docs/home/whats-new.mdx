@@ -1,16 +1,16 @@
 # What's New in PoT?
-- [EdgeGuard](../reference-microserivces-catalog/Edgeguard) , a new extension of the Datasance PoT  and the Eclipse ioFog Hardware Abstraction Layer Microservice. It serves as a critical security and monitoring component for edge devices running ioFog Agents.
+- [EdgeGuard](../reference-microservices-catalog/Edgeguard) , a new extension of the Datasance PoT  and the Eclipse ioFog Hardware Abstraction Layer Microservice. It serves as a critical security and monitoring component for edge devices running ioFog Agents.
 - [PoT Kubernetes Operator](../reference-potctl/reference-control-plane) is now certified by RedHat OpenShift Operators Hub and Kuberentes Community Operators Hub.
-- [Kubernetes Control Plane](../reference-potctl/reference-control-plane) componenents are now allign with security best practises.
+- [Kubernetes Control Plane](../reference-potctl/reference-control-plane) components are now align with security best practises.
 - [Keycloak Auth and RBAC](../platform-iam/introduction) is now available.
 - [Controller Ingress](../reference-potctl/reference-control-plane) option is now available for `KubernetesControlPlane`.
 - [Router and Proxy SSL Configurations](../reference-potctl/reference-control-plane) is now available for `KubernetesControlPlane`.
-- [Router](../getting-started/core-concepts) is upgraded from Apache Qpid Dispatch to Skupper Router.
+- [Router](../getting-started/core-concepts) is upgraded from Apache Qpid-Dispatch to Skupper Router.
 - [WASM Container Support](../reference-potctl/reference-application) is now available for WasmEdge, Wasmer and Wasmtime runtimes.
-- [GPU Workload Management](../reference-potctl/reference-application) support is now available via CDI defitinions on microservice YAML files.
+- [GPU Workload Management](../reference-potctl/reference-application) support is now available via CDI definitions on microservice YAML files.
 - [New Microservice Container Configuration Options](../reference-potctl/reference-application) are now available `runAsUser` `platform` `runtime` `cdiDevices` .
-- [NATs Catalog Microservice](../reference-microserivces-catalog/nats) is now available.
-- [ECN Viewer: System Apllications](../reference-controller/ecn-viewer) added to `Controller` for `Router` & `Proxy` microservices SSL/TLS configurations and helath monitoring.
+- [NATs Catalog Microservice](../reference-microservices-catalog/nats) is now available.
+- [ECN Viewer: System Applications](../reference-controller/ecn-viewer) added to `Controller` for `Router` & `Proxy` microservices SSL/TLS configurations and helath monitoring.
 - [ECN Viewer: SwaggerUI](../reference-controller/ecn-viewer) added to `ECN-Viewer` which helps SREs and Developers send request to the `Controller REST-API` via browser.
 - [Template parametric expressions](../reference-potctl/reference-template-engine) are now available.
 - [Application Templates](../applications/application-templates) which simplify and improve management of your microservices.
@@ -23,7 +23,7 @@
 
 EdgeGuard is particularly valuable for edge devices deployed outside traditional datacenters, where the risk of unauthorized access is significantly higher. By detecting potential security breaches and wiping all microservices running on the compromised ioFog Agent, EdgeGuard helps organizations adhere to strict security policies and minimize exposure to potential threats
 
-[Find out more](../reference-microserivces-catalog/Edgeguard)!
+[Find out more](../reference-microservices-catalog/Edgeguard)!
 
 ## Kubernetes ControlPlane
 
@@ -55,12 +55,12 @@ Learn more about SSL Configurations from `KubernetesControlPlane` [YAML specific
 
 ## Router
 
-The Datasance PoT Router, upgraded from Apache Qpid Dispatch to Skupper Router as Dispatch Router is maining by RedHat Skupper's community. 
-For production workload you need to configure SSL/TLS accros cluster. You don't need to manully send  certificates as a volume to your Edge device , `Router` can now gather it's SSL/TLS configuration and base64 encoded SSL/TLS certificates from `Agent` LocalAPI which helps you to easily build trust across Edge Compute Network (ECN).
+The Datasance PoT Router, upgraded from Apache Qpid Dispatch to Skupper Router as Dispatch Router is maintained by RedHat Skupper's community. 
+For production workload you need to configure SSL/TLS across cluster. You don't need to manually send  certificates as a volume to your Edge device , `Router` can now gather it's SSL/TLS configuration and base64 encoded SSL/TLS certificates from `Agent` LocalAPI which helps you to easily build trust across Edge Compute Network (ECN).
 
 ## WASM Container Support
 
-WebAssemly promising a huge potential for state-of-the art Edge use cases. You can run, deploy and manage  WebAssembly containers alongside with your traditional containers. Folks at containerd/runwasi community building containerd Wasm shims for the most popular WebAssembly runtimes. We are now publishing containerd wasm shims for WasmEdge, Wasmer, and Wasmtime runtimes as  `.deb` `.rpm` packages on our officialy [Linux Artifact Repository](https://downloads.datasance.com), and it is already included in `Agent` installation script on `potctl`. This expands the platform's capability to deploy lightweight, portable, and efficient applications, unlocking new possibilities for edge computing.
+WebAssemly promising a huge potential for state-of-the art Edge use cases. You can run, deploy and manage  WebAssembly containers alongside with your traditional containers. Folks at containerd/runwasi community building containerd Wasm shims for the most popular WebAssembly runtimes. We are now publishing containerd wasm shims for WasmEdge, Wasmer, and Wasmtime runtimes as  `.deb` `.rpm` packages on our official [Linux Artifact Repository](https://downloads.datasance.com), and it is already included in `Agent` installation script on `potctl`. This expands the platform's capability to deploy lightweight, portable, and efficient applications, unlocking new possibilities for edge computing.
 
 Check out the Microservice [YAML specification](../reference-potctl/reference-application)!
 
@@ -80,9 +80,9 @@ Check out the Microservice [YAML specification](../reference-potctl/reference-ap
 
 The NATs Catalog Microservice offers a scalable and lightweight solution for message streaming and communication within the ECN or Edge2X connectivity with built-in MQTT support comes with NATs. Designed for high-performance, this microservice integrates seamlessly with Datasance PoT’s architecture.
 
-[Check out NATs Catalog Microservice](../reference-microserivces-catalog/nats)
+[Check out NATs Catalog Microservice](../reference-microservices-catalog/nats)
 
-## ECN Viewer: System Apllications
+## ECN Viewer: System Applications
 
 Each router and proxy microservices are created automatically as a `system` application on each `Agent` . New `applications/system` and `microservices/system` endpoints are avaliable on Controller REST-API. The ECN Viewer’s System Applications tab allows Admins and SREs to manage Router and Proxy microservices, configure SSL/TLS settings, and monitor the their health.
 

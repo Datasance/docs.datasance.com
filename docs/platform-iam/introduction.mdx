@@ -10,7 +10,7 @@ By default preconfigured Datasance PoT realm comes with below Realm level roles:
 - pot-Developer
 - pot-Viewer
 
-By default preconfigured Datasance PoT realm comes with  two client `pot-controller` and `ecn-viwer`. 
+By default preconfigured Datasance PoT realm comes with  two client `pot-controller` and `ecn-viewer`. 
 `ecn-viewer`client comes with `Standard Flow` , `pot-controller` client comes with `Direct access grants` and `Service accounts roles`
 
 Both `pot-controller` and `ecn-viewer` client has tree roles: `SRE`, `Developer` and `Viewer`
@@ -32,12 +32,12 @@ It is important to note that you have never change the client level roles as `Co
 
 - `SRE`'s can deploy, manage and configure both Agents, System Applications, Applications and Microservices.
 - `Developer`'s can deploy, manage and configure Applications and Microservices.
-- `Viewer`'s can only viewe the resources on cluster.
+- `Viewer`'s can only view the cluster resources.
 
 By default users with `Developer` and `Viewer` roles need to configure 2FA. If you want to force `SRE`'s to 2FA you need to configure settings on `browser dynamic otp` flow on Authentication section.
 
-:::warning[Don't have Keycloak Intance?]
-<p>We recommened going through the <a href="../platform-iam/keycloak-deployment">Keycloak Deployment Guide</a> before continuing on here.</p>
+:::warning[Don't have Keycloak Instance?]
+<p>We recommended going through the <a href="../platform-iam/keycloak-deployment">Keycloak Deployment Guide</a> before continuing on here.</p>
 ::: 
 
 ## Download PreConfigured Realm Configuration for Datasance PoT
@@ -49,7 +49,7 @@ wget -q -O - "https://raw.githubusercontent.com/Datasance/keycloak/refs/heads/ma
 ```
 ##### Example
 
-```bash title="Download preconfigured Datasance PoT realm configuration and assing realm-name: test "
+```bash title="Download preconfigured Datasance PoT realm configuration and assign realm-name: test "
 wget -q -O - "https://raw.githubusercontent.com/Datasance/keycloak/refs/heads/main/datasance-realm_template.json" | sed 's/\$realm/test/g' > datasance-pot-realm.json
 ```
 
@@ -66,7 +66,7 @@ Import the preconfigured realm json you download in previous step.
 
 ## Create User
 
-Create user inside imported realm. Create user's password and assing role.
+Create user inside imported realm. Create user's password and assign role.
 
 <img src="/images/keycloak/keycloak-5.png" />
 <img src="/images/keycloak/keycloak-6.png" />
@@ -115,10 +115,10 @@ spec:
 ```
 
 
-## Configure ECN-Viwer URL
+## Configure ECN-Viewer URL
 
 :::warning[Configure ECN-Viewer Redirect URL]
-Once you deploy your Datasance PoT `ControlPlane`, you need to configure ECN-Viwer redirect URL on Keycloak client setting.
+Once you deploy your Datasance PoT `ControlPlane`, you need to configure ECN-Viewer redirect URL on Keycloak client setting.
 Follow instructions on below images.
 Only configure `Root URL`and do not put `/` at the end of `Root URL`  
 ::: 

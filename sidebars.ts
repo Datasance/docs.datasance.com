@@ -437,37 +437,37 @@ const sidebars: SidebarsConfig = {
         {
           "type": "doc",
           "label": "NATs",
-          "id": "reference-microserivces-catalog/nats"
+          "id": "reference-microservices-catalog/nats"
         },
         {
           "type": "doc",
           "label": "HAL",
-          "id": "reference-microserivces-catalog/hal"
+          "id": "reference-microservices-catalog/hal"
         },
         {
           "type": "doc",
           "label": "EdgeGuard",
-          "id": "reference-microserivces-catalog/Edgeguard"
+          "id": "reference-microservices-catalog/Edgeguard"
         },
         {
           "type": "doc",
           "label": "REST Blue",
-          "id": "reference-microserivces-catalog/rest-blue"
+          "id": "reference-microservices-catalog/rest-blue"
         },
         {
           "type": "doc",
           "label": "Proxus IIoT Platform",
-          "id": "reference-microserivces-catalog/Proxus-IIoT"
+          "id": "reference-microservices-catalog/Proxus-IIoT"
         },
         {
           "type": "doc",
           "label": "Diagnostics",
-          "id": "reference-microserivces-catalog/diagnostics"
+          "id": "reference-microservices-catalog/diagnostics"
         },
         {
           "type": "doc",
           "label": "JSON REST API",
-          "id": "reference-microserivces-catalog/jsonrestapi"
+          "id": "reference-microservices-catalog/jsonrestapi"
         }
       ]
     },
