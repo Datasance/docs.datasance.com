@@ -15,6 +15,7 @@ This will be officiallay part of Agent configuration for auto deployment.For now
 Configure `abstractedHardwareEnabled` as `true` for your Agent via `ECNViewer` or `potctl`
 :::
 
+## EdgeGuard as a traditional container
 
 ```yaml
 ---
@@ -29,8 +30,8 @@ spec:
         name: foo
       images:
         registry: 1
-        x86: ghcr.io/datasance/edge-guard:1.0.0
-        arm: ghcr.io/datasance/edge-guard:1.0.0
+        x86: ghcr.io/datasance/edge-guard:latest
+        arm: ghcr.io/datasance/edge-guard:latest
       container:
         volumes:
           - hostDestination: /etc/iofog-agent/local-api
@@ -53,6 +54,41 @@ spec:
 The `EdgeGuard` images will always be available on ioFog Controllers using the catalog item ID `4`.
 
 Please refer to the [catalog overview](../applications/microservice-registry-catalog) if you don't know yet how to deploy microservices using catalog items.
+
+
+## EdgeGuard as a WASM container
+
+```yaml
+---
+apiVersion: datasance.com/v3
+kind: Application
+metadata:
+  name: edge-guard
+spec:
+  microservices:
+    - name: edge-guard
+      agent:
+        name: foo
+      images:
+        registry: 1
+        x86: ghcr.io/datasance/edge-guard-wasm:main 
+        arm: ghcr.io/datasance/edge-guard-wasm:main
+      container:
+        rootHostAccess: false
+        platform: "wasip1/wasm"
+        runtime: "io.containerd.wasmedge.v1"
+        volumes:
+          - hostDestination: /etc/iofog-agent/local-api
+            containerDestination: /local-api
+            accessMode: ro
+            type: bind
+        env:
+          - key: PERIOD
+            value: '10'
+  routes: []
+
+
+
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
