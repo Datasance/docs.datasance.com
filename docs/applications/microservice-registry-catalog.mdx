@@ -44,7 +44,15 @@ spec:
     env: []
     ports: []
     rootHostAccess: false
-    volumes: []
+    volumes:
+      - hostDestination: /etc/iofog-agent/local-api
+        containerDestination: /local-api
+        accessMode: ro
+        type: bind
+      - hostDestination: hw-id
+        containerDestination: /id
+        accessMode: rw
+        type: volume
     commands: []
   config: {}
   application: edge-guard

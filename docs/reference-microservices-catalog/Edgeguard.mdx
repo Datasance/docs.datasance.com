@@ -34,10 +34,14 @@ spec:
         arm: ghcr.io/datasance/edge-guard:latest
       container:
         volumes:
-          - hostDestination: /etc/iofog-agent/local-api
+          - hostDestination: /Users/emirhan/local-api
             containerDestination: /local-api
             accessMode: ro
             type: bind
+          - hostDestination: hw-id
+            containerDestination: /id
+            accessMode: rw
+            type: volume
         env:
           - key: PERIOD
             value: '10'
@@ -78,10 +82,14 @@ spec:
         platform: "wasip1/wasm"
         runtime: "io.containerd.wasmedge.v1"
         volumes:
-          - hostDestination: /etc/iofog-agent/local-api
+          - hostDestination: /Users/emirhan/local-api
             containerDestination: /local-api
             accessMode: ro
             type: bind
+          - hostDestination: hw-id
+            containerDestination: /id
+            accessMode: rw
+            type: volume
         env:
           - key: PERIOD
             value: '10'
