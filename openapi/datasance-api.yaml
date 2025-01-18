@@ -4140,14 +4140,37 @@ components:
         protocol:
           type: string
           enum:
-          - tcp
-          - udp
-        proxy:
-          type: boolean
+            - tcp
+            - udp
+        public:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            schemes:
+              type: array
+              items:
+                type: string
+            protocol:
+              type: string
+              enum:
+                - tcp
+                - http
+            router:
+              type: object
+              properties:
+                host:
+                  type: string
+                port:
+                  type: number
+              required: []
+          required:
+            - schemes
+            - protocol
       required:
-      - internal
-      - external
-      - protocol
+        - internal
+        - external
+        - protocol
     PortMappingsRequest:
       type: object
       properties:
@@ -4158,20 +4181,77 @@ components:
         protocol:
           type: string
           enum:
-          - tcp
-          - udp
-        proxy:
-          type: boolean
+            - tcp
+            - udp
+        public:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            schemes:
+              type: array
+              items:
+                type: string
+            protocol:
+              type: string
+              enum:
+                - tcp
+                - http
+            router:
+              type: object
+              properties:
+                host:
+                  type: string
+                port:
+                  type: number
+              required: []
+          required:
+            - schemes
+            - protocol
       required:
-      - internal
-      - external
+        - internal
+        - external
     PortMappingsPublicResponse:
       type: object
       properties:
-        publicIp:
-          type: string
-        publicPort:
+        internal:
           type: number
+        external:
+          type: number
+        protocol:
+          type: string
+          enum:
+            - tcp
+            - udp
+        public:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            schemes:
+              type: array
+              items:
+                type: string
+            protocol:
+              type: string
+              enum:
+                - tcp
+                - http
+            router:
+              type: object
+              properties:
+                host:
+                  type: string
+                port:
+                  type: number
+              required: []
+          required:
+            - schemes
+            - protocol
+      required:
+        - internal
+        - external
+        - protocol
     PortMappingsListResponse:
       type: object
       properties:
@@ -4186,12 +4266,40 @@ components:
           type: number
         external:
           type: number
-        publicMode:
-          type: boolean
-        publicIp:
+        protocol:
           type: string
-        publicPort:
-          type: number
+          enum:
+            - tcp
+            - udp
+        public:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            schemes:
+              type: array
+              items:
+                type: string
+            protocol:
+              type: string
+              enum:
+                - tcp
+                - http
+            router:
+              type: object
+              properties:
+                host:
+                  type: string
+                port:
+                  type: number
+              required: []
+          required:
+            - schemes
+            - protocol
+      required:
+        - internal
+        - external
+        - protocol
     PortMappingAgentRequest:
       type: object
       properties:
