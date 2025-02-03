@@ -46,6 +46,9 @@ spec:
           runtime: ''
           cdiDevices: []
           ports: []
+        msRoutes:
+          subTags: []
+          pubTags: []
         config:
           test_mode: true
           data_label: \"{{username}}\"
@@ -67,6 +70,9 @@ spec:
             # The ui will be listening on port 80 (internal).
             - external: 5001
               internal: 80
+        msRoutes:
+          subTags: []
+          pubTags: []
 
 " > /tmp/my-app-template.yaml
 potctl deploy -f /tmp/my-app-template.yaml
@@ -161,6 +167,9 @@ spec:
       platform: ''
       runtime: ''
       cdiDevices: []
+    msRoutes:
+      subTags: []
+      pubTags: []
     config:
       data_label: Alex
       test_mode: true
@@ -201,6 +210,9 @@ spec:
       platform: ''
       runtime: ''
       cdiDevices: []
+    msRoutes:
+      subTags: []
+      pubTags: []
     config: {}
     application: heartrate-demo
   routes:

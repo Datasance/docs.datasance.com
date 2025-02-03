@@ -39,6 +39,9 @@ spec:
         runtime: ''
         cdiDevices: []
         ports: []
+      msRoutes:
+        subTags: []
+        pubTags: []
       config:
         test_mode: true
         data_label: Anonymous Person
@@ -72,6 +75,9 @@ spec:
         env:
           - key: BASE_URL
             value: http://localhost:8080/data
+      msRoutes:
+        subTags: []
+        pubTags: []
       config:
         test: 54
   routes:
@@ -188,7 +194,9 @@ spec:
       # This will result in the container being started as `docker run <image> <options> dbhost localhost:27017`
       - 'dbhost'
       - 'localhost:27017'
-
+  msRoutes:
+    subTags: []
+    pubTags: []
   # Microservice configuration
   config:
     # Arbitrary key, value YAML object
@@ -222,6 +230,8 @@ spec:
 | container.extraHosts     | Define extra host for your containers. Like passing `--add-host` argument while running container.|
 | container.env            | List of environment variables to be provided to the container running the microservice                                                                                                               |
 | container.commands       | List of arguments passed as CMD to the container runtime                                                                                                                                             |
+| msRoutes.subTags       | List of tags where microservice assign as a subscriber                                                                                                                                             |
+| msRoutes.pubTags      | List of tags where microservice assign as a publisher                                                                                                                                            |
 | application              | Unique identifier of the Application the microservice is part of                                                                                                                                     |
 | rebuild                  | Boolean instructing the ioFog Agent to rebuild the microservice container after update. Use this flag if you updated the content of the docker image but didn't change the image name and/or tag.    |
 
@@ -241,8 +251,8 @@ You can also define additinal Extra Hosts for your microservices with èxtraHost
         address: "${Agents.foo}"  # Assigns the IP adress of the Agent with name `foo`
       - name: appHostLocal
         address: "${Apps.foo.bar.local}" #Assigns the IP adress of the microservice named `bar` inside  the application named `foo`
-      - name: appHostPublic
-        address: "${Apps.foo.bar.public.port}"
+      - name: appHostPublic #Assigns the IP adress of the Public Proxy for the microservice named `bar` inside  the application named `foo` with port number 6001
+        address: "${Apps.foo.bar.public.6001}"
     env:
 
 ...

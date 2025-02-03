@@ -1,4 +1,7 @@
 # What's New in PoT?
+- [Dynamic Microservice Routing](../reference-potctl/reference-agent.mdx) , is now available with msRoutes.pubtags and msRoutes.subtags definitions on Microservice or Application YAMLs.
+- [Agent as a Container](../reference-potctl/reference-agent.mdx) , option added for Remote Agents and Remote ContorlPlane Agents.
+- [Agent Router SSL](../reference-potctl/reference-agent.mdx) , a new config parameter added for ioFog Agents Router configuration.
 - [EdgeGuard](../reference-microservices-catalog/Edgeguard) , a new extension of the Datasance PoT  and the Eclipse ioFog Hardware Abstraction Layer Microservice. It serves as a critical security and monitoring component for edge devices running ioFog Agents.
 - [PoT Kubernetes Operator](../reference-potctl/reference-control-plane) is now certified by RedHat OpenShift Operators Hub and Kuberentes Community Operators Hub.
 - [Kubernetes Control Plane](../reference-potctl/reference-control-plane) components are now align with security best practises.
@@ -18,6 +21,25 @@
 - [Agent Installation Plugins](../platform-deployment/setup-your-agents) added to `potctl` .
 - [Commands for upgrade and rollback of Agents](../agent-management/upgrade-rollback) added to `potctl`.
 
+## Dynamic Microservice Routing in PoT
+
+PoT now supports dynamic microservice routing, enabling real-time updates to microservice communication based on publisher-subscriber tags. When a microservice subscribes to specific tags, the system automatically detects relevant publishers and updates routing rules across the Edge Compute Network. This improves flexibility, reduces manual configuration, and ensures seamless data flow between microservices.
+
+[Find out more](../reference-potctl/reference-application)!
+
+
+## Agent as a Container
+
+If you don't want to install Agents as an rpm, deb packages, You can now deploy your Remote Agent or RemoteControlPlane SystemAgent as a container.
+
+[Find out more](../reference-potctl/reference-agent)!
+
+
+## Agent Router SSL Configuration
+
+New router configuration parameters added to ioFog Agent deployment YAML. It helps easily deploy router with SSL/TLS configuration without moving volumes. You only need to provide certificates in single line bade64 encoded strings.
+
+[Find out more](../reference-potctl/reference-agent)!
 
 ## EdgeGuard
 

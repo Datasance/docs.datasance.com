@@ -21,7 +21,7 @@ brew install potctl
 
 #### Install potctl on Windows
 
-The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.3.5/potctl.exe).
+The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.3.6/potctl.exe).
 
 ##### Prepare Windows
 
@@ -92,7 +92,7 @@ spec:
     viewerClient: ecn-viewer
   controller:
     container:
-      image: ghcr.io/datasance/controller:3.4.8
+      image: ghcr.io/datasance/controller:3.4.9
 ---
 apiVersion: datasance.com/v3
 kind: LocalAgent
@@ -100,7 +100,7 @@ metadata:
   name: local-agent
 spec:
   container:
-    image: ghcr.io/datasance/agent:3.3.0
+    image: ghcr.io/datasance/agent:3.3.2
 " > /tmp/quick-start.yaml
 potctl deploy -f /tmp/quick-start.yaml
 ```
@@ -151,7 +151,7 @@ Which should output something similar to:
 CONTAINER ID        IMAGE                          COMMAND                  CREATED             STATUS              PORTS                                                          NAMES
 71927882293f        iofog/router:3.0.1             "/qpid-dispatch/laun…"   15 minutes ago      Up 15 minutes       0.0.0.0:5672->5672/tcp, 0.0.0.0:56721-56722->56721-56722/tcp   iofog_PJFbk3ZHjX3RkNWxwcRqzDXnKV6mLHmq
 8454ca70755b        iofog/agent:3.0.0              "sh /start.sh"           15 minutes ago      Up 15 minutes                                                                      iofog-agent
-dc7568ad1708        ghcr.io/datasance/controller:3.4.8         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
+dc7568ad1708        ghcr.io/datasance/controller:3.4.9         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
 ```
 
 ## Deploy Microservices

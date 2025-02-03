@@ -14,6 +14,10 @@ spec:
     user: foo
     keyFile: ~/.ssh/id_rsa
     port: 22
+  package:
+    version: 3.3.2 # provide Agent package version if you would like to deploy Agent as a deb or rpm package
+    container: 
+      image: ghcri.io/datasance/agent:3.3.2  # provide image in the case you would like to deploy Agent as a container
   config:
     description: agent running on VM
     latitude: 46.204391
@@ -40,6 +44,13 @@ spec:
       messagingPort: 5672
       edgeRouterPort: 56721
       interRouterPort: 56722
+      sslProfile:
+      caCert:
+      tlsCert:
+      tlsKey:
+      saslMechanisms:
+      requireSsl:
+      authenticatePeer:
     dockerPruningFrequency: 1
     logLevel: INFO
     availableDiskThreshold: 90
@@ -66,6 +77,8 @@ The following fields are necessary for every Agent YAML specification.
 | ssh.user    | Username of remote host that potctl must SSH into to install Agent service.                                                                                       |
 | ssh.keyFile | Path to private SSH key that potctl must use to SSH into remote host to install Agent service.                                                                    |
 | ssh.port    | Port to use with SSH. Optional (default: 22).                                                                                                                       |
+| package.version    | Agent package version if you would like to deploy Agent as a deb or rpm package.                                                                                                                      |
+| package.container.image    | Agent image in the case you would like to deploy Agent as a container                                                                                                                    |
 
 #### Installation Plugin Fields
 
@@ -118,7 +131,14 @@ Configuration details are specified through the optional `config` field in the A
 | routerConfig.routerMode      | Set the router mode. Available values are `edge`, `interior` and `none`. Default: `edge`                                                                                                                                                                                                                     |
 | routerConfig.messagingPort   | Set the router messaging port. Default: 5672                                                                                                                                                                                                                                                                 |
 | routerConfig.edgeRouterPort  | Set the router edge router port. Only valid if routerMode is `interior`. Default: 56721                                                                                                                                                                                                                      |
-| routerConfig.interRouterPort | Set the router interior router port. Only valid if routerMode is `interior`. Default: 56722                                                                                                                                                                                                                  |
+| routerConfig.interRouterPort | Set the router interior router port. Only valid if routerMode is `interior`. Default: 56722 
+| routerConfig.sslProfile      | SSL profile name for router ssl configuration                                                                                                                                                                                                                                                                               |
+| routerConfig.caCert          | base64 encoded CA Cert string                                                                                                                                                                                                                   |
+| routerConfig.tlsCert         | base64 encoded TLS Cert string                                                                                                                                                                                                                                                             |
+| routerConfig.tlsKey          | base64 encoded TLS Key string                                                                                                                                                                                                                     |
+| routerConfig.saslMechanisms  | Set SASL Mechanism for router connections. "EXTERNAL"
+| routerConfig.requireSsl      | Set as "yes". Only valid if routerMode is `interior`
+| routerConfig.authenticatePeer| Set as "yes". Only valid if routerMode is `interior`                                                                                                                                                                                                                     |
 | logLevel                     | Set the standard logging levels that can be used to control logging output                                                                                                                                                                                                                                   |
 | dockerPruningFrequency       | Set the docker pruning frequency in hours                                                                                                                                                                                                                                                                    |
 | availableDiskThreshold       | Set the available disk threshold                                                                                                                                                                                                                                                                             |
@@ -165,6 +185,13 @@ spec:
     messagingPort: 5672
     edgeRouterPort: 56721
     interRouterPort: 56722
+    sslProfile:
+    caCert:
+    tlsCert:
+    tlsKey:
+    saslMechanisms:
+    requireSsl:
+    authenticatePeer:
   dockerPruningFrequency: 1
   logLevel: INFO
   availableDiskThreshold: 90
