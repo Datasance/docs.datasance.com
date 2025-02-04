@@ -42,7 +42,6 @@ potctl deploy -f proxus-edge-template.yaml -n $namespace
 ::: 
 
 ```yaml title="proxus-edge-template.yaml"
----
 apiVersion: datasance.com/v3
 kind: ApplicationTemplate
 metadata:
@@ -96,11 +95,12 @@ spec:
             jsDomain: "{{domain}}"
             leafNodes:
               remotes:
-                urlProtocol: "{{url-protocol}}"
-                url: "{{url}}"
-                user: "{{user}}"
-                password: "{{password}}"
-                account: "{{account}}"
+                remote:
+                  - account: "{{account}}"
+                    password: "{{password}}"
+                    url: "{{url}}"
+                    urlProtocol: "{{url-protocol}}"
+                    user: "{{user}}"
                 tls:
                   CaCert: "{{ca-cert}}"
                   TlsCert: "{{tls-cert}}"
@@ -126,7 +126,7 @@ spec:
           name: "{{agent-name}}"
         config: {}
         images:
-          x86: proxusplatform/proxus-server:1.1.1.0-x64
+          x86: proxusplatform/proxus-server:1.1.1.0-amd64
           arm: proxusplatform/proxus-server:1.1.1.0-arm64
           registry: remote
         container:
@@ -161,6 +161,10 @@ spec:
             - BrokerUrl=nats://iofog:4222
             - BrokerUser="{{user}}"
             - BrokerPassword="{{password}}"
+            - EnableMQTTHooks=true
+
+
+    
 ```
 
 ```bash
