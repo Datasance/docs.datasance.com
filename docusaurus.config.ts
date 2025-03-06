@@ -51,8 +51,8 @@ const config: Config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: 'v1.3.6',
-              // path: 'v1.3.6',
+              label: 'v1.3.7',
+              // path: 'v1.3.7',
             },
           },
 
@@ -148,7 +148,7 @@ const config: Config = {
           position: 'left',
           items: [
             {
-              label: 'Datasance PoT Controller REST-API v3.4.9',
+              label: 'Datasance PoT Controller REST-API v3.4.10',
               to: '/api',
             }
           ]
