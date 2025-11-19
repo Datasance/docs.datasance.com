@@ -16,7 +16,7 @@ Configs are located at `/etc/iofog-agent/`. There are 4 config files:
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <config>
-  <access_token/>
+  <private_key/>
   <controller_url>http://localhost:54421/api/v3/</controller_url>
   <iofog_uuid/>
   <secure_mode>on</secure_mode>
@@ -39,6 +39,9 @@ Configs are located at `/etc/iofog-agent/`. There are 4 config files:
   <scan_devices_freq>60</scan_devices_freq>
   <gps>auto</gps>
   <gps_coordinates>0,0</gps_coordinates>
+  <gps_device/>
+  <gps_scan_freq>60</gps_scan_freq>
+  <edge_guard_freq>0</edge_guard_freq>
   <isolated_docker_container>off</isolated_docker_container>
   <docker_pruning_freq>1</docker_pruning_freq>
   <available_disk_threshold>90</available_disk_threshold>
@@ -49,7 +52,7 @@ Configs are located at `/etc/iofog-agent/`. There are 4 config files:
 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <config>
-  <access_token/>
+  <private_key/>
   <controller_url>http://localhost:51121/api/v3/</controller_url>
   <iofog_uuid/>
   <secure_mode>on</secure_mode>
@@ -72,6 +75,9 @@ Configs are located at `/etc/iofog-agent/`. There are 4 config files:
   <scan_devices_freq>60</scan_devices_freq>
   <gps>auto</gps>
   <gps_coordinates>0,0</gps_coordinates>
+  <gps_device/>
+  <gps_scan_freq>60</gps_scan_freq>
+  <edge_guard_freq>0</edge_guard_freq>
   <isolated_docker_container>off</isolated_docker_container>
   <docker_pruning_freq>1</docker_pruning_freq>
   <available_disk_threshold>90</available_disk_threshold>
@@ -83,7 +89,7 @@ Configs are located at `/etc/iofog-agent/`. There are 4 config files:
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <config>
-  <access_token/>
+  <private_key/>
   <controller_url>http://localhost:54421/api/v3/</controller_url>
   <iofog_uuid/>
   <secure_mode>off</secure_mode>
@@ -106,6 +112,9 @@ Configs are located at `/etc/iofog-agent/`. There are 4 config files:
   <scan_devices_freq>60</scan_devices_freq>
   <gps>auto</gps>
   <gps_coordinates>0,0</gps_coordinates>
+  <gps_device/>
+  <gps_scan_freq>60</gps_scan_freq>
+  <edge_guard_freq>0</edge_guard_freq>
   <isolated_docker_container>off</isolated_docker_container>
   <docker_pruning_freq>1</docker_pruning_freq>
   <available_disk_threshold>90</available_disk_threshold>

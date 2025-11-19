@@ -24,39 +24,49 @@ An Agent Configuration can be deployed using `potctl deploy -f agent-config.yaml
 apiVersion: datasance.com/v3
 kind: AgentConfig
 metadata:
-name: agent-1  \# ioFog Agent name
+  name: edge-1
+  tags: []
 spec:
 \# All fields are optional - Only the specified fields will be updated
-name: agent-1
-description: agent running on VM
-latitude: 46.204391
-longitude: 6.143158
-agentType: auto
-dockerUrl: unix:///var/run/docker.sock
-diskLimit: 10
-diskDirectory: /var/lib/iofog-agent/
-memoryLimit: 4096
-cpuLimit: 80
-logLimit: 10
-logDirectory: /var/log/iofog-agent/
-logFileCount: 10
-statusFrequency: 10
-changeFrequency: 10
-deviceScanFrequency: 60
-bluetoothEnabled: true
-watchdogEnabled: false
-abstractedHardwareEnabled: false
-upstreamRouters: ['default-router']
-networkRouter: ''
-host: 34.44.56.64
-routerConfig:
-routerMode: edge
-messagingPort: 5672
-edgeRouterPort: 56721
-interRouterPort: 56722
-dockerPruningFrequency: 1
-logLevel: INFO
-availableDiskThreshold: 90
+  name: edge-1
+  host: 10.0.34.53
+  description: agent running on VM
+  latitude: 46.204391
+  longitude: 6.143158
+  fogType: x86
+  networkInterface: dynamic
+  dockerUrl: unix:///var/run/docker.sock
+  containerEngine: docker
+  deploymentType: native
+  diskLimit: 10
+  diskDirectory: /var/lib/iofog-agent/
+  memoryLimit: 4096
+  cpuLimit: 80
+  logLimit: 10
+  logDirectory: /var/log/iofog-agent/
+  logFileCount: 10
+  statusFrequency: 10
+  changeFrequency: 10
+  deviceScanFrequency: 60
+  bluetoothEnabled: false
+  watchdogEnabled: false
+  gpsMode: manual
+  gpsScanFrequency: 60
+  gpsDevice: ''
+  edgeGuardFrequency: 0
+  abstractedHardwareEnabled: false
+  upstreamRouters:
+    - default-router
+  routerConfig:
+    routerMode: edge
+    messagingPort: 5671
+    edgeRouterPort: 45671
+    interRouterPort: 55671
+  logLevel: INFO
+  dockerPruningFrequency: 0
+  availableDiskThreshold: 20
+  timeZone: Etc/UTC
+
 ```
 
 

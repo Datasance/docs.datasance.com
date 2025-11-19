@@ -14,9 +14,12 @@ potctl get catalog
 NAMESPACE
 default
 
-ID		NAME		DESCRIPTION									REGISTRY	X86		                        ARM					
-1		NATs		NATs server microservice for Datasance PoT					remote		ghcr.io/datasance/nats:latest		ghcr.io/datasance/nats:latest		
-4		EdgeGuard	Security and monitoring component for edge devices running ioFog Agents.	remote		ghcr.io/datasance/edge-guard:latest	ghcr.io/datasance/edge-guard:latest	
+ID		NAME		DESCRIPTION						REGISTRY	X86					ARM					
+2		RESTBlue	REST API for Bluetooth Low Energy layer.		remote		ghcr.io/datasance/restblue:latest	ghcr.io/datasance/restblue:latest	
+5		NATs		NATs server microservice for Datasance PoT		remote		ghcr.io/datasance/nats:latest		ghcr.io/datasance/nats:latest		
+4		Debug		The built-in debugger for Datasance PoT IoFog Agent.	remote		ghcr.io/datasance/node-debugger:latest	ghcr.io/datasance/node-debugger:latest	
+1		Router		The built-in router for Datasance PoT.			remote		ghcr.io/datasance/router:3.5.2		ghcr.io/datasance/router:3.5.2		
+3		HAL		REST API for Hardware Abstraction layer.		remote		ghcr.io/datasance/hal:latest		ghcr.io/datasance/hal:latest		
 
 ```
 
@@ -27,13 +30,13 @@ echo "---
 apiVersion: 'datasance.com/v3'
 kind: Application
 metadata:
-name: edge-guard
+name: debugger
 spec:
 ---
 apiVersion: 'datasance.com/v3'
 kind: Microservice # Or application, as application uses the same spec for its microservices
 metadata:
-  name: edge-guard
+  name: debugger
 spec:
   agent:
     name: my-agent-name
@@ -43,21 +46,14 @@ spec:
   container:
     env: []
     ports: []
-    rootHostAccess: false
-    volumes:
-      - hostDestination: /etc/iofog-agent/local-api
-        containerDestination: /local-api
-        accessMode: ro
-        type: bind
-      - hostDestination: hw-id
-        containerDestination: /id
-        accessMode: rw
-        type: volume
+    hostNetworkMode: ture
+    isPrivileged: true
+    volumes: []
     commands: []
   config: {}
-  application: edge-guard
-" > /tmp/edge-guard.yaml
-potctl deploy microservice -f /tmp/edge-guard.yaml
+  application: debugger
+" > /tmp/debugger.yaml
+potctl deploy microservice -f /tmp/debugger.yaml
 ```
 
 Note that this YAML snippet assumes we have a running ECN in the current Namespace with an Agent called `my-agent-name`.
@@ -65,7 +61,7 @@ Note that this YAML snippet assumes we have a running ECN in the current Namespa
 We can check that the expected images have been used by describing our Microservice with potctl:
 
 ```bash
-potctl describe microservice edge-guard/edge-guard
+potctl describe microservice debugger/debugger
 ```
 
 

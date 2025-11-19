@@ -52,7 +52,8 @@ spec:
         registry: remote
       config: {}
       container:
-        rootHostAccess: false
+        hostNetworkMode: false
+        isPrivileged: false
         runAsUser: ''
         platform: ''
         runtime: ''
@@ -80,7 +81,8 @@ spec:
         registry: remote
       config: {}
       container:
-        rootHostAccess: false
+        hostNetworkMode: false
+        isPrivileged: false
         runAsUser: ''
         platform: ''
         runtime: ''
@@ -135,7 +137,8 @@ with controller API the same configuration looks like:
       "registryId": 1,
       "application": "edai-smartbuilding-rules-engine",
       "iofogUuid": "node-id",
-      "rootHostAccess": true,
+      "hostNetworkMode": true,
+      "isPrivileged": true,
       "logSize": 0,
       "volumeMappings": [],
       "ports": [
@@ -181,7 +184,8 @@ with controller API the same configuration looks like:
       "registryId": 1,
       "application": "edai-smartbuilding-rules-engine",
       "iofogUuid": "node-id",
-      "rootHostAccess": true,
+      "hostNetworkMode": true,
+      "isPrivileged": true,
       "logSize": 0,
       "volumeMappings": [],
       "ports": [

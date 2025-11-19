@@ -110,7 +110,8 @@ spec:
           arm: ghcr.io/datasance/nats:latest
           registry: remote
         container:
-          rootHostAccess: false
+          hostNetworkMode: false
+          isPrivileged: false
           volumes:
             - hostDestination: nats-data
               containerDestination: /store_leaf

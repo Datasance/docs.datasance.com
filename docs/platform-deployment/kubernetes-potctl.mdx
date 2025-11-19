@@ -44,14 +44,16 @@ spec:
     password: iht234g9afhe
   config: ~/.kube/config
   replicas:
-    controller: 2
-  database:
-    provider: mysql/postgres
-    user: 
-    host: 
-    port: 
-    password: 
-    databaseName: pot
+    controller: 1
+  # database:
+  #  provider: mysql/postgres
+  #  user: 
+  #  host: 
+  #  port: 
+  #  password: 
+  #  databaseName: pot
+  #  ssl: true/false 
+  #  ca: base64 encoded string
   auth:
     url: https://example.com/
     realm: realm-name
@@ -61,53 +63,39 @@ spec:
     controllerSecret: 
     viewerClient: ecn-viewer
   images:
-    pullSecret: pull-srect
-    operator: ghcr.io/datasance//operator:3.1.18
-    controller: ghcr.io/datasance/controller:3.4.10
-    portManager: ghcr.io/datasance/port-manager:3.1.7
-    proxy: ghcr.io/datasance/proxy:3.1.2
-    router: ghcr.io/datasance/router:3.3.0
+    # pullSecret: pull-srect
+    operator: ghcr.io/datasance/operator:3.5.2
+    controller: ghcr.io/datasance/controller:3.5.8
+    router: ghcr.io/datasance/router:3.5.2
+    routerAdaptor: ghcr.io/datasance/router-adaptor:3.5.2
   services:
     controller:
       type:  LoadBalancer/ClusterIP
       # annotations:
       #  service.beta.kubernetes.io/azure-load-balancer-internal: "true"
-    proxy:
-      type:  LoadBalancer/oadBalancer
-      annotations:
-        service.beta.kubernetes.io/azure-load-balancer-internal: "true"
     router:
       type:  LoadBalancer/ClusterIP
       # annotations:
       #  service.beta.kubernetes.io/azure-load-balancer-internal: "true"
-  controller:
-    ecnViewerUrl: https://
-    https: true
-    secretName:
-    ecnViewerPort: 8008
-  router:
-    internalSecret: 
-    amqpsSecret: 
-    requireSsl: "yes"
-    saslMechanisms: EXTERNAL
-    authenticatePeer: "yes"
-  proxy:
-    serverName: 
-    transport: tls
-  ingresses:
-    controller:
-      annotations:
-        # cert-manager.io/cluster-issuer: letsencrypt
-        # nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
-        # nginx.ingress.kubernetes.io/backend-protocol: "https"
-      ingressClassName: nginx
-      host: 
-      secretName:
-    router:
-      address: 
-      messagePort: 5672
-      interiorPort: 55672
-      edgePort: 45672" > /tmp/controlplane.yaml
+  # controller:
+  #  ecnViewerUrl: https://
+  #  https: true
+  #  secretName:
+  #  logLevel: info
+  # ingresses:
+  #  controller:
+  #    annotations:
+  #      # cert-manager.io/cluster-issuer: letsencrypt
+  #      # nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  #      # nginx.ingress.kubernetes.io/backend-protocol: "https"
+  #    ingressClassName: nginx
+  #    host: 
+  #    secretName:
+  #  router:
+  #    address: 
+  #    messagePort: 5671
+  #    interiorPort: 55671
+  #    edgePort: 45671" > /tmp/controlplane.yaml
 
 ```
 

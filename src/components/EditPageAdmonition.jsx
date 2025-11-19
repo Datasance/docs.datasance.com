@@ -9,7 +9,7 @@ const EditPageAdmonition = () => {
 
   // Remove version segment from the pathname
   const filePath = location.pathname
-    .replace(/^\/(v\d+\.\d+\.\d+\/)?/, '') // Remove version segment like "v1.3.8/"
+    .replace(/^\/(v\d+\.\d+\.\d+\/)?/, '') // Remove version segment like "v1.4.5/"
     .replace(/\/$/, '') + '.mdx';          // Ensure the file ends with .mdx
 
   const editLink = `${baseUrl}/docs/${filePath}`;

@@ -40,7 +40,8 @@ spec:
           x86: edgeworx/healthcare-heart-rate:x86-v1
           registry: remote # public docker
         container:
-          roothostaccess: false
+          hostNetworkMode: false
+          isPrivileged: false
           runAsUser: ''
           platform: ''
           runtime: ''
@@ -61,7 +62,8 @@ spec:
           x86: edgeworx/healthcare-heart-rate-ui:x86
           registry: remote
         container:
-          rootHostAccess: false
+          hostNetworkMode: false
+          isPrivileged: false
           runAsUser: ''
           platform: ''
           runtime: ''
@@ -162,7 +164,8 @@ spec:
       env: []
       extraHosts: []
       ports: []
-      rootHostAccess: false
+      hostNetworkMode: false
+      isPrivileged: false
       runAsUser: ''
       platform: ''
       runtime: ''
@@ -205,7 +208,8 @@ spec:
       ports:
       - internal: 80
         external: 5001
-      rootHostAccess: false
+      hostNetworkMode: false
+      isPrivileged: false
       runAsUser: ''
       platform: ''
       runtime: ''

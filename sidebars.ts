@@ -219,58 +219,58 @@ const sidebars: SidebarsConfig = {
         }
       ]
     },
-    {
-      "type": "category",
-      "label": "Developing Microservices",
-      "items": [
-        {
-          "type": "doc",
-          "label": "Overview",
-          "id": "developing-microservices/overview"
-        },
-        {
-          "type": "doc",
-          "label": "SDK",
-          "id": "developing-microservices/sdk"
-        },
-        {
-          "type": "doc",
-          "label": "Debugging",
-          "id": "developing-microservices/debugging"
-        }
-      ]
-    },
-    {
-      "type": "category",
-      "label": "Tutorial - Our First Microservices",
-      "items": [
-        {
-          "type": "doc",
-          "label": "Introduction",
-          "id": "tutorial/introduction"
-        },
-        {
-          "type": "doc",
-          "label": "Get to Know ioFog",
-          "id": "tutorial/get-to-know-iofog"
-        },
-        {
-          "type": "doc",
-          "label": "Manage Our Microservices",
-          "id": "tutorial/manage-our-microservices"
-        },
-        {
-          "type": "doc",
-          "label": "Create Our First Microservice (JavaScript)",
-          "id": "tutorial/create-our-first-microservice-javascript"
-        },
-        {
-          "type": "doc",
-          "label": "Deploy Our Microservice",
-          "id": "tutorial/deploy-our-microservice"
-        }
-      ]
-    },
+    // {
+    //   "type": "category",
+    //   "label": "Developing Microservices",
+    //   "items": [
+    //     {
+    //       "type": "doc",
+    //       "label": "Overview",
+    //       "id": "developing-microservices/overview"
+    //     },
+    //     {
+    //       "type": "doc",
+    //       "label": "SDK",
+    //       "id": "developing-microservices/sdk"
+    //     },
+    //     {
+    //       "type": "doc",
+    //       "label": "Debugging",
+    //       "id": "developing-microservices/debugging"
+    //     }
+    //   ]
+    // },
+    // {
+    //   "type": "category",
+    //   "label": "Tutorial - Our First Microservices",
+    //   "items": [
+    //     {
+    //       "type": "doc",
+    //       "label": "Introduction",
+    //       "id": "tutorial/introduction"
+    //     },
+    //     {
+    //       "type": "doc",
+    //       "label": "Get to Know ioFog",
+    //       "id": "tutorial/get-to-know-iofog"
+    //     },
+    //     {
+    //       "type": "doc",
+    //       "label": "Manage Our Microservices",
+    //       "id": "tutorial/manage-our-microservices"
+    //     },
+    //     {
+    //       "type": "doc",
+    //       "label": "Create Our First Microservice (JavaScript)",
+    //       "id": "tutorial/create-our-first-microservice-javascript"
+    //     },
+    //     {
+    //       "type": "doc",
+    //       "label": "Deploy Our Microservice",
+    //       "id": "tutorial/deploy-our-microservice"
+    //     }
+    //   ]
+    // },
     {
       "type": "category",
       "label": "Application Management",
@@ -284,11 +284,6 @@ const sidebars: SidebarsConfig = {
           "type": "doc",
           "label": "Application Templates",
           "id": "applications/application-templates"
-        },
-        {
-          "type": "doc",
-          "label": "Microservice Exposing",
-          "id": "applications/microservice-exposing"
         },
         {
           "type": "doc",
@@ -314,57 +309,93 @@ const sidebars: SidebarsConfig = {
     },
     {
       "type": "category",
-      "label": "Reference - potctl",
+      "label": "YAML References",
       "items": [
         {
           "type": "doc",
-          "label": "Reference Kinds",
+          "label": "YAML Kinds",
           "id": "reference-potctl/reference-kinds"
         },
         {
           "type": "doc",
-          "label": "Reference Control Plane",
+          "label": "Control Plane",
           "id": "reference-potctl/reference-control-plane"
         },
         {
           "type": "doc",
-          "label": "Reference Agent",
+          "label": "Agent",
           "id": "reference-potctl/reference-agent"
         },
         {
           "type": "doc",
-          "label": "Reference Application",
+          "label": "Application",
           "id": "reference-potctl/reference-application"
         },
         {
           "type": "doc",
-          "label": "Reference Application Template",
+          "label": "Application Template",
           "id": "reference-potctl/reference-application-template"
         },
         {
           "type": "doc",
-          "label": "Reference Route",
+          "label": "Route",
           "id": "reference-potctl/reference-route"
         },
         {
           "type": "doc",
-          "label": "Reference Catalog",
+          "label": "Catalog",
           "id": "reference-potctl/reference-catalog"
         },
         {
           "type": "doc",
-          "label": "Reference Registry",
+          "label": "Registry",
           "id": "reference-potctl/reference-registry"
         },
         {
           "type": "doc",
-          "label": "Reference Edge Resources",
+          "label": "Secret",
+          "id": "reference-potctl/reference-secret"
+        },
+        {
+          "type": "doc",
+          "label": "Certificate",
+          "id": "reference-potctl/reference-certificate"
+        },
+        {
+          "type": "doc",
+          "label": "ConfigMap",
+          "id": "reference-potctl/reference-configmap"
+        },
+        {
+          "type": "doc",
+          "label": "VolumeMount",
+          "id": "reference-potctl/reference-volumemount"
+        },
+        {
+          "type": "doc",
+          "label": "Service",
+          "id": "reference-potctl/reference-service"
+        },
+        {
+          "type": "doc",
+          "label": "Edge Resources",
           "id": "reference-potctl/reference-edge-resources"
         },
         {
           "type": "doc",
-          "label": "Reference Template Engine",
+          "label": "Template Engine",
           "id": "reference-potctl/reference-template-engine"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ECN Viewer",
+      "items": [
+        {
+          "type": "doc",
+          "label": "ECN Viewer",
+          "id": "ECN-Viewer/ecn-viewer"
         }
       ]
     },
@@ -386,11 +417,6 @@ const sidebars: SidebarsConfig = {
           "type": "doc",
           "label": "REST API",
           "id": "reference-controller/rest-api"
-        },
-        {
-          "type": "doc",
-          "label": "ECN Viewer",
-          "id": "reference-controller/ecn-viewer"
         }
       ]
     },
@@ -422,11 +448,6 @@ const sidebars: SidebarsConfig = {
           "type": "doc",
           "label": "Agent Logs",
           "id": "reference-agent/agent-logs"
-        },
-        {
-          "type": "doc",
-          "label": "Debugging",
-          "id": "reference-agent/debugging"
         }
       ]
     },
@@ -443,11 +464,6 @@ const sidebars: SidebarsConfig = {
           "type": "doc",
           "label": "HAL",
           "id": "reference-microservices-catalog/hal"
-        },
-        {
-          "type": "doc",
-          "label": "EdgeGuard",
-          "id": "reference-microservices-catalog/Edgeguard"
         },
         {
           "type": "doc",

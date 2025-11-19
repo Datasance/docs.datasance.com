@@ -15,9 +15,9 @@ spec:
     keyFile: ~/.ssh/id_rsa
     port: 22
   package:
-    version: 3.3.3 # provide Agent package version if you would like to deploy Agent as a deb or rpm package
+    # version: 3.5.5 # provide Agent package version if you would like to deploy Agent as a deb or rpm package
     container: 
-      image: ghcri.io/datasance/agent:3.3.3  # provide image in the case you would like to deploy Agent as a container
+      image: ghcri.io/datasance/agent:3.5.5  # provide image in the case you would like to deploy Agent as a container
   config:
     description: agent running on VM
     latitude: 46.204391
@@ -36,22 +36,19 @@ spec:
     deviceScanFrequency: 60
     bluetoothEnabled: true
     watchdogEnabled: false
+    gpsMode: auto
+    gpsScanFrequency: 60
+    gpsDevice: ''
+    edgeGuardFrequency: 0
     abstractedHardwareEnabled: false
     upstreamRouters: ['default-router']
     networkRouter: ''
     routerConfig:
       routerMode: edge
-      messagingPort: 5672
-      edgeRouterPort: 56721
-      interRouterPort: 56722
-      sslProfile:
-      caCert:
-      tlsCert:
-      tlsKey:
-      saslMechanisms:
-      requireSsl:
-      authenticatePeer:
-    dockerPruningFrequency: 1
+      messagingPort: 5671
+      edgeRouterPort: 45671
+      interRouterPort: 55671
+    dockerPruningFrequency: 0
     logLevel: INFO
     availableDiskThreshold: 90
   scripts:
@@ -129,19 +126,26 @@ Configuration details are specified through the optional `config` field in the A
 | host                         | Hostname used for router communication and public ports. Default: host provided at deploy time.                                                                                                                                                                                                              |
 | routerConfig                 | Set the router configuration                                                                                                                                                                                                                                                                                 |
 | routerConfig.routerMode      | Set the router mode. Available values are `edge`, `interior` and `none`. Default: `edge`                                                                                                                                                                                                                     |
-| routerConfig.messagingPort   | Set the router messaging port. Default: 5672                                                                                                                                                                                                                                                                 |
-| routerConfig.edgeRouterPort  | Set the router edge router port. Only valid if routerMode is `interior`. Default: 56721                                                                                                                                                                                                                      |
-| routerConfig.interRouterPort | Set the router interior router port. Only valid if routerMode is `interior`. Default: 56722 
-| routerConfig.sslProfile      | SSL profile name for router ssl configuration                                                                                                                                                                                                                                                                               |
-| routerConfig.caCert          | base64 encoded CA Cert string                                                                                                                                                                                                                   |
-| routerConfig.tlsCert         | base64 encoded TLS Cert string                                                                                                                                                                                                                                                             |
-| routerConfig.tlsKey          | base64 encoded TLS Key string                                                                                                                                                                                                                     |
-| routerConfig.saslMechanisms  | Set SASL Mechanism for router connections. "EXTERNAL"
-| routerConfig.requireSsl      | Set as "yes". Only valid if routerMode is `interior`
-| routerConfig.authenticatePeer| Set as "yes". Only valid if routerMode is `interior`                                                                                                                                                                                                                     |
+| routerConfig.messagingPort   | Set the router messaging port. Default: 5671                                                                                                                                                                                                                                                                 |
+| routerConfig.edgeRouterPort  | Set the router edge router port. Only valid if routerMode is `interior`. Default: 45671                                                                                                                                                                                                                      |
+| routerConfig.interRouterPort | Set the router interior router port. Only valid if routerMode is `interior`. Default: 55671                                                                                                                                                                                                                 |
 | logLevel                     | Set the standard logging levels that can be used to control logging output                                                                                                                                                                                                                                   |
 | dockerPruningFrequency       | Set the docker pruning frequency in hours                                                                                                                                                                                                                                                                    |
-| availableDiskThreshold       | Set the available disk threshold                                                                                                                                                                                                                                                                             |
+| availableDiskThreshold       | Set the available disk threshold
+| edgeGuardFrequency | Set the Edge Guard scaning frequency in seconds
+| gpsMode | Set the gps mode. Available values are `auto`, `manual` , `dynamic` and `off` 
+| gpsDevice | Set the gps device if mode is dynamic and your edge hardware has gps module like `/dev/ttyUSB2` 
+| gpsScanFrequency | Set the gps scan frequency in seconds                                                                                                                                                                                                                                                                         |
+
+## EdgeGuard
+
+`EdgeGuard` serves as a critical security and monitoring component for edge devices running ioFog Agents.
+
+The primary function of EdgeGuard is to collecting comprehensive hardware details and generates an irreversible hardware signature unique to the edge device.
+
+In the event of a detected hardware signature change, EdgeGuard immediately deprovisions the ioFog Agent from the Edge Compute Network (ECN) cluster. This action ensures that unauthorized changes or tampering with edge devices are swiftly addressed, maintaining the integrity and security of the ECN.
+
+EdgeGuard is particularly valuable for edge devices deployed outside traditional datacenters, where the risk of unauthorized access is significantly higher. By detecting potential security breaches and wiping all microservices running on the compromised ioFog Agent, EdgeGuard helps organizations adhere to strict security policies and minimize exposure to potential threats
 
 # Agent Configuration YAML Specification
 
@@ -158,7 +162,6 @@ metadata:
   name: agent-1 # ioFog Agent name
 spec:
   # All fields are optional - Only the specified fields will be updated
-  name: agent-1
   description: agent running on VM
   latitude: 46.204391
   longitude: 6.143158
@@ -176,23 +179,19 @@ spec:
   deviceScanFrequency: 60
   bluetoothEnabled: true
   watchdogEnabled: false
+  gpsMode: auto
+  gpsScanFrequency: 60
+  gpsDevice: ''
+  edgeGuardFrequency: 0
   abstractedHardwareEnabled: false
   upstreamRouters: ['default-router']
   networkRouter: ''
-  host: 123.123.123.123
   routerConfig:
     routerMode: edge
-    messagingPort: 5672
-    edgeRouterPort: 56721
-    interRouterPort: 56722
-    sslProfile:
-    caCert:
-    tlsCert:
-    tlsKey:
-    saslMechanisms:
-    requireSsl:
-    authenticatePeer:
-  dockerPruningFrequency: 1
+    messagingPort: 5671
+    edgeRouterPort: 45671
+    interRouterPort: 55671
+  dockerPruningFrequency: 0
   logLevel: INFO
   availableDiskThreshold: 90
 ```

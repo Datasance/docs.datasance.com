@@ -1,150 +1,79 @@
 # What's New in PoT?
-- [Dynamic Microservice Routing](../reference-potctl/reference-agent.mdx) , is now available with msRoutes.pubtags and msRoutes.subtags definitions on Microservice or Application YAMLs.
-- [Agent as a Container](../reference-potctl/reference-agent.mdx) , option added for Remote Agents and Remote ContorlPlane Agents.
-- [Agent Router SSL](../reference-potctl/reference-agent.mdx) , a new config parameter added for ioFog Agents Router configuration.
-- [EdgeGuard](../reference-microservices-catalog/Edgeguard) , a new extension of the Datasance PoT  and the Eclipse ioFog Hardware Abstraction Layer Microservice. It serves as a critical security and monitoring component for edge devices running ioFog Agents.
-- [PoT Kubernetes Operator](../reference-potctl/reference-control-plane) is now certified by RedHat OpenShift Operators Hub and Kuberentes Community Operators Hub.
-- [Kubernetes Control Plane](../reference-potctl/reference-control-plane) components are now align with security best practises.
-- [Keycloak Auth and RBAC](../platform-iam/introduction) is now available.
-- [Controller Ingress](../reference-potctl/reference-control-plane) option is now available for `KubernetesControlPlane`.
-- [Router and Proxy SSL Configurations](../reference-potctl/reference-control-plane) is now available for `KubernetesControlPlane`.
-- [Router](../getting-started/core-concepts) is upgraded from Apache Qpid-Dispatch to Skupper Router.
-- [WASM Container Support](../reference-potctl/reference-application) is now available for WasmEdge, Wasmer and Wasmtime runtimes.
-- [GPU Workload Management](../reference-potctl/reference-application) support is now available via CDI definitions on microservice YAML files.
-- [New Microservice Container Configuration Options](../reference-potctl/reference-application) are now available `runAsUser` `platform` `runtime` `cdiDevices` .
-- [NATs Catalog Microservice](../reference-microservices-catalog/nats) is now available.
-- [ECN Viewer: System Applications](../reference-controller/ecn-viewer) added to `Controller` for `Router` & `Proxy` microservices SSL/TLS configurations and helath monitoring.
-- [ECN Viewer: SwaggerUI](../reference-controller/ecn-viewer) added to `ECN-Viewer` which helps SREs and Developers send request to the `Controller REST-API` via browser.
-- [Template parametric expressions](../reference-potctl/reference-template-engine) are now available.
-- [Application Templates](../applications/application-templates) which simplify and improve management of your microservices.
-- [Edge Resources](../agent-management/edge-resources), let your microservices know what their Agent is capable of.
-- [Agent Installation Plugins](../platform-deployment/setup-your-agents) added to `potctl` .
-- [Commands for upgrade and rollback of Agents](../agent-management/upgrade-rollback) added to `potctl`.
 
-## Dynamic Microservice Routing in PoT
+- [Service](../reference-potctl/reference-service) is now available for exposing microservices, agents, Kubernetes services, or external endpoints through Router's TCP bridge mechanism.
+- [Secret Management](../reference-potctl/reference-secret) is now available for storing and managing sensitive data including Opaque and TLS secrets.
+- [Certificate and CertificateAuthority](../reference-potctl/reference-certificate) management is now available for generating self-signed certificates or using existing certificates from PoT cluster or Kubernetes secrets.
+- [ConfigMap](../reference-potctl/reference-configmap) is now available for managing non-sensitive configuration data that can be mounted to microservices.
+- [VolumeMount](../reference-potctl/reference-volumemount) is now available for attaching ConfigMaps or Secrets to Agents as volumes, enabling easy volume management for microservices.
+- [Debugging & Exec Sessions](#debugging-and-exec-sessions) deliver role-aware remote terminals for Agents, microservices, and system microservices—powered by potctl and ECN Viewer.
+- [ECN Viewer](../ECN-Viewer) now mirrors nearly every potctl operation, enabling full-cluster workload management, remote exec, resource editing, and deployments directly from the browser.
 
-PoT now supports dynamic microservice routing, enabling real-time updates to microservice communication based on publisher-subscriber tags. When a microservice subscribes to specific tags, the system automatically detects relevant publishers and updates routing rules across the Edge Compute Network. This improves flexibility, reduces manual configuration, and ensures seamless data flow between microservices.
+## Service
 
-[Find out more](../reference-potctl/reference-application)!
+Services enable you to expose microservices, agents, Kubernetes services, or external endpoints through the Router's TCP bridge mechanism. Services create TCP connectors on Router instances, allowing microservices to reach these endpoints via a service mesh. Services are distributed to Agents based on tags, enabling flexible and scalable service discovery across your Edge Compute Network.
 
+[Find out more!](../reference-potctl/reference-service) and check out the [YAML specification](../reference-potctl/reference-service)!
 
-## Agent as a Container
+## Secret Management
 
-If you don't want to install Agents as an rpm, deb packages, You can now deploy your Remote Agent or RemoteControlPlane SystemAgent as a container.
+Secrets provide a secure way to store and manage sensitive data such as passwords, API keys, and TLS certificates. PoT supports Opaque secrets for general-purpose data storage and TLS secrets for certificate management. Secrets can be referenced by microservices and other resources, ensuring sensitive information is handled securely throughout your ECN.
 
-[Find out more](../reference-potctl/reference-agent)!
+[Find out more!](../reference-potctl/reference-secret) and check out the [YAML specification](../reference-potctl/reference-secret)!
 
+## Certificate and CertificateAuthority
 
-## Agent Router SSL Configuration
+Certificate and CertificateAuthority resources enable comprehensive TLS certificate management for your Edge Compute Network. You can generate self-signed certificates, create Certificate Authorities, and sign certificates using existing CAs from your PoT cluster or Kubernetes secrets. This feature simplifies SSL/TLS configuration across your edge infrastructure, ensuring secure communication between components.
 
-New router configuration parameters added to ioFog Agent deployment YAML. It helps easily deploy router with SSL/TLS configuration without moving volumes. You only need to provide certificates in single line bade64 encoded strings.
+[Find out more!](../reference-potctl/reference-certificate) and check out the [YAML specification](../reference-potctl/reference-certificate)!
 
-[Find out more](../reference-potctl/reference-agent)!
+## ConfigMap
 
-## EdgeGuard
+ConfigMaps allow you to store and manage non-sensitive configuration data in key-value pairs. ConfigMaps can be used to store application configuration, environment variables, or configuration files. They support both mutable and immutable modes, providing flexibility for different use cases. ConfigMaps can be mounted to microservices as volumes or referenced directly in your deployment configurations.
 
-EdgeGuard is particularly valuable for edge devices deployed outside traditional datacenters, where the risk of unauthorized access is significantly higher. By detecting potential security breaches and wiping all microservices running on the compromised ioFog Agent, EdgeGuard helps organizations adhere to strict security policies and minimize exposure to potential threats
+[Find out more!](../reference-potctl/reference-configmap) and check out the [YAML specification](../reference-potctl/reference-configmap)!
 
-[Find out more](../reference-microservices-catalog/Edgeguard)!
+## VolumeMount
 
-## Kubernetes ControlPlane
+VolumeMounts provide a convenient way to attach ConfigMaps or Secrets to Agents as volumes. Once attached, these volumes are available on the Agent and can be easily mounted to running microservices. This feature simplifies configuration and secret management by allowing you to create volumes from ConfigMaps or Secrets and attach them to multiple Agents, enabling consistent configuration across your edge infrastructure.
 
-The Kubernetes Control Plane in Datasance PoT ensures seamless integration with Kubernetes-native tools and workflows. With enhanced security practices and alignment with enterprise-grade standards, it provides robust control for deploying, managing, and scaling edge compute workloads.
+[Find out more!](../reference-potctl/reference-volumemount) and check out the [YAML specification](../reference-potctl/reference-volumemount)!
 
-[Datasance PoT Operator @ RedHat OpenShift Ecosystem Catalog](https://catalog.redhat.com/software/container-stacks/detail/6724b139a54bac7986f20494)!
+## Debugging and Exec Sessions
 
-[Datasance PoT Operator @ Kubernetes Community Operator Hub](https://operatorhub.io/operator/datasance-pot-operator)!
+Secure debugging is now available across the entire ECN:
 
-[Find out more](../reference-potctl/reference-control-plane)!
+- **potctl workflow**: attach a privileged debugger container and open an exec session without handling SSH keys.
+- **RBAC-aware access**: SREs can exec into Agents, microservices, and system microservices; Developers are limited to microservices; Viewers cannot open exec sessions.
+- **ECN Viewer parity**: click the terminal icon in any Agent, microservice, or system microservice slide-over to launch the same exec experience directly in the browser.
 
-## Keycloak Auth and RBAC
+### potctl commands
 
-Keycloak is now integrated into the Datasance PoT platform, offering secure authentication and Role-Based Access Control (RBAC). This ensures enterprise-grade identity management, user roles, and granular access permissions across your Edge Compute Network (ECN).
+Attach and exec into a microservice (application or system):
 
-[Find out more](../platform-iam/introduction)!
+```bash
+# Application microservice
+potctl attach exec <app>/<microservice>
+potctl exec <app>/<microservice>
 
-## Controller Ingress
+# System microservice
+potctl attach exec <sys-app>/<sys-microservice>
+potctl exec <sys-app>/<sys-microservice>
+```
 
-The Controller Ingress feature enables secure and customizable access to the `KubernetesControlPlane`. Users can configure ingress settings to route traffic efficiently while adhering to organizational security standards. This includes domain-based routing and SSL/TLS configurations.
+Attach and exec into an Agent (with optional custom debugger image):
 
-Check out the `KubernetesControlPlane` [YAML specification](../reference-potctl/reference-control-plane)!
+```bash
+potctl attach exec agent <agent-name> [debuggerImage:tag]
+potctl exec agent <agent-name>
+```
 
-## Router and Proxy SSL Configurations
+If no image is provided, the cluster’s catalog debugger image is deployed automatically. Debugger containers run with the required `host`, `pid`, `ipc`, and `net` privileges, giving you SSH-like access without distributing key pairs.
 
-With SSL/TLS configurations for the `Router` and `Proxy` components, Datasance PoT ensures encrypted and secure communication between microservices. This feature simplifies compliance with security standards and enhances the integrity of data in transit across the ECN.
+## ECN Viewer: Full-Stack Management
 
-Learn more about SSL Configurations from `KubernetesControlPlane` [YAML specification](../reference-potctl/reference-control-plane)!
+The browser-based ECN Viewer now provides operational parity with potctl for day-2 workflows. You can deploy and manage applications, edit any resource YAML, configure registries and catalogs, open exec sessions into Agents or microservices, and call the Controller REST API without leaving the UI. Only the installation of Controllers and Agents still requires potctl.
 
-## Router
-
-The Datasance PoT Router, upgraded from Apache Qpid Dispatch to Skupper Router as Dispatch Router is maintained by RedHat Skupper's community. 
-For production workload you need to configure SSL/TLS across cluster. You don't need to manually send  certificates as a volume to your Edge device , `Router` can now gather it's SSL/TLS configuration and base64 encoded SSL/TLS certificates from `Agent` LocalAPI which helps you to easily build trust across Edge Compute Network (ECN).
-
-## WASM Container Support
-
-WebAssemly promising a huge potential for state-of-the art Edge use cases. You can run, deploy and manage  WebAssembly containers alongside with your traditional containers. Folks at containerd/runwasi community building containerd Wasm shims for the most popular WebAssembly runtimes. We are now publishing containerd wasm shims for WasmEdge, Wasmer, and Wasmtime runtimes as  `.deb` `.rpm` packages on our official [Linux Artifact Repository](https://downloads.datasance.com), and it is already included in `Agent` installation script on `potctl`. This expands the platform's capability to deploy lightweight, portable, and efficient applications, unlocking new possibilities for edge computing.
-
-Check out the Microservice [YAML specification](../reference-potctl/reference-application)!
-
-## GPU Workload Management
-
-GPU workload management is now possible through CDI (Container Device Interface) definitions in microservice YAML files. This feature allows developers to assign GPU resources efficiently, enabling high-performance compute tasks such as AI and ML workloads at the edge.
-
-Check out the Microservice [YAML specification](../reference-potctl/reference-application)!
-
-## New Microservice Container Configuration Options
-
-Additional configuration options for microservices include `runAsUser`, `platform`, `runtime`, and `cdiDevices`. These options provide greater flexibility and security, enabling you to tailor deployments to meet specific application requirements.
-
-Check out the Microservice [YAML specification](../reference-potctl/reference-application)!
-
-## NATs Catalog Microservice
-
-The NATs Catalog Microservice offers a scalable and lightweight solution for message streaming and communication within the ECN or Edge2X connectivity with built-in MQTT support comes with NATs. Designed for high-performance, this microservice integrates seamlessly with Datasance PoT’s architecture.
-
-[Check out NATs Catalog Microservice](../reference-microservices-catalog/nats)
-
-## ECN Viewer: System Applications
-
-Each router and proxy microservices are created automatically as a `system` application on each `Agent` . New `applications/system` and `microservices/system` endpoints are avaliable on Controller REST-API. The ECN Viewer’s System Applications tab allows Admins and SREs to manage Router and Proxy microservices, configure SSL/TLS settings, and monitor the their health.
-
-[Find out more!](../reference-controller/ecn-viewer)
-
-## ECN Viewer: Swagger-UI
-
-Built-in Swagger UI integrated into ECN-Viewer. SREs and Developers send request to the `Controller REST-API` via browser.
-
-[Find out more!](../reference-controller/ecn-viewer)
-
-## Template parametric expressions
-
-Variables, filter and template "queries" can now be used as values for any field in your deployment YAMLs (And therefore, any value of the JSON body of most PUT/POST/PATCH Controller REST API requests).
-
-Those variables allow you to reference the same document, or any resource preexisting on your Controller, adding a lot of flexibility in your deployments.
-
-[Find out more](../reference-potctl/reference-template-engine)!
-
-## Application Templates
-
-What if we need to deploy the same code on a lot of Agents? We would need to details all the microservices and routes in a separate YAML document for every instance of your Application. This is tedious and error prone, as often only a few values would change from one Agent to another.
-
-Wouldn't it be nice to have a way to specify the skeleton (template) of an Application and then reuse the same template over an over again, only modifying a few variables? That's where the Controller Application Template catalog comes into play!
-
-[Find out more!](../applications/application-templates) and check out the [YAML specification](../reference-potctl/reference-application-template)!
-
-## Edge Resources
-
-The Edge is where the virtual meets the physical. Most if not all Edge applications are built to interact in some way with entities or resources that exist in the physical world.
-
-Edge Resources are Digital Twins that allow you to define an interface for your microservices to communicate with resources available on your ioFog Agents.
-
-[Find out more!](../agent-management/edge-resources)
-
-## Agent Installation Plugins
-
-`potctl` can install ioFog Agent on a number of Linux distributions out of the box. However, the list of supported distributions is finite; in order to allow the community to add support for any host environment, `potctl` has been updated with the ability to run user-defined installation scripts for Agent and its dependancies.
-
-[Find out more!](../platform-deployment/setup-your-agents) and check out the [YAML specification](../reference-potctl/reference-agent)!
+[Find out more!](../ECN-Viewer)
 
 
 

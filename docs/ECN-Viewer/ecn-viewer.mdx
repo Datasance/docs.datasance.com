@@ -1,0 +1,117 @@
+# ECN Viewer
+
+ECN Viewer is the browser-based control plane for Datasance PoT. It mirrors nearly every potctl capability—deploying applications, editing resources, inspecting telemetry, and opening remote shells—without requiring local tooling. The only operations that still require potctl are the initial installation of Controllers and Agents.
+
+## Access and Configuration
+
+- The Viewer is served directly by the Controller. Configure the HTTP/S port with the `VIEWER_PORT` environment variable (defaults to `80`).
+- Authentication and authorization follow the same Keycloak-backed RBAC rules as potctl, so users only see and manage namespaces permitted by their role.
+
+## What You Can Do
+
+ECN Viewer enables you to:
+
+- Monitor overall ECN health, capacity, and activity timelines.
+- Inspect the full Agent fleet, open remote terminals, and edit Agent YAML definitions in place.
+- Manage microservices and applications (deploy, start/stop, scale, and reroute traffic).
+- Administer supporting resources such as registries, catalogs, services, ConfigMaps, Secrets, certificates, and volume mounts.
+- Launch Controller REST API calls directly from the browser for advanced scenarios.
+
+## Global Dashboards
+
+The landing dashboards provide snapshots of cluster utilization, alerts, and deployment progress.
+
+![Dashboard overview with fleet KPIs](/images/ecn-viewer/dashboard-1.png)
+
+![Timeline and workload density widgets](/images/ecn-viewer/dashboard-2.png)
+
+## Agent Operations
+
+### Fleet Inventory
+
+Review every Agent’s status, resource usage, and running workloads from the inventory table.
+
+![Agent inventory with health indicators](/images/ecn-viewer/agent-list.png)
+
+### Geographic Map
+
+Visualize Agents on a map to understand geographic distribution and reach.
+
+![Agent locations on an interactive map](/images/ecn-viewer/agent-map.png)
+
+### Detailed Insights
+
+Each Agent slide-over exposes metrics, running microservices, routes, and connected resources.
+
+![Agent slide-over showing runtime metrics](/images/ecn-viewer/agent-slideover.png)
+
+### Remote Shell and Exec Sessions
+
+Open an interactive terminal inside the Agent or microservice container for diagnostics—no SSH required.
+
+![Browser-based shell session on an Agent](/images/ecn-viewer/agent-shell.png)
+
+![Interactive terminal attached to a workload container](/images/ecn-viewer/terminal.png)
+
+### Declarative Editing
+
+Edit the full Agent specification in YAML. Changes are validated and sent to the Controller just like potctl applies.
+
+![Inline YAML editor for Agent configuration](/images/ecn-viewer/agent-yaml.png)
+
+## Workload and Application Management
+
+### Microservice Inventory
+
+List, filter, and drill into every microservice deployed across the ECN.
+
+![Microservice inventory with health signals](/images/ecn-viewer/microserivce-list.png)
+
+![Microservice slide-over with routes and runtime configuration](/images/ecn-viewer/microservice-slideover.png)
+
+### Services and Routing
+
+Manage TCP bridge Services, dynamic routes, and traffic policies from the same interface.
+
+![Services view showing bridge ports and distribution tags](/images/ecn-viewer/services.png)
+
+### Catalogs and Registries
+
+Browse controller-hosted catalog items and container registries; publish new versions or retag artifacts directly.
+
+![Catalog microservices ready for deployment](/images/ecn-viewer/catalog-microservices.png)
+
+![Registry management panel](/images/ecn-viewer/registries.png)
+
+### Application Templates and Deployments
+
+Create or edit application templates, then instantiate them across Agents—all from the Viewer.
+
+![Application template designer](/images/ecn-viewer/app-template.png)
+
+## Resource Editors
+
+ECN Viewer includes dedicated editors for every supporting resource type. Each editor provides form-based and YAML views so you can create, update, or delete resources the same way you would through potctl.
+
+![ConfigMap editor with structured data view](/images/ecn-viewer/configmap.png)
+
+![Secret editor with secure value handling](/images/ecn-viewer/secret.png)
+
+![VolumeMount editor for binding ConfigMaps/Secrets to Agents](/images/ecn-viewer/volumemount.png)
+
+![Certificate management for site and local CAs](/images/ecn-viewer/Certificates.png)
+
+## REST API Explorer
+
+Need to exercise an advanced API surface? Use the embedded REST client to call the Controller directly. It ships with environment-aware authentication and request templates.
+
+![Embedded REST API explorer](/images/ecn-viewer/rest-api.png)
+
+## Operational Parity with potctl
+
+- The Viewer uses the same RBAC model and audit trails, ensuring consistent governance.
+- The only actions that still require potctl are initial deployment and upgrading of ControlPlane component and installation of Agents—the Viewer handles everything else.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

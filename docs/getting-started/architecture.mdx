@@ -78,30 +78,19 @@ For advanced users, it is possible to configure the topology manually, such as s
 :::
 
 
-## Proxy
 
-The Proxy microservice is an internal component on ioFog routing network. Its purpose is to translate HTTP requests to AMQP (communication protocol of Routers) where necessary.
+## Edge Compute Network - Routers
 
-When exposing a microservice, one Proxy will be created on the router, where the service is to be accessed from outside, and another proxy will be created on the router to which a target microservice is connected.
-
-
-:::tip[Want to know more about Proxy?]
-<p>As an internal part of the ioFog stack, proxy is not a separately manageable component. However, feel free to also explore and potentially contribute at the <a href="https://github.com/Datasance/skupper-proxy">skupper-proxy github repository</a>.</p>
-:::
-
-
-## Edge Compute Network - Routers and Exposed Ports
-
-Having introduced the Router and Proxy, we can now extend our ECN from the previous example with microservice communication and microservice public port exposure.
+Having introduced the Router, we can now extend our ECN from the previous example with microservice communication and microservice public port exposure for service mesh.
 
 <figure>
-  <img src="/images/docs/iofog-architecture-ecn-router.png" alt=""/>
+  <img src="/images/docs/PoT_Remote_ControlPlane.png" alt=""/>
   <figcaption>Edge Compute Network showing default Router layout and communication pattern between microservices deployed on two different Agents.</figcaption>
 </figure>
 
 In this example, we have two Agents, each running one microservice. Each Agent, by default, has its own Edge Router, which is connected to the Interior Router co-hosted with the Controller.
 
-All communication between routers is using AMQP protocol, and where necessary, gets translated to HTTP using the Proxy microservices co-located with their respective routers.
+All communication between routers is using AMQP protocol, and also Routers create TCP bridges for service mesh.
 
 Next, we are going to transition to the Kubernetes world and show how ECNs look when part of them are deployed on Kubernetes.
 
@@ -116,14 +105,6 @@ When deploying ioFog on Kubernetes using potctl or Helm, the ioFog Operator woul
 <p>As an internal part of the ioFog stack, the Operator is not a separately manageable component. However, feel free to explore and potentially contribute at the <a href="https://github.com/Datasance/iofog-operator">Datasance/iofog-operator github repository</a>.</p>
 :::
 
-## Port Manager
-
-The last major component of ioFog on Kubernetes. The Port Manager is responsible for deploying Proxies on the cluster as necessary for exposing microservices on external public ports. It does so by exposing these ports as a Kubernetes service with a global Load Balancer and opening appropriate ports.
-
-
-:::tip[Want to know more about ioFog Port Manager?]
-<p>As an internal part of the ioFog stack, the Port Manager is not a separately manageable component. However, feel free to explore and potentially contribute at the <a href="https://github.com/Datasance/port-manager">Datasance/port-manager github repository</a>.</p>
-:::
 
 ## Edge Compute Network - On Kubernetes
 
@@ -132,7 +113,7 @@ The last example we are going to show is ioFog ECN deployed on Kubernetes. In fa
 Note that there is currently no way in ioFog to schedule microservices on the Kubernetes cluster itself, i.e. the cluster nodes acting as ioFog agents.
 
 <figure>
-  <img src="/images/docs/pot-k8s-architecture.png" alt=""/>
+  <img src="/images/docs/PoT_K8S_ControlPlane.png" alt=""/>
   <figcaption>Edge Compute Network with the control plane deployed exclusively on Kubernetes.</figcaption>
 </figure>
 
@@ -144,10 +125,6 @@ So far we have assumed that control over ioFog is only handled using Controller'
 
 potctl works by interacting directly with Controller using REST API, with Agents over SSH, or with Kubernetes clusters using `kubeconfig` access configuration, similarly to how `kubectl` handles connections to Kubernetes clusters.
 
-<figure>
-  <img src="/images/docs/iofog-architecture-iofogctl.png" alt=""/>
-  <figcaption>potctl interacts with hosts via SSH or with Kubernetes to install ioFog components, and then directly with Controller to manage ECNs.</figcaption>
-</figure>
 
 
 :::tip[Want to know more about potctl?]

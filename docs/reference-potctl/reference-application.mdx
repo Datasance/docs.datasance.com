@@ -33,7 +33,8 @@ spec:
         x86: edgeworx/healthcare-heart-rate:x86-v1
         # registry: remote
       container:
-        rootHostAccess: false
+        hostNetworkMode: false
+        isPrivileged: false
         runAsUser: ''
         platform: ''
         runtime: ''
@@ -58,7 +59,8 @@ spec:
         x86: edgeworx/healthcare-heart-rate-ui:x86
         registry: remote
       container:
-        rootHostAccess: false
+        hostNetworkMode: false
+        isPrivileged: false
         runAsUser: ''
         platform: ''
         runtime: ''
@@ -67,10 +69,6 @@ spec:
           - internal: 80
             external: 5000
             protocol: tcp
-            public:
-              protocol: http
-              schemes:
-                - http
         extraHosts: [] 
         env:
           - key: BASE_URL
@@ -154,8 +152,15 @@ spec:
 
   # Microservice container configuration
   container:
-    # Requires root host access on the agent ?
-    rootHostAccess: false
+    # container annotations
+    annotations: {}
+    # Requires host network mode on the agent ?
+    hostNetworkMode: false
+    # Require privileged access
+    isPrivileged: false
+    # ipc mode and pid namespace configuration
+    ipcMode: ''
+    pidMode: ''
     # Specify which user you would like to run contianer
     runAsUser: ''
     # The platform for the container image
@@ -183,17 +188,25 @@ spec:
       # This will create a mapping between the port 80 of the microservice container and the port 5000 of the agent
       - internal: 80
         external: 5000
-        public: # This will create a HTTP proxy tunnel between the port 6005 on the default router, and the port 5000 on the Agent
-          protocol: http # Protocol for the proxy tunnel (Either tcp or http, defaults to http)
-          schemes:
-            - http
-          router:
-            port: 6005
-            host: default-router
     commands:
       # This will result in the container being started as `docker run <image> <options> dbhost localhost:27017`
       - 'dbhost'
       - 'localhost:27017'
+    # CPUs in which to allow execution (0-3, 0,1)  
+    cpuSetCpus: ''
+    # Memory Limit
+    memoryLimit: 4096
+    # Check container health
+    healthCheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8083/healthz | grep -q 'Healthy' || exit 1
+      interval: 30
+      timeout: 10
+      startPeriod: 60
+      retries: 3
+  # int value that gives agent and order which container needs to start first 0 to 100. Default is 50.  
+  schedule: 50
   msRoutes:
     subTags: []
     pubTags: []
@@ -220,16 +233,24 @@ spec:
 | images.registry          | Either `local`, `remote`, or `registryID`. Remote will pull the image from Dockerhub, local will use the local cache of the ioFog Agent. RegistryID will use the specified registry.                 |
 | images.catalogId         | Catalog item ID to be used in lieu and place of the images and the registry. (see [catalog items](../applications/microservice-registry-catalog))                                               |
 | config                   | User-defined arbitrary object to be passed to the microservice runtime as its configuration                                                                                                          |
-| container.rootHostAccess | Set to true if the container needs to be able to access the host. This will also set the network of the container to `host`                                                                          |
+| container.annotations | Add an annotation to the container (passed through to the OCI runtime)
+| container.hostNetworkMode | Set to true to set the network of the container to `host` 
+| container.isPrivileged | Set to true if the container needs to be able to access the host.`                                                                            |
+| container.ipcMode      | IPC mode to use |
+| container.pidMode      | PID namespace to use |
 | container.runAsUSer      | Set which user you would like to run your microservice |
 | container.platform       | Define platform option for your container iamge |
 | container.runtime        | Define which runtime you would like to run your container |
 | container.cdiDevices     | Map CDI devices to your microservice runtime |
-| container.ports          | List of port mapping to be provided to the container running the microservice (See [public ports](../applications/microservice-exposing) for a more detailed explanation of public ports)       |
+| container.ports          | List of port mapping to be provided to the container running the microservice       |
 | container.volumes        | List of volume mapping to be provided to the container running the microservice                                                                                                                      |
 | container.extraHosts     | Define extra host for your containers. Like passing `--add-host` argument while running container.|
 | container.env            | List of environment variables to be provided to the container running the microservice                                                                                                               |
-| container.commands       | List of arguments passed as CMD to the container runtime                                                                                                                                             |
+| container.commands       | List of arguments passed as CMD to the container runtime 
+| container.cpuSetCpus | CPUs in which to allow execution (0-3, 0,1)
+| container.memoryLimit | Memory Limit
+| container.healthCheck | Check container health
+| schedule |                  Int value that gives agent and order which container needs to start first 0 to 100. Default is 50.                                                                                                                          |
 | msRoutes.subTags       | List of tags where microservice assign as a subscriber                                                                                                                                             |
 | msRoutes.pubTags      | List of tags where microservice assign as a publisher                                                                                                                                            |
 | application              | Unique identifier of the Application the microservice is part of                                                                                                                                     |
@@ -237,9 +258,13 @@ spec:
 
 ##### Extra Hosts
 
-By default ioFog `Agent` pass it's timezone configuration as a `TZ` env variable for each microservice in order to let developers easyly configure their microservices on different timezone and locations.
-On the other hand, ioFog `Agent` also automatically define `iofog` ExtraHost with Àgent` IP adress for each microservice if they are not configured with `rootHostAccess` enabled. Which helps microservices to talk with Àgent` Local-API.
-You can also define additinal Extra Hosts for your microservices with èxtraHosts`options. You can just define some literral IP adress as a extraHost or you can also define a query and let `Controller` to define IP adress according to your query.
+By default ioFog `Agent` pass it's timezone configuration as a `TZ` env variable for each microservice in order to let developers easily configure their microservices on different timezone and locations.
+
+On the other hand, ioFog `Agent` also automatically define `iofog` ExtraHost with `Agent` IP address for each microservice if they are not configured with `hostNetworkMode` enabled. Which helps microservices to talk with Àgent` Local-API.
+
+Also, ioFog `Agent`  automatically define `service.local` ExtraHost with `Router` IP address which runs on same agent with microservice if they are not configured with `hostNetworkMode` enabled. Which helps microservices to talk with `Network Services` attached to the local Router network.
+
+You can also define additional Extra Hosts for your microservices with `extraHosts` options. You can just define some literal IP address as a extraHost or you can also define a query and let `Controller` to define IP adress according to your query.
 
 ```yaml
 ...
@@ -250,9 +275,7 @@ You can also define additinal Extra Hosts for your microservices with èxtraHost
       - name: agentHost
         address: "${Agents.foo}"  # Assigns the IP adress of the Agent with name `foo`
       - name: appHostLocal
-        address: "${Apps.foo.bar.local}" #Assigns the IP adress of the microservice named `bar` inside  the application named `foo`
-      - name: appHostPublic #Assigns the IP adress of the Public Proxy for the microservice named `bar` inside  the application named `foo` with port number 6001
-        address: "${Apps.foo.bar.public.6001}"
+        address: "${Apps.foo.bar.local}" #Assigns the IP adress of the microservice named `bar` inside  the application named `foo` that runs on same agent host with microservice
     env:
 
 ...

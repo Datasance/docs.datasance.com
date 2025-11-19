@@ -1,0 +1,25 @@
+# Route YAML Specification
+
+`potctl` allows users to manage a Controller's Routes between Microservices.
+
+The route has a very simple definition
+
+```yaml
+apiVersion: datasance.com/v3
+kind: Route
+metadata:
+  name: my-route
+spec:
+  from: src-msvc-name
+  to: dest-msvc-name
+```
+
+| Field | Description                     |
+| ----- | ------------------------------- |
+| name  | Unique identifier for the route |
+| from  | Source microservice name        |
+| to    | Destination microservice name   |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
