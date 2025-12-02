@@ -45,10 +45,15 @@ spec:
     controllerClient: pot-controller
     controllerSecret:
     viewerClient: ecn-viewer
+  events:  # enable/disable or configure controller audit events
+    auditEnabled: true   # true / false
+    retentionDays: 14    # how many days should controller saved events records
+    cleanupInterval: 86400  # controller internal event cleanup job interval in seconds.
+    captureIpAddress: true  # should controller also track IP addresses on events  
   images:
    # pullSecret:  # set the K8S pull secret name
-    operator: ghcr.io/datasance/operator:3.5.2
-    controller: ghcr.io/datasance/controller:3.5.8
+    operator: ghcr.io/datasance/operator:3.5.4
+    controller: ghcr.io/datasance/controller:3.5.10
     routerAdaptor: ghcr.io/datasance/router-adaptor:3.5.2
     router: ghcr.io/datasance/router:3.5.2
   services:
@@ -138,7 +143,7 @@ spec:
     #   install:
     #     entrypoint: install_iofog.sh
     #     args:
-    #       - ghcr.io/datasance/controller:3.5.8
+    #       - ghcr.io/datasance/controller:3.5.10
     #   uninstall:
     #     entrypoint: uninstall_iofog.sh
     # ecnViewerPort:
@@ -240,7 +245,7 @@ spec:
       #   containerEngine: docker
   # package: # you can set the container image for Controller installation
   #   container:
-  #     image: emirhandurmus/controller:3.5.8
+  #     image: emirhandurmus/controller:3.5.10
   # systemMicroservices:
   #   router:
   #     x86: ghcr.io/datasance/router:3.5.2
@@ -262,6 +267,11 @@ spec:
     controllerClient: pot-controller
     controllerSecret:
     viewerClient: ecn-viewer
+  events:  # enable/disable or configure controller audit events
+    auditEnabled: true   # true / false
+    retentionDays: 14    # how many days should controller saved events records
+    cleanupInterval: 86400  # controller internal event cleanup job interval in seconds.
+    captureIpAddress: true  # should controller also track IP addresses on events 
 
 
 ```
@@ -305,9 +315,14 @@ spec:
     controllerClient: pot-controller
     controllerSecret:
     viewerClient: ecn-viewer
+  events:  # enable/disable or configure controller audit events
+    auditEnabled: true   # true / false
+    retentionDays: 14    # how many days should controller saved events records
+    cleanupInterval: 86400  # controller internal event cleanup job interval in seconds.
+    captureIpAddress: true  # should controller also track IP addresses on events 
   controller:
     container:
-      image: ghcr.io/datasance/controller:3.5.8
+      image: ghcr.io/datasance/controller:3.5.10
 ```
 
 | Field            | Description                                               |

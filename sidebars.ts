@@ -343,13 +343,18 @@ const sidebars: SidebarsConfig = {
         },
         {
           "type": "doc",
+          "label": "Registry",
+          "id": "reference-potctl/reference-registry"
+        },
+        {
+          "type": "doc",
           "label": "Catalog",
           "id": "reference-potctl/reference-catalog"
         },
         {
           "type": "doc",
-          "label": "Registry",
-          "id": "reference-potctl/reference-registry"
+          "label": "OfflineImage",
+          "id": "reference-potctl/reference-offlineimage"
         },
         {
           "type": "doc",
