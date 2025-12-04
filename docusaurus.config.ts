@@ -5,8 +5,8 @@ import type * as Redocusaurus from 'redocusaurus';
 import path from 'path';
 
 const config: Config = {
-  title: 'Datasance Documentation',
-  tagline: 'Datasance Documentation',
+  title: 'Datasance PoT Documentation',
+  tagline: 'Securely deploy, manage, and scale containerized workloads across thousands of heterogeneous far-edge and IoT environments.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -61,6 +61,12 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
+        },
       } satisfies Preset.Options,
     ],
     // Redocusaurus config
@@ -93,6 +99,14 @@ const config: Config = {
   themeConfig: {
     // Replace with your project's social card
     image: 'img/datasance-logo.png',
+    // SEO Metadata
+    metadata: [
+      {name: 'keywords', content: 'edge computing, edgeops, distributed edge computing, datasance pot, pot, fog computing, kubernetes edge, iofog, iot platform, edge orchestration'},
+      {name: 'description', content: 'Datasance PoT is an Enterprise Open Source Fog and Distributed Edge Computing Platform. Learn how to deploy, manage, and scale your edge applications.'},
+      {name: 'og:title', content: 'Datasance PoT Documentation'},
+      {name: 'og:description', content: 'Comprehensive documentation for Datasance PoT - The Enterprise Edge Computing Platform.'},
+      {name: 'og:type', content: 'website'},
+    ],
     tableOfContents: {
       minHeadingLevel: 2,
       maxHeadingLevel: 4,

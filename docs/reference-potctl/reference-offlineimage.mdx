@@ -1,3 +1,9 @@
+---
+title: OfflineImage YAML Specification - potctl Reference
+description: YAML reference for OfflineImage. Deploy container images to air-gapped edge nodes using potctl without internet access.
+keywords: [offline image, air-gapped deployment, edge container deployment, potctl, yaml reference, datasance pot, restricted network, edgeops]
+---
+
 # OfflineImage YAML Specification
 
 `potctl` allows users to deploy container images to edge nodes that cannot access the internet for pulling images. OfflineImage enables developers to pull images on their local machine with potctl installed, then transfer and load those images on remote edge hosts via SSH, automatically creating catalog items with registry ID 2 (from_cache).

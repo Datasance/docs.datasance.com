@@ -1,0 +1,25 @@
+# Datasance PoT Documentation
+
+Datasance PoT (Platform of Things) is an Enterprise Open Source Fog and Distributed Edge Computing Platform.
+Securely deploy, manage, and scale containerized workloads across thousands of heterogeneous far-edge and IoT environments.
+
+
+## Core Concepts
+- **Edge Computing**: Distributed computing paradigm bringing computation and data storage closer to the sources of data.
+- **EdgeOps**: DevOps for the Edge.
+- **Microservices**: Deploy and manage container microservices at the edge.
+- **potctl**: The command-line interface for managing Datasance PoT.
+
+## Key Sections
+- Introduction: https://docs.datasance.com/
+- Getting Started: https://docs.datasance.com/getting-started/
+- Architecture: https://docs.datasance.com/getting-started/architecture
+- Developing Microservices: https://docs.datasance.com/developing-microservices/overview
+- Platform Deployment: https://docs.datasance.com/platform-deployment/introduction
+- Reference Deployment Manifests: https://docs.datasance.com/reference-potctl/reference-kinds
+- API Reference: https://docs.datasance.com/api/
+
+## API
+Datasance PoT Controller provides a comprehensive REST API for controlling the platform.
+OpenAPI Spec: https://docs.datasance.com/api/
+
