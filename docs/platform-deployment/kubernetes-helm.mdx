@@ -76,7 +76,7 @@ Then install using the values file:
 
 ```bash
 helm install pot-operator datasance/pot -n pot --create-namespace \
-  -f myvalues.yaml
+  -f pot-operator-values.yaml
 ```
 
 The install creates:
@@ -327,7 +327,7 @@ See the [complete values.yaml file](https://github.com/Datasance/helm/blob/main/
 To upgrade an existing installation:
 
 ```bash
-helm upgrade pot-operator datasance/pot -n pot -f myvalues.yaml
+helm upgrade pot-operator datasance/pot -n pot -f pot-operator-values.yaml
 ```
 
 ## Uninstall
