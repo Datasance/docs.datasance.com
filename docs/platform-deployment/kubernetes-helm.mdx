@@ -1,92 +1,365 @@
 
 :::tip[Not interested in using Kubernetes?]
-  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
-  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use potctl instead, go to <a href="../pltform-deployment/kubernetes-potctl"> Kubernetes - Deploy Control Plane Using potctl</a>.</p>
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
+  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use potctl instead, go to <a href="../platform-deployment/kubernetes-potctl"> Kubernetes - Deploy Control Plane Using potctl</a>.</p>
 :::
 
 # Kubernetes - Deploy Control Plane Using Helm
 
-In this tutorial, we will install the ioFog Kubernetes Control Plane using Helm.
+In this tutorial, we will install the Datasance PoT (Proof of Technology) Control Plane on Kubernetes using Helm.
 
-The Helm Chart installs a set of Custom Resources and an Operator onto the cluster. It then creates a Custom Resource Definition which describes an ioFog Control Plane to be deployed on the cluster. The Operator consumes this CRD and creates deployments for the Controller, Port Manager, and Router, as well as associated services.
+The Helm Chart deploys the PoT operator (iofog-operator) and creates a `ControlPlane` custom resource instance automatically. The Operator consumes this CRD and creates deployments for the Controller and Router, as well as associated services.
 
 ## Prerequisites
 
-First, we need a working Kubernetes cluster. We can simply set up a cluster on the Google Kubernetes Engine (GKE) by following the [Creating a cluster tutorial](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster). Using any other managed cluster providers works as well, so do custom installations of Kubernetes, e.g. Minikube.
+- **Helm 3** - [Helm installation instructions](https://helm.sh/docs/using_helm/#installing-helm)
+- **Kubernetes 1.22+** - The chart uses `apiextensions.k8s.io/v1` CRDs
+- **kubectl** - [kubectl installation instructions](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- A working Kubernetes cluster (GKE, EKS, AKS, Minikube, or any other Kubernetes distribution)
 
-IoFog also provides [tools for infrastructure setup](https://github.com/eclipse-iofog/platform) to setup a Kubernetes cluster in case we don't have one available.
+## Add the Helm Repository
 
-The tutorial requires installation of `Helm v3+` and `kubectl` executing the deployment.
+Add the Datasance Helm [repotsitory](https://github.com/Datasance/helm) to your local index:
 
-- [Helm installation instructions](https://helm.sh/docs/using_helm/#installing-helm)
-- [kubectl installation instructions](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+```bash
+helm repo add datasance https://datasance.github.io/helm
+helm repo update
+```
 
-From now on, we assume we have a running Kubernetes cluster.
+## Install the Chart
 
-## Install Helm Chart
+Install the Chart while specifying the required authentication configuration. The chart requires Keycloak/OpenID Connect authentication settings. You can provide these values either via a values file or using `--set` flags.
 
-Add the ioFog Helm repository to our local index:
+### Quick Install with Flags
+
+```bash
+helm install pot-operator datasance/pot -n pot --create-namespace \
+  --set controlplane.spec.auth.url=https://keycloak.example.com \
+  --set controlplane.spec.auth.realm=pot \
+  --set controlplane.spec.auth.realmKey=master \
+  --set controlplane.spec.auth.ssl=true \
+  --set controlplane.spec.auth.controllerClient=pot-controller \
+  --set controlplane.spec.auth.controllerSecret=supersecret \
+  --set controlplane.spec.auth.viewerClient=pot-viewer
+```
+
+### Install with Values File
+
+Create a `myvalues.yaml` file with your configuration:
+
+```yaml
+operator:
+  image: ghcr.io/datasance/operator:3.5.4
+controlplane:
+  spec:
+    # Database is optional; if omitted, the controller uses internal SQLite.
+    # When using SQLite, keep controller replicas at 1.
+    database:
+      provider: postgres
+      host: db
+      port: 5432
+      user: pot
+      password: changeme
+      databaseName: pot
+      ssl: false
+    auth:
+      url: https://keycloak.example.com
+      realm: pot
+      realmKey: master
+      ssl: true
+      controllerClient: pot-controller
+      controllerSecret: supersecret
+      viewerClient: pot-viewer
+```
+
+Then install using the values file:
+
+```bash
+helm install pot-operator datasance/pot -n pot --create-namespace \
+  -f myvalues.yaml
+```
+
+The install creates:
+
+- CRDs for `controlplanes.datasance.com`
+- The PoT operator (iofog-operator) Deployment + RBAC + ServiceAccount
+- One ControlPlane instance (toggle with `controlplane.create`)
+
+### Verify Installation
+
+To list all Helm releases, run:
+
+```bash
+helm list -n pot
+```
+
+The result should look like this:
 
 ```plain
-helm repo add iofog https://eclipse-iofog.github.io/helm
+NAME          REVISION  UPDATED                   STATUS    CHART        APP VERSION  NAMESPACE
+pot-operator  1         Tue Dec  8 21:34:42 2025  DEPLOYED  pot-3.5.4    3.5.4        pot
 ```
 
-To list all available version of ioFog Helm chart, including development versions, run:
+## Configuration
+
+The Helm chart supports extensive configuration through values. You can view the complete default [values.yaml file](https://github.com/Datasance/helm/blob/main/charts/pot/values.yaml).
+
+### Required Values
+
+The following authentication values **must** be set via `values.yaml` or `--set`:
+
+- `controlplane.spec.auth.url` - Keycloak/OpenID Connect server URL
+- `controlplane.spec.auth.realm` - Keycloak realm name
+- `controlplane.spec.auth.realmKey` - Realm key (typically "master")
+- `controlplane.spec.auth.ssl` - Enable SSL (true/false)
+- `controlplane.spec.auth.controllerClient` - Controller OIDC client ID
+- `controlplane.spec.auth.controllerSecret` - Controller OIDC client secret
+- `controlplane.spec.auth.viewerClient` - Viewer OIDC client ID
+
+### Common Configuration Options
+
+#### Operator Configuration
 
 ```bash
-helm search repo -l --devel iofog/iofog
+# Operator image and replicas
+--set operator.image=ghcr.io/datasance/operator:3.5.4
+--set operator.replicaCount=1
+--set operator.imagePullPolicy=Always
+
+# Resource limits
+--set operator.resources.requests.cpu=100m
+--set operator.resources.requests.memory=128Mi
+--set operator.resources.limits.cpu=500m
+--set operator.resources.limits.memory=512Mi
+
+# Node scheduling
+--set operator.nodeSelector.kubernetes.io/os=linux
+--set operator.tolerations[0].key=node-role.kubernetes.io/master
+--set operator.tolerations[0].effect=NoSchedule
 ```
 
-Install the Chart while specifying user credentials and a target namespace. If we are not using the default namespace, we can use `--create-namespace` from Helm v3.2 onwards. Otherwise the namespace must already exist on the cluster. Note that not specifying the version default to latest stable version of ioFog chart, therefore for ioFog releases that have not officially released a stable chart yet, so we need to specify the `--version` here manually. To install version `3.0.0` for example, use the following:
+#### ControlPlane Metadata
 
 ```bash
-helm install my-ecn \
- --namespace my-ns --create-namespace \
- --version 3.0.0 \
- --set user.email=user@domain.com \
- --set user.password=any123password345 \
- iofog/iofog
+--set controlplane.create=true
+--set controlplane.name=pot
+--set controlplane.namespace=pot
 ```
 
-The `my-ecn` refers to the Helm release name as shown below.
+#### Database Configuration (Optional)
 
-To list all Helm releases, we can simply run `helm list`. The result should look like this:
-
-```plain
-NAME     REVISION  UPDATED                   STATUS    CHART             APP VERSION  NAMESPACE
-my-ecn   1         Tue Oct  1 21:34:42 2019  DEPLOYED  iofog-3.0.0       3.0.0        my-ns
-```
-
-The following is a complete list of all user configurable properties for the ioFog Helm chart. All of the properties are optional and have defaults. Use `--set property.name=value` in `helm install` to parametrize Helm release. We recommend not changing the image variables, as these are predefined for each ioFog version, and mixing these across versions is not supported.
-
-| Property            | Default value                  | Description                                                                   |
-| ------------------- | ------------------------------ | ----------------------------------------------------------------------------- |
-| user.firstName      | First                          | First name of initial user in Controller                                      |
-| user.surname        | Second                         | Surname of initial user in Controller                                         |
-| user.email          | user@domain.com                | Email (login) of initial user in Controller                                   |
-| user.password       | H23fkidf9hoibf2nlk             | Password of initial user in Controller                                        |
-| images.controller   | iofog/controller               | [Controller Docker image](https://hub.docker.com/r/iofog/controller/tags)     |
-| images.operator     | iofog/iofog-operator:          | [Operator Docker image](https://hub.docker.com/r/iofog/iofog-operator/tags)   |
-| images.portManager  | iofog/port-manager:            | [Port Manager Docker image](https://hub.docker.com/r/iofog/port-manager/tags) |
-| images.proxy        | iofog/proxy:                   | [Proxy Docker image](https://hub.docker.com/r/iofog/proxy/tags)               |
-| replicas.operator   | 1                              | Number of replicas of Operator pods                                           |
-| replicas.controller | 1                              | Number of replicas of Controller pods                                         |
-
-### Connection to Installed ioFog
-
-Once the installation is complete, you will be able to connect to the ioFog Controller on K8s using [potctl](../potctl/introduction). Make sure the `--namespace` here matches the one used during `helm install` step, so `potctl` can find the correct ECN using your kubeconfig file.
+If omitted, the controller uses internal SQLite (keep controller replicas at 1):
 
 ```bash
-potctl --namespace my-ns connect --kube ~/.kube/config --email user@domain.com --pass H23fkidf9hoibf2nlk
+--set controlplane.spec.database.provider=postgres
+--set controlplane.spec.database.host=db
+--set controlplane.spec.database.port=5432
+--set controlplane.spec.database.user=pot
+--set controlplane.spec.database.password=changeme
+--set controlplane.spec.database.databaseName=pot
+--set controlplane.spec.database.ssl=false
 ```
 
-## Uninstall ioFog Stack
-
-To uninstall ioFog stack, simply delete the Helm release.
+#### Controller Configuration
 
 ```bash
-helm --namespace my-ns delete my-ecn
+--set controlplane.spec.replicas.controller=1
+--set controlplane.spec.controller.logLevel=info
+--set controlplane.spec.controller.https=false
+--set controlplane.spec.controller.secretName=tls-secret
 ```
+
+#### Service Configuration
+
+```bash
+--set controlplane.spec.services.controller.type=LoadBalancer
+--set controlplane.spec.services.router.type=LoadBalancer
+```
+
+#### Ingress Configuration
+
+```bash
+--set controlplane.spec.ingresses.controller.host=controller.example.com
+--set controlplane.spec.ingresses.controller.ingressClassName=nginx
+--set controlplane.spec.ingresses.controller.annotations.cert-manager.io/cluster-issuer=letsencrypt-prod
+```
+
+#### Image Configuration
+
+```bash
+--set controlplane.spec.images.controller=ghcr.io/datasance/controller:3.5.11
+--set controlplane.spec.images.routerAdaptor=ghcr.io/datasance/router-adaptor:3.5.2
+--set controlplane.spec.images.router=ghcr.io/datasance/router:3.5.2
+--set controlplane.spec.images.pullSecret=my-registry-secret
+```
+
+#### Events Configuration
+
+```bash
+--set controlplane.spec.events.auditEnabled=true
+--set controlplane.spec.events.retentionDays=14
+--set controlplane.spec.events.cleanupInterval=86400
+--set controlplane.spec.events.captureIpAddress=true
+```
+
+### Complete Values File Reference
+
+For the complete list of all configurable properties, refer to the [values.yaml file](https://github.com/Datasance/helm/blob/main/charts/pot/values.yaml) in the Helm chart [repotsitory](https://github.com/Datasance/helm).
+
+#### Get Values Configuration File
+
+```bash
+wget -q -O - "https://raw.githubusercontent.com/Datasance/helm/refs/heads/main/charts/pot/values.yaml" > pot-operator-values.yaml
+```
+
+
+The values file structure includes:
+
+#### Global Configuration
+
+```yaml
+nameOverride: "iofog-operator"
+fullnameOverride: "iofog-operator"
+imagePullSecrets: []
+```
+
+#### CRD and RBAC
+
+```yaml
+crds:
+  install: true
+
+rbac:
+  create: true
+```
+
+#### Operator Configuration
+
+```yaml
+operator:
+  replicaCount: 1
+  image: ghcr.io/datasance/operator:3.5.4
+  imagePullPolicy: Always
+  serviceAccount:
+    create: true
+    name: "iofog-operator"
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  extraEnv: []
+  extraArgs: []
+```
+
+#### ControlPlane Configuration
+
+```yaml
+controlplane:
+  create: true
+  name: pot
+  namespace: ""
+  annotations: {}
+  labels: {}
+  spec:
+    replicas:
+      controller: 1
+    # database:
+    #   provider: postgres
+    #   user: ""
+    #   host: ""
+    #   port: 5432
+    #   password: ""
+    #   databaseName: ""
+    #   ssl: false
+    #   ca: ""
+    auth:
+      # REQUIRED: set all auth fields (Keycloak / OpenID Connect Client identity)
+      url: ""
+      realm: ""
+      realmKey: ""
+      ssl: ""
+      controllerClient: ""
+      controllerSecret: ""
+      viewerClient: ""
+    events:
+      auditEnabled: true
+      retentionDays: 14
+      cleanupInterval: 86400
+      captureIpAddress: true
+    images:
+      # pullSecret: ""
+      controller: "ghcr.io/datasance/controller:3.5.11"
+      routerAdaptor: "ghcr.io/datasance/router-adaptor:3.5.2"
+      router: "ghcr.io/datasance/router:3.5.2"
+    services:
+      controller:
+        type: LoadBalancer
+        # address: ""
+        # annotations: {}
+      router:
+        type: LoadBalancer
+        # address: ""
+        # annotations: {}
+    controller:
+      # pidBaseDir: ""
+      # ecnViewerPort: 0
+      # ecnViewerUrl: ""
+      https: false
+      # secretName: ""
+      logLevel: "info"
+    # ingresses:
+    #   controller:
+    #     annotations: {}
+    #     ingressClassName: ""
+    #     host: ""
+    #     secretName: ""
+    #   router:
+    #     address: ""
+    #     messagePort: 5671
+    #     interiorPort: 55671
+    #     edgePort: 45671
+```
+
+See the [complete values.yaml file](https://github.com/Datasance/helm/blob/main/charts/pot/values.yaml) for all available options and their default values.
+
+## Upgrade
+
+To upgrade an existing installation:
+
+```bash
+helm upgrade pot-operator datasance/pot -n pot -f myvalues.yaml
+```
+
+## Uninstall
+
+To uninstall the PoT Control Plane:
+
+```bash
+helm uninstall pot-operator -n pot
+```
+
+**Note:** CRDs remain by default after uninstallation. Remove them manually if desired:
+
+```bash
+kubectl delete crd controlplanes.datasance.com
+```
+
+## Connection to Installed Control Plane
+
+Once the installation is complete, you can connect to the Controller using [potctl](../potctl/introduction). Make sure the `--namespace` matches the one used during `helm install`:
+
+#### Connect to Installed Control Plane as a KubernetesControlPlane
+```bash
+potctl create namespace pot
+potctl connect --email foo.bar@example.com --kube ~/.kube/config --namespace pot
+```
+
+#### Connect to Installed Control Plane as a RemoteControlPlane
+```bash
+potctl create namespace pot
+potctl connect --email foo.bar@example.com --name pot --ecn-addr <http://controller-endpoint:51121> -n pot
+```
+You will need to authenticate using your Keycloak credentials configured during installation.
 
 
 :::tip[Where to go from here?]

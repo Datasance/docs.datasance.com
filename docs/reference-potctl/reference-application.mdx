@@ -262,7 +262,25 @@ spec:
 | application              | Unique identifier of the Application the microservice is part of                                                                                                                                     |
 | rebuild                  | Boolean instructing the ioFog Agent to rebuild the microservice container after update. Use this flag if you updated the content of the docker image but didn't change the image name and/or tag.    |
 
-##### Extra Hosts
+
+#### Auto Attach VolumeMounts
+
+You can automatically attach existing VolumeMounts via `$VolumeMount/<volume-mount-name>` prefix on `Microservice` volume mapping definition. `Controller` will check if the `agent` that is going to run microservice has already linked with the `VolumeMount`. If not `Controller` automatically linked `VolumeMount` with the `agent`, so that your microservices can you use it. 
+
+```yaml
+        volumes:
+          - hostDestination: $VolumeMount/test-vm-from-configmap
+            containerDestination: /home/foo
+            accessMode: 'ro'
+            type: 'bind'
+          - hostDestination: $VolumeMount/test-vm-from-secret
+            containerDestination: /home/foo
+            accessMode: 'rw'
+            type: 'bind'
+
+```
+
+#### Extra Hosts
 
 By default ioFog `Agent` pass it's timezone configuration as a `TZ` env variable for each microservice in order to let developers easily configure their microservices on different timezone and locations.
 
@@ -286,7 +304,6 @@ You can also define additional Extra Hosts for your microservices with `extraHos
 
 ...
 ```
-
 
 ## Using a template
 

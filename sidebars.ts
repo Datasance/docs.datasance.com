@@ -166,11 +166,11 @@ const sidebars: SidebarsConfig = {
           "label": "Kubernetes potctl",
           "id": "platform-deployment/kubernetes-potctl"
         },
-        // {
-        //   "type": "doc",
-        //   "label": "Kubernetes Helm",
-        //   "id": "platform-deployment/kubernetes-helm"
-        // },
+        {
+          "type": "doc",
+          "label": "Kubernetes Helm",
+          "id": "platform-deployment/kubernetes-helm"
+        },
         {
           "type": "doc",
           "label": "Setup Your Agents",

@@ -59,7 +59,7 @@ spec:
   images:
    # pullSecret:  # set the K8S pull secret name
     operator: ghcr.io/datasance/operator:3.5.4
-    controller: ghcr.io/datasance/controller:3.5.10
+    controller: ghcr.io/datasance/controller:3.5.11
     routerAdaptor: ghcr.io/datasance/router-adaptor:3.5.2
     router: ghcr.io/datasance/router:3.5.2
   services:
@@ -149,7 +149,7 @@ spec:
     #   install:
     #     entrypoint: install_iofog.sh
     #     args:
-    #       - ghcr.io/datasance/controller:3.5.10
+    #       - ghcr.io/datasance/controller:3.5.11
     #   uninstall:
     #     entrypoint: uninstall_iofog.sh
     # ecnViewerPort:
@@ -251,7 +251,7 @@ spec:
       #   containerEngine: docker
   # package: # you can set the container image for Controller installation
   #   container:
-  #     image: emirhandurmus/controller:3.5.10
+  #     image: emirhandurmus/controller:3.5.11
   # systemMicroservices:
   #   router:
   #     x86: ghcr.io/datasance/router:3.5.2
@@ -328,7 +328,7 @@ spec:
     captureIpAddress: true  # should controller also track IP addresses on events 
   controller:
     container:
-      image: ghcr.io/datasance/controller:3.5.10
+      image: ghcr.io/datasance/controller:3.5.11
 ```
 
 | Field            | Description                                               |
