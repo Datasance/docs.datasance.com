@@ -53,6 +53,195 @@ wget -q -O - "https://raw.githubusercontent.com/Datasance/keycloak/refs/heads/ma
 wget -q -O - "https://raw.githubusercontent.com/Datasance/keycloak/refs/heads/main/datasance-realm_template.json" | sed 's/\$realm/test/g' > datasance-pot-realm.json
 ```
 
+### PoT Controller OpenID Client Configuration
+
+```json
+{
+  "clientId": "pot-controller",
+  "name": "pot-controller",
+  "description": "",
+  "rootUrl": "",
+  "adminUrl": "",
+  "baseUrl": "",
+  "surrogateAuthRequired": false,
+  "enabled": true,
+  "alwaysDisplayInConsole": false,
+  "clientAuthenticatorType": "client-secret",
+  "secret": "<Controller-Client-Secret-Here>",
+  "redirectUris": [
+    "/*"
+  ],
+  "webOrigins": [
+    "/*"
+  ],
+  "notBefore": 0,
+  "bearerOnly": false,
+  "consentRequired": false,
+  "standardFlowEnabled": false,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "serviceAccountsEnabled": true,
+  "publicClient": false,
+  "frontchannelLogout": true,
+  "protocol": "openid-connect",
+  "attributes": {
+    "client.secret.creation.time": "1765275213",
+    "post.logout.redirect.uris": "+",
+    "oauth2.device.authorization.grant.enabled": "false",
+    "backchannel.logout.revoke.offline.tokens": "false",
+    "use.refresh.tokens": "true",
+    "realm_client": "false",
+    "oidc.ciba.grant.enabled": "false",
+    "backchannel.logout.session.required": "true",
+    "client_credentials.use_refresh_token": "false",
+    "acr.loa.map": "{}",
+    "require.pushed.authorization.requests": "false",
+    "tls.client.certificate.bound.access.tokens": "false",
+    "display.on.consent.screen": "false",
+    "token.response.type.bearer.lower-case": "false"
+  },
+  "authenticationFlowBindingOverrides": {},
+  "fullScopeAllowed": true,
+  "nodeReRegistrationTimeout": -1,
+  "protocolMappers": [
+    {
+      "name": "Client IP Address",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usersessionmodel-note-mapper",
+      "consentRequired": false,
+      "config": {
+        "user.session.note": "clientAddress",
+        "introspection.token.claim": "true",
+        "userinfo.token.claim": "true",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "clientAddress",
+        "jsonType.label": "String"
+      }
+    },
+    {
+      "name": "Client ID",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usersessionmodel-note-mapper",
+      "consentRequired": false,
+      "config": {
+        "user.session.note": "client_id",
+        "introspection.token.claim": "true",
+        "userinfo.token.claim": "true",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "client_id",
+        "jsonType.label": "String"
+      }
+    },
+    {
+      "name": "Client Host",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usersessionmodel-note-mapper",
+      "consentRequired": false,
+      "config": {
+        "user.session.note": "clientHost",
+        "introspection.token.claim": "true",
+        "userinfo.token.claim": "true",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "clientHost",
+        "jsonType.label": "String"
+      }
+    }
+  ],
+  "defaultClientScopes": [
+    "web-origins",
+    "acr",
+    "audience",
+    "openid",
+    "profile",
+    "roles",
+    "basic",
+    "email"
+  ],
+  "optionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ],
+  "access": {
+    "view": true,
+    "configure": true,
+    "manage": true
+  }
+}
+```
+
+### PoT ECN-Viewer OpenID Client Configuration
+
+```json
+{
+  "clientId": "ecn-viewer",
+  "name": "ecn-viewer",
+  "description": "",
+  "rootUrl": "",
+  "adminUrl": "",
+  "baseUrl": "/",
+  "surrogateAuthRequired": false,
+  "enabled": true,
+  "alwaysDisplayInConsole": false,
+  "clientAuthenticatorType": "client-secret",
+  "redirectUris": [
+    "/*"
+  ],
+  "webOrigins": [
+    "*"
+  ],
+  "notBefore": 0,
+  "bearerOnly": false,
+  "consentRequired": false,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": false,
+  "publicClient": true,
+  "frontchannelLogout": true,
+  "protocol": "openid-connect",
+  "attributes": {
+    "realm_client": "false",
+    "oidc.ciba.grant.enabled": "false",
+    "backchannel.logout.session.required": "true",
+    "standard.token.exchange.enabled": "false",
+    "login_theme": "datasance",
+    "post.logout.redirect.uris": "+",
+    "frontchannel.logout.session.required": "true",
+    "display.on.consent.screen": "false",
+    "oauth2.device.authorization.grant.enabled": "false",
+    "backchannel.logout.revoke.offline.tokens": "false"
+  },
+  "authenticationFlowBindingOverrides": {},
+  "fullScopeAllowed": true,
+  "nodeReRegistrationTimeout": -1,
+  "defaultClientScopes": [
+    "web-origins",
+    "acr",
+    "openid",
+    "profile",
+    "roles",
+    "basic",
+    "email"
+  ],
+  "optionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ],
+  "access": {
+    "view": true,
+    "configure": true,
+    "manage": true
+  }
+}
+
+```
 
 ## Import Realm
 
@@ -73,9 +262,9 @@ Create user inside imported realm. Create user's password and assign role.
 <img src="/images/keycloak/keycloak-7.png" />
 <img src="/images/keycloak/keycloak-8.png" />
 
-## Get Client Secret
+## Generate Client Secret
 
-Create client secret for `pot-controller` client. Copy and save it, you wil use it while preparing `ControlPlane` yaml.
+Generate client secret for `pot-controller` client. Copy and save it, you wil use it while preparing `ControlPlane` yaml.
 
 <img src="/images/keycloak/keycloak-9.png" />
 <img src="/images/keycloak/keycloak-10.png" />
@@ -118,7 +307,8 @@ spec:
 ## Configure ECN-Viewer URL
 
 :::warning[Configure ECN-Viewer Redirect URL]
-Once you deploy your Datasance PoT `ControlPlane`, you need to configure ECN-Viewer redirect URL on Keycloak client setting.
+When deploying `ControlPlnae` via `potctl` or `Helm, both `potctl` and our kubernetes operator updates ECN-Viewer client's redirect URL.
+But if you deploy your Datasance PoT `ControlPlane` manually, you need to configure ECN-Viewer redirect URL on Keycloak client setting.
 Follow instructions on below images.
 Only configure `Root URL`and do not put `/` at the end of `Root URL`  
 ::: 
