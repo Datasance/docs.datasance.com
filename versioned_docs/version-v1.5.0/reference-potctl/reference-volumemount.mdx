@@ -1,0 +1,70 @@
+---
+title: VolumeMount YAML Specification - potctl Reference
+description: Reference for VolumeMount YAML specification. Manage volumes from ConfigMaps and Secrets for edge agents in Datasance PoT.
+keywords: [volumemount, edge storage, potctl, yaml reference, datasance pot, configmap volume, secret volume]
+---
+
+# VolumeMount YAML Specification
+
+`potctl` allows users to deploy and manage volumeMounts.
+
+The VolumeMount has a very simple definition
+
+```yaml
+apiVersion: datasance.com/v3
+kind: VolumeMount
+metadata:
+  name: test-vm-from-configmap
+spec:
+  configMapName: configmap-name
+```
+
+```yaml
+apiVersion: datasance.com/v3
+kind: VolumeMount
+metadata:
+  name: test-vm-from-secret
+spec:
+  secretName: configmap-name
+```
+
+| Field        | Description                                           |
+| ------------ | ----------------------------------------------------- |
+| spec.configMapName          | The name of ConfigMap that you are going to create a VolumeMount from                                   |
+| spec.secretName       | The name of Secret that you are going to create a VolumeMount from                                            |
+
+## Attach VolumeMount to Agents
+
+
+```bash
+potctl attach volume-mount test-vm-from-configmap agentName-1 agentName-2 agentName-3
+```
+When you attach volumeMount to Agents, each Agent will create local volume with volumeMount's secret or configMap, then you can easily attach those volumes to running microservices. 
+
+```yaml
+        volumes:
+          - hostDestination: $VolumeMount/test-vm-from-configmap
+            containerDestination: /home/foo
+            accessMode: 'rw'
+            type: 'bind'
+          - hostDestination: $VolumeMount/test-vm-from-secret
+            containerDestination: /home/foo
+            accessMode: 'rw'
+            type: 'bind'
+
+```
+
+
+
+## Detach VolumeMount from Agents
+
+
+```bash
+potctl detach volume-mount test-vm-from-configmap agentName-1 agentName-2 agentName-3
+```
+
+
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

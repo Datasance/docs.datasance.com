@@ -51,11 +51,11 @@ const config: Config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: 'v1.4.8',
+              label: 'v1.6.1',
               // path: 'v1.4.5',
             },
           },
-
+          exclude: ['**/potctl/md/**'],
         },
         blog: false,
         theme: {
@@ -162,7 +162,7 @@ const config: Config = {
           position: 'left',
           items: [
             {
-              label: 'Datasance PoT Controller REST-API v3.5.11',
+              label: 'Datasance PoT Controller REST-API v3.7.0',
               to: '/api',
             }
           ]

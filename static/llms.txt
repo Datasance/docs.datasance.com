@@ -16,7 +16,7 @@ Securely deploy, manage, and scale containerized workloads across thousands of h
 - Architecture: https://docs.datasance.com/getting-started/architecture
 - Developing Microservices: https://docs.datasance.com/developing-microservices/overview
 - Platform Deployment: https://docs.datasance.com/platform-deployment/introduction
-- Reference Deployment Manifests: https://docs.datasance.com/reference-potctl/reference-kinds
+- Reference Deployment Manifests: https://docs.datasance.com/yaml-references/reference-kinds
 - API Reference: https://docs.datasance.com/api/
 
 ## API

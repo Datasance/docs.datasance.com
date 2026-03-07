@@ -1,0 +1,98 @@
+# What's New in PoT?
+
+- [Service](../reference-potctl/reference-service) is now available for exposing microservices, agents, Kubernetes services, or external endpoints through Router's TCP bridge mechanism.
+- [Secret Management](../reference-potctl/reference-secret) is now available for storing and managing sensitive data including Opaque and TLS secrets.
+- [Certificate and CertificateAuthority](../reference-potctl/reference-certificate) management is now available for generating self-signed certificates or using existing certificates from PoT cluster or Kubernetes secrets.
+- [ConfigMap](../reference-potctl/reference-configmap) is now available for managing non-sensitive configuration data that can be mounted to microservices.
+- [VolumeMount](../reference-potctl/reference-volumemount) is now available for attaching ConfigMaps or Secrets to Agents as volumes, enabling easy volume management for microservices.
+- [OfflineImage](../reference-potctl/reference-offlineimage) is now available for deploying container images to edge nodes that cannot access the internet, enabling potctl to pull images locally and transfer them to remote hosts via SSH.
+- [Debugging & Exec Sessions](#debugging-and-exec-sessions) deliver role-aware remote terminals for Agents, microservices, and system microservices—powered by potctl and ECN Viewer.
+- [ECN Viewer](../ECN-Viewer) now mirrors nearly every potctl operation, enabling full-cluster workload management, remote exec, resource editing, and deployments directly from the browser.
+- [Events and Auditing](#events-and-auditing) provides comprehensive tracking and auditing of all Controller API endpoint calls for compliance and troubleshooting.
+
+## Service
+
+Services enable you to expose microservices, agents, Kubernetes services, or external endpoints through the Router's TCP bridge mechanism. Services create TCP connectors on Router instances, allowing microservices to reach these endpoints via a service mesh. Services are distributed to Agents based on tags, enabling flexible and scalable service discovery across your Edge Compute Network.
+
+[Find out more!](../reference-potctl/reference-service) and check out the [YAML specification](../reference-potctl/reference-service)!
+
+## Secret Management
+
+Secrets provide a secure way to store and manage sensitive data such as passwords, API keys, and TLS certificates. PoT supports Opaque secrets for general-purpose data storage and TLS secrets for certificate management. Secrets can be referenced by microservices and other resources, ensuring sensitive information is handled securely throughout your ECN.
+
+[Find out more!](../reference-potctl/reference-secret) and check out the [YAML specification](../reference-potctl/reference-secret)!
+
+## Certificate and CertificateAuthority
+
+Certificate and CertificateAuthority resources enable comprehensive TLS certificate management for your Edge Compute Network. You can generate self-signed certificates, create Certificate Authorities, and sign certificates using existing CAs from your PoT cluster or Kubernetes secrets. This feature simplifies SSL/TLS configuration across your edge infrastructure, ensuring secure communication between components.
+
+[Find out more!](../reference-potctl/reference-certificate) and check out the [YAML specification](../reference-potctl/reference-certificate)!
+
+## ConfigMap
+
+ConfigMaps allow you to store and manage non-sensitive configuration data in key-value pairs. ConfigMaps can be used to store application configuration, environment variables, or configuration files. They support both mutable and immutable modes, providing flexibility for different use cases. ConfigMaps can be mounted to microservices as volumes or referenced directly in your deployment configurations.
+
+[Find out more!](../reference-potctl/reference-configmap) and check out the [YAML specification](../reference-potctl/reference-configmap)!
+
+## VolumeMount
+
+VolumeMounts provide a convenient way to attach ConfigMaps or Secrets to Agents as volumes. Once attached, these volumes are available on the Agent and can be easily mounted to running microservices. This feature simplifies configuration and secret management by allowing you to create volumes from ConfigMaps or Secrets and attach them to multiple Agents, enabling consistent configuration across your edge infrastructure.
+
+[Find out more!](../reference-potctl/reference-volumemount) and check out the [YAML specification](../reference-potctl/reference-volumemount)!
+
+## OfflineImage
+
+OfflineImage enables you to deploy container images to edge nodes that cannot access the internet for pulling images. This feature is essential for air-gapped or network-restricted edge deployments. potctl pulls the images on your local machine (where potctl is installed), transfers them to remote edge hosts via SSH, loads them into Docker on each host, and automatically creates catalog items with registry ID 2 (from_cache). This allows microservices to use these pre-loaded images without requiring internet access on the edge nodes.
+
+[Find out more!](../reference-potctl/reference-offlineimage) and check out the [YAML specification](../reference-potctl/reference-offlineimage)!
+
+## Debugging and Exec Sessions
+
+Secure debugging is now available across the entire ECN:
+
+- **potctl workflow**: attach a privileged debugger container and open an exec session without handling SSH keys.
+- **RBAC-aware access**: SREs can exec into Agents, microservices, and system microservices; Developers are limited to microservices; Viewers cannot open exec sessions.
+- **ECN Viewer parity**: click the terminal icon in any Agent, microservice, or system microservice slide-over to launch the same exec experience directly in the browser.
+
+### potctl commands
+
+Attach and exec into a microservice (application or system):
+
+```bash
+# Application microservice
+potctl attach exec <app>/<microservice>
+potctl exec <app>/<microservice>
+
+# System microservice
+potctl attach exec <sys-app>/<sys-microservice>
+potctl exec <sys-app>/<sys-microservice>
+```
+
+Attach and exec into an Agent (with optional custom debugger image):
+
+```bash
+potctl attach exec agent <agent-name> [debuggerImage:tag]
+potctl exec agent <agent-name>
+```
+
+If no image is provided, the cluster’s catalog debugger image is deployed automatically. Debugger containers run with the required `host`, `pid`, `ipc`, and `net` privileges, giving you SSH-like access without distributing key pairs.
+
+## ECN Viewer: Full-Stack Management
+
+The browser-based ECN Viewer now provides operational parity with potctl for day-2 workflows. You can deploy and manage applications, edit any resource YAML, configure registries and catalogs, open exec sessions into Agents or microservices, and call the Controller REST API without leaving the UI. Only the installation of Controllers and Agents still requires potctl.
+
+[Find out more!](../ECN-Viewer)
+
+## Events and Auditing
+
+The Events endpoint provides comprehensive tracking and auditing of all Controller API calls. Administrators can filter events by type, endpoint, status, method, resource type, actor, and time range. Export event logs for compliance reporting or delete old events to manage storage. This feature is essential for enterprise deployments requiring audit trails and compliance with security policies.
+
+[Find out more!](../ECN-Viewer#events-and-auditing)
+
+
+
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
+

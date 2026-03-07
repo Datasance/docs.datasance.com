@@ -1,0 +1,371 @@
+
+:::tip[Not interested in using Kubernetes?]
+  <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
+  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use potctl instead, go to <a href="../platform-deployment/kubernetes-potctl"> Kubernetes - Deploy Control Plane Using potctl</a>.</p>
+:::
+
+# Kubernetes - Deploy Control Plane Using Helm
+
+In this tutorial, we will install the Datasance PoT Control Plane on Kubernetes using Helm.
+
+The Helm Chart deploys the PoT operator (iofog-operator) and creates a `ControlPlane` custom resource instance automatically. The Operator consumes this CRD and creates deployments for the Controller and Router, as well as associated services.
+
+## Prerequisites
+
+- **Helm 3** - [Helm installation instructions](https://helm.sh/docs/using_helm/#installing-helm)
+- **Kubernetes 1.22+** - The chart uses `apiextensions.k8s.io/v1` CRDs
+- **kubectl** - [kubectl installation instructions](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- A working Kubernetes cluster (GKE, EKS, AKS, Minikube, or any other Kubernetes distribution)
+
+## Add the Helm Repository
+
+Add the Datasance Helm [repotsitory](https://github.com/Datasance/helm) to your local index:
+
+```bash
+helm repo add datasance https://datasance.github.io/helm
+helm repo update
+```
+
+## Install the Chart
+
+Install the Chart while specifying the required authentication configuration. The chart requires Keycloak/OpenID Connect authentication settings. You can provide these values either via a values file or using `--set` flags.
+
+### Quick Install with Flags
+
+```bash
+helm install pot-operator datasance/pot -n pot --create-namespace \
+  --set controlplane.spec.auth.url=https://keycloak.example.com \
+  --set controlplane.spec.auth.realm=pot \
+  --set controlplane.spec.auth.realmKey=master \
+  --set controlplane.spec.auth.ssl=true \
+  --set controlplane.spec.auth.controllerClient=pot-controller \
+  --set controlplane.spec.auth.controllerSecret=supersecret \
+  --set controlplane.spec.auth.viewerClient=pot-viewer
+```
+
+### Install with Values File
+
+Create a `myvalues.yaml` file with your configuration:
+
+```yaml
+operator:
+  image: ghcr.io/datasance/operator:3.6.0
+controlplane:
+  spec:
+    # Database is optional; if omitted, the controller uses internal SQLite.
+    # When using SQLite, keep controller replicas at 1.
+    database:
+      provider: postgres
+      host: db
+      port: 5432
+      user: pot
+      password: changeme
+      databaseName: pot
+      ssl: false
+    auth:
+      url: https://keycloak.example.com
+      realm: pot
+      realmKey: master
+      ssl: true
+      controllerClient: pot-controller
+      controllerSecret: supersecret
+      viewerClient: pot-viewer
+```
+
+Then install using the values file:
+
+```bash
+helm install pot-operator datasance/pot -n pot --create-namespace \
+  -f pot-operator-values.yaml
+```
+
+The install creates:
+
+- CRDs for `controlplanes.datasance.com`
+- The PoT operator (iofog-operator) Deployment + RBAC + ServiceAccount
+- One ControlPlane instance (toggle with `controlplane.create`)
+
+### Verify Installation
+
+To list all Helm releases, run:
+
+```bash
+helm list -n pot
+```
+
+The result should look like this:
+
+```plain
+NAME          REVISION  UPDATED                   STATUS    CHART        APP VERSION  NAMESPACE
+pot-operator  1         Tue Dec  8 21:34:42 2025  DEPLOYED  pot-3.6.0    3.6.0        pot
+```
+
+## Configuration
+
+The Helm chart supports extensive configuration through values. You can view the complete default [values.yaml file](https://github.com/Datasance/helm/blob/main/charts/pot/values.yaml).
+
+### Required Values
+
+The following authentication values **must** be set via `values.yaml` or `--set`:
+
+- `controlplane.spec.auth.url` - Keycloak/OpenID Connect server URL
+- `controlplane.spec.auth.realm` - Keycloak realm name
+- `controlplane.spec.auth.realmKey` - Realm key (typically "master")
+- `controlplane.spec.auth.ssl` - Enable SSL (true/false)
+- `controlplane.spec.auth.controllerClient` - Controller OIDC client ID
+- `controlplane.spec.auth.controllerSecret` - Controller OIDC client secret
+- `controlplane.spec.auth.viewerClient` - Viewer OIDC client ID
+
+### Common Configuration Options
+
+#### Operator Configuration
+
+```bash
+# Operator image and replicas
+--set operator.image=ghcr.io/datasance/operator:3.6.0
+--set operator.replicaCount=1
+--set operator.imagePullPolicy=Always
+
+# Resource limits
+--set operator.resources.requests.cpu=100m
+--set operator.resources.requests.memory=128Mi
+--set operator.resources.limits.cpu=500m
+--set operator.resources.limits.memory=512Mi
+
+# Node scheduling
+--set operator.nodeSelector.kubernetes.io/os=linux
+--set operator.tolerations[0].key=node-role.kubernetes.io/master
+--set operator.tolerations[0].effect=NoSchedule
+```
+
+#### ControlPlane Metadata
+
+```bash
+--set controlplane.create=true
+--set controlplane.name=pot
+--set controlplane.namespace=pot
+```
+
+#### Database Configuration (Optional)
+
+If omitted, the controller uses internal SQLite (keep controller replicas at 1):
+
+```bash
+--set controlplane.spec.database.provider=postgres
+--set controlplane.spec.database.host=db
+--set controlplane.spec.database.port=5432
+--set controlplane.spec.database.user=pot
+--set controlplane.spec.database.password=changeme
+--set controlplane.spec.database.databaseName=pot
+--set controlplane.spec.database.ssl=false
+```
+
+#### Controller Configuration
+
+```bash
+--set controlplane.spec.replicas.controller=1
+--set controlplane.spec.controller.logLevel=info
+--set controlplane.spec.controller.https=false
+--set controlplane.spec.controller.secretName=tls-secret
+```
+
+#### Service Configuration
+
+```bash
+--set controlplane.spec.services.controller.type=LoadBalancer
+--set controlplane.spec.services.router.type=LoadBalancer
+```
+
+#### Ingress Configuration
+
+```bash
+--set controlplane.spec.ingresses.controller.host=controller.example.com
+--set controlplane.spec.ingresses.controller.ingressClassName=nginx
+--set controlplane.spec.ingresses.controller.annotations.cert-manager.io/cluster-issuer=letsencrypt-prod
+```
+
+#### Image Configuration
+
+```bash
+--set controlplane.spec.images.controller=ghcr.io/datasance/controller:3.6.0
+--set controlplane.spec.images.routerAdaptor=ghcr.io/datasance/router-adaptor:3.6.0
+--set controlplane.spec.images.router=ghcr.io/datasance/router:3.6.0
+--set controlplane.spec.images.pullSecret=my-registry-secret
+```
+
+#### Events Configuration
+
+```bash
+--set controlplane.spec.events.auditEnabled=true
+--set controlplane.spec.events.retentionDays=14
+--set controlplane.spec.events.cleanupInterval=86400
+--set controlplane.spec.events.captureIpAddress=true
+```
+
+### Complete Values File Reference
+
+For the complete list of all configurable properties, refer to the [values.yaml file](https://github.com/Datasance/helm/blob/main/charts/pot/values.yaml) in the Helm chart [repotsitory](https://github.com/Datasance/helm).
+
+#### Get Values Configuration File
+
+```bash
+wget -q -O - "https://raw.githubusercontent.com/Datasance/helm/refs/heads/main/charts/pot/values.yaml" > pot-operator-values.yaml
+```
+
+
+The values file structure includes:
+
+#### Global Configuration
+
+```yaml
+nameOverride: "iofog-operator"
+fullnameOverride: "iofog-operator"
+imagePullSecrets: []
+```
+
+#### CRD and RBAC
+
+```yaml
+crds:
+  install: true
+
+rbac:
+  create: true
+```
+
+#### Operator Configuration
+
+```yaml
+operator:
+  replicaCount: 1
+  image: ghcr.io/datasance/operator:3.6.0
+  imagePullPolicy: Always
+  serviceAccount:
+    create: true
+    name: "iofog-operator"
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  extraEnv: []
+  extraArgs: []
+```
+
+#### ControlPlane Configuration
+
+```yaml
+controlplane:
+  create: true
+  name: pot
+  namespace: ""
+  annotations: {}
+  labels: {}
+  spec:
+    replicas:
+      controller: 1
+    # database:
+    #   provider: postgres
+    #   user: ""
+    #   host: ""
+    #   port: 5432
+    #   password: ""
+    #   databaseName: ""
+    #   ssl: false
+    #   ca: ""
+    auth:
+      # REQUIRED: set all auth fields (Keycloak / OpenID Connect Client identity)
+      url: ""
+      realm: ""
+      realmKey: ""
+      ssl: ""
+      controllerClient: ""
+      controllerSecret: ""
+      viewerClient: ""
+    events:
+      auditEnabled: true
+      retentionDays: 14
+      cleanupInterval: 86400
+      captureIpAddress: true
+    images:
+      # pullSecret: ""
+      controller: "ghcr.io/datasance/controller:3.6.0"
+      routerAdaptor: "ghcr.io/datasance/router-adaptor:3.6.0"
+      router: "ghcr.io/datasance/router:3.6.0"
+    services:
+      controller:
+        type: LoadBalancer
+        # address: ""
+        # annotations: {}
+      router:
+        type: LoadBalancer
+        # address: ""
+        # annotations: {}
+    controller:
+      # pidBaseDir: ""
+      # ecnViewerPort: 0
+      # ecnViewerUrl: ""
+      https: false
+      # secretName: ""
+      logLevel: "info"
+    # ingresses:
+    #   controller:
+    #     annotations: {}
+    #     ingressClassName: ""
+    #     host: ""
+    #     secretName: ""
+    #   router:
+    #     address: ""
+    #     messagePort: 5671
+    #     interiorPort: 55671
+    #     edgePort: 45671
+```
+
+See the [complete values.yaml file](https://github.com/Datasance/helm/blob/main/charts/pot/values.yaml) for all available options and their default values.
+
+## Upgrade
+
+To upgrade an existing installation:
+
+```bash
+helm upgrade pot-operator datasance/pot -n pot -f pot-operator-values.yaml
+```
+
+## Uninstall
+
+To uninstall the PoT Control Plane:
+
+```bash
+helm uninstall pot-operator -n pot
+```
+
+**Note:** CRDs remain by default after uninstallation. Remove them manually if desired:
+
+```bash
+kubectl delete crd controlplanes.datasance.com
+```
+
+## Connection to Installed Control Plane
+
+Once the installation is complete, you can connect to the Controller using [potctl](../potctl/introduction). Make sure the `--namespace` matches the one used during `helm install`:
+
+#### Connect to Installed Control Plane as a KubernetesControlPlane
+```bash
+potctl create namespace pot
+potctl connect --email foo.bar@example.com --kube ~/.kube/config --namespace pot
+```
+
+#### Connect to Installed Control Plane as a RemoteControlPlane
+```bash
+potctl create namespace pot
+potctl connect --email foo.bar@example.com --name pot --ecn-addr <http://controller-endpoint:51121> -n pot
+```
+You will need to authenticate using your Keycloak credentials configured during installation.
+
+
+:::tip[Where to go from here?]
+  <p>Having our Control Plane up and running, we can now go to <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

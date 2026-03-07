@@ -1,0 +1,109 @@
+# What's Next?
+
+:::caution[Roadmap Disclaimer]
+The roadmap outlined below represents our current development plans and priorities. However, Datasance reserves the right to modify, delay, or change any roadmap items at any time without prior notice. Features, timelines, and priorities are subject to change based on customer feedback, technical requirements, and business needs.
+:::
+
+This page provides an overview of upcoming features and enhancements planned for the Datasance PoT platform. The roadmap is organized by component to help you understand what's coming in each area of the platform.
+
+## Controller
+
+The Controller component will see significant enhancements in security, observability, and operational capabilities:
+
+- **Certificate rotation with rotate frequency**: Automated certificate rotation with configurable rotation intervals to maintain security without manual intervention.
+- **Agent private key rotation**: Secure rotation of agent private keys to enhance security posture and comply with key rotation policies.
+- **Full RBAC**: Complete role-based access control implementation across all Controller operations and resources.
+- **Distributed trust chain - zero trust**: Implementation of zero-trust architecture principles with distributed trust chain validation for enhanced security.
+- **Agent & microservice/system microservice logging WebSocket endpoints**: Real-time logging capabilities via WebSocket connections for agents and all microservice types.
+- **Microservice templates**: Template-based microservice definitions to simplify deployment and ensure consistency across applications.
+- **Secret, Key, Certs encryption with enterprise-grade KMS**: Integration with enterprise-grade Key Management Service (KMS) for encryption of secrets, keys, and certificates.
+- **Agent Config - Airgap**: Airgap configuration support for agents to enable deployments in isolated network environments.
+- **Default system catalog images with registry ID local for airgap type nodes**: Pre-configured system catalog images using local registry IDs for airgap deployments, ensuring all system microservices run with properly cached local images.
+- **Offline catalog attach to node**: Ability to attach offline catalogs directly to nodes for airgap scenarios.
+- **New tables: msvc-secrets and msvc-configmaps**: New database tables for managing microservice secrets and ConfigMaps with support for type definitions, volume or environment variable usage, and dynamic configuration.
+- **Network service TLS setup**: Enhanced TLS configuration for network services to ensure secure communication.
+- **Router local CLI port SSL profile**: SSL profile configuration for router local CLI ports to secure administrative access.
+- **NATs as a system microservice**: NATS deployment as a system microservice with Controller endpoints, service logic, ConfigMap support, and certificate management.
+- **Zenoh as a system microservice**: Zenoh deployment as a system microservice with Controller endpoints, service logic, ConfigMap support, and certificate management.
+- **Microservice-Agent local API roles**: Role-based access control for microservice access to Agent local APIs (GPS, config, and other local services).
+- **Remove routes on application struct**: Deprecation of routes in application structures as the local message bus is being phased out.
+- **Control REST-API with MessagePack encoded payloads**: Support for MessagePack encoding in Controller REST API payloads for improved performance and efficiency.
+- **PQC-enabled cert manager**: Post-quantum cryptography (PQC) support in the certificate manager for future-proof security.
+- **Enhance OpenTelemetry**: Expanded OpenTelemetry integration for improved observability and monitoring capabilities.
+- **Enhancing controller logger through silly details**: Improved controller logging with more granular detail levels for better debugging and troubleshooting.
+- **CLI user login with v3 API**: User authentication for CLI using v3 API. When provisioned, static local API tokens will no longer be used. RBAC JWT tokens will be used instead, supporting both online and offline login scenarios.
+
+## Agent
+
+The Agent component will receive updates focused on security, observability, and operational improvements:
+
+- **Agent-microservice logging with Controller WebSocket**: Real-time logging from agents and microservices to the Controller via WebSocket connections for centralized log aggregation.
+- **Offline image catalog.js**: Enhanced offline image catalog management to prevent image pruning during catalog operations.
+- **Removing message bus server and message bus on local API**: Deprecation of message bus components from the local API as part of the transition to new messaging infrastructure.
+- **Use TPM**: Integration with Trusted Platform Module (TPM) for enhanced security and hardware-based key management.
+- **Local API v3**: New version of the Agent local API with improved functionality and security features.
+- **Local API roles for microservice struct**: Role-based access control for microservices accessing Agent local APIs.
+- **Enhance JWT manager**: Improved JWT token management with enhanced security and rotation capabilities.
+- **Service account JWT as volume attach on microservice**: Service account JWT tokens mounted as volumes on microservices for secure local API access.
+- **Volume mount logic**: Enhanced volume mount implementation with tmpfs for secrets and static mounts for ConfigMaps, all using symbolic links. Service account tokens will be managed as secrets with rotation support.
+- **CLI access logic**: Updated CLI access mechanism replacing static local API keys with dynamic authentication.
+- **Agent config as YAML**: Agent configuration management using YAML format for improved readability and maintainability.
+- **Agent CLI to Golang**: Migration of agent CLI to Golang with new command structure (e.g., `pot-agent start -f config.yaml`).
+- **CLI will handle reboot, update, delete**: Agent CLI will support reboot, update, and delete operations for improved lifecycle management.
+- **Remove agent native deployment**: Deprecation of native agent deployment methods in favor of containerized deployments.
+- **NATs, Zenoh persistent message store on agent volume directory**: Persistent message store for NATS and Zenoh on agent volume directories for reliable message queuing.
+- **Control REST-API with MessagePack encoded payloads**: Support for MessagePack encoding in Agent REST API payloads.
+- **2 HA controllers**: High availability support with two controllers. The agent will track the health of each controller and automatically failover to the second controller if the first becomes unavailable for a configured time period. A third controller will be monitored, and the agent will automatically return to the first controller once it becomes available again.
+
+## potctl
+
+The potctl CLI tool will be enhanced with new deployment and management capabilities:
+
+- **Airgap deployment of cluster resources**: Support for deploying cluster resources in airgap environments without internet connectivity.
+- **Offline image registries**: Management of offline image registries for airgap deployments.
+- **Router HA**: High availability configuration and management for Router components.
+- **NATs struct**: Resource structure definitions for NATS deployments.
+- **Zenoh struct**: Resource structure definitions for Zenoh deployments.
+- **NATs deployment on local, remote, k8s control plane**: Deployment capabilities for NATS on local, remote, and Kubernetes control plane environments.
+- **Zenoh deployment on local, remote, k8s control plane**: Deployment capabilities for Zenoh on local, remote, and Kubernetes control plane environments.
+- **Controller OpenTelemetry Config**: Configuration management for Controller OpenTelemetry integration.
+
+## Operator
+
+The Kubernetes Operator will be enhanced with additional resource management capabilities:
+
+- **Router HA**: High availability support and reconciliation for Router components.
+- **NATs struct and reconcile**: Resource structure definitions and reconciliation logic for NATS deployments.
+- **Zenoh struct and reconcile**: Resource structure definitions and reconciliation logic for Zenoh deployments.
+- **Controller OpenTelemetry Config**: Configuration management and reconciliation for Controller OpenTelemetry settings.
+
+## Router
+
+Router enhancements will focus on security and configuration management:
+
+- **Local CLI - skstat with default TLS setup**: Router local CLI commands (including skstat) will use TLS by default, with non-TLS ports removed for enhanced security.
+- **Router config from attached secret volume mount and dynamic config**: Router configuration will be loaded from attached secret volume mounts with support for dynamic configuration updates.
+
+## MessageBus
+
+NATS and Zenoh will be enhanced as system microservices with improved security and configuration management:
+
+### NATS
+
+- **Datasance NATS image with RHEL micro image, non-root user**: Custom Datasance NATS container image based on RHEL micro base image, running as a non-root user for enhanced security.
+- **Datasance NATS config loader, watcher inside image**: Built-in configuration loader and watcher within the NATS image for dynamic configuration management.
+
+### Zenoh
+
+- **Datasance Zenoh image with RHEL micro image, non-root user, with API, MQTT, and other required plugins (storage vs)**: Custom Datasance Zenoh container image based on RHEL micro base image, running as a non-root user, with API, MQTT, and storage plugins included.
+- **Datasance Zenoh config loader, watcher inside image**: Built-in configuration loader and watcher within the Zenoh image for dynamic configuration management.
+
+---
+
+:::tip[Stay Updated]
+Keep an eye on our [What's New](../home/whats-new) page to see when these features are released, and check our release notes for detailed information about each update.
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

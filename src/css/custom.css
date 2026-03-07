@@ -11,9 +11,26 @@
   --ifm-code-font-size: 90%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
   --alert-highlight: rgba(230, 100, 102, 0.2);
-  --alert-foreground: #10253D ;
+  --alert-foreground: #10253D;
 
-
+  /* Compact layout */
+  --doc-sidebar-width: 240px !important;
+  /* Use more horizontal space on large screens */
+  --ifm-container-width: 1280px;
+  --ifm-container-width-xl: 1600px;
+  --ifm-menu-link-padding-vertical: 0.25rem;
+  --ifm-menu-link-padding-horizontal: 0.5rem;
+  --ifm-font-size-base: 95%;
+  --ifm-line-height-base: 1.6;
+  --ifm-leading-desktop: 1.2;
+  --ifm-paragraph-margin-bottom: 1rem;
+  --ifm-heading-margin-top: 1.5rem;
+  --ifm-heading-margin-bottom: 0.75rem;
+  --ifm-h1-font-size: 1.75rem;
+  --ifm-h2-font-size: 1.35rem;
+  --ifm-h3-font-size: 1.15rem;
+  --ifm-toc-padding-vertical: 0.35rem;
+  --ifm-toc-padding-horizontal: 0.35rem;
 }
 
 [data-theme='light'] {
@@ -125,6 +142,73 @@
   }
 }
 
+/* Compact sidebar typography */
+.theme-doc-sidebar-container .menu__link {
+  font-size: 0.9rem;
+}
+.theme-doc-sidebar-container .menu__list-item-collapsible {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Compact right-hand TOC */
+.theme-doc-toc-desktop .table-of-contents__link {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+/* TOC (context section): ensure readable width on all screen sizes */
+.theme-doc-toc-desktop {
+  min-width: 180px;
+}
+
+/* Main content: responsive width - grows on large screens for better balance with TOC */
+.theme-doc-markdown {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* On large screens, widen content so TOC sits closer and layout uses space better */
+@media (min-width: 1400px) {
+  .theme-doc-markdown {
+    max-width: 58rem;
+  }
+}
+@media (min-width: 1600px) {
+  .theme-doc-markdown {
+    max-width: 65rem;
+  }
+}
+@media (min-width: 1920px) {
+  .theme-doc-markdown {
+    max-width: 72rem;
+  }
+}
+.theme-doc-markdown h1 {
+  margin-top: 0;
+  padding-bottom: 0.5rem;
+}
+.theme-doc-markdown h2 {
+  margin-top: 1.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+.theme-doc-markdown h3 {
+  margin-top: 1.25rem;
+}
+.theme-doc-markdown p {
+  line-height: 1.6;
+}
+.theme-doc-markdown ul,
+.theme-doc-markdown ol {
+  margin-bottom: 1rem;
+}
+.theme-doc-markdown li {
+  margin-bottom: 0.25rem;
+}
+.theme-doc-markdown li > p {
+  margin-bottom: 0.5rem;
+}
+
 .emoji-icon {
   vertical-align: initial;
 }
@@ -137,4 +221,22 @@
   font-weight: bold;
   background-color: #644A92;
   border-color: #e7646609;
+}
+
+/* Architecture diagrams: fit within content layer, scale to fit */
+.theme-doc-markdown figure.arch-diagram {
+  max-width: 100%;
+  overflow: hidden;
+}
+.theme-doc-markdown figure.arch-diagram img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  cursor: zoom-in;
+}
+.theme-doc-markdown figure.arch-diagram figcaption {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ifm-color-content-secondary);
+  margin-top: 0.5rem;
 }

@@ -1,0 +1,47 @@
+---
+title: RoleBinding YAML Specification - potctl Reference
+description: YAML reference for RoleBinding kind. Bind Roles to users or groups for access control.
+keywords: [role binding, rbac, yaml reference, potctl, datasance pot, subjects]
+---
+
+# RoleBinding YAML Specification
+
+The `RoleBinding` kind binds a [Role](reference-roles) to one or more **subjects** (users or groups). It defines who receives the permissions in the Role. Without a RoleBinding, a Role has no effect.
+
+## Example
+
+```yaml
+apiVersion: datasance.com/v3
+kind: RoleBinding
+metadata:
+  name: developers-binding
+roleRef:
+  kind: Role
+  name: developer-role
+  apiGroup: datasance.com/v3
+subjects:
+  - kind: User
+    name: alice
+  - kind: Group
+    name: developers
+```
+
+## Fields
+
+| Field | Description |
+| ----- | ----------- |
+| `metadata.name` | Unique name for the RoleBinding. |
+| `roleRef` | Reference to the Role to bind. Required. |
+| `roleRef.kind` | Kind of the referenced resource (e.g. `Role`). |
+| `roleRef.name` | Name of the Role. |
+| `roleRef.apiGroup` | API group of the Role (e.g. `datasance.com/v3`). |
+| `subjects` | Array of subjects that receive the Role's permissions. |
+| `subjects[].kind` | Either `User` or `Group`. |
+| `subjects[].name` | Keycloak username or group (controller client role). |
+| `subjects[].apiGroup` | Optional API group. |
+
+Deploy with `potctl deploy -f role-binding.yaml`. For Keycloak integration and REST API, see [Security – Role Bindings](../security/role-bindings).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

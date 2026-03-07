@@ -21,7 +21,7 @@ brew install potctl
 
 #### Install potctl on Windows
 
-The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.4.8/potctl.exe).
+The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.6.1/potctl.exe).
 
 ##### Prepare Windows
 
@@ -55,16 +55,16 @@ sudo yum install potctl -y
 Run `potctl version` to verify we have successfully installed the CLI.
 
 :::warning[Prepare your Keycloak Realms for Datasance PoT]
-  <p>We recommened going through the <a href="../platform-iam/introduction">Keycloak Installation Guide</a> before continuing on here.</p>
+  <p>We recommened going through the <a href="../platform-deployment/prepare-realm">Keycloak Installation Guide</a> before continuing on here.</p>
 :::
 
-## Deploy ioFog Locally
+## Deploy **PoT** Locally
 
 We can use `potctl deploy` to install and provision ECN components. Here we will deploy a containerized ECN locally.
 
 
 :::info[Want to know more about potctl?]
-  <p>We aren't going into detail about potctl here because we want to show you how simple it can be to get going with ioFog. Please make sure to check out the full potctl documentation <a href="../potctl/introduction">here</a>.</p>
+  <p>We aren't going into detail about potctl here because we want to show you how simple it can be to get going with **PoT**. Please make sure to check out the full potctl documentation <a href="../potctl/introduction">here</a>.</p>
 :::
 
 
@@ -90,9 +90,11 @@ spec:
     controllerClient: pot-controller
     controllerSecret:
     viewerClient: ecn-viewer
+  nats:
+    enabled: false
   controller:
     container:
-      image: ghcr.io/datasance/controller:3.5.11
+      image: ghcr.io/datasance/controller:3.7.0
 ---
 apiVersion: datasance.com/v3
 kind: LocalAgent
@@ -100,7 +102,7 @@ metadata:
   name: local-agent
 spec:
   container:
-    image: ghcr.io/datasance/agent:3.5.5
+    image: ghcr.io/datasance/agent:3.7.0
 " > /tmp/quick-start.yaml
 potctl deploy -f /tmp/quick-start.yaml
 ```
@@ -151,94 +153,8 @@ Which should output something similar to:
 CONTAINER ID        IMAGE                          COMMAND                  CREATED             STATUS              PORTS                                                          NAMES
 71927882293f        iofog/router:3.0.1             "/qpid-dispatch/laun…"   15 minutes ago      Up 15 minutes       0.0.0.0:5672->5672/tcp, 0.0.0.0:56721-56722->56721-56722/tcp   iofog_PJFbk3ZHjX3RkNWxwcRqzDXnKV6mLHmq
 8454ca70755b        iofog/agent:3.0.0              "sh /start.sh"           15 minutes ago      Up 15 minutes                                                                      iofog-agent
-dc7568ad1708        ghcr.io/datasance/controller:3.5.11         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
+dc7568ad1708        ghcr.io/datasance/controller:3.7.0         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
 ```
-
-## Deploy Microservices
-
-Now that our local ECN is up, lets put it to use. The following commands will deploy a demonstration application on your ECN:
-
-```bash
-echo "---
-apiVersion: datasance.com/v3
-kind: Application
-metadata:
-  name: health-care-wearable
-spec:
-  microservices:
-  - name: heart-rate-monitor
-    agent:
-      name: local-agent
-      config:
-        bluetoothEnabled: false
-        abstractedHardwareEnabled: false
-    images:
-      arm: edgeworx/healthcare-heart-rate:arm-v1
-      x86: edgeworx/healthcare-heart-rate:x86-v1
-      registry: remote
-    container:
-      hostNetworkMode: false
-      isPrivileged: false
-      runAsUser: ''
-      platform: ''
-      runtime: ''
-      cdiDevices: []
-      ports: []
-    config:
-      test_mode: true
-      data_label: Anonymous_Person
-  - name: heart-rate-viewer
-    agent:
-      name: local-agent
-    images:
-      arm: edgeworx/healthcare-heart-rate-ui:arm
-      x86: edgeworx/healthcare-heart-rate-ui:x86
-      registry: remote
-    container:
-      hostNetworkMode: false
-      isPrivileged: false
-      runAsUser: ''
-      platform: ''
-      runtime: ''
-      cdiDevices: []
-      ports:
-        - external: 5000
-          internal: 80
-          protocol: tcp
-      env:
-        - key: BASE_URL
-          value: http://localhost:8080/data
-  routes:
-  - name: monitor-to-viewer
-    from: heart-rate-monitor
-    to: heart-rate-viewer" > /tmp/quick-start-app.yaml
-potctl deploy -f /tmp/quick-start-app.yaml
-```
-
-This deploys two microservices: `heart-rate-monitor` and `heart-rate-viewer`. The former generates mock heart rate data that would normally be generated with a physical heart monitoring device, and the latter is a web application that offers a live visualisation of the generated data.
-
-After `potctl deploy -f /tmp/quick-start-app.yaml` has completed, the agent will have to download each microservice image and start them.
-
-You can follow the progress by running the command:
-
-```bash
-watch potctl get microservices
-```
-
-Which will output something similar to:
-
-```plain
-Every 2.0s: potctl get microservices                                                                                                                     Nehas-MacBook-Pro.local: Tue Apr  7 11:18:43 2020
-
-NAMESPACE
-default
-
-MICROSERVICE            STATUS          AGENT           ROUTES                  VOLUMES                 PORTS
-heart-rate-monitor      QUEUED          local-agent     heart-rate-viewer
-heart-rate-viewer       QUEUED          local-agent                                                     5000:80
-```
-
-Once both microservice status are 'RUNNING', the microservices have started. We will be able to see the web application on our browser at <a href="http://localhost:5000/" target="_blank">http://localhost:5000</a>.
 
 ## Teardown
 
@@ -250,7 +166,7 @@ potctl delete all
 
 ## Next Steps
 
-Now that you have seen what ioFog is about, you can create a real ECN with remote hosts. Instructions are found [here](../platform-deployment/introduction).
+Now that you have seen what **PoT** is about, you can create a real ECN with remote hosts. Instructions are found [here](../platform-deployment/introduction).
 
 We can also try deploying other Microservices on the local ECN. We can find instructions on writing our own Microservice [here](../developing-microservices/overview) and a step-by-step [tutorial](../tutorial/introduction).
 

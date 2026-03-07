@@ -1,0 +1,33 @@
+## potctl rename
+
+Rename the iofog resources that are currently deployed
+
+### Synopsis
+
+Rename the iofog resources that are currently deployed
+
+### Options
+
+```
+  -h, --help   help for rename
+```
+
+### Options inherited from parent commands
+
+```
+      --debug              Toggle for displaying verbose output of API clients (HTTP and SSH)
+  -n, --namespace string   Namespace to execute respective command within (default "default")
+  -v, --verbose            Toggle for displaying verbose output of potctl
+```
+
+### SEE ALSO
+
+* [potctl](potctl.md)	 - 
+* [potctl rename agent](potctl_rename_agent.md)	 - Rename an Agent
+* [potctl rename application](potctl_rename_application.md)	 - Rename an Application
+* [potctl rename controller](potctl_rename_controller.md)	 - Rename a Controller
+* [potctl rename edge-resource](potctl_rename_edge-resource.md)	 - Rename an Edge Resource
+* [potctl rename microservice](potctl_rename_microservice.md)	 - Rename a Microservice
+* [potctl rename namespace](potctl_rename_namespace.md)	 - Rename a Namespace
+
+

@@ -1,0 +1,76 @@
+---
+title: ConfigMap YAML Specification - potctl Reference
+description: Reference for ConfigMap YAML specification. Manage configuration data for microservices in Datasance PoT using key-value pairs.
+keywords: [configmap, yaml reference, configuration management, potctl, datasance pot, edge microservices, edge configuration]
+---
+
+# ConfigMap YAML Specification
+
+`potctl` allows users to deploy and manage configMaps.
+
+The configMap has a very simple definition
+
+```yaml
+apiVersion: datasance.com/v3
+kind: ConfigMap
+metadata:
+  name: test-configMap
+spec:
+  immutable: false
+data:
+  key1: value1  
+  key2: value2
+```
+
+```yaml
+apiVersion: datasance.com/v3
+kind: ConfigMap
+metadata:
+  name: test-nats-configmap
+spec:
+  immutable: true
+data:
+  accounts.conf: |
+    accounts: {
+      USERS: {
+        users: [
+          {user: test, password: test}
+        ],
+        jetstream: enabled
+      }
+    }
+  nats-server.conf: |
+    port: 4222
+    server_name: test-leaf
+    jetstream {
+      store_dir="./store_leaf"	
+        domain: test
+    }
+    leafnodes {
+        remotes = [
+            {
+                urls: ["nats://test:test@example.online:7422"]
+                account: "USERS"
+                tls: {
+                    ca_file: "/etc/nats/certs/leafnodes/ca.crt"
+                    cert_file: "/etc/nats/certs/leafnodes/tls.crt"
+                    key_file: "/etc/nats/certs/leafnodes/tls.key"
+                    verify: true
+                    handshake_first: true
+                }
+            },
+        ]
+    }
+    mqtt {
+      port: 1884 
+    }
+```
+
+| Field        | Description                                           |
+| ------------ | ----------------------------------------------------- |
+| spec.immutable          | Is configMap immutable? true or false                                   |
+| data     | ConfigMap data with key value pairs.                                           |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
