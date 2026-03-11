@@ -1,0 +1,132 @@
+---
+title: Agent Configuration Files - Reference
+description: Reference for Agent configuration files (config.xml). Configure edge agent behavior, logging, and controller connections.
+keywords: [agent configuration, config.xml, edge agent settings, datasance pot, edgeops, edge configuration]
+---
+
+# Agent Configurations
+
+Configs are located at `/etc/iofog-agent/`. 
+
+#### config.yaml
+
+```yaml
+
+currentProfile: default  # default | development | production
+
+profiles:
+  default:
+    privateKey: ""
+    routerUuid: ""
+    controllerUrl: "http://localhost:54421/api/v3/"
+    iofogUuid: ""
+    secureMode: "off"
+    devMode: "off"
+    controllerCert: "/etc/iofog-agent/cert.crt"
+    arch: "auto"
+    networkInterface: "dynamic"
+    dockerUrl: "unix:///var/run/docker.sock"
+    diskConsumptionLimit: "10"
+    diskDirectory: "/var/lib/iofog-agent/"
+    memoryConsumptionLimit: "4096"
+    processorConsumptionLimit: "80.0"
+    logDiskConsumptionLimit: "10.0"
+    logDiskDirectory: "/var/log/iofog-agent/"
+    logFileCount: "10"
+    logLevel: "INFO"
+    statusUpdateFreq: "30"
+    getChangesFreq: "60"
+    postDiagnosticsFreq: "10"
+    scanDevicesFreq: "60"
+    gps: "auto"
+    gpsCoordinates: "0,0"
+    gpsDevice: ""
+    gpsScanFreq: "60"
+    isolatedDockerContainer: "off"
+    edgeGuardFreq: "0"
+    dockerPruningFreq: "0"
+    availableDiskThreshold: "20"
+    upgradeScanFrequency: "24"
+    timeZone: ""
+    namespace: "default"
+    hwSignature: ""
+
+  development:
+    privateKey: ""
+    routerUuid: ""
+    controllerUrl: "http://localhost:51121/api/v3/"
+    iofogUuid: ""
+    secureMode: "off"
+    devMode: "on"
+    controllerCert: "/etc/iofog-agent/cert.crt"
+    arch: "auto"
+    networkInterface: "dynamic"
+    dockerUrl: "unix:///var/run/docker.sock"
+    diskConsumptionLimit: "10"
+    diskDirectory: "/var/lib/iofog-agent/"
+    memoryConsumptionLimit: "4096"
+    processorConsumptionLimit: "80.0"
+    logDiskConsumptionLimit: "10.0"
+    logDiskDirectory: "/var/log/iofog-agent/"
+    logFileCount: "10"
+    logLevel: "INFO"
+    statusUpdateFreq: "30"
+    getChangesFreq: "60"
+    postDiagnosticsFreq: "10"
+    scanDevicesFreq: "60"
+    gps: "auto"
+    gpsCoordinates: "0,0"
+    gpsDevice: ""
+    gpsScanFreq: "60"
+    isolatedDockerContainer: "off"
+    edgeGuardFreq: "0"
+    dockerPruningFreq: "0"
+    availableDiskThreshold: "20"
+    upgradeScanFrequency: "24"
+    timeZone: ""
+    namespace: "default"
+    hwSignature: ""
+
+  production:
+    privateKey: ""
+    routerUuid: ""
+    controllerUrl: "http://localhost:54421/api/v3/"
+    iofogUuid: ""
+    secureMode: "on"
+    devMode: "off"
+    controllerCert: "/etc/iofog-agent/cert.crt"
+    arch: "auto"
+    networkInterface: "dynamic"
+    dockerUrl: "unix:///var/run/docker.sock"
+    diskConsumptionLimit: "10"
+    diskDirectory: "/var/lib/iofog-agent/"
+    memoryConsumptionLimit: "4096"
+    processorConsumptionLimit: "80.0"
+    logDiskConsumptionLimit: "10.0"
+    logDiskDirectory: "/var/log/iofog-agent/"
+    logFileCount: "10"
+    logLevel: "INFO"
+    statusUpdateFreq: "30"
+    getChangesFreq: "60"
+    postDiagnosticsFreq: "10"
+    scanDevicesFreq: "60"
+    gps: "auto"
+    gpsCoordinates: "0,0"
+    gpsDevice: ""
+    gpsScanFreq: "60"
+    isolatedDockerContainer: "off"
+    edgeGuardFreq: "0"
+    dockerPruningFreq: "0"
+    availableDiskThreshold: "20"
+    upgradeScanFrequency: "24"
+    timeZone: ""
+    namespace: "default"
+    hwSignature: ""
+
+
+```
+
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
