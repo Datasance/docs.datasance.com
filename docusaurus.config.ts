@@ -162,7 +162,7 @@ const config: Config = {
           position: 'left',
           items: [
             {
-              label: 'Datasance PoT Controller REST-API v3.7.0',
+              label: 'Datasance PoT Controller REST-API v3.7.1',
               to: '/api',
             }
           ]

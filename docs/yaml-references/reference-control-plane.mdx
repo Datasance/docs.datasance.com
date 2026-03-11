@@ -59,7 +59,7 @@ spec:
   images:
    # pullSecret:  # set the K8S pull secret name
     operator: ghcr.io/datasance/operator:3.7.1
-    controller: ghcr.io/datasance/controller:3.7.0
+    controller: ghcr.io/datasance/controller:3.7.1
     router: ghcr.io/datasance/router:3.7.0
     nats: ghcr.io/datasance/nats:2.12.4   # used when NATs is enabled
   # NATs: enable and optionally configure JetStream
@@ -202,7 +202,7 @@ spec:
     #   install:
     #     entrypoint: install_iofog.sh
     #     args:
-    #       - ghcr.io/datasance/controller:3.7.0
+    #       - ghcr.io/datasance/controller:3.7.1
     #   uninstall:
     #     entrypoint: uninstall_iofog.sh
     # ecnViewerPort:
@@ -304,7 +304,7 @@ spec:
       #   containerEngine: docker
   # package: # you can set the container image for Controller installation
   #   container:
-  #     image: emirhandurmus/controller:3.7.0
+  #     image: emirhandurmus/controller:3.7.1
   # systemMicroservices:
   #   router:
   #     x86: ghcr.io/datasance/router:3.7.0
@@ -415,7 +415,7 @@ spec:
     captureIpAddress: true  # should controller also track IP addresses on events 
   controller:
     container:
-      image: ghcr.io/datasance/controller:3.7.0
+      image: ghcr.io/datasance/controller:3.7.1
 ```
 
 | Field            | Description                                               |
@@ -424,7 +424,7 @@ spec:
 | nats.enabled     | Optional. Set to true to enable NATS for this local control plane. |
 | events           | Optional. Controller audit events (auditEnabled, retentionDays, cleanupInterval, captureIpAddress). |
 | controller       | Controller specification. |
-| controller.container.image | Docker image for the Controller (e.g. ghcr.io/datasance/controller:3.7.0). |
+| controller.container.image | Docker image for the Controller (e.g. ghcr.io/datasance/controller:3.7.1). |
 | auth             | Authentication configuration for Keycloak: url, realm, realmKey, ssl, controllerClient, controllerSecret, viewerClient. |       
 
 ## Remote Controller
