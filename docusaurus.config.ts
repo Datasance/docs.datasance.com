@@ -4,6 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 import type * as Redocusaurus from 'redocusaurus';
 import path from 'path';
 import { FLAVOR, PRODUCT_NAME } from './src/config/distribution';
+import { applySitemapPriorities, SITEMAP_IGNORE_PATTERNS } from './scripts/seo/sitemap-utils';
 
 const config: Config = {
   markdown: {
@@ -116,10 +117,15 @@ const config: Config = {
           customCss: './src/css/custom.css',
         },
         sitemap: {
-          changefreq: 'weekly',
-          priority: 0.5,
-          ignorePatterns: ['/tags/**'],
+          lastmod: 'date',
+          changefreq: null,
+          priority: null,
+          ignorePatterns: SITEMAP_IGNORE_PATTERNS,
           filename: 'sitemap.xml',
+          createSitemapItems: async ({ siteConfig, routes, defaultCreateSitemapItems }) => {
+            const items = await defaultCreateSitemapItems({ siteConfig, routes });
+            return applySitemapPriorities(items, siteConfig.url);
+          },
         },
       } satisfies Preset.Options,
     ],

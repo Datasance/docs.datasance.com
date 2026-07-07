@@ -5,9 +5,10 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "DOCUSAURUS_DISTRIBUTION=datasance docusaurus start",
-    "build": "DOCUSAURUS_DISTRIBUTION=datasance docusaurus build",
-    "build:datasance": "DOCUSAURUS_DISTRIBUTION=datasance docusaurus build",
-    "build:iofog": "DOCUSAURUS_DISTRIBUTION=iofog docusaurus build",
+    "build": "DOCUSAURUS_DISTRIBUTION=datasance docusaurus build && node scripts/seo/postbuild-seo.js",
+    "build:datasance": "DOCUSAURUS_DISTRIBUTION=datasance docusaurus build && node scripts/seo/postbuild-seo.js",
+    "build:iofog": "DOCUSAURUS_DISTRIBUTION=iofog docusaurus build && node scripts/seo/postbuild-seo.js",
+    "postbuild:seo": "node scripts/seo/postbuild-seo.js",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",

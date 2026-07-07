@@ -1,5 +1,27 @@
+# Datasance PoT docs — allow search and AI inference; block training use.
+# Managed robots.txt is disabled in Cloudflare. This file is authoritative.
+
 User-agent: *
+Allow: /
+Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: meta-externalagent
 Allow: /
 
 Sitemap: https://docs.datasance.com/sitemap.xml
+Sitemap: https://docs.datasance.com/sitemap-current.xml
+Sitemap: https://docs.datasance.com/sitemap-legacy.xml
 LLMs: https://docs.datasance.com/llms.txt
+LLMs-Full: https://docs.datasance.com/llms-full.txt
