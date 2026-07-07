@@ -29,18 +29,17 @@ potctl [flags]
 * [potctl disconnect](potctl_disconnect.md)	 - Disconnect from an ioFog cluster
 * [potctl exec](potctl_exec.md)	 - Connect to an Exec Session of a resource
 * [potctl get](potctl_get.md)	 - Get information of existing resources
-* [potctl legacy](potctl_legacy.md)	 - Execute commands using legacy CLI
 * [potctl logs](potctl_logs.md)	 - Get log contents of deployed resource
 * [potctl move](potctl_move.md)	 - Move an existing resources inside the current Namespace
 * [potctl nats](potctl_nats.md)	 - Manage NATS resources
 * [potctl prune](potctl_prune.md)	 - prune ioFog resources
 * [potctl rebuild](potctl_rebuild.md)	 - Rebuilds a microservice or system-microservice
-* [potctl rename](potctl_rename.md)	 - Rename the iofog resources that are currently deployed
+* [potctl reconcile](potctl_reconcile.md)	 - Retry async platform provisioning for an agent or service
 * [potctl rollback](potctl_rollback.md)	 - Rollback ioFog resources
 * [potctl start](potctl_start.md)	 - Starts a resource
 * [potctl stop](potctl_stop.md)	 - Stops a resource
 * [potctl upgrade](potctl_upgrade.md)	 - Upgrade ioFog resources
 * [potctl version](potctl_version.md)	 - Get CLI application version
-* [potctl view](potctl_view.md)	 - Open ECN Viewer
+* [potctl view](potctl_view.md)	 - Open EdgeOps Console
 
 

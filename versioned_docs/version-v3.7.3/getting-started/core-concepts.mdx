@@ -1,0 +1,97 @@
+---
+title: Datasance PoT Core Concepts
+description: Understand the core concepts of Edge Computing, EdgeOps, and Datasance PoT. Learn about Edge Compute Networks (ECN) and microservices at the edge.
+keywords: [core concepts, edge computing, edgeops, microservices, iofog, edge compute network, ecn, fog computing]
+---
+
+# Core Concepts
+
+The enterprise edge has become a business-critical frontier. Today, up to 75% of enterprise data is created outside the data centers. It is generated across factories, stores, remote sites, vehicles, and infrastructure. The scale is massive.
+
+At the same time, edge environments remain resource-constrained by design. They operate in real-world conditions, with limited connectivity and tight operational margins. Yet the hardware landscape is changing fast. New generations of edge CPUs and GPUs are now powerful, affordable, and widely available. This makes real-time analytics, Edge AI, and autonomous decision-making practical at the edge.
+
+Traditional centralized cloud models can not keep up. Latency is dictated by physics. Costs grow with every round trip. And when connectivity is degraded, remote sites lose autonomy. For distributed enterprises, this creates risk, complexity, and operational friction.
+
+Datasance **PoT** (Platform of Things) is an enterprise-grade unified edge orchestration platform designed specifically for large-scale distributed edge environments. It enables organizations to manage, secure, and operate thousands of applications and software workloads across heterogeneous edge nodes, from a single, consistent operating model.
+
+**PoT** brings cloud-native principles to the edge, without ignoring real-world constraints. It is secure, vendor-agnostic, and open by design. By reducing operational complexity and restoring local autonomy, **PoT** helps enterprises regain control of their edge strategy and build a foundation that is ready for what comes next.
+
+## Enterprise Edge Challenges
+
+Edge computing can be defined as executing some or all of the processing and storage functions of IT systems located in a wide area network to “edge” instead of a central point (data center, cloud, etc.).
+
+Running IT at the enterprise edge either in standalone or hybrid mode is fundamentally different from running it in the cloud or a data center. Edge solutions should embrace and overcome the challenges inherent in enterprise edge use cases. 
+
+
+### Scale and diversity
+
+Enterprises generally do not operate at the edge in a few locations. They operate in tens, hundreds or even in thousands. These locations may include factories, retail stores, energy sites, vehicles, and remote infrastructure. Edge environments are diverse and they  combine different CPU architectures, GPUs, operating systems and generations of hardware. This fragmentation makes it hard to apply a single operating model. Point solutions and custom scripts do not scale and quickly become fragile.
+
+### Increasing Applications and changing requirements
+Enterprise IT Applications are surging and they require more real-time or near real-time processing, they are getting more delay sensitive and latency intolerant. Combined with the lack of stable, high bandwidth and redundant upstream connections and high cost of data transmission urges edge environments to support more autonomous operation, especially for critical workloads.
+
+### Security and management
+
+Edge devices are frequently deployed in physically exposed and untrusted environments. Securing them at scale is hard. Communications between the edge nodes and headquarters and among the edges should be encrypted. An IT system with distributed edge nodes requires built-in trust, automation and verifiable control across unreliable networks. Managing the full lifecycle (LCM) of the IT infrastructure (onboarding, updating, patching and monitoring) is complex and costly in edge environments.
+
+### Cost
+IT infrastructure project costs are on the rise with the digitalization and widespread use of modern tools and applications. Capex and opex costs should be optimized to attain business value. In many cases, IT components at the Edge are siloed and redundant, resulting in increased capex. Likewise operational teams and tools to manage parallel and redundant hardware and software stacks, lack of automation results in excessive opex spendings.
+
+
+## Introducing Datasance PoT
+
+Datasance **PoT** is an enterprise-grade platform designed to operate edge environments as a managed cluster, even when individual edge nodes must remain isolated for reliability and security reasons. **PoT** shifts operations from manual, site-by-site work to a unified, cluster-wide model while preserving local autonomy at each edge location.
+
+## Key Capabilities
+
+Datasance **PoT** provides the essential capabilities required to reliably run and operate software workloads across distributed edge environments.
+
+It focuses on the full lifecycle of **applications**, **services** and **edge operations**, enabling unified and consistent control at scale.
+
+### Edge Environment and Agent Management
+
+**PoT** simplifies how edge environments are brought under control. Edge nodes are onboarded using lightweight agents that establish secure identity and connectivity to the control plane. Installation and upgrades are automated through **PoT** management toolkits (cli and UI), without requiring deep, site-specific customization.
+
+**PoT** provides a unified and Open Source operational layer above hardware and operating systems, allowing enterprises to manage diverse environments as part of a single cluster while preserving local isolation and autonomy.
+
+### Application and Workload Lifecycle Orchestration
+
+**PoT** orchestrates the complete lifecycle of containerized workloads at the edge. Applications are deployed, updated, versioned and retired consistently across distributed locations using declarative, YAML-based manifests.
+
+Environmental differences are abstracted away, allowing teams to focus on what should run and where, rather than how each site is configured. This enables repeatable deployments, controlled rollouts and safe updates across edge clusters.
+
+### Configuration, Secrets and Policy Management
+
+**PoT** provides built-in mechanisms for managing application configuration and sensitive data. Configuration values and secrets are centrally defined and securely distributed to edge workloads at runtime, without hardcoding or manual handling.
+Access control and permissions are enforced through role-based access control (RBAC), ensuring that users, systems and workloads operate strictly within their intended scope.
+
+### Secure Connectivity
+
+**PoT** establishes a trust between the control plane and edge devices. This is essential for edge environments that operate outside traditional security perimeters.
+
+Secure communication is a first-class capability in **PoT**. Each edge node and workload operates with a verified identity, supported by built-in certificate management.
+
+**PoT** provides a secure service mesh(Skupper) and distributed message bus(NATs) by default, enabling reliable, encrypted communication between services across nodes and sites. This allows edge environments to remain isolated from a network perspective while still participating in a trusted, managed cluster.
+
+### Observability and Operations
+
+**PoT** delivers a unified operational view across distributed edge environments. Teams can observe workload status, connectivity and operational health across sites from a single interface.
+
+Both a command-line interface (potctl) and a web-based UI (ECN-Viewer) are provided, supporting automation-first workflows as well as day-to-day operational visibility. This enables faster troubleshooting, controlled operations and predictable behavior at scale.
+
+### Open-Source Foundation with Enterprise Support
+
+**PoT** is built on an open-source foundation, ensuring transparency, extensibility and long-term control. Enterprises are not locked into proprietary platforms or hidden dependencies.
+
+Datasance complements this foundation with enterprise-grade support and operational expertise, enabling organizations to adopt open-source edge orchestration with confidence for mission-critical environments.
+
+
+:::info[Ready for more?]
+  <p>If you want to know more about all the **PoT** components and learn how to unified Edge orchestration at scale, head to <a href="architecture.html">Architecture overview</a>.</p>
+  <p>If instead you want to get started right away, you can check out the <a href="../getting-started/quick-start-local">Quick Start guide</a> to deploy ioFog locally on your computer, or go through production deployment in <a href="../platform-deployment/introduction">Remote deployment</a> or <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes deployment</a>.</p>
+  <p>You can also head to our tutorial for developers to <a href="../tutorial/introduction">Learn how to use ioFog and build microservices</a></p>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

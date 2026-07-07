@@ -112,8 +112,8 @@ spec:
                   TlsCert: "{{tls-cert}}"
                   TlsKey: "{{tls-key}}"
         images:
-          x86: ghcr.io/datasance/nats:latest
-          arm: ghcr.io/datasance/nats:latest
+          amd64: ghcr.io/datasance/nats:latest
+          arm64: ghcr.io/datasance/nats:latest
           registry: remote
         container:
           hostNetworkMode: false
@@ -133,8 +133,8 @@ spec:
           name: "{{agent-name}}"
         config: {}
         images:
-          x86: proxusplatform/proxus-server:1.1.1.0-amd64
-          arm: proxusplatform/proxus-server:1.1.1.0-arm64
+          amd64: proxusplatform/proxus-server:1.1.1.0-amd64
+          arm64: proxusplatform/proxus-server:1.1.1.0-arm64
           registry: remote
         container:
           runAsUser: "0"

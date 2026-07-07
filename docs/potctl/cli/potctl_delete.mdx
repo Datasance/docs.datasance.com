@@ -17,8 +17,9 @@ potctl delete [flags]
 ### Options
 
 ```
-  -f, --file string   YAML file containing specifications for ioFog resources to deploy
-  -h, --help          help for delete
+      --delete-namespace   Also delete the Kubernetes namespace (never deletes "default")
+  -f, --file string        YAML file containing specifications for ioFog resources to deploy
+  -h, --help               help for delete
 ```
 
 ### Options inherited from parent commands
@@ -31,16 +32,15 @@ potctl delete [flags]
 
 ### SEE ALSO
 
-* [potctl](/potctl/cli/potctl)	 - 
-* [potctl delete agent](/potctl/cli/potctl_delete_agent) - Delete an Agent
+* [potctl](/potctl/cli/potctl) - * [potctl delete agent](/potctl/cli/potctl_delete_agent)	 - Delete an Agent
 * [potctl delete all](/potctl/cli/potctl_delete_all) - Delete all resources within a namespace
 * [potctl delete application](/potctl/cli/potctl_delete_application) - Delete an application
 * [potctl delete application-template](/potctl/cli/potctl_delete_application-template) - Delete an application-template
+* [potctl delete auth-group](/potctl/cli/potctl_delete_auth-group) - Delete a custom embedded auth group
 * [potctl delete catalogitem](/potctl/cli/potctl_delete_catalogitem) - Delete a Catalog item
 * [potctl delete certificate](/potctl/cli/potctl_delete_certificate) - Delete a Certificate
 * [potctl delete configmap](/potctl/cli/potctl_delete_configmap) - Delete a ConfigMap
 * [potctl delete controller](/potctl/cli/potctl_delete_controller) - Delete a Controller
-* [potctl delete edge-resource](/potctl/cli/potctl_delete_edge-resource) - Delete an Edge Resource
 * [potctl delete microservice](/potctl/cli/potctl_delete_microservice) - Delete a Microservice
 * [potctl delete namespace](/potctl/cli/potctl_delete_namespace) - Delete a Namespace
 * [potctl delete nats-account-rule](/potctl/cli/potctl_delete_nats-account-rule) - Delete a NATS account rule

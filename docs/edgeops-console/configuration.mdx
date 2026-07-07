@@ -1,0 +1,104 @@
+---
+title: EdgeOps Console Configuration
+description: Configure EdgeOps Console v1.0.9 with CONSOLE_URL, CONSOLE_PORT, consoleUrl in controller-config.js, and the v3.8 auth contract.
+keywords: [edgeops console, configuration, console url, oidc, controller config, v3.8]
+slug: /edgeops-console/configuration
+---
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Console configuration
+
+EdgeOps Console reads runtime settings from **`window.controllerConfig`**. The Controller writes this object to **`controller-config.js`** in the embedded static `build/` directory every time it starts.
+
+You configure the public Console URL and listen port on the Controller side. You do not edit `controller-config.js` by hand in production.
+
+## Controller YAML and environment variables
+
+| Setting | YAML key | Environment variable | Default |
+| ------- | -------- | -------------------- | ------- |
+| Listen port | `console.port` | **`CONSOLE_PORT`** | **8008** |
+| Public URL | `console.url` | **`CONSOLE_URL`** | Derived from `CONTROLLER_PUBLIC_URL` if unset |
+
+Example Controller YAML:
+
+```yaml
+console:
+  port: 8008
+  url: "https://console.example.com:8008"
+```
+
+v3.8 renamed v3.7 **`viewer.port`** / **`viewer.url`** to **`console.port`** / **`console.url`**. Set **`CONSOLE_URL`** to the scheme, host, and port users type in the browser. OAuth redirect URIs depend on this value.
+
+Full Controller settings: [Controller configuration](/reference-controller/configuration).
+
+## Runtime `controller-config.js`
+
+At startup the Controller injects a script like this into the embedded Console build:
+
+```javascript
+window.controllerConfig = {
+  apiPort: 51121,
+  publicUrl: "https://controller.example.com:51121",
+  consoleUrl: "https://console.example.com:8008",
+  auth: {
+    mode: "embedded",
+    loginUrl: "/api/v3/user/login",
+    refreshUrl: "/api/v3/user/refresh",
+    logoutUrl: "/api/v3/user/logout",
+    profileUrl: "/api/v3/user/profile",
+    changePasswordUrl: "/api/v3/user/change-password",
+    oauthAuthorizeUrl: "/api/v3/user/oauth/authorize",
+    oauthInteractionUrl: "/login/oauth",
+  },
+  controlPlane: "Remote",
+}
+```
+
+### Fields the Console reads
+
+| Field | Purpose |
+| ----- | ------- |
+| **`publicUrl`** | Scheme, host, and port for Controller REST and WebSocket calls |
+| **`consoleUrl`** | Public Console URL for OAuth redirects and same-origin checks |
+| **`auth.mode`** | `embedded` (default) or `external` |
+| **`auth.*Url`** | BFF login, refresh, logout, profile, password, and OAuth paths (relative to `publicUrl`) |
+| **`controlPlane`** | Optional. `Remote`, `Kubernetes`, or `Local` for UI hints |
+
+The Console **does not** read legacy v3.7 keys such as `viewerUrl`, `oidcIssuerUrl`, `oidcClientId`, or Keycloak-specific settings. Use the **`auth.*`** block above.
+
+The Controller sets **`consoleUrl`** from **`CONSOLE_URL`**, then falls back to **`CONTROLLER_PUBLIC_URL`**, then `http://localhost:{CONSOLE_PORT}`.
+
+## Authentication wiring
+
+Console OAuth uses a dedicated client ID on the Controller:
+
+| Environment variable | YAML key | Description |
+| -------------------- | -------- | ----------- |
+| **`OIDC_CONSOLE_CLIENT_ID`** | `auth.consoleClient` | SPA client ID for EdgeOps Console |
+| **`AUTH_CONSOLE_CLIENT_ENABLED`** | `auth.consoleClient.enabled` | Register and enable the Console OAuth client |
+
+Embedded mode (default): the issuer is `{CONTROLLER_PUBLIC_URL}/oidc`. Bootstrap the first admin with **`OIDC_BOOTSTRAP_ADMIN_USERNAME`** and **`OIDC_BOOTSTRAP_ADMIN_PASSWORD`**.
+
+External IdP: set **`AUTH_MODE=external`** and **`OIDC_ISSUER_URL`**. See [External OIDC](/platform-deployment/external-oidc).
+
+Setup walkthrough: [Embedded OIDC](/platform-deployment/embedded-oidc).
+
+## TLS and reverse proxies
+
+Console and API can both use TLS. Set **`CONTROLLER_PUBLIC_URL`** and **`CONSOLE_URL`** to the external HTTPS URLs. Behind a reverse proxy, enable **`TRUST_PROXY`** on the Controller so redirect URIs and CORS origins match what clients send.
+
+Listener certificates use v3.8 **`TLS_*`** variables (renamed from **`SSL_*`**). Details: [Controller configuration](/reference-controller/configuration).
+
+## Local development
+
+Console source lives in [Datasance/edgeops-console](https://github.com/Datasance/edgeops-console) (**v1.0.9**). For UI development, run `npm run start-dev` against a local Controller API. Production images embed the static `build/` output via **`EDGEOPS_CONSOLE_PATH`** at Controller build time.
+
+## See also
+
+- [EdgeOps Console features](/edgeops-console/features)
+- [Control Plane YAML](/yaml-references/reference-control-plane) - values {CLI_NAME} and the Operator apply at deploy time
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

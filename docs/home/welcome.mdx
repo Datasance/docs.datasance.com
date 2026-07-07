@@ -1,61 +1,109 @@
 ---
-title: Welcome to Datasance PoT - Edge Computing Platform
-description: Datasance PoT is the Enterprise Open Source Fog and Distributed Edge Computing Platform. Securely deploy, manage, and scale containerized workloads across thousands of heterogeneous far-edge and IoT environments.
-keywords: [datasance, pot, edge computing, edgeops, fog computing, distributed edge, kubernetes edge, iofog, edge microservices]
+title: Welcome
+description: PoT v3.8.0 platform train docs for greenfield deployments. Edgelet nodes, EdgeOps Console, Controller with embedded OIDC, and containerized edge workloads.
+keywords: [datasance, pot, edge computing, edgelet, edgeops console, fog computing, distributed edge, kubernetes edge, iofog, edge microservices, v3.8]
 slug: /
 ---
 
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
 # Welcome
 
-Welcome to Datasance’s official documentation site. This site is your comprehensive resource for understanding, deploying, and managing Datasance PoT (Platform of Things), our Enterprise Open Source Fog and Distributed Edge Computing Platform.
+:::warning[Greenfield release: v3.8.0]
 
-## About
+{PRODUCT_NAME} **v3.8.0** is a greenfield release. There is no in-place upgrade from v3.7 field deployments.
 
-Datasance PoT is built on the foundation of Eclipse ioFog, enhanced with enterprise-level features, scalability, and support. Our platform enables seamless edge device management, Kubernetes-native control, and traditional and WebAssembly containers support, all tailored for enterprise needs.
+You need a new Controller database, **Edgelet v1.0.0+** on every node, and **{CLI_NAME} v3.8.0**. Legacy Java iofog-agent and v3.7 field agents are not supported on Controller v3.8.
 
-:::tip[Source Code]
-
-Below is a detailed table showing the original versions of the components and their corresponding Datasance versions.
+See [Migrating to v3.8.0](/migrating-to-v3-8) for the step-by-step guide.
 
 :::
 
-| Community        | Component        | Source Version   | Datasance Compnent | Datasance Version |
-| ---------------- | ---------------- | ---------------- | ------------------ | ----------------- |
-| Eclipse ioFog    | iofogctl         | v3.0.0           | potctl             | v1.6.2            |
-| Eclipse ioFog    | Agent            | v3.0.1           | Agent              | v3.7.0           |
-| CNCF Containerd  | Runwasi          | v0.7.0           | Runwasi            | v0.7.0            |
-| Eclipse ioFog    | Controller       | v3.0.4           | Controller         | v3.7.1            |
-| Eclipse ioFog    | ECN-Viewer       | v3.0.0           | ECN-Viewer         | v1.4.2          |
-| Eclipse ioFog    | Router           | v3.0.0           | Router             | v3.7.0            |
-| RedHat Skupper   | Skupper-Router   | v3.4.0           | Router             | v3.7.0            |
-| Eclipse ioFog    | Operator         | v3.2.0           | Operator           | v3.7.1          |
-| Eclipse ioFog    | HAL              | v1.0.0           | HAL                | v1.1.0            |
-| Eclipse ioFog    | RESTBLUE         | v0.1             | RESTBLUE           | v1.0.0            |
-| Eclipse ioFog    | iofog-go-sdk     | v3.3.0           | iofog-go-sdk       | v3.7.0           |
-| Eclipse ioFog    | iofog-nodejs-sdk | v3.0.0           | iofog-nodejs-sdk   | v3.0.1            |
-| CNCF NATs        | nats-server      | v2.12.24         | nats-server        | v2.12.24          |
+Welcome to the official documentation for **{PRODUCT_NAME}** platform train **v3.8.0**.
 
+{PRODUCT_NAME} is an enterprise open-source fog and distributed edge computing platform. You deploy a Control Plane on Kubernetes or remote hosts, connect **Edgelet nodes** at the edge, and run containerized microservices across heterogeneous hardware.
 
-## Key Features of Datasance PoT
+## Platform train v3.8.0
 
-- **Enterprise Open Source**: Built for organizations seeking reliable, vendor-neutral solutions.
-- **Kubernetes Native**: Seamlessly integrates with Kubernetes for control plane management.
-- **Edge Computing and Fog**: Facilitates distributed computing with both traditional and WebAssembly containers support.
-- **Built-in Scalability**: High availability and scalability for enterprise-grade deployments.
-- **CLI Tool (potctl)**: Simplified deployment and management through command-line operations.
-- **Enhanced IAM**: Enterprise-grade identity and access management with Keycloak.
-- **Vendor-Agnostic Hardware Support**: Flexible deployment across diverse edge devices.
+These components ship on the same release train:
 
-Explore the documentation to learn how Datasance PoT can empower your edge computing needs and streamline operations.
+| Component | Version |
+| --------- | ------- |
+| PoT platform | **v3.8.0** |
+| Controller | v3.8.0 |
+| {CLI_NAME} | v3.8.0 |
+| ioFog Operator | v3.8.0 |
+| Router (wrapper image) | v3.8.0 |
+| NATs (wrapper image) | v2.14.3 |
+| **Edgelet** | **v1.0.0** |
+| **EdgeOps Console** | **v1.0.9** |
+| ioFog Go SDK | v3.8.0 |
 
-## Getting Support
+Pair **Edgelet v1.0.0** with **Controller v3.8.0**. Do not run v3.7 agents against a v3.8 Controller.
 
-We’re here to help! For any inquiries, support, or collaboration opportunities, feel free to reach out to us via email:
+## Wrapped upstream
 
-- **General Inquiries**: [contact@datasance.com](mailto:contact@datasance.com)
-- **Technical Support**: [support@datasance.com](mailto:support@datasance.com)
-- **Service Requests**: [service@datasance.com](mailto:service@datasance.com)
+We ship wrapper images for these upstream projects:
+
+| Upstream | Pin | Our artifact |
+| -------- | --- | ------------ |
+| NATS Server | **2.14.3** | nats-server wrapper |
+| Skupper Router | **3.5.1** | Router wrapper (image **v3.8.0**) |
+
+Deploy YAML examples use the wrapper image tag (**3.8.0** for Router). The Skupper version inside the image is **3.5.1**.
+
+## Dual mirror
+
+Datasance maintains **Eclipse ioFog** and **Datasance** mirrors of the same codebase. Release tags share the same commit SHA. Flavor differences are registry org (`ghcr.io/datasance/` vs `ghcr.io/eclipse-iofog/`), canonical `apiVersion` in new YAML, product name, and CLI binary name (`potctl` vs `iofogctl`). Feature set is the same.
+
+## Quick start
+
+New deployments use **embedded OIDC** for authentication by default. You do not need an external IdP for a first install.
+
+To stand up a local Control Plane and **Edgelet nodes** (not the legacy Java iofog-agent):
+
+1. Read [Core Concepts](../getting-started/core-concepts).
+2. Follow [Quick Start With Local Deployment](../getting-started/quick-start-local).
+3. Run the [Acme Smart Plant Tutorial](/tutorials/acme-smart-plant) for the full plant demo.
+
+For production topology and auth options, see [Platform Deployment](../platform-deployment/introduction).
+
+## Key features
+
+{PRODUCT_NAME} delivers vendor-agnostic edge infrastructure with zero-trust security, resilient networking, and intelligent workload orchestration.
+
+### Flexible deployment
+
+- **Control Plane flexibility**: Deploy on public or private cloud, Kubernetes, or bare metal. Native SQLite, Postgres, and MySQL backends. External KMS support for Secrets and ConfigMaps.
+- **Hardware-agnostic runtime**: Manage amd64, arm64, riscv64, arm (32-bit), GPUs, VMs, and industrial IoT devices from one platform.
+- **Air-gap deployments**: Onboard hardware and distribute workload images entirely offline.
+- **Centralized management**: Operate clusters from the **EdgeOps Console** and **{CLI_NAME}** CLI.
+
+### Workload orchestration
+
+- **Agnostic workloads**: Run Linux and WebAssembly containers on Edgelet nodes.
+- **Automated lifecycle**: Built-in registry, ConfigMap, TLS Secrets, volume mounts, and intelligent pruning.
+- **Zero-touch debugging**: Secure remote shell access and real-time log streaming without site visits.
+- **Templates and catalogs**: Standardize global deployments with application templates and microservice catalogs.
+
+### Resilient networking
+
+- **Secure service mesh**: Default mTLS routing for edge-to-edge, edge-to-external, and external-to-edge traffic.
+- **Distributed messaging**: Embedded NATS with persistent message stores and multi-tenant isolation.
+- **Dynamic authorization**: Decentralized JWT authentication with dynamic RBAC on the message bus.
+- **Edgelet API**: Local **EdgeletAPI v1** for dynamic, real-time workload reconfiguration on the device.
+
+### Zero-trust security
+
+- **Unified IAM and PKI**: Embedded OIDC and RBAC for users, plus Ed25519 PKI identity for edge devices.
+- **Automated certificates**: Built-in X.509 certificate manager for continuous cluster-wide trust.
+- **EdgeGuard and Watchdog**: Detect unauthorized physical access and terminate unverified workloads.
+- **Continuous monitoring**: Event auditing, health tracking, and deep resource utilization metrics.
+
+## Getting support
+
+- **General inquiries**: [contact@datasance.com](mailto:contact@datasance.com)
+- **Technical support**: [support@datasance.com](mailto:support@datasance.com)
+- **Service requests**: [service@datasance.com](mailto:service@datasance.com)
 - **Sales**: [sales@datasance.com](mailto:sales@datasance.com)
-- **Partnership Opportunities**: [partners@datasance.com](mailto:partners@datasance.com)
-
-Our team will respond promptly to assist you.
+- **Partnerships**: [partners@datasance.com](mailto:partners@datasance.com)

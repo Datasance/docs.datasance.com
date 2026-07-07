@@ -1,0 +1,135 @@
+---
+title: Client package
+description: ioFog Go SDK client package for Controller REST API v3. Login, TLS, WebSocket exec, and log streaming.
+keywords: [go sdk, client, controller api, websocket, exec, logs, v3.8]
+slug: /platform-components/sdk/client
+---
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Client package
+
+The **`client`** package is an HTTP client for the Controller REST API under **`/api/v3/`**. Use it for automation, custom tooling, or anything that needs the same routes as {CLI_NAME} and EdgeOps Console.
+
+Import path: `github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/client`
+
+Full route list and v3.8 terminology changes: [Controller REST API](/reference-controller/rest-api). OpenAPI browser: [**API reference**](/api/controller).
+
+## Create a client
+
+Parse the Controller base URL (include `/api/v3`), then log in with your credentials.
+
+```go
+import (
+	"net/url"
+
+	"github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/client"
+)
+
+baseURL, err := url.Parse("http://localhost:51121/api/v3")
+if err != nil {
+	return err
+}
+
+clt, err := client.NewAndLogin(client.Options{BaseURL: baseURL}, "user@domain.com", "password")
+if err != nil {
+	return err
+}
+```
+
+Call any method on the authenticated client:
+
+```go
+resp, err := clt.GetStatus()
+if err != nil {
+	return err
+}
+println(resp.Status)
+```
+
+## HTTPS / TLS
+
+Pass optional `Options.TLSConfig` for HTTPS Controller endpoints. If omitted, the SDK skips certificate verification (self-signed friendly). CLI tools should load trust from their store. Use `InsecureSkipVerify: true` only in explicit insecure mode.
+
+## v3.8 API changes
+
+When upgrading SDK or Controller from v3.7:
+
+| Removed or renamed | Use instead |
+| ------------------ | ----------- |
+| Flow client methods (`/api/v3/flow/*`) | **Application** methods (`/api/v3/application/*`) |
+| RBAC and types named `flow` | **`application`** |
+| `fogType`, `fogTypeId`, `agentType` fields | **`arch`**, **`archId`** |
+| **EdgeResource** client methods | Removed. Controller v3.8 does not expose EdgeResource routes |
+| `AttachExecMicroservice`, `DetachExecMicroservice`, and system variants | **WebSocket dial** (see below) |
+| `RefreshUserSubscriptionKey` | Removed |
+
+Microservice create no longer accepts a `flowId` query parameter. Pass the target **`application`** name in the JSON body.
+
+## Microservice exec (WebSocket)
+
+Interactive exec is WebSocket-first. Dial directly. No REST attach step.
+
+```go
+session, err := clt.DialMicroserviceExecWithOptions(microserviceUUID, &client.DialExecOptions{
+	OnStatusLine: func(line string) {
+		fmt.Fprintln(os.Stdout, line)
+	},
+})
+if err != nil {
+	return err
+}
+defer session.Close()
+
+for {
+	frame, err := session.Read()
+	if err != nil {
+		return err
+	}
+	if frame.Type == client.ExecMessageStdout {
+		os.Stdout.Write(frame.Data)
+	}
+}
+```
+
+`OnStatusLine` receives STDERR status lines while waiting for the Edgelet node (for example `Waiting for agent connection...`). `ExecSession.Close()` is idempotent.
+
+System microservices use `DialSystemMicroserviceExec` or `DialSystemMicroserviceExecWithOptions`.
+
+Fog node debug still provisions a debug microservice via `AttachExecToAgent`, then uses `DialSystemMicroserviceExec` on the debug microservice UUID.
+
+## Log streaming (WebSocket)
+
+Remote log tailing uses WebSocket sessions with optional query parameters:
+
+```go
+session, err := clt.DialMicroserviceLogs(microserviceUUID, &client.LogTailOptions{
+	Tail:   100,
+	Follow: true,
+})
+if err != nil {
+	return err
+}
+defer session.Close()
+
+for {
+	frame, err := session.Read()
+	if err != nil {
+		return err
+	}
+	switch frame.Type {
+	case client.LogMessageLine:
+		os.Stdout.Write(frame.Data)
+	case client.LogMessageStop:
+		return nil
+	case client.LogMessageError:
+		return fmt.Errorf("%s", frame.Data)
+	}
+}
+```
+
+Use `DialSystemMicroserviceLogs` for system microservices and `DialFogLogs` for Edgelet node (Agent) logs.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

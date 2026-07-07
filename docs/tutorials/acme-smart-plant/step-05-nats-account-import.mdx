@@ -1,0 +1,90 @@
+---
+title: "Step 5 - NATS account import"
+description: "Acme Smart Plant tutorial. Deploy the operations-center NATS import rule to receive alerts, journal events, and fleet telemetry from the plant account."
+keywords: [tutorial, acme smart plant, nats account rule, import, operations-center]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 5 - NATS account import
+
+## Goal
+
+Deploy **operations-center-import**, the matching import rule on the remote ops NATS account. It pulls live alerts, journal events, and fleet telemetry from **production-monitoring**.
+
+## Scenario context
+
+Step 2 exported three subject trees from the plant. Step 4 gave you the plant account public key. This step wires **operations-center** (dashboard on **ops-b**) to receive those subjects locally as `notify.alerts.>`, `journal.events.>`, and `telemetry.machine.>`.
+
+The pot-edge-patterns file is `deploy/steps/04-nats-account-import.yaml` (YAML file number 4, tutorial step 5).
+
+## YAML walkthrough
+
+Replace `<production-monitoring-account-id>` with the key from step 4 before you deploy.
+
+<FlavorYaml title="operations-center-import">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: operations-center-import
+spec:
+  description: Operations center account - import alerts, journal, and fleet telemetry from production site
+  exportsAllowWildcards: true
+  imports:
+    - name: live-alerts
+      subject: notify.alerts.>
+      type: stream
+      account: <production-monitoring-account-id>
+      local_subject: notify.alerts.>
+      description: Imported live anomaly notifications
+    - name: event-journal
+      subject: journal.events.>
+      type: stream
+      account: <production-monitoring-account-id>
+      local_subject: journal.events.>
+      description: Imported JetStream journal - JOURNAL_PRODUCTION
+    - name: fleet-telemetry
+      subject: telemetry.machine.>
+      type: stream
+      account: <production-monitoring-account-id>
+      local_subject: telemetry.machine.>
+      description: Imported machine telemetry for fleet sparklines and status badges
+`}</FlavorYaml>
+
+Each import pairs with an export from step 2 by name (`live-alerts`, `event-journal`, `fleet-telemetry`).
+
+## Why this design
+
+The dashboard user rule **ops-viewer** (step 1) already allows subscribe on these subjects. Import rules deliver the messages into the **operations-center** account so **alert-dashboard** can consume them on **ops-b** without joining the plant account.
+
+Fleet charts need all three pieces: **fleet-telemetry** export/import, **ops-viewer** `subAllow`, and `TELEMETRY_SUBJECT` on the dashboard (step 8).
+
+## Deploy
+
+Edit the YAML file with your account key, then:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/04-nats-account-import.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get nats-account-rules`}</CliBlock>
+Confirm `operations-center-import` lists three imports with your plant account key.
+
+After step 8 deploys the dashboard, live alerts and fleet sparklines should update. You can defer UI checks until then if you have not deployed **operations-center** yet.
+
+## Common mistakes
+
+- **Wrong account key.** A single typo blocks all cross-account traffic.
+- **Deploying before step 4.** The placeholder must be replaced with a real key from <code>{CLI_NAME} get nats-accounts</code>.
+- **Missing fleet-telemetry import.** Alerts work but fleet panel stays empty.
+- **Mismatch with export names.** Import `name` fields must match export names from step 2.
+
+## Next step
+
+[Step 6: Diagnostic Service](/tutorials/acme-smart-plant/step-06-service-diagnostic): create a Router bridge so **ops-b** can call diagnostic-service HTTP on **site-a**.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

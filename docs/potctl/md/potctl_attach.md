@@ -9,7 +9,7 @@ Attach one ioFog resource to another.
 ### Examples
 
 ```
-attach
+potctl attach
 ```
 
 ### Options
@@ -30,8 +30,7 @@ attach
 
 * [potctl](potctl.md)	 - 
 * [potctl attach agent](potctl_attach_agent.md)	 - Attach an Agent to an existing Namespace
-* [potctl attach edge-resource](potctl_attach_edge-resource.md)	 - Attach an Edge Resource to an existing Agent
-* [potctl attach exec](potctl_attach_exec.md)	 - Attach an Exec Session to a resource
+* [potctl attach exec](potctl_attach_exec.md)	 - Provision fog debug exec on an Agent
 * [potctl attach volume-mount](potctl_attach_volume-mount.md)	 - Attach a Volume Mount to existing Agents
 
 

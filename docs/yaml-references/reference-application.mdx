@@ -6,6 +6,12 @@ keywords: [application yaml, microservice yaml, datasance pot, potctl, edge appl
 
 # Application YAML Specification
 
+:::info[v3.8.0: multi-arch microservice images]
+
+Legacy `images.x86` and generic `images.arm` keys are removed. Use **`images.amd64`**, **`images.arm64`**, **`images.riscv64`**, and **`images.arm`** (32-bit) under each microservice. Omit architectures you do not need. See [Catalog YAML](reference-catalog) for the same architecture keys on catalog items.
+
+:::
+
 `potctl` allows users to deploy sets of Microservices to Edge Compute Networks ('ECNs'). The various components of Microservices are specified within YAML files for `potctl` to consume.
 
 An application is a set of Microservices working together to achieve one specific purpose.
@@ -38,8 +44,8 @@ spec:
       agent:
         name: horse-1
       images:
-        arm: arm-image:latest
-        x86: x86-image:latest
+        amd64: amd64-image:latest
+        arm64: arm64-image:latest
         # registry: remote
       natsConfig:
         natsAccess: true
@@ -64,8 +70,8 @@ spec:
       agent:
         name: horse-1
       images:
-        arm: arm-image:latest
-        x86: x86-image:latest
+        amd64: amd64-image:latest
+        arm64: arm64-image:latest
         registry: remote
       natsConfig:
         natsAccess: false
@@ -97,13 +103,13 @@ spec:
 
 At **application** level you can enable NATs and bind the application to a NATs account:
 
-- **`spec.natsConfig.natsAccess`** — Set to `true` to enable NATs for the application.
-- **`spec.natsConfig.natsRule`** — Name of a [NATs Account Rule](../security/nats-account-rule) that defines the account policy (limits, imports/exports, JetStream).
+- **`spec.natsConfig.natsAccess`** - Set to `true` to enable NATs for the application.
+- **`spec.natsConfig.natsRule`** - Name of a [NATs Account Rule](../security/nats-account-rule) that defines the account policy (limits, imports/exports, JetStream).
 
 At **microservice** level, each microservice that needs NATs credentials specifies:
 
-- **`natsConfig.natsAccess`** — Set to `true` to enable NATs for that microservice.
-- **`natsConfig.natsRule`** — Name of a [NATs User Rule](../security/nats-user-rule) that defines the user's permissions within the application's account.
+- **`natsConfig.natsAccess`** - Set to `true` to enable NATs for that microservice.
+- **`natsConfig.natsRule`** - Name of a [NATs User Rule](../security/nats-user-rule) that defines the user's permissions within the application's account.
 
 Example: Application uses `natsRule: test-export` (Account Rule); a microservice uses `natsRule: default-user` (User Rule). The Controller provisions credentials accordingly. See [NATs JWT Authentication](../security/nats-jwt-authentication) for how credentials are issued.
 
@@ -131,13 +137,13 @@ spec:
     # Optional agent configuration
     config:
       # All fields are optional
-      dockerUrl: unix:///var/run/docker.sock
+      containerEngineUrl: unix:///run/edgelet/containerd.sock
       diskLimit: 50
-      diskDirectory: /var/lib/iofog-agent/
+      diskDirectory: /var/lib/edgelet/
       memoryLimit: 4096
       cpuLimit: 80
       logLimit: 10
-      logDirectory: /var/log/iofog-agent/
+      logDirectory: /var/log/edgelet/
       logFileCount: 10
       statusFrequency: 10
       changeFrequency: 10
@@ -153,14 +159,14 @@ spec:
         messagingPort: 5672
         edgeRouterPort: 56721
         interRouterPort: 56722
-      dockerPruningFrequency: 1
+      pruningFrequency: 1
       logLevel: INFO
       availableDiskThreshold: 90
 
   # Information about the container images to be used
   images:
-    x86: edgeworx/healthcare-heart-rate:x86-v1 # Image to be used on x86 type agents
-    arm: edgeworx/healthcare-heart-rate:arm-v1 # Image to be used on arm type agents
+    amd64: edgeworx/healthcare-heart-rate:x86-v1 # Image for amd64 Edgelet nodes
+    arm64: edgeworx/healthcare-heart-rate:arm-v1 # Image for arm64 Edgelet nodes
     registry: remote # Either 'remote' or 'local' or the registry ID - Remote will pull the image from Dockerhub, local will use the local cache of the agent
     # Optional catalog item id (See Catalog items in the advanced section)
     catalogId: 0 # 0 is equivalent to not providing the field
@@ -245,8 +251,10 @@ spec:
 | name                     | User-defined unique identifier of an Microservice within an ioFog Controller. Must start and end with lowercase alphanumeric character. Can include '-' character.                                   |
 | agent                    | Object describing the name and the required configuration of the ioFog agent the microservice is to be deployed on. All configuration fields are optional only the specified values will be updated. |
 | images                   | Description of the images to be used by the container running the microservice.                                                                                                                      |
-| images.x86               | Image to be used on x86 ioFog Agents.                                                                                                                                                                |
-| images.arm               | Image to be used on ARM ioFog Agents.                                                                                                                                                                |
+| images.amd64             | Image for amd64 Edgelet nodes.                                                                                                                                                                       |
+| images.arm64             | Image for arm64 Edgelet nodes.                                                                                                                                                                       |
+| images.riscv64           | Image for riscv64 Edgelet nodes.                                                                                                                                                                     |
+| images.arm               | Image for 32-bit ARM Edgelet nodes.                                                                                                                                                                  |
 | images.registry          | Either `local`, `remote`, or `registryID`. Remote will pull the image from Dockerhub, local will use the local cache of the ioFog Agent. RegistryID will use the specified registry.                 |
 | images.catalogId         | Catalog item ID to be used in lieu and place of the images and the registry. (see [catalog items](../applications/microservice-registry-catalog))  
 | natsConfig.natsAccess | boolean. when `true` Controller generates NATs user creds and mount it to the Microservice if Applicaiton natsAccess is enabled |

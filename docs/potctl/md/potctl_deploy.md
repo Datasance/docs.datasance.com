@@ -5,7 +5,7 @@ Deploy Edge Compute Network components on existing infrastructure
 ### Synopsis
 
 Deploy Edge Compute Network components on existing infrastructure.
-Visit iofog.org to view all YAML specifications usable with this command.
+Visit https://docs.datasance.com to view all YAML specifications usable with this command.
 
 ```
 potctl deploy [flags]
@@ -14,11 +14,10 @@ potctl deploy [flags]
 ### Examples
 
 ```
-deploy -f ecn.yaml
+potctl deploy -f ecn.yaml
           application-template.yaml
           application.yaml
           microservice.yaml
-          edge-resource.yaml
           catalog.yaml
           volume.yaml
           route.yaml

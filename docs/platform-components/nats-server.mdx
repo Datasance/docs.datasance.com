@@ -1,0 +1,107 @@
+---
+title: NATS Server
+description: PoT NATS wrapper pins upstream NATS Server 2.14.3. Volume-mount contract for Kubernetes and Edgelet, reload behavior, and JetStream integration.
+keywords: [nats, messaging, jetstream, v3.8, wrapper, 2.14.3]
+slug: /platform-components/nats-server
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME, REGISTRY } from '@site/src/config/distribution';
+
+# NATS Server
+
+The platform ships a **NATS Server** wrapper image that pins upstream **[NATS Server 2.14.3](https://github.com/nats-io/nats-server)**. NATS carries application pub/sub, request/reply, key-value, and JetStream traffic across the ECN. The Controller manages account resolver JWTs, user credentials, and TLS material.
+
+## Version and image
+
+| Item | Value |
+| ---- | ----- |
+| Upstream NATS Server | **2.14.3** |
+| Wrapper image tag | **`2.14.3`** (semver without `v`) |
+| Default image | <code>{REGISTRY}/nats:2.14.3</code> |
+| Entrypoint binary | `iofog-nats` |
+
+Override the image in `spec.images.nats` or `spec.systemMicroservices.nats` on your ControlPlane CR. See [Control Plane YAML](/yaml-references/reference-control-plane).
+
+Supported platforms: **amd64**, **arm64**, **arm** (32-bit), and **riscv64**.
+
+## Where NATS runs
+
+Enable NATS on the Control Plane with `nats.enabled: true`. The Operator (Kubernetes) or {CLI_NAME} (remote hosts) mounts config, account files, TLS certs, JWT assets, and creds into the NATS container.
+
+Edgelet nodes do not run a standalone NATS hub by default. Microservices connect to the Control Plane NATS cluster over the ECN mesh.
+
+## Volume-mount contract
+
+Both **Kubernetes** and **Edgelet** deployments use the same paths. Mount server config, account config, TLS material, JWT assets, and creds at the paths below (or override with environment variables).
+
+| Mount | Default path | Env override |
+| ----- | ------------ | ------------ |
+| Server config | `/etc/nats/config/server.conf` | `NATS_CONF` |
+| Account config | `/etc/nats/config/accounts.conf` | `NATS_ACCOUNTS` |
+| TLS certs | `/etc/nats/certs` | `NATS_TLS_DIR` |
+| JWT mount (read-only) | `/tmp/nats/jwt` | `NATS_JWT_MOUNT_DIR` |
+| JWT working dir | `/home/runner/nats/jwt` | `NATS_JWT_DIR` |
+| User creds | `/etc/nats/creds/` | `NATS_CREDS_DIR` |
+
+The server config may use environment variable placeholders (for example `$SERVER_NAME`). The wrapper preserves the container environment so injected vars resolve at startup.
+
+## Key environment variables
+
+| Variable | Default | Description |
+| -------- | ------- | ----------- |
+| `NATS_SERVER_MODE` | `server` | `server` (SIGHUP reload) or `leaf` (restart on non-TLS changes) |
+| `NATS_MONITOR_PORT` | `8222` | HTTP monitoring port (`0` disables) |
+| `NATS_SYS_USER_CRED_PATH` | *(none)* | System account creds for JetStream account purge on resolver changes |
+| `NATS_CLIENT_URL` | `nats://127.0.0.1:4222` | URL for wrapper JetStream purge API calls |
+| `NATS_JETSTREAM_STORE_DIR` | *(parsed from config)* | JetStream store directory for account reconciliation |
+
+## Reload behavior
+
+The wrapper watches config, accounts, TLS, JWT mount dir, and creds dir. On change:
+
+- **Server mode**: sends **SIGHUP** to reload
+- **Leaf mode**: sends **SIGHUP** for TLS cert changes only; other changes trigger stop and restart
+
+When JWT files change, the wrapper syncs `*.jwt` from the mount dir into `NATS_JWT_DIR`, reloads, runs JetStream account reconciliation, and pushes account JWTs via `$SYS.REQ.CLAIMS.UPDATE`.
+
+When an account is removed from the resolver, the wrapper can purge orphaned JetStream data via the Account Purge API if `NATS_SYS_USER_CRED_PATH` is set.
+
+## PoT integration
+
+On the Control Plane, enable NATS and set replica count in your ControlPlane CR:
+
+<FlavorYaml title="Enable NATS on Kubernetes">{`spec:
+  replicas:
+    nats: 2
+  nats:
+    enabled: true
+  images:
+    nats: {{REGISTRY}}/nats:2.14.3`}</FlavorYaml>
+
+Applications and microservices use [NATS Account Rules](/security/nats-account-rule) and [NATS User Rules](/security/nats-user-rule) for multi-tenant access. For JWT authentication details, see [NATS JWT Authentication](/security/nats-jwt-authentication).
+
+Router and NATS deploy with TLS by default. See [Certificates for Router and NATS](/security/certificates-manager) for site CA and secret names.
+
+## Health check
+
+Published images include `curl` for health checks. Example:
+
+```bash
+curl -f http://127.0.0.1:8222/healthz
+```
+
+## Related docs
+
+| Document | Description |
+| -------- | ----------- |
+| [Control Plane YAML](/yaml-references/reference-control-plane) | `nats.enabled`, replicas, JetStream storage, ingress |
+| [NATS Account Rule](/security/nats-account-rule) | Account-level publish/subscribe permissions |
+| [NATS User Rule](/security/nats-user-rule) | User-level permissions within an account |
+| [Architecture](/getting-started/architecture#nats) | NATS role in the ECN |
+
+Source: [Datasance/nats-server](https://github.com/Datasance/nats-server) (mirror of [eclipse-iofog/nats-server](https://github.com/eclipse-iofog/nats-server)).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,0 +1,69 @@
+---
+title: "Step 4 - Copy account key"
+description: "Acme Smart Plant tutorial. Manual step to copy the production-monitoring NATS account public key after deploying the plant Application."
+keywords: [tutorial, acme smart plant, nats accounts, cross-account, manual step]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 4 - Copy account key
+
+## Goal
+
+Copy the **production-monitoring** NATS account public key. You paste this value into the import rule in step 5.
+
+## Scenario context
+
+NATS cross-account import rules reference the **source account** by public key, not by Application name. The Controller creates the account when you deploy **production-monitoring** in step 3. This manual step bridges YAML file `04-nats-account-import.yaml` (tutorial step 5) to the live account ID on your ECN.
+
+## Procedure
+
+Run:
+
+<CliBlock>{`{{CLI_NAME}} get nats-accounts`}</CliBlock>
+Find the row for Application **production-monitoring**. Copy the **account public key** (sometimes labeled `publicKey` or `id` depending on CLI output format).
+
+Save it somewhere temporary. You will replace every `<production-monitoring-account-id>` placeholder in `deploy/steps/04-nats-account-import.yaml`.
+
+Example output shape (values differ on each ECN):
+
+```text
+NAME                    PUBLIC KEY
+production-monitoring   ABCD1234...
+operations-center       *(not created yet)*
+```
+
+:::warning[Do not skip this step]
+
+If you deploy the import rule with the placeholder literal, live alerts and fleet charts on **ops-b** stay empty with no obvious deploy error.
+
+:::
+
+## Why this design
+
+Export rules on the plant account declare *what* may leave. Import rules on **operations-center** declare *from whom*. NATS matches the pair by account public key. PoT does not auto-wire cross-application imports because different ECNs use different account IDs.
+
+## Verify
+
+You have a non-empty public key string that matches the **production-monitoring** row from <code>{CLI_NAME} get nats-accounts</code>.
+
+Optionally confirm the account name aligns with step 3:
+
+<CliBlock>{`{{CLI_NAME}} describe application production-monitoring`}</CliBlock>
+Look for `natsConfig.natsRule: production-monitoring-export`.
+
+## Common mistakes
+
+- **Copying the wrong account.** Use the key for **production-monitoring**, not **operations-center** (created later).
+- **Running this before step 3.** The account does not exist until the plant Application deploys.
+- **Pasting the key with angle brackets.** Replace `<production-monitoring-account-id>` entirely; do not wrap the real key in `<>`.
+
+## Next step
+
+[Step 5: NATS account import](/tutorials/acme-smart-plant/step-05-nats-account-import): paste the key into the import rule and deploy it on **operations-center**.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

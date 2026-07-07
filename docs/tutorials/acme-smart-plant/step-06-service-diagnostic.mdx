@@ -1,0 +1,83 @@
+---
+title: "Step 6 - Diagnostic Service"
+description: "Acme Smart Plant tutorial. Create a Router Service bridge for diagnostic-service on site-a so the remote dashboard can call HTTP runbooks."
+keywords: [tutorial, acme smart plant, service, router, diagnostic-service]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 6 - Diagnostic Service
+
+## Goal
+
+Create a **Service** resource that exposes **diagnostic-service** HTTP through the default Router mesh. The alert dashboard on **ops-b** uses this bridge in step 8.
+
+## Scenario context
+
+When an operator clicks **Diagnose** on an alert, the dashboard calls a runbook API on **site-a**. That microservice listens on container port 8080 (external 8081 on the Edgelet node). It does not use NATS.
+
+Router bridges HTTP across Edgelet nodes without exposing factory ports on the public internet. This step creates the bridge; step 7 reads the assigned `bridgePort`.
+
+## YAML walkthrough
+
+File: `deploy/steps/05-service-diagnostic.yaml`
+
+<FlavorYaml title="diagnostic-service Service">{`---
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: diagnostic-service
+  tags:
+    - pot-edge-patterns
+spec:
+  type: microservice
+  resource: production-monitoring/diagnostic-service
+  targetPort: 8081
+  defaultBridge: default-router
+`}</FlavorYaml>
+
+| Field | Value | Meaning |
+| ----- | ----- | ------- |
+| `resource` | `production-monitoring/diagnostic-service` | Application/microservice pair from step 3 |
+| `targetPort` | `8081` | External port on **site-a** (maps to container 8080) |
+| `defaultBridge` | `default-router` | Platform Router instance |
+| `tags` | `pot-edge-patterns` | Tag consuming agents for service discovery |
+
+Ensure the **ops-b** Edgelet node carries tag `service.iofog.org/tag: pot-edge-patterns` so Router routes traffic to this Service.
+
+## Why this design
+
+NATS carries alerts and telemetry. HTTP runbooks use Router because diagnostic-service is a plain REST API. The pattern scales to any remote ops center: NATS for events, Router for request/response.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/05-service-diagnostic.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get services
+{{CLI_NAME}} describe service diagnostic-service`}</CliBlock>
+The describe output includes `bridgePort`. Save it for step 7 and step 8 (`DIAGNOSTIC_URL`).
+
+Optional curl from a shell on **ops-b** after step 8 sets the URL:
+
+```bash
+curl -s "http://router.default.svc.bridge.local:<diagnostic-bridge-port>/diagnose/M002?faultType=high_vibration"
+```
+
+## Common mistakes
+
+- **Deploying before step 3.** The microservice `production-monitoring/diagnostic-service` must exist.
+- **Wrong targetPort.** Use **8081** (external), not container port 8080.
+- **Missing Router tag on ops-b.** Without `pot-edge-patterns` tag, cross-node HTTP routing fails with timeout or 502.
+- **Skipping step 7.** You need `bridgePort` before deploying the dashboard Application.
+
+## Next step
+
+[Step 7: Note bridge port](/tutorials/acme-smart-plant/step-07-note-bridge-port): read `bridgePort` from <code>{CLI_NAME} describe service diagnostic-service</code>.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

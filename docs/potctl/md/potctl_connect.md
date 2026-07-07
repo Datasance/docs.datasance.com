@@ -8,7 +8,7 @@ Connect to an existing Control Plane.
 
 This command must be executed within an empty or non-existent Namespace.
 All resources provisioned with the corresponding Control Plane will become visible under the Namespace.
-Visit iofog.org to view all YAML specifications usable with this command.
+Visit https://docs.datasance.com to view all YAML specifications usable with this command.
 
 ```
 potctl connect [flags]
@@ -29,6 +29,8 @@ potctl connect --generate
 
 ```
       --b64               Indicate whether input password (--pass) is base64 encoded or not
+      --ca string         Path to PEM CA certificate for controller TLS (persisted to namespace config)
+      --ca-b64 string     Base64-encoded PEM CA certificate for controller TLS (persisted to namespace config)
       --ecn-addr string   URL of Edge Compute Network to connect to
       --email string      ioFog user email address
   -f, --file string       YAML file containing specifications for ioFog resources to deploy

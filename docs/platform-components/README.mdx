@@ -1,0 +1,44 @@
+---
+title: Platform Components
+description: In-house v3.8 platform images and libraries. Operator, Router, NATS Server, and ioFog Go SDK.
+keywords: [platform components, operator, router, nats, sdk, v3.8]
+slug: /platform-components
+---
+
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
+# Platform Components
+
+These pages document the in-house images and libraries that ship with **{PRODUCT_NAME}** platform train **v3.8.0**. They wrap upstream projects where needed and integrate with the Controller, Edgelet nodes, and {PRODUCT_NAME} YAML kinds.
+
+Use this section when you need version pins, install paths, runtime contracts, or source repo links. For deployment walkthroughs, see [Platform deployment](/platform-deployment/introduction). For architecture context, see [Architecture](/getting-started/architecture).
+
+## Components
+
+| Component | Version | Role |
+| --------- | ------- | ---- |
+| [Operator](/platform-components/operator) | **v3.8.0** | Reconciles `ControlPlane` custom resources on Kubernetes |
+| [Router](/platform-components/router) | **v3.8.0** (Skupper **3.5.1**) | Cross-network messaging between Controller and Edgelet nodes |
+| [NATS Server](/platform-components/nats-server) | **2.14.3** upstream | Pub/sub, JetStream, and account resolver for the ECN |
+| [ioFog Go SDK](/platform-components/sdk) | **v3.8.0** | Build microservices ([microservices](/platform-components/sdk/microservices)), call the REST API ([client](/platform-components/sdk/client)), or deploy YAML ([apps](/platform-components/sdk/apps)) |
+
+## Where they run
+
+On **Kubernetes**, the Operator deploys Controller, Router, and NATS from a `ControlPlane` custom resource. Image tags and replicas live in [Control Plane YAML](/yaml-references/reference-control-plane).
+
+On **remote hosts**, {CLI_NAME} deploys Controller, Router, and NATS from Control Plane YAML. Edgelet nodes run edge Router instances and connect back to the interior Router on the Control Plane.
+
+Application workloads are **not** deployed by the Operator. Use {CLI_NAME}, the REST API, EdgeOps Console, or the Go SDK to create `Application` and `Microservice` resources after the Control Plane is up.
+
+## Related docs
+
+| Topic | Page |
+| ----- | ---- |
+| Control Plane images and replicas | [Control Plane YAML](/yaml-references/reference-control-plane) |
+| Router and NATS TLS | [Certificates Manager](/security/certificates-manager) |
+| NATS account and user rules | [NATS Account Rule](/security/nats-account-rule), [NATS User Rule](/security/nats-user-rule) |
+| Greenfield migration from v3.7 | [Migrating to v3.8.0](/migrating-to-v3-8) |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

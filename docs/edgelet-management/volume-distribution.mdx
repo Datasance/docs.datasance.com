@@ -1,0 +1,60 @@
+---
+title: Volume Distribution to Edgelet Nodes
+description: Push host directories to Edgelet nodes with the Volume YAML kind and potctl deploy. Mount paths for microservice workloads.
+keywords: [volume, edgelet node, potctl, volumemount, edge volumes, deploy]
+slug: /edgelet-management/volume-distribution
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Volume distribution
+
+Microservices often need files on the Edgelet node before a container starts. With {CLI_NAME}, you push directories from your operator machine to selected nodes using the **`Volume`** kind.
+
+This is **orchestrator-driven file distribution**. It is separate from:
+
+- **`VolumeMount`** (ConfigMap/Secret materialization) — see [VolumeMount YAML](/yaml-references/reference-volumemount)
+- On-node **`VOLUME`** mappings — see [Edgelet volumes](/edgelet/volumes)
+
+## Volume YAML
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Volume
+spec:
+  name: secret
+  source: /tmp/
+  destination: /tmp/secrets/
+  permissions: 666
+  agents:
+    - zebra-1
+    - zebra-2
+`}</FlavorYaml>
+
+Deploy:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f volume.yaml`}</CliBlock>
+
+With the example above, everything under `/tmp/` on your operator machine is pushed to `/tmp/secrets/` on **zebra-1** and **zebra-2**.
+
+## Use in microservices
+
+After the Volume is deployed, reference the destination path in microservice volume mappings. See [Application YAML](/yaml-references/reference-application) for mount syntax.
+
+List, describe, and delete Volumes like any other {CLI_NAME} resource:
+
+<CliBlock>{`{{CLI_NAME}} get volumes
+{{CLI_NAME}} describe volume secret
+{{CLI_NAME}} delete volume secret`}</CliBlock>
+
+## See also
+
+- [Volume kind](/yaml-references/reference-kinds#volume) — YAML overview
+- [Edgelet volumes](/edgelet/volumes) — `VOLUME`, `BIND`, and prune behavior on the node
+- [Microservice registry and catalog](/applications/microservice-registry-catalog)
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

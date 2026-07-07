@@ -1,55 +1,82 @@
-# Download And Install potctl
+---
+title: Download
+description: Install potctl or iofogctl v3.8.0 on macOS, Linux, or Windows.
+keywords: [potctl, iofogctl, install, homebrew, download]
+---
 
-## Install potctl on Mac
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME, FLAVOR } from '@site/src/config/distribution';
+
+# Download and Install {CLI_NAME}
+
+Platform train **v3.8.0** ships **{CLI_NAME} v3.8.0**. Install the binary that matches your distribution.
+
+## Install on macOS
 
 Mac users can use Homebrew:
 
-```bash
-brew tap datasance/potctl
-brew install potctl
-```
+{FLAVOR === 'datasance' ? (
+<CliBlock>{`brew tap Datasance/potctl
+brew install potctl`}</CliBlock>
+) : (
+<CliBlock>{`brew tap eclipse-iofog/iofogctl
+brew install iofogctl`}</CliBlock>
+)}
 
-## Install potctl on Windows
+## Install on Windows
 
-The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.6.2/potctl.exe).
+{FLAVOR === 'datasance' ? (
+<p>
+Download the Windows binary from{' '}
+<a href="https://github.com/Datasance/potctl/releases/tag/v3.8.0-rc.1">Datasance potctl releases</a>.
+</p>
+) : (
+<p>
+Download the Windows binary from{' '}
+<a href="https://github.com/eclipse-iofog/iofogctl/releases/tag/v3.8.0-rc.1">Eclipse ioFog iofogctl releases</a>.
+</p>
+)}
 
-#### Prepare Windows
+### Prepare Windows
 
-In order to use `potctl` to deploy an ECN locally on Windows we will need to configure Docker to run Linux containers:
+To deploy an ECN locally on Windows, configure Docker to run Linux containers:
 
-- Install [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install/)
-- Follow the guidelines for using WSL2 or Hyper-V backend [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
-- Ensure that docker is running with [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
+- Install <a href="https://docs.docker.com/desktop/setup/install/windows-install/">Docker Desktop for Windows</a>
+- Follow the WSL2 or Hyper-V backend guidelines in the Docker Desktop docs
+- Ensure Docker is running before you use <code>{CLI_NAME}</code>
 
-## Install potctl on Linux
+## Install on Linux
 
-The Debian package can be installed like so:
-
-```bash
-wget -qO- https://downloads.datasance.com/datasance.gpg | sudo tee /etc/apt/trusted.gpg.d/datasance.gpg >/dev/null
-echo "deb [arch=all signed-by=/etc/apt/trusted.gpg.d/datasance.gpg] https://downloads.datasance.com/deb stable main" | sudo tee /etc/apt/sources.list.d/datansance.list >/dev/null
+{FLAVOR === 'datasance' ? (
+<>
+<p>Install the Debian package:</p>
+<CliBlock>{`wget -qO- https://downloads.datasance.com/datasance.gpg | sudo tee /etc/apt/trusted.gpg.d/datasance.gpg >/dev/null
+echo "deb [arch=all signed-by=/etc/apt/trusted.gpg.d/datasance.gpg] https://downloads.datasance.com/deb stable main" | sudo tee /etc/apt/sources.list.d/datasance.list >/dev/null
 sudo apt update
-sudo apt install potctl -y
-
-```
-
-And similarly, the RPM package can be installed like so:
-
-```bash
-cd /etc/yum.repos.d ; curl https://downloads.datasance.com/datasance.repo -LO
+sudo apt install potctl -y`}</CliBlock>
+<p>Or install the RPM package:</p>
+<CliBlock>{`cd /etc/yum.repos.d
+curl https://downloads.datasance.com/datasance.repo -LO
 sudo yum update
-sudo yum install potctl
-```
+sudo yum install potctl`}</CliBlock>
+</>
+) : (
+<p>
+Download the Linux binary from{' '}
+<a href="https://github.com/eclipse-iofog/iofogctl/releases/tag/v3.8.0-rc.1">Eclipse ioFog iofogctl releases</a>.
+</p>
+)}
 
-## Verify potctl Installation
+## Verify installation
 
-Run `potctl version` to verify you have successfully installed the CLI.
+<CliBlock>{`{{CLI_NAME}} version`}</CliBlock>
 
+You should see version **v3.8.0** (or a matching v3.8.0-rc tag).
 
 :::info[Next steps?]
   <ul>
-    <li><a href="../getting-familiar.html">Getting familiar with potctl.</a></li>
-    <li><a href="../yaml-references/reference-kinds">potctl reference.</a></li>
+    <li><a href="../potctl/getting-familiar">Getting familiar with {CLI_NAME}.</a></li>
+    <li><a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>CLI reference.</a></li>
   </ul>
 :::
 

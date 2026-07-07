@@ -1,0 +1,124 @@
+---
+title: Operator
+description: ioFog Operator v3.8.0 reconciles ControlPlane custom resources on Kubernetes. Helm install, greenfield migration, and ControlPlane-only scope.
+keywords: [operator, kubernetes, controlplane, helm, v3.8, greenfield]
+slug: /platform-components/operator
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME, FLAVOR, REGISTRY } from '@site/src/config/distribution';
+
+# Operator
+
+The **Operator** (v3.8.0) runs on Kubernetes and reconciles **`ControlPlane`** custom resources. When you apply or update a ControlPlane CR, the Operator creates and maintains Controller, Router, NATS, Services, Ingresses, Secrets, and related cluster objects.
+
+The Operator does **not** deploy application workloads. After the Control Plane is up, deploy applications with {CLI_NAME}, the REST API, EdgeOps Console, or the [ioFog Go SDK](/platform-components/sdk).
+
+## Version and image
+
+| Item | Value |
+| ---- | ----- |
+| Operator release | **v3.8.0** |
+| Default image | <code>{REGISTRY}/operator:3.8.0</code> |
+| Kubernetes | **1.22+** |
+| CRD scope | **ControlPlane only** (Application CRD removed in v3.8) |
+
+Override the image in `spec.images.operator` on your ControlPlane CR. See [Control Plane YAML](/yaml-references/reference-control-plane).
+
+## Greenfield release
+
+:::warning[No in-place upgrade from v3.7]
+
+Platform train **v3.8.0** is a **greenfield** release. Uninstall the legacy operator and delete v3.7 CRDs before installing v3.8. Rewrite ControlPlane manifests for embedded or external OIDC. Redeploy application workloads with {CLI_NAME} or the Go SDK.
+
+See [Migrating to v3.8.0](/migrating-to-v3-8) for the full checklist.
+
+:::
+
+Removed in v3.8:
+
+- **Application** CRD and reconciler
+- Keycloak auth fields on ControlPlane
+- ECN Viewer-related Controller fields
+
+## Helm install (optional)
+
+Charts publish from this repository to each mirror's gh-pages index. The legacy standalone repo [Datasance/helm](https://github.com/Datasance/helm) is **deprecated**.
+
+<CliBlock title="Add the Helm repository">{`helm repo add iofog-operator ${FLAVOR === 'datasance' ? 'https://datasance.github.io/iofog-operator' : 'https://eclipse-iofog.github.io/iofog-operator'}
+helm repo update`}</CliBlock>
+
+<CliBlock title="Install the operator">{`helm install iofog-operator iofog-operator/iofog-operator \\
+  --namespace iofog-system --create-namespace \\
+  --version 3.8.0`}</CliBlock>
+
+For a full Control Plane install with embedded OIDC, replicas, and database settings, see [Kubernetes Helm deployment](/platform-deployment/kubernetes-helm).
+
+## Manifest tarballs
+
+GitHub Releases attach flavor-specific tarballs: `manifests-iofog-<version>.tar.gz` and `manifests-datasance-<version>.tar.gz`.
+
+<CliBlock>{`VERSION=3.8.0
+FLAVOR=${FLAVOR === 'datasance' ? 'datasance' : 'iofog'}
+
+curl -fsSL -o manifests.tar.gz \\
+  "https://github.com/eclipse-iofog/iofog-operator/releases/download/v\${VERSION}/manifests-\${FLAVOR}-\${VERSION}.tar.gz"
+tar xzf manifests.tar.gz
+kubectl apply -f "manifests-\${FLAVOR}-\${VERSION}/crds/"
+kubectl apply -f "manifests-\${FLAVOR}-\${VERSION}/operator/install.yaml"`}</CliBlock>
+
+Adapt and apply the sample ControlPlane from the tarball for your cluster.
+
+## OLM
+
+OLM bundles publish as container images (`operator-bundle:<version>`). Package **`iofog-operator`**, channel **`stable`**.
+
+<CliBlock>{`VERSION=3.8.0
+
+operator-sdk run bundle "{{REGISTRY}}/operator-bundle:\${VERSION}" \\
+  --namespace iofog-system --timeout 5m`}</CliBlock>
+
+## What the Operator manages
+
+When you create a ControlPlane CR, the Operator:
+
+- Deploys Controller pods with auth, database, and console settings from `spec`
+- Deploys Router and NATS when enabled in the spec
+- Creates Services and optional Ingresses for external access
+- Rotates Secrets when auth or database credentials change
+- Restarts Controller pods when auth configuration changes
+
+Example fragment (full schema in [Control Plane YAML](/yaml-references/reference-control-plane)):
+
+<FlavorYaml title="ControlPlane image overrides">{`spec:
+  images:
+    operator: {{REGISTRY}}/operator:3.8.0
+    controller: {{REGISTRY}}/controller:v3.8.0
+    router: {{REGISTRY}}/router:3.8.0
+    nats: {{REGISTRY}}/nats:2.14.3`}</FlavorYaml>
+
+## Application workloads
+
+v3.8 removed the Application CRD from the Operator. Deploy and update applications outside the Operator:
+
+- {CLI_NAME} `deploy` with Application and Microservice YAML
+- Controller REST API or EdgeOps Console
+- ioFog Go SDK `pkg/apps`
+
+The Operator watches **ControlPlane** resources only.
+
+## Related docs
+
+| Document | Description |
+| -------- | ----------- |
+| [Kubernetes Helm deployment](/platform-deployment/kubernetes-helm) | End-to-end Control Plane install |
+| [Control Plane YAML](/yaml-references/reference-control-plane) | CR fields, replicas, images, NATS, ingress |
+| [Embedded OIDC](/platform-deployment/embedded-oidc) | Default auth mode for greenfield installs |
+| [Architecture](/getting-started/architecture) | How Operator fits in the ECN |
+
+Source: [Datasance/iofog-operator](https://github.com/Datasance/iofog-operator) (mirror of [eclipse-iofog/iofog-operator](https://github.com/eclipse-iofog/iofog-operator)).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

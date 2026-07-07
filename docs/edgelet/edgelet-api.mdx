@@ -1,0 +1,223 @@
+---
+title: EdgeletAPI v1
+description: On-device EdgeletAPI for local administration. HTTPS and Unix socket on port 54321, JWT auth, RBAC, and WebSocket routes for logs and exec.
+keywords: [edgelet, edgeletapi, v1, localhost, websocket, rbac, jwt]
+slug: /edgelet/edgelet-api
+---
+
+# EdgeletAPI v1
+
+The **EdgeletAPI** is the on-device operator API exposed by the Edgelet daemon. The `edgelet` CLI is a thin transport client over this API. It does not implement daemon runtime logic.
+
+:::info[Not the Controller API]
+Remote Controller REST lives at `/api/v3/...` on your `controllerUrl`. EdgeletAPI is **localhost-only** administration under `/v1/...`.
+:::
+
+Browse the full OpenAPI spec on this site: [**API reference**](/api/edgelet).
+
+## Base URL and transport
+
+| Transport | URL | Notes |
+| --------- | --- | ----- |
+| HTTPS (default) | `https://127.0.0.1:54321` | TLS required; trust `/etc/edgelet/edgeletapi-ca.crt` |
+| Unix socket | `http+unix:///run/edgelet/edgelet.sock` | Same router as HTTPS; preferred for CLI on-node |
+| WebSocket | `wss://127.0.0.1:54321` | Log stream, exec attach, microservice control channel |
+
+TLS server name (SNI): `edgelet.default.svc.bridge.local`.
+
+Both HTTPS and Unix socket listeners share the same route table and middleware.
+
+### Unauthenticated probes
+
+These routes skip JWT auth (for orchestrators and monitoring):
+
+| Route | Purpose |
+| ----- | ------- |
+| `GET /health/live` | Process liveness |
+| `GET /health/ready` | Readiness (daemon modules up) |
+| `GET /metrics` | Prometheus metrics |
+
+## Authentication
+
+Send the bearer token from `/etc/edgelet/edgelet-api`:
+
+```bash
+TOKEN=$(sudo cat /etc/edgelet/edgelet-api)
+curl -sk --cacert /etc/edgelet/edgeletapi-ca.crt \
+  -H "Authorization: Bearer ${TOKEN}" \
+  https://127.0.0.1:54321/v1/system/status
+```
+
+### JWT modes
+
+| Edgelet node state | Token policy |
+| ------------------ | ------------ |
+| **Unprovisioned (bootstrap)** | Unsigned bootstrap JWT accepted on all EdgeletAPI routes |
+| **Provisioned** | Unsigned JWT rejected; signed Ed25519 JWT required |
+| **Deprovisioned** | Reverts to bootstrap mode |
+
+CLI admin tokens use claim `tokenUse: edgeletapi` and audience `aud: edgelet://edgeletapi/v1`.
+
+Service account and microservice workload tokens carry additional claims (for example `iofog.org.microservice.uuid` for self-scoped routes). Use `GET /v1/auth/whoami` to inspect the caller identity.
+
+## Authorization (RBAC)
+
+Authorization is **deny-by-default**. Every `/v1/...` route must be mapped to an RBAC resource and verb; unmapped routes return `403 FORBIDDEN`.
+
+| HTTP method | RBAC verb |
+| ----------- | --------- |
+| `GET` | `get` |
+| `POST` | `create` |
+| `PATCH`, `PUT` | `update` |
+| `DELETE` | `delete` |
+
+Local admin tokens typically carry broad rules such as `system:localadmin:*`. Microservice self routes (`/v1/microservices/config`, `/v1/microservices/control`) bind identity from the JWT claim `iofog.org.microservice.uuid`.
+
+## Response envelope
+
+Successful responses:
+
+```json
+{
+  "success": true,
+  "data": { }
+}
+```
+
+Errors:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "human-readable detail",
+    "details": { }
+  }
+}
+```
+
+Long-running applies (ControlPlane, RuntimeClass, some image pulls) may return **HTTP 202** with an `operationId`. Poll status endpoints (for example `GET /v1/deploy/controlplane:apply/{operationId}`). Terminal failure on a known operation still returns HTTP 200 with `success=true` and `data.status=failed` plus nested `data.error`.
+
+## Error codes
+
+| Code | Meaning |
+| ---- | ------- |
+| `INVALID_ARGUMENT` | Malformed payload, unsupported field/value, validation error |
+| `UNAUTHORIZED` | Missing or invalid authentication token |
+| `FORBIDDEN` | Authenticated but RBAC denied |
+| `NOT_FOUND` | Requested resource does not exist |
+| `CONFLICT` | State conflict prevents the operation |
+| `NOT_IMPLEMENTED` | Endpoint or operation not implemented |
+| `EXEC_START_TIMEOUT` | Local exec shell did not start within 15s (HTTP 504) |
+| `INTERNAL` | Unexpected server-side failure |
+
+| Error code | CLI exit code |
+| ---------- | ------------- |
+| `INVALID_ARGUMENT` | 2 |
+| `UNAUTHORIZED`, `FORBIDDEN` | 3 |
+| `NOT_FOUND` | 4 |
+| `CONFLICT` | 5 |
+| `NOT_IMPLEMENTED` | 6 |
+| All others | 1 |
+
+Daemon unreachable (connection failure) uses exit code **10** (not an API error code).
+
+RuntimeClass endpoints require **full** linux build flavor and `containerEngine=edgelet`. Other combinations return HTTP 400 with `INVALID_ARGUMENT`.
+
+## Route groups
+
+### `/v1/system/*`
+
+Daemon administration: status, info, version, provision/deprovision, config get/patch/switch, reload, stop, prune, GPS, controller certificate upload, controller connection status, ControlPlane get/restart/delete, daemon logs (HTTP and `:stream` WebSocket).
+
+Notable behaviors:
+
+- `POST /v1/system/reload` - SIGHUP-style config reload; rejected changes do not mutate on-disk config
+- `POST /v1/system/provision` / `DELETE /v1/system/provision` - Edgelet node lifecycle; affects JWT mode
+- `GET /v1/system/controlplane` - local Controller deployment status (see [Control plane on node](/edgelet/control-plane))
+- `POST /v1/system/controlplane/restart` - bounce the controller container; optional `?pull=true`
+
+### `/v1/ms/*`
+
+Runtime view and lifecycle for workloads (managed, local, and control-plane sources):
+
+- `GET /v1/ms` - list microservices; `source` query: `managed`, `local`, `controlplane`, or `all` (default)
+- `GET /v1/ms/{id}` - inspect (UUID or `namespace.name`)
+- Lifecycle: `start`, `stop`, `restart`, `kill`
+- Logs: `GET .../logs` (HTTP); `GET .../logs:stream` (WebSocket follow)
+- Exec: session create/get/delete; `GET .../exec/sessions/{sessionId}:attach` (interactive WebSocket). See [Exec sessions](/edgelet/exec-sessions).
+
+### `/v1/deploy/*`
+
+Manifest-driven local persistence and apply:
+
+| Kind | Apply | Validate | List/get/delete |
+| ---- | ----- | -------- | --------------- |
+| Microservice | `POST .../microservices:apply` | `...:validate` | `GET/DELETE .../microservices/{id}` |
+| Registry | `POST .../registries:apply` | `...:validate` | `GET/DELETE .../registries/{id}` |
+| RuntimeClass | `POST .../runtimeclasses:apply` | `...:validate` | `GET/DELETE .../runtimeclasses/{name}` |
+| ControlPlane | `POST .../controlplane:apply` (async) | `...:validate` | status via `/v1/system/controlplane` |
+
+Manifest YAML uses `apiVersion: edgelet.iofog.org/v1`.
+
+Apply uses `multipart/form-data` with fields `manifest` (required), `dryRun` (optional), and `async` (optional). Registry apply is synchronous. ControlPlane apply is asynchronous by default.
+
+### `/v1/auth/*`
+
+| Route | Purpose |
+| ----- | ------- |
+| `GET /v1/auth/whoami` | Caller identity and effective RBAC summary |
+| `GET /v1/auth/tokens` | List active service account tokens |
+| `POST /v1/auth/tokens/revoke` | Revoke token by JTI |
+
+### `/v1/images/*`
+
+Engine image operations: list, pull (with async status poll), load, prune, remove. Requires a healthy container engine.
+
+### Microservice self routes
+
+| Route | Transport | Purpose |
+| ----- | --------- | ------- |
+| `GET /v1/microservices/config` | HTTP | Config blob for calling microservice UUID |
+| `GET /v1/microservices/control` | WebSocket | Control/message channel for calling microservice |
+
+Both require a JWT with `iofog.org.microservice.uuid` matching a running workload.
+
+## WebSockets
+
+Upgrade paths use the same TLS trust and bearer token as HTTP. Send `Authorization: Bearer ...` on the upgrade request.
+
+| Route | Use |
+| ----- | --- |
+| `GET /v1/system/logs:stream` | Follow daemon logs |
+| `GET /v1/ms/{id}/logs:stream` | Follow container logs |
+| `GET /v1/ms/{id}/exec/sessions/{sessionId}:attach` | Interactive exec terminal |
+| `GET /v1/microservices/control` | Microservice control channel (self) |
+
+Server → client binary opcodes on the control channel:
+
+| Opcode | Meaning | Client action |
+| ------ | ------- | ------------- |
+| `0x9` | Ping | Respond with pong |
+| `0xA` | Pong | - |
+| `0xB` | ACK | - |
+| `0xC` | Config changed | `GET /v1/microservices/config` |
+| `0xF` | Resource limits changed | Re-read agent limits / adjust behavior |
+
+## Contract stability
+
+EdgeletAPI is **v1-only**. Route namespace is `/v1/...` with dual transport (Unix socket and HTTPS/WSS on port 54321). Bootstrap vs provisioned JWT policy and RuntimeClass gating are part of the v1 contract.
+
+Breaking changes (path/method change, auth rule change, schema change for existing operations) require an explicit contract amendment. Non-breaking additions (new optional fields, new routes with RBAC entries) should ship together with updated OpenAPI and RBAC mapping in the Edgelet repo.
+
+## See also
+
+- [Architecture](/edgelet/architecture) - module layout and EdgeletAPI vs Controller API
+- [Exec sessions](/edgelet/exec-sessions) - local and Controller-initiated exec
+- [Container engines](/edgelet/container-engines) - RuntimeClass gating
+- [Troubleshooting](/edgelet/troubleshooting) - auth failures and CLI exit 10
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

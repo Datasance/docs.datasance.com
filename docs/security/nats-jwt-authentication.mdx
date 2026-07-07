@@ -131,8 +131,8 @@ spec:
         name: edge-1
       images:
         registry: 1
-        x86: natsio/nats-box:latest
-        arm: natsio/nats-box:latest
+        amd64: natsio/nats-box:latest
+        arm64: natsio/nats-box:latest
       container:
         hostNetworkMode: false
         isPrivileged: false
@@ -160,8 +160,8 @@ spec:
         name: edge-2
       images:
         registry: 1
-        x86: natsio/nats-box:latest
-        arm: natsio/nats-box:latest
+        amd64: natsio/nats-box:latest
+        arm64: natsio/nats-box:latest
       container:
         hostNetworkMode: false
         isPrivileged: false
@@ -192,8 +192,8 @@ spec:
     name: edge-2
   images:
     registry: 1
-    x86: natsio/nats-box:latest
-    arm: natsio/nats-box:latest
+    amd64: natsio/nats-box:latest
+    arm64: natsio/nats-box:latest
   container:
     extraHosts: []
     ports: []
@@ -370,8 +370,8 @@ spec:
     config: {}
   images:
     catalogId: 0
-    x86: natsio/nats-box:latest
-    arm: natsio/nats-box:latest
+    amd64: natsio/nats-box:latest
+    arm64: natsio/nats-box:latest
     registry: remote
   container:
     commands:

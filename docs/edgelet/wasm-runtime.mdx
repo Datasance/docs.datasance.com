@@ -1,0 +1,138 @@
+---
+title: Edgelet Wasm Runtime
+description: Run Wasm workloads on Edgelet nodes with RuntimeClass handlers. edgelet-wasmtime, spin, and upstream shims on the embedded engine.
+keywords: [edgelet, wasm, wasmtime, runtimeclass, wasi, spin, microservice]
+slug: /edgelet/wasm-runtime
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import { API_VERSION, CLI_NAME } from '@site/src/config/distribution';
+
+# Wasm runtime
+
+Edgelet runs **Wasm** workloads on **linux** when `containerEngine: edgelet`. Workloads use `platform: wasi/wasm` and a **RuntimeClass** handler. Docker and Podman engines do not support RuntimeClass on Edgelet.
+
+## Prerequisites
+
+| Requirement | Detail |
+| ----------- | ------ |
+| Platform | **linux** only |
+| Engine | `containerEngine: edgelet` |
+| Shim binary | Handler-specific `containerd-shim-*` on `PATH` (see table below) |
+| RuntimeClass | Deployed on the node before scheduling a Wasm microservice |
+
+<code>{CLI_NAME}</code> can stage Wasm shims during Edgelet node install when `package.wasm` is set on the Agent manifest. Native linux install only; skipped for `deploymentType: container` and for `containerEngine: podman`.
+
+## RuntimeClass
+
+Register handlers with EdgeletAPI deploy manifests (`apiVersion: edgelet.iofog.org/v1`). Each `metadata.name` is the value you set on `spec.container.runtime` in Controller YAML.
+
+```yaml
+apiVersion: edgelet.iofog.org/v1
+kind: RuntimeClass
+metadata:
+  name: edgelet-wasmtime
+handler: edgelet-wasmtime
+```
+
+Apply on the node:
+
+```bash
+edgelet deploy -f runtimeclass-edgelet-wasmtime.yaml
+edgelet deploy -f runtimeclass-edgelet-wasmtime.yaml --dry-run
+```
+
+`edgelet-wasmtime` is the Datasance wasmtime shim (`containerd-shim-edgelet-v2`). It is **not** the same as `containerEngine: edgelet` (the embedded OCI engine).
+
+## Supported handlers
+
+| Handler | Shim binary (primary) | Notes |
+| ------- | --------------------- | ----- |
+| `edgelet-wasmtime` | `containerd-shim-edgelet-v2` | Datasance shim; recommended for generic WASI images |
+| `spin` | `containerd-shim-spin-v2` | Spin framework workloads |
+| `wasmtime` | `containerd-shim-wasmtime-v2` | Upstream wasmtime shim |
+| `wasmedge` | `containerd-shim-wasmedge-v2` | WasmEdge shim |
+| `wasmer` | `containerd-shim-wasmer-v2` | Wasmer shim |
+| `slight` | `containerd-shim-slight-v2` | Slight runtime |
+| `lunatic` | `containerd-shim-lunatic-v2` | Lunatic runtime |
+| `wws` | `containerd-shim-wws-v2` | Wasmer WASIX (wws) |
+
+Edgelet discovers shims from `PATH`. If the shim is missing, deploy fails with a clear error when the workload starts.
+
+## Pin a Wasm microservice
+
+Controller YAML uses `apiVersion: {API_VERSION}`. Set `spec.container.platform` to `wasi/wasm` and `spec.container.runtime` to the RuntimeClass `metadata.name` (not `containerEngine`).
+
+<CodeBlock language="yaml" title="Microservice (edgelet-wasmtime)">
+{`apiVersion: ${API_VERSION}
+kind: Microservice
+metadata:
+  name: wasm2
+spec:
+  name: wasm2
+  agent:
+    name: edge-1
+  images:
+    registry: 1
+    amd64: ghcr.io/containerd/runwasi/wasi-demo-app:latest
+    arm64: ghcr.io/containerd/runwasi/wasi-demo-app:latest
+  container:
+    platform: wasi/wasm
+    runtime: edgelet-wasmtime
+    ports:
+      - internal: 8080
+        external: 8081
+        protocol: tcp
+  application: wasm`}
+</CodeBlock>
+
+Spin example (`runtime: spin`):
+
+<CodeBlock language="yaml" title="Application excerpt (spin)">
+{`apiVersion: ${API_VERSION}
+kind: Application
+metadata:
+  name: wasm
+spec:
+  microservices:
+    - name: wasm
+      agent:
+        name: controller-1
+      images:
+        registry: 1
+        amd64: ghcr.io/spinframework/containerd-shim-spin/examples/spin-rust-hello:v0.22.0
+        arm64: ghcr.io/spinframework/containerd-shim-spin/examples/spin-rust-hello:v0.22.0
+      container:
+        platform: wasi/wasm
+        runtime: spin
+        ports:
+          - internal: 80
+            external: 8080
+            protocol: tcp
+        commands:
+          - "/"`}
+</CodeBlock>
+
+Deploy the application with <code>{CLI_NAME}</code> after the RuntimeClass exists on the target Edgelet node.
+
+## Operator install (optional)
+
+When provisioning an Edgelet node, <code>{CLI_NAME}</code> can install configured Wasm handlers and apply matching RuntimeClass manifests. Set `package.wasm` on the Agent kind with handler keys (for example `edgelet-wasmtime`, `spin`). See [Setup Edgelet Nodes](/platform-deployment/setup-your-agents).
+
+## Troubleshooting
+
+| Symptom | Check |
+| ------- | ----- |
+| `runtimeclass is supported only when containerEngine=edgelet` | Set `containerEngine: edgelet` on linux |
+| Workload stuck or shim error | `which containerd-shim-edgelet-v2` (or handler-specific shim); redeploy RuntimeClass |
+| Handler not found | `edgelet deploy -f runtimeclass.yaml --dry-run`; confirm `metadata.name` matches `spec.container.runtime` |
+
+## See also
+
+- [Container engines](/edgelet/container-engines) - engine matrix and RuntimeClass overview
+- [EdgeletAPI v1](/edgelet/edgelet-api) - deploy endpoints for RuntimeClass
+- [edgelet deploy](/edgelet/cli/edgelet_deploy) - apply manifests on the node
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

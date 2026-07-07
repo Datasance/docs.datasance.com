@@ -1,0 +1,104 @@
+---
+title: Edgelet Configuration Updates
+description: Update running Edgelet nodes with AgentConfig YAML via potctl. Push arch, containerEngine, pruningFrequency, and router settings from the Controller.
+keywords: [agentconfig, edgelet node, potctl, configuration, arch, pruningFrequency, containerEngine]
+slug: /edgelet-management/configuration-updates
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Configuration updates
+
+{CLI_NAME} provides an **`AgentConfig`** resource to change Edgelet node behavior after deploy.
+
+Deploy-time settings live on the **`Agent`** or **`LocalAgent`** kind. **`AgentConfig`** updates only the fields you list. Unlisted fields stay unchanged.
+
+Retrieve the current config:
+
+<CliBlock>{`{{CLI_NAME}} describe agent-config <EDGELET_NODE_NAME>`}</CliBlock>
+
+Apply changes:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f agent-config.yaml`}</CliBlock>
+
+## Example AgentConfig
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: AgentConfig
+metadata:
+  name: zebra-1
+spec:
+  description: Edgelet node on factory floor VM
+  latitude: 46.204391
+  longitude: 6.143158
+  arch: amd64
+  containerEngine: edgelet
+  containerEngineUrl: unix:///run/edgelet/containerd.sock
+  diskLimit: 50
+  diskDirectory: /var/lib/edgelet/
+  memoryLimit: 4096
+  cpuLimit: 80
+  logLimit: 10
+  logDirectory: /var/log/edgelet/
+  logFileCount: 10
+  statusFrequency: 10
+  changeFrequency: 10
+  deviceScanFrequency: 60
+  watchdogEnabled: true
+  gpsMode: auto
+  gpsScanFrequency: 60
+  edgeGuardFrequency: 0
+  upstreamRouters:
+    - default-router
+  routerConfig:
+    routerMode: edge
+    messagingPort: 5671
+    edgeRouterPort: 45671
+    interRouterPort: 55671
+  upstreamNatsServers:
+    - default-nats-hub
+  natsConfig:
+    natsMode: leaf
+    natsServerPort: 4222
+    natsLeafPort: 7422
+    natsMqttPort: 8883
+    natsHttpPort: 8222
+    jsStorageSize: 10g
+    jsMemoryStoreSize: 1g
+  pruningFrequency: 24
+  logLevel: INFO
+  availableDiskThreshold: 20
+  timeZone: Etc/UTC
+`}</FlavorYaml>
+
+## v3.8 field notes
+
+| Legacy (v3.7) | v3.8 |
+| ------------- | ---- |
+| `agentType` | **`arch`** |
+| `dockerUrl` | **`containerEngineUrl`** |
+| `dockerPruningFrequency` | **`pruningFrequency`** (hours) |
+
+Default linux engine is **`edgelet`**, not `docker`.
+
+## How updates reach the node
+
+1. You deploy **`AgentConfig`** with {CLI_NAME}.
+2. The Controller stores the desired config.
+3. The Edgelet field agent polls `config/changes` and applies deltas.
+4. The node may hot-reload some keys on SIGHUP. Others need a restart. See [Configuration reference](/edgelet/configuration-reference).
+
+You can also change values on the device with **`edgelet config`** when SSH access is available.
+
+## See also
+
+- [Agent YAML specification](/yaml-references/reference-agent) — full `spec.config` table
+- [Edgelet configuration reference](/edgelet/configuration-reference) — on-device keys and reload matrix
+- [Image and disk pruning](/edgelet-management/image-pruning) — `pruningFrequency`
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

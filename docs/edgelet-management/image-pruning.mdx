@@ -1,0 +1,56 @@
+---
+title: Image and Disk Pruning on Edgelet Nodes
+description: Reclaim disk on Edgelet nodes with potctl prune agent, pruningFrequency in AgentConfig, and edgelet system prune on the device.
+keywords: [pruning, edgelet node, potctl prune, pruningFrequency, disk, images]
+slug: /edgelet-management/image-pruning
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Image and disk pruning
+
+Disk space on edge hardware is limited. Edgelet supports scheduled and on-demand pruning of unused images and orphaned volume data.
+
+## Prune from the orchestrator
+
+Trigger an immediate image prune on one Edgelet node:
+
+<CliBlock>{`{{CLI_NAME}} prune agent zebra-1`}</CliBlock>
+
+See [{CLI_NAME} prune agent](/potctl/cli/potctl_prune_agent) for flags.
+
+## Scheduled prune via AgentConfig
+
+Set **`pruningFrequency`** in **`AgentConfig`** (hours between cycles). v3.8 uses **`pruningFrequency`**, not legacy `dockerPruningFrequency`.
+
+```yaml
+spec:
+  pruningFrequency: 24
+  availableDiskThreshold: 20
+  watchdogEnabled: true
+```
+
+The Edgelet pruning manager runs containers → volumes → images on the embedded engine. See [Configuration updates](/edgelet-management/configuration-updates).
+
+## On-device prune
+
+When SSH'd to the node:
+
+```bash
+edgelet system prune images
+edgelet system prune volumes
+edgelet system prune all
+```
+
+Orphaned **`VOLUME`** data under `/var/lib/edgelet/volumes/data/` is not removed on microservice delete. Use volume prune or see [Edgelet volumes](/edgelet/volumes).
+
+## See also
+
+- [Agent YAML specification](/yaml-references/reference-agent) — `pruningFrequency`, `availableDiskThreshold`
+- [Edgelet configuration reference](/edgelet/configuration-reference) — `pruningFrequency`, `watchdogEnabled`
+- [Troubleshooting](/edgelet/troubleshooting) — disk growth after deletes
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

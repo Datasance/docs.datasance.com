@@ -1,0 +1,105 @@
+---
+title: Edgelet Configuration
+description: Edgelet config file, profiles, init-config, and edgelet config CLI for Edgelet nodes on v3.8.
+keywords: [edgelet, configuration, config.yaml, init-config, profiles, containerEngine]
+slug: /edgelet/configuration
+---
+
+# Edgelet configuration
+
+Edgelet stores runtime settings in `/etc/edgelet/config.yaml` (platform paths in [Installation](/edgelet/installation)). Use **`edgelet init-config`** for first-time setup and **`edgelet config`** to update values at runtime.
+
+For every config key, defaults, and reload behavior, see [Configuration reference](/edgelet/configuration-reference).
+
+## Config file structure
+
+Edgelet uses **profiles**. One profile is active via `currentProfile`:
+
+```yaml
+# /etc/edgelet/config.yaml
+currentProfile: production
+profiles:
+  production:
+    controllerUrl: "http://localhost:51121/api/v3/"
+    controllerCert: "/etc/edgelet/cert.crt"
+    arch: "auto"
+    containerEngine: edgelet
+    containerEngineUrl: unix:///run/edgelet/containerd.sock
+    watchdogEnabled: true
+    pruningFrequency: 24
+    upgradeScanFrequency: 24
+    diskDirectory: /var/lib/edgelet/
+    logDirectory: /var/log/edgelet/
+    logLevel: INFO
+```
+
+Switch profiles without editing the file manually:
+
+```bash
+edgelet config switch production
+```
+
+## Common production settings
+
+| Setting | Purpose | Notes |
+| ------- | ------- | ----- |
+| `controllerUrl` | Controller REST API base URL | Required for provisioned nodes |
+| `controllerCert` | Path to Controller CA PEM | Install via `edgelet config cert` or `edgelet provision` |
+| `arch` | Node architecture | `auto`, `amd64`, `arm64`, `arm`, `riscv64` |
+| `containerEngine` | Runtime backend | `edgelet` (linux default), `docker`, `podman` |
+| `containerEngineUrl` | Engine socket URL | e.g. `unix:///run/edgelet/containerd.sock` |
+| `pruningFrequency` | Image prune interval (hours) | Replaces legacy `dockerPruningFrequency` |
+| `watchdogEnabled` | Orphan container cleanup | Recommended for production |
+| `upgradeScanFrequency` | OTA readiness scan interval (hours) | Default 24 |
+| `changeFrequency` | Controller change poll interval | CLI: `--cf` |
+| `statusFrequency` | Status heartbeat interval | CLI: `--sf` |
+| `shutdownPolicy` | Control stop behavior | `leave-running` (docker/podman default). See [Workload continuity](/edgelet/workload-continuity) |
+
+v3.8 naming: use **`arch`** (not `fogType`), **`containerEngineUrl`** (not `dockerUrl`), **`pruningFrequency`** (not `dockerPruningFrequency`).
+
+## init-config
+
+Write the default configuration template when no config file exists:
+
+```bash
+sudo edgelet init-config
+edgelet init-config --config-path /etc/edgelet/config.yaml
+```
+
+- Idempotent: does **not** overwrite an existing file.
+- Uses `/usr/share/edgelet/edgelet-config.yaml.sample` when installed, otherwise the embedded release template.
+- `install.sh` may also install the sample on first install.
+
+Controller CA (`/etc/edgelet/cert.crt`) is separate. For lab installs use `install.sh --with-sample-ca`; for production use **`edgelet provision`** or **`edgelet config cert`**.
+
+## edgelet config
+
+Update settings via flags (persists to the active profile):
+
+```bash
+edgelet config --controller-url http://localhost:51121/api/v3
+edgelet config --change-frequency-seconds 10 --status-frequency-seconds 10
+edgelet config --disk-limit-gib 20 --memory-limit-mib 512
+
+edgelet config cert <base64-encoded-cert-string>
+edgelet config switch prod
+
+edgelet -o json config --cf 10
+```
+
+See [Configuration reference](/edgelet/configuration-reference) for the full flag table.
+
+## Reload
+
+The daemon reloads config on **SIGHUP** (`edgelet system reload`). Some settings require a restart. Check [Configuration reference](/edgelet/configuration-reference) for the reload matrix.
+
+## See also
+
+- [Installation](/edgelet/installation) - config paths and first-time setup
+- [Deployment](/edgelet/deployment) - engine selection and production defaults
+- [Logging](/edgelet/logging) - `logLevel`, `logDirectory`, rotation
+- [YAML Reference: Agent](/yaml-references/reference-agent) - Controller-side `kind: Agent` fields
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

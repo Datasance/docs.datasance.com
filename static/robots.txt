@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://docs.datasance.com/sitemap.xml
-
+LLMs: https://docs.datasance.com/llms.txt

@@ -1,0 +1,123 @@
+---
+title: "Step 1 - NATS user rules"
+description: "Acme Smart Plant tutorial. Deploy NATS user rules for sensor-simulator, smart-anomaly-detector, and alert-dashboard before any Application."
+keywords: [tutorial, acme smart plant, nats user rule, telemetry.machine, notify.alerts, journal.events]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 1 - NATS user rules
+
+## Goal
+
+Deploy three **NatsUserRule** resources that define who can publish and subscribe on each NATS subject in Phase 1. User rules must exist before you deploy Applications that reference them.
+
+## Scenario context
+
+Acme runs plant floor microservices on **site-a** and a remote dashboard on **ops-b**. Each microservice gets its own NATS user with the smallest subject permissions it needs.
+
+- **sensor-simulator** publishes multi-metric machine telemetry.
+- **smart-anomaly-detector** reads telemetry and raises alerts plus journal events.
+- **alert-dashboard** (deployed later on **ops-b**) subscribes to imported subjects for live alerts, the event journal, and fleet sparklines.
+
+This step creates the user rules only. No microservices run yet.
+
+## YAML walkthrough
+
+The manifest `deploy/steps/01-nats-user-rules.yaml` in [pot-edge-patterns](https://github.com/Datasance/pot-edge-patterns) defines three rules.
+
+### sensor-publisher
+
+The simulator publishes one JSON message per machine on subjects like `telemetry.machine.M001`. The rule allows publish on the wildcard `telemetry.machine.>`.
+
+<FlavorYaml title="sensor-publisher">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: sensor-publisher
+spec:
+  description: sensor-simulator - publish multi-metric machine telemetry (in-account)
+  pubAllow:
+    - telemetry.machine.>
+`}</FlavorYaml>
+
+### anomaly-processor
+
+The detector subscribes to all machine telemetry, then publishes live alerts and durable journal events when thresholds fire.
+
+<FlavorYaml title="anomaly-processor">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: anomaly-processor
+spec:
+  description: smart-anomaly-detector - subscribe telemetry, publish alerts and journal events
+  pubAllow:
+    - notify.alerts.>
+    - journal.events.>
+    - "$JS.API.>"
+  subAllow:
+    - telemetry.machine.>
+    - "_INBOX.>"
+`}</FlavorYaml>
+
+The `$JS.API.>` permission lets the detector create and write to the JetStream stream `JOURNAL_PRODUCTION`.
+
+### ops-viewer
+
+The dashboard user subscribes to alert, journal, and telemetry subjects. It does not publish plant data.
+
+<FlavorYaml title="ops-viewer">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: ops-viewer
+spec:
+  description: alert-dashboard - subscribe to imported alerts, journal, and fleet telemetry fan-in
+  pubAllow:
+    - "$JS.API.>"
+    - "$JS.ACK.>"
+  subAllow:
+    - notify.alerts.>
+    - journal.events.>
+    - telemetry.machine.>
+    - "_INBOX.>"
+    - "$JS.ACK.>"
+`}</FlavorYaml>
+
+## Why this design
+
+| Subject pattern | Who uses it | Purpose |
+| --------------- | ----------- | ------- |
+| `telemetry.machine.{machineId}` | sensor-simulator → detector | In-account plant telemetry (four machines **M001**–**M004**) |
+| `notify.alerts.{machineId}` | detector → dashboard | Ephemeral live alert panel |
+| `journal.events.{machineId}` | detector → dashboard | Durable audit trail via JetStream |
+
+PoT mounts NATS credentials from these rules when a microservice sets `natsConfig.natsRule`. Tight pub/sub lists prevent a compromised dashboard user from publishing fake telemetry back into the plant account.
+
+## Deploy
+
+From the pot-edge-patterns repo root:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/01-nats-user-rules.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get nats-user-rules`}</CliBlock>
+You should see `sensor-publisher`, `anomaly-processor`, and `ops-viewer`.
+
+## Common mistakes
+
+- **Deploying the Application first.** Step 3 references these rule names. Deploy user rules before any Application.
+- **Mixing v1.0.0 subject names.** Use `telemetry.machine.>`, not the deprecated `telemetry.temperature` subject from v1.0.0 demos.
+- **Skipping ops-viewer.** The dashboard in step 8 needs this rule even though it runs on **ops-b**.
+
+## Next step
+
+[Step 2: NATS account export](/tutorials/acme-smart-plant/step-02-nats-account-export): export alerts, journal events, and fleet telemetry from the plant NATS account.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,15 +1,44 @@
 ---
-title: Agent YAML Specification - potctl Reference
-description: YAML specification and configuration reference for Datasance PoT Agents. Manage edge node behavior, security, and settings.
-keywords: [agent yaml, edge agent, datasance pot, potctl, agent configuration, edge node, edgeguard]
+title: Edgelet node YAML Specification - potctl Reference
+description: YAML reference for Edgelet nodes on PoT v3.8.0. Agent and LocalAgent deploy kinds, AgentConfig updates, arch, containerEngine, and pruningFrequency.
+keywords: [edgelet node yaml, agent yaml, edgelet, potctl, arch, containerEngine, agentconfig, v3.8]
 ---
 
-# Agent YAML Specification
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME, REGISTRY } from '@site/src/config/distribution';
 
-Agents are components of an ECN which run on edge nodes. They communicate with Controllers to allow your edge nodes to host Microservices.
+# Edgelet node YAML Specification
 
-```yaml
-apiVersion: datasance.com/v3
+Edgelet nodes run on edge hosts and connect to the Controller so microservices can deploy locally. In YAML the resource kind stays **`Agent`** (remote SSH deploy) or **`LocalAgent`** (local container). Prose and UI labels use **Edgelet node**.
+
+Deploy with <code>{CLI_NAME} deploy -f agent.yaml</code>. Update a running node with the **`AgentConfig`** kind ([configuration updates](/edgelet-management/configuration-updates)) or [Edgelet configuration](/edgelet/configuration) on the device.
+
+:::info[v3.8.0: Edgelet only]
+
+v3.8 requires **Edgelet v1.0.0+** on every node. The Java ioFog Agent and v3.7 field agents are not supported. See [Migrating to v3.8.0](/migrating-to-v3-8) and [Legacy Agent (v3.7)](/legacy-agent-v3-7) for the v3.7.3 snapshot.
+
+:::
+
+## v3.8 field renames
+
+| Legacy (v3.7) | v3.8 |
+| ------------- | ---- |
+| `agentType` | **`arch`** |
+| `fogType` / `fogTypeId` | **`arch`** / **`archId`** |
+| `dockerUrl` | **`containerEngineUrl`** |
+| `dockerPruningFrequency` | **`pruningFrequency`** |
+| - | **`containerEngine`**: `edgelet`, `docker`, or `podman` |
+
+**Architectures:** `auto`, `amd64`, `arm64`, `riscv64`, and `arm` (32-bit). Catalog and offline images use **`archId`** with the same four architecture names.
+
+Default Edgelet image tag for the v3.8 release train: **<code>{REGISTRY}/edgelet:1.0.0</code>**. Override under `spec.package.container.image` or `spec.package.version` for native binary installs.
+
+## Remote Edgelet node (`Agent`)
+
+The **`Agent`** kind installs Edgelet on a remote host over SSH. Omit `package` for a native install with the default Edgelet package, or set `package.container.image` to run Edgelet as a container.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: Agent
 metadata:
   name: meerkat
@@ -20,22 +49,21 @@ spec:
     user: foo
     keyFile: ~/.ssh/id_rsa
     port: 22
-  package:
-    # version: 3.7.0# provide Agent package version if you would like to deploy Agent as a deb or rpm package
-    container: 
-      image: ghcri.io/datasance/agent:3.7.0 # provide image in the case you would like to deploy Agent as a container
   config:
-    description: agent running on VM
+    description: edgelet running on device
+    host: 30.40.50.6
     latitude: 46.204391
     longitude: 6.143158
-    agentType: auto
-    dockerUrl: unix:///var/run/docker.sock
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+    containerEngineUrl: unix:///run/edgelet/containerd.sock
     diskLimit: 50
-    diskDirectory: /var/lib/iofog-agent/
+    diskDirectory: /var/lib/edgelet/
     memoryLimit: 4096
     cpuLimit: 80
     logLimit: 10
-    logDirectory: /var/log/iofog-agent/
+    logDirectory: /var/log/edgelet/
     logFileCount: 10
     statusFrequency: 10
     changeFrequency: 10
@@ -48,13 +76,12 @@ spec:
     edgeGuardFrequency: 0
     abstractedHardwareEnabled: false
     upstreamRouters: ['default-router']
-    networkRouter: ''
     routerConfig:
       routerMode: edge
       messagingPort: 5671
       edgeRouterPort: 45671
       interRouterPort: 55671
-    upstreasmNatsServer:
+    upstreamNatsServers:
       - default-nats-hub
     natsConfig:
       natsMode: leaf
@@ -64,141 +91,224 @@ spec:
       natsHttpPort: 8222
       jsStorageSize: 10g
       jsMemoryStoreSize: 1g
-    dockerPruningFrequency: 0
-    logLevel: INFO
+    pruningFrequency: 0
+    logLevel: info
     availableDiskThreshold: 90
+`}</FlavorYaml>
+
+| Field | Description |
+| ----- | ----------- |
+| `host` | Hostname or IP that {CLI_NAME} SSHs into to install Edgelet. |
+| `ssh` | SSH user, private key path, and port (default 22). |
+| `airgap` | Set `true` for air-gapped installs. Pair with `package` and optional `scripts`. |
+| `package` | Edgelet package version or container image override. |
+| `config` | Runtime settings pushed to the Controller and Edgelet. See [Configuration fields](#configuration-fields). |
+| `scripts` | Optional custom install scripts instead of default {CLI_NAME} procedures. |
+
+## Local Edgelet node (`LocalAgent`)
+
+The **`LocalAgent`** kind deploys an **additional** Edgelet container on the local machine. [LocalControlPlane](reference-control-plane#local-control-plane) already deploys a system Edgelet via `spec.systemAgent` ([Quick Start (local)](/getting-started/quick-start-local)). Use `LocalAgent` when you need a second local node.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: LocalAgent
+metadata:
+  name: local
+spec:
+  package:
+    version: 1.0.0
+    container:
+      image: {{REGISTRY}}/edgelet:1.0.0
+  config:
+    description: edgelet running on device
+    host: 30.40.50.6
+    latitude: 46.204391
+    longitude: 6.143158
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+    containerEngineUrl: unix:///run/edgelet/containerd.sock
+    diskLimit: 50
+    diskDirectory: /var/lib/edgelet/
+    memoryLimit: 4096
+    cpuLimit: 80
+    logLimit: 10
+    logDirectory: /var/log/edgelet/
+    logFileCount: 10
+    statusFrequency: 10
+    changeFrequency: 10
+    deviceScanFrequency: 60
+    bluetoothEnabled: true
+    watchdogEnabled: false
+    gpsMode: auto
+    gpsScanFrequency: 60
+    gpsDevice: ''
+    edgeGuardFrequency: 0
+    abstractedHardwareEnabled: false
+    upstreamRouters: ['default-router']
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+      edgeRouterPort: 45671
+      interRouterPort: 55671
+    upstreamNatsServers:
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+      natsLeafPort: 7422
+      natsMqttPort: 8883
+      natsHttpPort: 8222
+      jsStorageSize: 10g
+      jsMemoryStoreSize: 1g
+    pruningFrequency: 0
+    logLevel: info
+    availableDiskThreshold: 90
+`}</FlavorYaml>
+
+## Air-gapped deploy with registry credentials
+
+For air-gapped remote hosts, set `airgap: true`, pin the Edgelet image, and optionally supply registry credentials and custom install scripts.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: meerkat
+spec:
+  host: 30.40.50.6
+  ssh:
+    user: foo
+    keyFile: ~/.ssh/id_rsa
+    port: 22
+  airgap: true
+  package:
+    version: 1.0.0
+    container:
+      image: {{REGISTRY}}/edgelet:1.0.0
+      registry: ghcr.io
+      username: foo
+      password: bar
   scripts:
     dir: /tmp/my-scripts
     deps:
       entrypoint: install_deps.sh
     install:
-      entrypoint: install_iofog.sh
+      entrypoint: install.sh
       args:
-        - 3.0.0-alpha1
+        - "--version=1.0.0"
+        - "--skip-config"
+        - "--skip-start"
     uninstall:
-      entrypoint: uninstall_iofog.sh
-```
+      entrypoint: uninstall.sh
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+`}</FlavorYaml>
 
-#### Required Fields
+### Package fields
 
-The following fields are necessary for every Agent YAML specification.
+| Field | Description |
+| ----- | ----------- |
+| `package.version` | Edgelet binary release tag for native installs (for example `1.0.0`). Ignored when `scripts.install.entrypoint` is set; pass `--version=` in `scripts.install.args` instead. |
+| `package.container.image` | Edgelet container image (default train: <code>{REGISTRY}/edgelet:1.0.0</code>). |
+| `package.container.registry` | Registry host for image pull during air-gapped install. |
+| `package.container.username` | Registry username when credentials are required. |
+| `package.container.password` | Registry password when credentials are required. |
+| `package.wasm` | Optional Wasm shim bundles for Edgelet Wasm runtime. See [Wasm runtime](/edgelet/wasm-runtime). |
 
-| Field       | Description                                                                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name        | User-defined unique identifier of Agent instance within an potctl namespace. Must start and end with lowercase alphanumeric character. Can include '-' character. |
-| host        | Hostname of remote host that potctl must SSH into to install Agent service.                                                                                       |
-| ssh.user    | Username of remote host that potctl must SSH into to install Agent service.                                                                                       |
-| ssh.keyFile | Path to private SSH key that potctl must use to SSH into remote host to install Agent service.                                                                    |
-| ssh.port    | Port to use with SSH. Optional (default: 22).                                                                                                                       |
-| package.version    | Agent package version if you would like to deploy Agent as a deb or rpm package.                                                                                                                      |
-| package.container.image    | Agent image in the case you would like to deploy Agent as a container                                                                                                                    |
+### Installation script fields
 
-#### Installation Plugin Fields
+Custom scripts override parts of the embedded Edgelet bootstrap. Files in `scripts.dir` are read on the operator machine and staged to `/tmp/edgelet-scripts` on the target host. See [Setup Edgelet nodes](/platform-deployment/setup-your-agents) for merge behavior, examples, and troubleshooting.
 
-Agents can be specified to require user-defined installation scripts to be executed instead of the default `potctl` installation procedures.
+| Field | Description |
+| ----- | ----------- |
+| `scripts.dir` | Required when the `scripts` block is present. Directory on the operator machine containing install scripts. |
+| `scripts.deps.entrypoint` | Optional. Overrides dependency install (docker/podman). Empty means embedded `install_deps.sh`. |
+| `scripts.deps.args` | Optional arguments appended to the deps entrypoint. |
+| `scripts.install.entrypoint` | Optional. Overrides Edgelet binary or container install. Empty means embedded `install.sh` or `install_container.sh`. When set, {CLI_NAME} does not inject `package.version` or `package.container.image`; pass flags in `scripts.install.args`. |
+| `scripts.install.args` | Optional arguments appended to the install entrypoint (for example `--version=1.0.0`, `--skip-config`, `--skip-start`). |
+| `scripts.uninstall.entrypoint` | Optional. Overrides teardown on Agent delete. Empty means embedded `uninstall.sh`. |
+| `scripts.uninstall.args` | Optional arguments appended to the uninstall entrypoint (for example `--remove-data`). |
 
-Custom installation scripts are specified through the optional `scripts` field in the Agent YAML.
+Only `deps`, `install`, and `uninstall` entrypoints are YAML-overridable. Prerequisites (`check_prereqs.sh`) and post-install layers always use embedded script names. When `scripts.install.entrypoint` is set, `scripts.dir` must also contain post-install scripts the bootstrap still runs.
 
-| Field         | Description                                                                                                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| dir           | Source directory containing all scripts to be used in Agent installation and uninstallation procedures. All files in this directory are copied to `/etc/iofog/agent/` on the Agent host. |
-| deps          | Details pertaining to the script in `scripts.dir` which serves as the entrypoint to installing pre-requisites of ioFog Agent.                                                            |
-| install       | Details pertaining to the script in `scripts.dir` which serves as the entrypoint to installing ioFog Agent.                                                                              |
-| uninstall     | Details pertaining to the script in `scripts.dir` which serves as the entrypoint to uninstalling ioFog Agent.                                                                            |
-| \*.entrypoint | Name of the script in `scripts.dir` which serves as the entrypoint to a procedure run on the Agent host.                                                                                 |
-| .\*.args      | List of arguments to be provided to the entrypoint when invoked on the Agent host.                                                                                                       |
+## Configuration fields
 
-#### Configuration Fields
+Specify runtime behavior under `spec.config` on **`Agent`** or **`LocalAgent`**. The same fields apply to **`AgentConfig`** (see below). Values can be changed after deploy with **`AgentConfig`** or on-device **`edgelet config`**.
 
-The following fields can be specified to modify Agent behaviour.
+| Field | Description |
+| ----- | ----------- |
+| `description` | Short description of the Edgelet node. |
+| `latitude` / `longitude` | Geo coordinates. Edgelet can auto-detect when online. |
+| `arch` | Node architecture: `auto`, `amd64`, `arm64`, `riscv64`, or `arm`. |
+| `archId` | Controller architecture ID (usually set by the API from `arch`). |
+| `deploymentType` | Install mode: `native` (default) or `container`. |
+| `containerEngine` | Runtime backend: `edgelet` (default on Linux), `docker`, or `podman`. |
+| `containerEngineUrl` | Engine socket URL. Default for `edgelet`: `unix:///run/edgelet/containerd.sock`. |
+| `networkInterface` | Network interface for agent traffic (`dynamic` or interface name). |
+| `host` | Hostname for router messaging and advertised ports. Defaults to deploy-time host. |
+| `diskLimit` | Disk quota in GiB for Edgelet data. |
+| `diskDirectory` | Data directory (default `/var/lib/edgelet/`). |
+| `memoryLimit` | Memory quota in MiB for message buffers. |
+| `cpuLimit` | CPU time limit as a percentage. |
+| `logLimit` | Log disk quota in GiB. |
+| `logDirectory` | Log directory (default `/var/log/edgelet/`). |
+| `logFileCount` | Number of rotated log files. |
+| `statusFrequency` | Status heartbeat interval in seconds. |
+| `changeFrequency` | Controller change poll interval in seconds. |
+| `deviceScanFrequency` | Device scan interval in seconds. |
+| `bluetoothEnabled` | Enable Bluetooth device scanning. |
+| `watchdogEnabled` | Kill orphan containers not started by Edgelet. |
+| `gpsMode` | GPS mode: `auto`, `manual`, `dynamic`, or `off`. |
+| `gpsScanFrequency` | GPS scan interval in seconds. |
+| `gpsDevice` | GPS device path when `gpsMode` is `dynamic` (for example `/dev/ttyUSB2`). |
+| `edgeGuardFrequency` | EdgeGuard hardware scan interval in seconds (`0` disables). |
+| `abstractedHardwareEnabled` | Enable abstracted hardware services when supported. |
+| `upstreamRouters` | Upstream Skupper routers (Agent names or `default-router`). |
+| `networkRouter` | Network router Agent name or `default-router`. |
+| `routerConfig.routerMode` | Router mode: `edge`, `interior`, or `none`. |
+| `routerConfig.messagingPort` | Router messaging port (default 5671). |
+| `routerConfig.edgeRouterPort` | Edge router port when mode is `interior` (default 45671). |
+| `routerConfig.interRouterPort` | Interior router port when mode is `interior` (default 55671). |
+| `upstreamNatsServers` | Upstream NATS hubs when `natsConfig.natsMode` is `leaf`. |
+| `natsConfig.natsMode` | NATS mode: `none`, `leaf`, or `server`. |
+| `natsConfig.natsServerPort` | NATS client port (default 4222). |
+| `natsConfig.natsLeafPort` | NATS leaf node port (default 7422). |
+| `natsConfig.natsClusterPort` | NATS cluster port when mode is `server`. |
+| `natsConfig.natsMqttPort` | NATS MQTT port. |
+| `natsConfig.natsHttpPort` | NATS HTTP monitor port. |
+| `natsConfig.jsStorageSize` | JetStream file storage size (for example `10g`). |
+| `natsConfig.jsMemoryStoreSize` | JetStream memory store size (for example `1g`). |
+| `pruningFrequency` | Image prune interval in hours (replaces `dockerPruningFrequency`). |
+| `logLevel` | Log level (for example `info` or `INFO`). |
+| `availableDiskThreshold` | Disk usage threshold percentage before warnings. |
 
-Note that these values can be overidden after Agent deployment through the `AgentConfig` kind specified [here](#agent-configuration-yaml-specification).
+## AgentConfig
 
-Configuration details are specified through the optional `config` field in the Agent YAML.
+The **`AgentConfig`** kind updates an Edgelet node that is already registered with the Controller. All spec fields are optional; only listed fields change.
 
-| Field                        | Description                                                                                                                                                                                                                                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| name                         | User-defined unique identifier of an agent within an ioFog Controller. Must start and end with lowercase alphanumeric character. Can include '-' character.                                                                                                                                                  |
-| description                  | Short description of the agent                                                                                                                                                                                                                                                                               |
-| latitude                     | Latitude coordinate of the agent. The ioFog Agent will automatically try to detect its own latitude if it has access to the internet                                                                                                                                                                         |
-| longitude                    | Longitude coordinate of the agent. The ioFog Agent will automatically try to detect its own longitude if it has access to the internet                                                                                                                                                                       |
-| agentType                    | Architecture type of agent. It will be used to determine which image gets deployed. The accepted values are `auto`, `x86` and `arm`. `auto` will have the ioFog agent detect the architecture it is running on, and report it to the ioFog controller. It defaults to `auto` if it fails to parse the value. |
-| dockerUrl                    | Docker engine socket                                                                                                                                                                                                                                                                                         |
-| diskLimit                    | Limit, in GiB, of disk space that the software is allowed to use                                                                                                                                                                                                                                             |
-| diskDirectory                | Set the directory to use for disk storage                                                                                                                                                                                                                                                                    |
-| memoryLimit                  | Set the limit, in MiB, of RAM memory that the software is allowed to use for messages                                                                                                                                                                                                                        |
-| cpuLimit                     | Set the limit, in percentage, of CPU time that the software is allowed to use                                                                                                                                                                                                                                |
-| logLimit                     | Set the limit, in GiB, of disk space that the log files can consume                                                                                                                                                                                                                                          |
-| logDirectory                 | Set the directory to use for log file storage                                                                                                                                                                                                                                                                |
-| logFileCount                 | Set the number of log files to evenly split the log storage limit                                                                                                                                                                                                                                            |
-| statusFrequency              | Set the status update frequency in seconds                                                                                                                                                                                                                                                                   |
-| changeFrequency              | Set the get changes frequency in seconds                                                                                                                                                                                                                                                                     |
-| deviceScanFrequency          | Set the scan devices frequency in seconds                                                                                                                                                                                                                                                                    |
-| bluetoothEnabled             | Boolean. Set on/off for the [bluetooth service](../reference-microservices-catalog/rest-blue). If ON, this will install the restblue microservice                                                                                                                                                       |
-| watchdogEnabled              | Boolean. If enabled, watchdog will kill all docker containers running on the agent if they are not part of the microservices deployed by ioFog. If enabled, only docker containers started by the agent process will be allowed to run                                                                       |
-| abstractedHardwareEnabled    | Boolean. Set on/off the [HAL services](../reference-microservices-catalog/hal). If ON, this will install the HAL microservice                                                                                                                                                                           |
-| upstreamRouters              | Set the upstream routers (using Agent names or `default-router`)                                                                                                                                                                                                                                             |
-| networkRouter                | Set the network router (using Agent names or `default-router`)                                                                                                                                                                                                                                               |
-| host                         | Hostname used for router communication and public ports. Default: host provided at deploy time.                                                                                                                                                                                                              |
-| routerConfig                 | Set the router configuration                                                                                                                                                                                                                                                                                 |
-| routerConfig.routerMode      | Set the router mode. Available values are `edge`, `interior` and `none`. Default: `edge`                                                                                                                                                                                                                     |
-| routerConfig.messagingPort   | Set the router messaging port. Default: 5671                                                                                                                                                                                                                                                                 |
-| routerConfig.edgeRouterPort  | Set the router edge router port. Only valid if routerMode is `interior`. Default: 45671                                                                                                                                                                                                                      |
-| routerConfig.interRouterPort | Set the router interior router port. Only valid if routerMode is `interior`. Default: 55671  
-| upstreamNatsServers          | Set the upstream nats server when natsMode is leaf (using Agent names or `default-nats-hub`)                                                                                                                                                                                                               |
-| natsConfig                   | Optional. NATS server configuration when the Agent runs a local NATS instance ( leaf , server, none).                                                                                                                                              |
-| natsConfig.natsMode          | NATS mode. Use `server` to run a NATS server on this Agent.                                                                                                                                                                                                                                                  |
-| natsConfig.natsServerPort    | NATS client listen port. Default typically 4222.                                                                                                                                                                                                                                                             |
-| natsConfig.natsLeafPort      | NATS leaf node listen port.                                                                                                                                                                                                                                                                                  |
-| natsConfig.natsClusterPort   | NATS cluster routing port.                                                                                                                                                                                                                                                                                   |
-| natsConfig.natsMqttPort      | NATS MQTT listen port (if MQTT is enabled).                                                                                                                                                                                                                                                                   |
-| natsConfig.natsHttpPort      | NATS HTTP monitor port.                                                                                                                                                                                                                                                                                      |
-| natsConfig.jsStorageSize     | JetStream file storage size (e.g. `10Gi`).                                                                                                                                                                                                                                                                   |
-| natsConfig.jsMemoryStoreSize | JetStream memory store size (e.g. `1Gi`).                                                                                                                                                                                                                                                                     |
-| logLevel                     | Set the standard logging levels that can be used to control logging output                                                                                                                                                                                                                                   |
-| dockerPruningFrequency       | Set the docker pruning frequency in hours                                                                                                                                                                                                                                                                    |
-| availableDiskThreshold       | Set the available disk threshold
-| edgeGuardFrequency | Set the Edge Guard scaning frequency in seconds
-| gpsMode | Set the gps mode. Available values are `auto`, `manual` , `dynamic` and `off` 
-| gpsDevice | Set the gps device if mode is dynamic and your edge hardware has gps module like `/dev/ttyUSB2` 
-| gpsScanFrequency | Set the gps scan frequency in seconds                                                                                                                                                                                                                                                                         |
+Retrieve current config with <code>{CLI_NAME} describe agent-config &lt;NAME&gt;</code>. Apply with <code>{CLI_NAME} deploy -f agent-config.yaml</code>.
 
-## EdgeGuard
-
-`EdgeGuard` serves as a critical security and monitoring component for edge devices running ioFog Agents.
-
-The primary function of EdgeGuard is to collecting comprehensive hardware details and generates an irreversible hardware signature unique to the edge device.
-
-In the event of a detected hardware signature change, EdgeGuard immediately deprovisions the ioFog Agent from the Edge Compute Network (ECN) cluster. This action ensures that unauthorized changes or tampering with edge devices are swiftly addressed, maintaining the integrity and security of the ECN.
-
-EdgeGuard is particularly valuable for edge devices deployed outside traditional datacenters, where the risk of unauthorized access is significantly higher. By detecting potential security breaches and wiping all microservices running on the compromised ioFog Agent, EdgeGuard helps organizations adhere to strict security policies and minimize exposure to potential threats
-
-# Agent Configuration YAML Specification
-
-Agent Configuration YAML files let you configure an ioFog Agent provisioned with your Controller. You can use Agent Configuration to modify the behaviour of an Agent after it is deployed.
-
-An Agent Configuration can be retrieved using `potctl describe agent-config <AGENT_NAME>`
-
-An Agent Configuration can be deployed using `potctl deploy -f agent-config.yaml`
-
-```yaml
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: AgentConfig
 metadata:
-  name: agent-1 # ioFog Agent name
+  name: meerkat
 spec:
-  # All fields are optional - Only the specified fields will be updated
   description: agent running on VM
   latitude: 46.204391
   longitude: 6.143158
-  agentType: auto
-  dockerUrl: unix:///var/run/docker.sock
+  arch: riscv64
+  containerEngine: edgelet
+  containerEngineUrl: unix:///run/edgelet/containerd.sock
   diskLimit: 50
-  diskDirectory: /var/lib/iofog-agent/
+  diskDirectory: /var/lib/edgelet/
   memoryLimit: 4096
   cpuLimit: 80
   logLimit: 10
-  logDirectory: /var/log/iofog-agent/
+  logDirectory: /var/log/edgelet/
   logFileCount: 10
   statusFrequency: 10
   changeFrequency: 10
@@ -211,25 +321,33 @@ spec:
   edgeGuardFrequency: 0
   abstractedHardwareEnabled: false
   upstreamRouters: ['default-router']
-  networkRouter: ''
   routerConfig:
     routerMode: edge
     messagingPort: 5671
     edgeRouterPort: 45671
     interRouterPort: 55671
-    natsConfig:
-      natsMode: server
-      natsServerPort: 4222
-      natsLeafPort: 7422
-      natsClusterPort: 6222
-      natsMqttPort: 8883
-      natsHttpPort: 8222
-      jsStorageSize: 10g
-      jsMemoryStoreSize: 1g
-  dockerPruningFrequency: 0
+  upstreamNatsServers:
+    - default-nats-hub
+  natsConfig:
+    natsMode: leaf
+    natsServerPort: 4222
+    natsLeafPort: 7422
+    natsMqttPort: 8883
+    natsHttpPort: 8222
+    jsStorageSize: 10g
+    jsMemoryStoreSize: 1g
+  pruningFrequency: 0
   logLevel: INFO
   availableDiskThreshold: 90
-```
+`}</FlavorYaml>
+
+`metadata.name` must match the Edgelet node name on the Controller. Describe output may include a **status** block (daemon health, disk and CPU usage, available runtimes, and upgrade readiness).
+
+## EdgeGuard
+
+EdgeGuard collects hardware details and builds a stable hardware signature for the device. When the signature changes, EdgeGuard deprovisions the Edgelet node from the ECN and removes running microservices. This helps detect tampering on nodes outside traditional datacenters.
+
+Set `edgeGuardFrequency` to a positive interval in seconds to enable periodic scans. Use `0` to disable.
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

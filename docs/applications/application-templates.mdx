@@ -1,6 +1,6 @@
 # Application Templates
 
-During the [Quickstart](../getting-started/quick-start-local) and the [tutorial](../tutorial/introduction), we specified the microservices list and routes for each application.
+During the [Quickstart](../getting-started/quick-start-local) and the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant), we specified the microservices list and routes for each application.
 
 That was nice and easy, but what if we need to deploy the same code on a lot of Agents? We would need to details all the microservices and routes in a separate YAML document for every instance of your Application. This is tedious and error prone, as often only a few values would change from one Agent to another.
 
@@ -36,8 +36,8 @@ spec:
         agent:
           name: \"{{agent-name}}\"
         images:
-          arm: arm-image:latest
-          x86: x86-image:latest
+          amd64: amd64-image:latest
+          arm64: arm64-image:latest
           registry: remote # public docker
         container:
           hostNetworkMode: false
@@ -58,8 +58,8 @@ spec:
         agent:
           name: \"{{agent-name}}\"
         images:
-          arm: arm-image:latest
-          x86: x86-image:latest
+          amd64: amd64-image:latest
+          arm64: arm64-image:latest
           registry: remote
         container:
           hostNetworkMode: false
@@ -137,13 +137,13 @@ spec:
     agent:
       name: my-agent-name
       config:
-        dockerUrl: unix:///var/run/docker.sock
+        containerEngineUrl: unix:///run/edgelet/containerd.sock
         diskLimit: 10
-        diskDirectory: /var/lib/iofog-agent/
+        diskDirectory: /var/lib/edgelet/
         memoryLimit: 4096
         cpuLimit: 80
         logLimit: 10
-        logDirectory: /var/log/iofog-agent/
+        logDirectory: /var/log/edgelet/
         logFileCount: 10
         statusFrequency: 10
         changeFrequency: 10
@@ -153,8 +153,8 @@ spec:
         abstractedHardwareEnabled: false
     images:
       catalogId: 0
-      arm: arm-image:latest
-      x86: x86-image:latest
+      amd64: amd64-image:latest
+      arm64: arm64-image:latest
       registry: remote
     container:
       volumes: []
@@ -176,13 +176,13 @@ spec:
     agent:
       name: my-agent-name
       config:
-        dockerUrl: unix:///var/run/docker.sock
+        containerEngineUrl: unix:///run/edgelet/containerd.sock
         diskLimit: 10
-        diskDirectory: /var/lib/iofog-agent/
+        diskDirectory: /var/lib/edgelet/
         memoryLimit: 4096
         cpuLimit: 80
         logLimit: 10
-        logDirectory: /var/log/iofog-agent/
+        logDirectory: /var/log/edgelet/
         logFileCount: 10
         statusFrequency: 10
         changeFrequency: 10
@@ -192,8 +192,8 @@ spec:
         abstractedHardwareEnabled: false
     images:
       catalogId: 0
-      arm: arm-image:latest
-      x86: x86-image:latest
+      amd64: amd64-image:latest
+      arm64: arm64-image:latest
       registry: remote
     container:
       volumes: []
@@ -218,7 +218,6 @@ We can see that the agent name, and the username, got correctly substitued.
 
 Once an application has been deployed based on a template, it behaves exactly like any other Application.
 Any further update to the Application Template will NOT modify the Application.
-
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

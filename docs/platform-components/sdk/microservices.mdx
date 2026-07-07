@@ -1,0 +1,108 @@
+---
+title: Microservices package
+description: ioFog Go SDK microservices package for EdgeletAPI v1. Config, control WebSocket, and migration from legacy Agent LocalAPI.
+keywords: [go sdk, microservices, edgeletapi, edgelet, v3.8, nats]
+slug: /platform-components/sdk/microservices
+---
+
+# Microservices package
+
+The **`microservices`** package is the Edgelet microservice SDK for **EdgeletAPI v1**. Use it inside containers that Edgelet runs on an Edgelet node.
+
+Import path: `github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/microservices`
+
+It supports:
+
+- reading microservice config over `GET /v1/microservices/config`
+- receiving control signals over `GET /v1/microservices/control` WebSocket
+
+It does **not** support legacy LocalAPI v2 messagebus APIs. For data-plane messaging, use **NATS**. See [Developing microservices](/developing-microservices/overview) and [EdgeletAPI](/edgelet/edgelet-api).
+
+## Runtime assumptions
+
+Edgelet mounts service-account material in the microservice container:
+
+- Token: `/var/run/secrets/edgelet.iofog.org/serviceaccount/token`
+- CA: `/var/run/secrets/edgelet.iofog.org/serviceaccount/ca.crt`
+
+The default client uses HTTPS/WSS to:
+
+- host: `edgelet.default.svc.bridge.local`
+- port: `54321`
+
+## Basic usage
+
+```go
+import (
+	msvcs "github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/microservices"
+)
+
+func run() error {
+	client, err := msvcs.NewDefaultEdgeletAPIClient()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := client.GetConfig()
+	if err != nil {
+		return err
+	}
+	_ = cfg
+
+	controlCh := client.EstablishControlWsConnection(0)
+	for range controlCh {
+		updated, err := client.GetConfig()
+		if err != nil {
+			return err
+		}
+		_ = updated
+	}
+	return nil
+}
+```
+
+When the control WebSocket signals a config change, call `GetConfig` again to load the updated spec.
+
+## Advanced configuration
+
+Override host, port, TLS, or secret paths when testing outside the default Edgelet mount layout:
+
+```go
+client, err := msvcs.NewEdgeletAPIClient(
+	"microservice-id",
+	msvcs.WithHost("edgelet.default.svc.bridge.local"),
+	msvcs.WithPort(msvcs.PortEdgeletAPI),
+	msvcs.WithTLS(true),
+	msvcs.WithTokenPath("/var/run/secrets/edgelet.iofog.org/serviceaccount/token"),
+	msvcs.WithCAPath("/var/run/secrets/edgelet.iofog.org/serviceaccount/ca.crt"),
+)
+```
+
+## Migration from ioFog Agent v2
+
+If you wrote microservices against the legacy Agent LocalAPI v2 SDK surface:
+
+| Removed | Replacement |
+| ------- | ----------- |
+| v2 endpoints (`/v2/...`) and messagebus methods | **EdgeletAPI v1** config + control; **NATS** for messages |
+| `IoMessage` / `IoMessageReadable` types | NATS client in your service |
+| `NewIoFogClient`, `NewDefaultIoFogClient` | **`NewEdgeletAPIClient`**, **`NewDefaultEdgeletAPIClient`** |
+| `PortIoFog` | **`PortEdgeletAPI`** |
+| `V3APIError` | **`EdgeletAPIError`** |
+
+`GetConfig` now parses the EdgeletAPI v1 response envelope. `EstablishControlWsConnection` uses Bearer JWT auth from the mounted token file.
+
+The Router wrapper image uses this same package in PoT mode. See [Router](/platform-components/router#edgelet-localapi-requirements).
+
+## Related docs
+
+| Topic | Page |
+| ----- | ---- |
+| SDK overview | [ioFog Go SDK](/platform-components/sdk) |
+| EdgeletAPI routes | [EdgeletAPI](/edgelet/edgelet-api) |
+| NATS messaging | [NATS Server](/platform-components/nats-server) |
+| Legacy Agent LocalAPI | [v3.7.3 Agent Local API](/v3.7.3/reference-agent/local-api) |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

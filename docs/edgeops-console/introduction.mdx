@@ -1,0 +1,58 @@
+---
+title: EdgeOps Console Introduction
+description: EdgeOps Console v1.0.9 is the v3.8 web UI embedded in the Controller image. Manage Edgelet nodes, workloads, and cluster resources from the browser.
+keywords: [edgeops console, console, web ui, v3.8, controller, embedded]
+slug: /edgeops-console/introduction
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
+# EdgeOps Console
+
+:::warning[Greenfield release: v3.8.0]
+
+Platform train **v3.8.0** ships **EdgeOps Console v1.0.9** embedded in the Controller image. Default listen port is **8008**. Legacy browser UI docs live in the [v3.7.3](/v3.7.3/) snapshot.
+
+:::
+
+**EdgeOps Console** is the web UI for {PRODUCT_NAME}. It talks to the Controller REST API and WebSocket endpoints. You manage Edgelet nodes, applications, microservices, routes, and supporting resources without SSH on every edge device.
+
+The Console is a static React SPA. The Controller embeds the production `build/` output and writes runtime settings to `controller-config.js` at startup. You do not run a separate Console container in a default v3.8 deploy.
+
+## Version and pairing
+
+| Item | Value |
+| ---- | ----- |
+| Console version | **v1.0.9** |
+| Controller | **v3.8.0** |
+| Default port | **8008** (REST API stays on **51121**) |
+
+Pair Console **v1.0.9** with Controller **v3.8.0** on the same platform train.
+
+## How you reach it
+
+After the Control Plane is up, open the Console at the URL you set with **`CONSOLE_URL`** (or `console.url` in Controller YAML). You can also run:
+
+<CliBlock>{`{{CLI_NAME}} view`}</CliBlock>
+That opens the Console URL configured for your connected cluster.
+
+Authentication follows the same RBAC model as {CLI_NAME}. Users only see namespaces their role allows. Default greenfield installs use [embedded OIDC](/platform-deployment/embedded-oidc).
+
+## What still needs the CLI
+
+Initial Control Plane deployment and Edgelet node provisioning still use {CLI_NAME}. Day-2 operations (deploy, edit YAML, exec, logs, registries, and most REST calls) work from the Console.
+
+## Reference pages
+
+| Document | Description |
+| -------- | ----------- |
+| [Configuration](/edgeops-console/configuration) | `CONSOLE_*` env vars, `consoleUrl`, and auth contract |
+| [Features](/edgeops-console/features) | Dashboard, workloads, exec, and API parity |
+| [Controller configuration](/reference-controller/configuration) | Full Controller YAML and environment variables |
+| [Exec sessions](/edgelet/exec-sessions) | WebSocket exec model used by the Console |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,8 +1,19 @@
 ---
-title: Controller Reference Documentation
-description: Reference documentation for the Datasance PoT Controller. CLI, API, and orchestration details for edge management.
-keywords: [controller reference, edge controller, datasance pot, documentation, edge computing]
+title: Controller
+description: Reference documentation for the Datasance PoT Controller v3.8.0 control plane.
+keywords: [controller, reference, v3.8, configuration, rest api]
 ---
 
-# reference-controller
+import { CLI_NAME } from '@site/src/config/distribution';
 
+# Controller
+
+Reference docs for Controller **v3.8.0**: configuration, environment variables, and REST API.
+
+| Page | Description |
+| ---- | ----------- |
+| [Overview](/reference-controller/overview) | Role in the ECN, ports, requirements |
+| [Configuration](/reference-controller/configuration) | YAML sections and env overrides |
+| [REST API](/reference-controller/rest-api) | `/api/v3` changes and OpenAPI |
+
+Legacy `iofog-controller` CLI content is frozen in the [v3.7.3](/v3.7.3/) snapshot. Use [{CLI_NAME}](/potctl/introduction) for current CLI workflows.

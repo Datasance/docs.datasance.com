@@ -1,0 +1,50 @@
+---
+title: Edgelet Node Management
+description: Day-to-day operations on provisioned Edgelet nodes via potctl. Configuration, attach, volumes, pruning, and upgrades after ECN setup.
+keywords: [edgelet node management, potctl, agentconfig, edgelet, fleet operations, v3.8]
+slug: /edgelet-management/introduction
+---
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Edgelet node management
+
+:::tip[Prerequisite: ECN with Edgelet nodes]
+
+You need a working Edge Compute Network (ECN) with provisioned **Edgelet nodes**. If you have not deployed nodes yet, start with [Platform Deployment](/platform-deployment/introduction) and [Setup Edgelet Nodes](/platform-deployment/setup-your-agents).
+
+:::
+
+Once Edgelet nodes are registered with the Controller, you run day-to-day operations from the orchestrator with **{CLI_NAME}**. In YAML the resource kind is still **`Agent`**; in prose we say **Edgelet node**.
+
+This section covers fleet operations. For how the Edgelet daemon works on the device, see [Edgelet](/edgelet/introduction).
+
+## What you can manage
+
+| Topic | Page | Typical command |
+| ----- | ---- | --------------- |
+| Runtime settings pushed from Controller | [Configuration updates](/edgelet-management/configuration-updates) | {CLI_NAME} deploy -f agent-config.yaml |
+| Move nodes between ECNs or namespaces | [Attach and detach](/edgelet-management/attach-detach) | {CLI_NAME} detach agent, {CLI_NAME} attach agent, {CLI_NAME} move agent |
+| Push host directories to nodes | [Volume distribution](/edgelet-management/volume-distribution) | {CLI_NAME} deploy -f volume.yaml |
+| Reclaim disk on nodes | [Image and disk pruning](/edgelet-management/image-pruning) | {CLI_NAME} prune agent |
+| Fleet Edgelet version changes | [Upgrade and rollback](/edgelet-management/upgrade-rollback) | {CLI_NAME} upgrade agent, {CLI_NAME} rollback agent |
+| Router/NATS platform on a node | [Reconcile platform](/edgelet-management/reconcile) | {CLI_NAME} reconcile agent |
+
+## Orchestrator vs on-device changes
+
+| Layer | Tool | Use when |
+| ----- | ---- | -------- |
+| **Controller push** | {CLI_NAME} + AgentConfig | Fleet-wide config from the control plane |
+| **On-device** | edgelet config, edgelet provision | Break-glass or air-gapped node admin |
+
+See [Edgelet configuration](/edgelet/configuration) and [Configuration reference](/edgelet/configuration-reference) for on-device keys.
+
+## See also
+
+- [YAML Reference: Agent](/yaml-references/reference-agent) — `Agent`, `AgentConfig`, and `spec.config` fields
+- [{CLI_NAME} Getting Familiar](/potctl/getting-familiar) — namespaces, `get`, `describe`, `logs`
+- [Edgelet installation](/edgelet/installation) — manual install and OTA on the host
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

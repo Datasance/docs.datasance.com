@@ -1,0 +1,99 @@
+---
+title: "Step 8 - Operations center Application"
+description: "Acme Smart Plant tutorial. Deploy alert-dashboard on ops-b with DIAGNOSTIC_URL, NATS imports, and fleet telemetry subscriptions."
+keywords: [tutorial, acme smart plant, alert-dashboard, operations-center, ops-b]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 8 - Operations center Application
+
+## Goal
+
+Deploy the **operations-center** Application on **ops-b** with **alert-dashboard**. The dashboard consumes imported NATS subjects and calls diagnostic runbooks through Router.
+
+## Scenario context
+
+Remote operators open a single web UI for fleet sparklines, live alerts, the event journal, and **Diagnose** actions. The dashboard binds to import rule **operations-center-import** (step 5) and user rule **ops-viewer** (step 1).
+
+Replace `<diagnostic-bridge-port>` with the value from step 7. Leave `<snapshot-bridge-port>` as a placeholder until Phase 2 step 14 unless you already deployed snapshot-service.
+
+## YAML walkthrough
+
+File: `deploy/steps/06-application-operations-center.yaml`
+
+### Application header
+
+<FlavorYaml title="operations-center Application">{`---
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: operations-center
+spec:
+  natsConfig:
+    natsAccess: true
+    natsRule: operations-center-import
+`}</FlavorYaml>
+
+### alert-dashboard microservice
+
+Image: `ghcr.io/datasance/pot-edge-patterns/alert-dashboard:1.1.0`
+
+Key environment variables:
+
+| Variable | Value | Purpose |
+| -------- | ----- | ------- |
+| `DIAGNOSTIC_URL` | `http://router.default.svc.bridge.local:<diagnostic-bridge-port>` | Router bridge to **site-a** runbooks |
+| `SNAPSHOT_URL` | `http://router.default.svc.bridge.local:<snapshot-bridge-port>` | Fab gallery link (Phase 2; placeholder OK in Phase 1) |
+| `NATS_NOTIFY_SUBJECT` | `notify.alerts.>` | Live alert panel |
+| `TELEMETRY_SUBJECT` | `telemetry.machine.>` | Fleet sparklines for **M001**–**M004** |
+| `JOURNAL_STREAM` | `JOURNAL_PRODUCTION` | Event journal consumer |
+
+Override `agent.name` if your ops node is not **ops-b**.
+
+Container external port **8082** maps to HTTP 8080 inside the dashboard. Step 9 creates the Service bridge for browser access.
+
+## Why this design
+
+| Data path | Mechanism |
+| --------- | --------- |
+| Live alerts | Imported `notify.alerts.>` + SSE in dashboard |
+| Event journal | Imported `journal.events.>` + JetStream consumer on `JOURNAL_PRODUCTION` |
+| Fleet charts | Imported `telemetry.machine.>` + in-memory ring buffer per machine |
+| Runbooks | HTTP via `DIAGNOSTIC_URL` through Router, not NATS |
+
+One Application on **ops-b** keeps remote ops isolated from plant NATS credentials.
+
+## Deploy
+
+Edit the YAML with your diagnostic bridge port, then:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/06-application-operations-center.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get microservices
+{{CLI_NAME}} describe microservice alert-dashboard`}</CliBlock>
+Confirm:
+
+- `natsAccess: true` and `natsRule: ops-viewer`
+- `DIAGNOSTIC_URL` contains your real bridge port, not the placeholder
+
+After step 9 exposes the dashboard Service, trigger a fault (optional `REPLAY_SEGMENT` on sensor-simulator) and confirm live alerts and journal entries appear. Fleet panel should show four machine sparklines.
+
+## Common mistakes
+
+- **Placeholder DIAGNOSTIC_URL.** **Diagnose** fails until you paste the port from step 7 and redeploy.
+- **Skipping step 5.** Without imports, NATS subjects are empty even when plant telemetry runs.
+- **Wrong TELEMETRY_SUBJECT.** Use `telemetry.machine.>`, not v1.0.0 `telemetry.temperature`.
+- **Deploying before ops-b exists.** Provision the **ops-b** Edgelet node first.
+
+## Next step
+
+[Step 9: Alert dashboard Service](/tutorials/acme-smart-plant/step-09-service-alert-dashboard): create the Router bridge and open the dashboard in a browser.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

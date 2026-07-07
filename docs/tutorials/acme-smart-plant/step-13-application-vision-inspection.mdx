@@ -1,0 +1,135 @@
+---
+title: "Step 13 - Vision inspection Application"
+description: "Acme Smart Plant tutorial. Deploy frame-generator on site-a, wafer-defect ONNX object-detector on edge-c, and snapshot-service on ops-b."
+keywords: [tutorial, acme smart plant, vision-inspection, frame-generator, object-detector, onnx, edge-c]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 13 - Vision inspection Application
+
+## Goal
+
+Deploy the **vision-inspection** Application with three microservices on three Edgelet nodes. Wafer thumbnails flow from **site-a** through ONNX inference on **edge-c** to an inspection store on **ops-b**.
+
+## Scenario context
+
+Acme adds fab line **fab-01** beside the existing plant floor on **site-a**. A **frame-generator** replays curated wafer map images every two seconds. An **object-detector** on **edge-c** runs the bundled **wafer-defect.onnx** model and publishes defect class plus confidence. A **snapshot-service** on **ops-b** keeps the latest inspection in memory for HTTP gallery access.
+
+Ideal topology:
+
+| Microservice | Edgelet node | Role |
+| ------------ | ------------ | ---- |
+| frame-generator | **site-a** | Publish `vision.wafers.fab-01` |
+| object-detector | **edge-c** | Subscribe wafers, publish `vision.inspections.fab-01` |
+| snapshot-service | **ops-b** | Subscribe inspections, serve HTTP on port 8080 |
+
+All three bind to account rule **vision-inspection-local** (step 12) and their user rules from step 11.
+
+## YAML walkthrough
+
+File: `deploy/steps/13-application-vision-inspection.yaml`
+
+### Application header
+
+<FlavorYaml title="vision-inspection Application">{`---
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: vision-inspection
+spec:
+  natsConfig:
+    natsAccess: true
+    natsRule: vision-inspection-local
+`}</FlavorYaml>
+
+### frame-generator
+
+Image: `ghcr.io/datasance/pot-edge-patterns/frame-generator:1.1.0`
+
+| Variable | Value | Purpose |
+| -------- | ----- | ------- |
+| `PUBLISH_INTERVAL` | `2s` | Wafer publish cadence |
+| `FRAMES_MODE` | `wafer` | v1.1.0 wafer dataset (not forklift v1.0.0) |
+| `LINE_ID` | `fab-01` | Subject suffix `vision.wafers.fab-01` |
+| `FRAMES_DATASET_DIR` | `/assets/wafers` | Bundled wafer thumbnails |
+
+Override `agent.name` if your production node is not **site-a**.
+
+### object-detector
+
+Image: `ghcr.io/datasance/pot-edge-patterns/object-detector:1.1.0` (amd64 and arm64 only; ONNX runtime)
+
+| Variable | Value | Purpose |
+| -------- | ----- | ------- |
+| `LINE_ID` | `fab-01` | Match frame-generator subject |
+| `MODEL_PATH` | `/models/wafer-defect.onnx` | Wafer defect ONNX model |
+| `CLASSES_PATH` | `/config/wafer-classes.json` | Defect class labels |
+
+Deploy on **edge-c** when available. ONNX inference is the edge AI story in this tutorial: inference runs near the fab line GPU/CPU on **edge-c**, not on the central ops node.
+
+### snapshot-service
+
+Image: `ghcr.io/datasance/pot-edge-patterns/snapshot-service:1.1.0`
+
+External port **8083** maps to HTTP 8080 inside the microservice. Step 14 creates the Router Service bridge. Leave `SNAPSHOT_URL` on the dashboard as a placeholder until step 15.
+
+### Single-node or two-node fallback
+
+If you lack **edge-c** or **ops-b**, override all `agent.name` values in the YAML:
+
+- **Single node:** set frame-generator, object-detector, and snapshot-service to your sole Edgelet node (for example **site-a**).
+- **Two nodes:** move object-detector to **site-a**; keep snapshot-service on **ops-b** or colocate it with the generator.
+
+Comments in the pot-edge-patterns manifest describe these fallbacks.
+
+## Why this design
+
+| Data path | Mechanism |
+| --------- | --------- |
+| Wafer thumbnails | NATS `vision.wafers.fab-01` (in-account) |
+| Defect inference | ONNX on **edge-c**, publish `vision.inspections.fab-01` |
+| Gallery HTTP | snapshot-service NATS consumer + Router bridge (steps 14–15) |
+
+Multi-agent placement keeps heavy ONNX off **site-a** plant floor workloads and off **ops-b** presentation services. NATS subjects still work because all microservices share **vision-inspection-local** credentials, not because of cross-account import.
+
+## Deploy
+
+Edit agent names for your ECN if needed, then:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/13-application-vision-inspection.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get microservices
+{{CLI_NAME}} describe microservice frame-generator
+{{CLI_NAME}} describe microservice object-detector
+{{CLI_NAME}} describe microservice snapshot-service`}</CliBlock>
+Confirm each microservice shows:
+
+- `natsAccess: true` with the correct user rule (`frame-publisher`, `vision-detector`, or `snapshot-consumer`)
+- Expected `agent.name` for your topology
+
+Log checks (after ~30 s):
+
+- **frame-generator**: published `waferId` values on `vision.wafers.fab-01`
+- **object-detector**: defect class and confidence on `vision.inspections.fab-01`
+- **snapshot-service**: received inspection JSON (no NATS publish expected)
+
+## Common mistakes
+
+- **Missing edge-c.** object-detector fails or never schedules if the agent is not provisioned. Use the single-node fallback or provision **edge-c** first.
+- **Wrong LINE_ID mismatch.** frame-generator and object-detector must use the same `LINE_ID` or subjects will not match.
+- **Using v1.0.0 images or subjects.** Redeploy with `:1.1.0` and `vision.wafers.>` / `vision.inspections.>`.
+- **ONNX on unsupported arch.** object-detector omits riscv64 and armv7 images. Use amd64 or arm64 Edgelet nodes for inference.
+- **Skipping steps 11–12.** Application deploy fails or NATS auth violations appear without user and account rules.
+
+## Next step
+
+[Step 14: Snapshot Service](/tutorials/acme-smart-plant/step-14-service-snapshot): create the Router bridge so operators reach the inspection gallery.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

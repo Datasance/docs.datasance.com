@@ -1,0 +1,74 @@
+---
+title: "Step 7 - Note bridge port"
+description: "Acme Smart Plant tutorial. Manual step to read diagnostic-service bridgePort for DIAGNOSTIC_URL in the operations-center Application."
+keywords: [tutorial, acme smart plant, router, bridge port, manual step]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 7 - Note bridge port
+
+## Goal
+
+Read the Router **bridgePort** for **diagnostic-service** and save it for step 8. You paste this port into `DIAGNOSTIC_URL` on the alert-dashboard microservice.
+
+## Scenario context
+
+Router assigns a mesh port when you create the Service in step 6. That port is not known until after deploy. Step 8 needs the real value in:
+
+```text
+http://router.default.svc.bridge.local:<diagnostic-bridge-port>
+```
+
+This manual gate keeps YAML as the source of truth without guessing ports.
+
+## Procedure
+
+<CliBlock>{`{{CLI_NAME}} describe service diagnostic-service`}</CliBlock>
+Find **`bridgePort`** in the output. Write it down as `<diagnostic-bridge-port>`.
+
+Example shape (your port will differ):
+
+```text
+NAME: diagnostic-service
+BRIDGE PORT: 10234
+TARGET PORT: 8081
+RESOURCE: production-monitoring/diagnostic-service
+```
+
+You can also list all services:
+
+<CliBlock>{`{{CLI_NAME}} get services`}</CliBlock>
+## Why this design
+
+Service bridges decouple microservice port maps on **site-a** from Router listener ports on the mesh. The dashboard on **ops-b** always calls `router.default.svc.bridge.local`, not the factory agent IP directly.
+
+If you deploy step 8 before noting the port, **Diagnose** returns 502 or times out until you redeploy with the correct `DIAGNOSTIC_URL`.
+
+## Verify
+
+You have a numeric `bridgePort` from a successful describe call. The Service status is healthy and `resource` points to `production-monitoring/diagnostic-service`.
+
+Optional reachability check from **ops-b** (replace the port):
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" "http://router.default.svc.bridge.local:<diagnostic-bridge-port>/health"
+```
+
+A `200` response confirms Router routing before you deploy the dashboard.
+
+## Common mistakes
+
+- **Using targetPort 8081 in DIAGNOSTIC_URL.** Use **bridgePort** from describe, not the Edgelet external port.
+- **Skipping describe after Service create.** bridgePort appears only after the Service deploys.
+- **Forgetting to redeploy step 8.** If you fix `DIAGNOSTIC_URL` later, run <code>{CLI_NAME} deploy -f deploy/steps/06-application-operations-center.yaml</code> again.
+
+## Next step
+
+[Step 8: Operations center Application](/tutorials/acme-smart-plant/step-08-application-operations-center): set `DIAGNOSTIC_URL` and deploy **alert-dashboard** on **ops-b**.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

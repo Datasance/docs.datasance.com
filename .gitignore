@@ -20,3 +20,6 @@ yarn-debug.log*
 yarn-error.log*
 
 .vscode
+NOTES.md
+zz_materials
+.cursor

@@ -1,0 +1,143 @@
+---
+title: Edgelet Configuration Reference
+description: Full reference for Edgelet config.yaml profile keys and edgelet config CLI flags. Defaults, reload behavior, and Controller push overrides.
+keywords: [edgelet, configuration, config.yaml, edgelet config, profiles, diskLimit, changeFrequency, shutdownPolicy]
+slug: /edgelet/configuration-reference
+---
+
+# Configuration reference
+
+Edgelet stores settings in `/etc/edgelet/config.yaml` under **profiles**. Use **`edgelet config`** to update the active profile, or edit the file and send **SIGHUP** to reload.
+
+For quick setup, see [Configuration](/edgelet/configuration).
+
+## YAML vs CLI key names
+
+The config file and `edgelet config` use slightly different names for some keys:
+
+| Config file key | `edgelet config` flag key |
+| --------------- | ------------------------- |
+| `diskLimit` | `diskLimitGiB` (`--disk-limit-gib`, `-d`) |
+| `memoryLimit` | `memoryLimitMiB` (`--memory-limit-mib`, `-m`) |
+| `cpuLimit` | `cpuLimitPercent` (`--cpu-limit-percent`, `-p`) |
+| `logLimit` | `logLimitGiB` (`--log-limit-gib`, `-l`) |
+| `changeFrequency` | `changeFrequencySeconds` (`--change-frequency-seconds`, `-cf`) |
+| `statusFrequency` | `statusFrequencySeconds` (`--status-frequency-seconds`, `-sf`) |
+
+Legacy aliases `logDiskDirectory` and `logDiskLimit` map to `logDirectory` and `logLimit`.
+
+## Controller push overrides
+
+When provisioned, the Controller can push config changes via the field agent `config/changes` feed. Pushed values override local profile keys until changed again from the Controller or locally.
+
+## Reload behavior
+
+| Category | Hot reload (SIGHUP / `edgelet system reload`) | Restart required |
+| -------- | --------------------------------------------- | ---------------- |
+| Frequencies, limits (monitor), log level | Yes | — |
+| `logDirectory` | — | Yes |
+| `containerEngine`, `containerEngineUrl` | — | Yes (cold engine change) |
+| `diskDirectory` | — | Yes |
+
+Embedded engine: data plane log settings also reload via `systemctl kill -s HUP edgelet-containerd`.
+
+---
+
+## CLI-managed keys
+
+Every key accepted by `edgelet config`:
+
+| Key | Alias | Type | Allowed values | Default | Notes |
+| --- | ----- | ---- | -------------- | ------- | ----- |
+| `controllerUrl` | `a` | string | URL | `http://localhost:54421/api/v3/` | Controller REST base |
+| `controllerCert` | `ac` | string | PEM file path | `/etc/edgelet/cert.crt` | Controller CA |
+| `containerEngine` | `ce` | string | `edgelet`, `docker`, `podman` | `edgelet` (linux) | Platform validated |
+| `containerEngineUrl` | `cu` | string | socket URL | `unix:///run/edgelet/containerd.sock` | External engine socket |
+| `networkInterface` | `n` | string | interface name | `dynamic` | Host network binding |
+| `diskLimitGiB` | `d` | float | GiB | `10` | **Monitor only** — disk usage alert threshold |
+| `diskDirectory` | `dl` | string | path | `/var/lib/edgelet/` | SQLite + volume data root |
+| `memoryLimitMiB` | `m` | float | MiB | `4096` | **Monitor only** — not cgroup-enforced |
+| `cpuLimitPercent` | `p` | float | percent | `80` | **Monitor only** — not cgroup-enforced |
+| `logLimitGiB` | `l` | float | GiB | `10` | Combined daemon log rotation budget |
+| `logDirectory` | `ld` | string | path | `/var/log/edgelet/` | Daemon log files |
+| `logFileCount` | `lc` | int | count | `10` | Rotated files per series |
+| `logLevel` | `ll` | string | `DEBUG`, `INFO`, `WARN`, `ERROR` | `INFO` | Hot reload |
+| `statusFrequencySeconds` | `sf` | int | seconds | `10` | Status POST interval |
+| `changeFrequencySeconds` | `cf` | int | seconds | `20` | Controller changes poll |
+| `deviceScanFrequency` | `sd` | int | seconds | `60` | Device scan interval |
+| `watchdogEnabled` | `wd` | bool | on/off | `true` | Orphan container cleanup |
+| `edgeGuardFrequency` | `egf` | int | seconds | `0` | **`0` disables** Edge Guard; forced `0` when unprovisioned |
+| `gpsMode` | `gps` | string | `auto`, `dynamic`, `manual`, `off` | `auto` | GPS integration |
+| `gpsCoordinates` | `gpsc` | string | `lat,lon` | empty | Manual GPS |
+| `gpsDevice` | `gpsd` | string | device path | `/dev/ttyUSB0` | NMEA device |
+| `gpsScanFrequency` | `gpsf` | int | seconds | `60` | GPS poll interval |
+| `arch` | `ft` | string | `auto`, `amd64`, `arm64`, `arm`, `riscv64` | `auto` | Node architecture |
+| `secureMode` | `sec` | bool | on/off | off | Secure mode flag |
+| `pruningFrequency` | `pf` | int | hours | `0` | Image/volume prune cycle; `0` disables scheduled prune |
+| `availableDiskThreshold` | `dt` | int | percent | `20` | Low-disk prune trigger |
+| `upgradeScanFrequency` | `uf` | int | hours | `24` | OTA readiness scan |
+| `devMode` | `dev` | bool | on/off | off | Developer mode |
+| `timezone` | `tz` | string | IANA zone | `Europe/Istanbul` | Node timezone |
+
+Run `edgelet config --help` for the live flag list.
+
+---
+
+## File-only keys (no `edgelet config` flag)
+
+These appear in `config.yaml` or are set by provision/OTA:
+
+| Key | Default | Reload | Notes |
+| --- | ------- | ------ | ----- |
+| `iofogUuid` | empty | — | Set by **provision**; empty when unprovisioned |
+| `shutdownPolicy` | `leave-running` (docker/podman), `drain-all` (embedded monolithic) | partial | `leave-running` or `drain-all`. See [Workload continuity](/edgelet/workload-continuity) |
+| `shutdownGracePeriodSeconds` | `90` | yes | Drain timeout for maintenance stops |
+| `controllerRequestTimeoutSeconds` | `30` | yes | Controller HTTP client timeout |
+| `controllerPingTimeoutSeconds` | `60` | yes | Connectivity probe timeout |
+| `pingFrequency` | derived | yes | Controller ping worker interval (seconds) |
+| `logReconcileCycleEveryNTicks` | `60` | yes | Reconcile log sampling |
+| `namespace` | `default` | — | Agent namespace metadata |
+| `timeZone` | `Europe/Istanbul` | — | Same as `timezone` |
+
+Private key material is stored in SQLite (`agent_credentials`), not in config.yaml.
+
+---
+
+## Resource limits: monitor vs enforce
+
+| Setting | Scope | Enforced? |
+| ------- | ----- | --------- |
+| Node `memoryLimit` / `cpuLimit` / `diskLimit` | Edgelet node host | **Monitor only** — status and alerts |
+| Manifest `spec.container.memoryLimit` | Single microservice | **Enforced** by container engine (see [Deploy manifests](/edgelet/deploy-manifests)) |
+
+---
+
+## Profiles
+
+```yaml
+currentProfile: production
+profiles:
+  production:
+    controllerUrl: "http://localhost:51121/api/v3/"
+    containerEngine: edgelet
+    arch: auto
+```
+
+Switch without editing the file:
+
+```bash
+edgelet config switch production
+```
+
+---
+
+## See also
+
+- [Configuration](/edgelet/configuration) — `init-config`, common production defaults
+- [Logging](/edgelet/logging) — log file layout and hot reload
+- [Persistence](/edgelet/persistence) — `diskDirectory` and SQLite backup
+- [YAML Reference: Agent](/yaml-references/reference-agent) — Controller-side `AgentConfig` push fields
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

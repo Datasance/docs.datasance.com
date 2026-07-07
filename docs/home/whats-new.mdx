@@ -1,106 +1,264 @@
-# What's New in PoT?
+---
+title: What's New
+description: PoT v3.8.0 release highlights. Edgelet node runtime, EdgeOps Console, embedded OIDC, multi-arch catalog, WebSocket exec, and greenfield migration.
+keywords: [pot v3.8, release notes, whats new, edgelet, edgeops console, embedded oidc, websocket exec, multi-arch catalog, greenfield]
+---
 
-- [NATS messaging](../../security/nats-jwt-authentication) is now available as default pub/sub, request/reply, KV store and JetStream messaging inside **PoT** clusters; use [NATS Account Rules](../../security/nats-account-rule) at application level and [NATS User Rules](../../security/nats-user-rule) at microservice level—the Controller provisions credentials automatically with no manual JWT handling.
-- [Access Control](../../security/roles) is now available with fine-grained [Roles](../../security/roles) and [Role Bindings](../../security/role-bindings) for the Controller REST and WS APIs, plus [NATS Account Rule](../../security/nats-account-rule) and [NATS User Rule](../../security/nats-user-rule) for NATS access.
-- [Security](../../security/introduction) is now documented in a dedicated section: [NATS JWT Authentication](../../security/nats-jwt-authentication) and [Certificates Manager](../../security/certificates-manager) for Microservices. For Routers and NATs instances TLS by default, with support for custom CAs and volume-mounted certs.
-- Legacy ioFog Messagebus is deprecated.
-- Controller supports external KMS system for Secrets and ConfigMaps(spec.usevault: true) store. HashiCorp Vault, OpenBao, AWS Secret Manager, Azure Key Vault, Google Secret Manager.
-- [VolumeMount](../../yaml-references/reference-volumemount) is now available with **type**-based volume mapping and reference by name.
-- [Logging via WebSocket](../../applications/microservice-logs) is now available for streaming Agent and microservice logs in ECN-Viewer and potctl; see [Agent Logs](../../reference-agent/agent-logs) for details.
-- [Airgap deployment](../../platform-deployment/airgap-deployment) is now documented with a dedicated guide for control plane and Agent images offline, [OfflineImage](../../yaml-references/reference-offlineimage) for microservices, and potctl flags (`--no-cache`, `--transfer-pool`).
-- [Service](../../yaml-references/reference-service) is now available for exposing microservices, agents, Kubernetes services, or external endpoints through Router's TCP bridge mechanism.
-- [Secret Management](../../yaml-references/reference-secret) is now available for storing and managing sensitive data including Opaque and TLS secrets.
-- [Certificate and CertificateAuthority](../../yaml-references/reference-certificate) management is now available for generating self-signed certificates or using existing certificates from PoT cluster or Kubernetes secrets.
-- [ConfigMap](../../yaml-references/reference-configmap) is now available for managing non-sensitive configuration data that can be mounted to microservices.
-- [VolumeMount](../../yaml-references/reference-volumemount) is now available for attaching ConfigMaps or Secrets to Agents as volumes, enabling easy volume management for microservices.
-- [OfflineImage](../../yaml-references/reference-offlineimage) is now available for deploying container images to edge nodes that cannot access the internet, enabling potctl to pull images locally and transfer them to remote hosts via SSH.
-- [Debugging & Exec Sessions](#debugging-and-exec-sessions) deliver role-aware remote terminals for Agents, microservices, and system microservices—powered by potctl and ECN Viewer.
-- [ECN Viewer](../../ECN-Viewer) now mirrors nearly every potctl operation, enabling full-cluster workload management, remote exec, resource editing, and deployments directly from the browser.
-- [Events and Auditing](#events-and-auditing) provides comprehensive tracking and auditing of all Controller API endpoint calls for compliance and troubleshooting.
+import CliBlock from '@site/src/components/CliBlock';
 
-## Service
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
 
-Services enable you to expose microservices, agents, Kubernetes services, or external endpoints through the Router's TCP bridge mechanism. Services create TCP connectors on Router instances, allowing microservices to reach these endpoints via a service mesh. Services are distributed to Agents based on tags, enabling flexible and scalable service discovery across your Edge Compute Network.
+# What's New in {PRODUCT_NAME}
 
-[Find out more!](../../yaml-references/reference-service) and check out the [YAML specification](../../yaml-references/reference-service)!
+:::warning[Greenfield release: v3.8.0]
 
-## Secret Management
+{PRODUCT_NAME} **v3.8.0** is a greenfield release. There is no in-place upgrade from v3.7 field deployments.
 
-Secrets provide a secure way to store and manage sensitive data such as passwords, API keys, and TLS certificates. PoT supports Opaque secrets for general-purpose data storage and TLS secrets for certificate management. Secrets can be referenced by microservices and other resources, ensuring sensitive information is handled securely throughout your ECN.
+You need a new Controller database, **Edgelet v1.0.0+** on every node, and **{CLI_NAME} v3.8.0**. Legacy Java iofog-agent and v3.7 field agents are not supported on Controller v3.8.
 
-[Find out more!](../../yaml-references/reference-secret) and check out the [YAML specification](../../yaml-references/reference-secret)!
+See [Migrating to v3.8.0](/migrating-to-v3-8) for the step-by-step guide.
 
-## Certificate and CertificateAuthority
+:::
 
-Certificate and CertificateAuthority resources enable comprehensive TLS certificate management for your Edge Compute Network. You can generate self-signed certificates, create Certificate Authorities, and sign certificates using existing CAs from your PoT cluster or Kubernetes secrets. This feature simplifies SSL/TLS configuration across your edge infrastructure, ensuring secure communication between components.
+Platform train **v3.8.0** ships **Controller v3.8.0**, **{CLI_NAME} v3.8.0**, **Edgelet v1.0.0**, **EdgeOps Console v1.0.9**, **ioFog Operator v3.8.0**, and updated **Router** and **NATS** wrapper images. Pair every component on the same train.
 
-[Find out more!](../../yaml-references/reference-certificate) and check out the [YAML specification](../../yaml-references/reference-certificate)!
+- [Greenfield platform train v3.8.0](#greenfield-platform-train) needs a fresh Control Plane database and Edgelet on every node. See [Migrating to v3.8.0](/migrating-to-v3-8).
+- [**Edgelet v1.0.0**](#edgelet-node-runtime) replaces the legacy Java iofog-agent and Agent-Go as the only supported node runtime on Controller v3.8.
+- [**EdgeOps Console v1.0.9**](#edgeops-console) is embedded in the Controller image and replaces the standalone ECN Viewer npm package.
+- [**Embedded OIDC authentication**](#embedded-oidc-authentication) is the default for greenfield installs. No external IdP is required for a first deploy.
+- [**External OIDC authentication**](#external-oidc-authentication) supports enterprise IdPs (Okta, Azure AD, Keycloak, or any OIDC provider) when SSO is required.
+- [**Multi-architecture catalog**](#multi-architecture-catalog) entries store up to four images per item as **`images[]`** with `{ containerImage, archId }`.
+- [**Four edge architectures**](#multi-architecture-catalog) are supported end to end: **amd64**, **arm64**, **riscv64**, and **arm** (32-bit).
+- [**WebSocket exec and log sessions**](#websocket-exec-and-log-sessions) replace REST exec on microservices. Controller v3.8 allows up to **5 concurrent exec sessions** per microservice.
+- [**EdgeletAPI v1**](#edgeletapi-v1) exposes a local HTTPS and Unix-socket API on every Edgelet node for operator CLI and automation.
+- [**Wasm workloads**](#wasm-workloads) run on linux Edgelet nodes through RuntimeClass handlers (`edgelet-wasmtime`, `spin`, and upstream shims).
+- [**Container engines**](#container-engines) on Edgelet: embedded **`edgelet`**, **`docker`**, or **`podman`**, selected at runtime per node.
+- [**Controller API and data model**](#controller-api-and-data-model) renames `flows` to **`applications`**, `fogType` to **`arch`**, and removes EdgeResource and diagnostics APIs.
+- [**Platform reconcile and HA**](#platform-reconcile-and-ha) adds `platformStatus` on agents and manual **`reconcile`** retry endpoints for agents and services.
+- [**Kubernetes Operator**](#kubernetes-operator) reconciles **ControlPlane** CRs only. The Application CRD is removed; deploy apps with {CLI_NAME} or the Go SDK.
+- [**{CLI_NAME} v3.8.0**](#cli-and-go-sdk) stores config under **`~/.iofog/v3`**, adds **`reconcile`**, and removes v3.7 **`legacy`** and **`rename`** subcommands.
+- [**Router and NATS**](#router-and-nats) wrapper images pin **Skupper Router 3.5.1** and upstream **NATS Server 2.14.3**.
+- [**ioFog Go SDK v3.8**](#cli-and-go-sdk) updates the Controller client for **`applications`**, WebSocket exec, and EdgeletAPI v1 microservice helpers.
+- [**Agent and environment renames**](#agent-and-environment-renames) from v3.7 (`dockerUrl`, `viewerUrl`, `SSL_*`, Keycloak env vars, and more).
+- [**Local Control Plane on Edgelet**](#local-control-plane-on-edgelet) lets a node host its own Controller workload via `kind: ControlPlane`.
+- [**Security and RBAC**](#security-and-rbac) continue with fine-grained roles, NATS JWT rules, and the certificates manager. Auth now flows through OIDC instead of Keycloak-first deploys.
+- [**Airgap deployment**](/platform-deployment/airgap-deployment) remains supported with OfflineImage, local image transfer, and `--no-cache` deploy flags.
+- [**Acme Smart Plant tutorial**](/tutorials/acme-smart-plant) walks through NATS rules, services, and multi-application edge patterns on v3.8.
 
-## ConfigMap
+## Greenfield platform train
 
-ConfigMaps allow you to store and manage non-sensitive configuration data in key-value pairs. ConfigMaps can be used to store application configuration, environment variables, or configuration files. They support both mutable and immutable modes, providing flexibility for different use cases. ConfigMaps can be mounted to microservices as volumes or referenced directly in your deployment configurations.
+PoT **v3.8.0** is not an in-place upgrade from v3.7 or v1.6.x field deployments. You export application YAML, uninstall the legacy operator and v3.7 CRDs, deploy a fresh Control Plane with a **new database**, and reinstall every edge node with **Edgelet v1.0.0+**.
 
-[Find out more!](../../yaml-references/reference-configmap) and check out the [YAML specification](../../yaml-references/reference-configmap)!
+Legacy Java Agent, v3.7 field agents, Application CRD workloads, and ECN Viewer are not supported on Controller v3.8. Historical docs for those components live in the [v3.7.3 snapshot](/v3.7.3/).
 
-## VolumeMount
+[Find out more!](/migrating-to-v3-8) and review the [Welcome](/) platform version table.
 
-VolumeMounts provide a convenient way to attach ConfigMaps or Secrets to Agents as volumes. Once attached, these volumes are available on the Agent and can be easily mounted to running microservices. This feature simplifies configuration and secret management by allowing you to create volumes from ConfigMaps or Secrets and attach them to multiple Agents, enabling consistent configuration across your edge infrastructure.
+## Edgelet node runtime
 
-[Find out more!](../../yaml-references/reference-volumemount) and check out the [YAML specification](../../yaml-references/reference-volumemount)!
+**Edgelet** is the node agent for v3.8. It runs on linux production hardware with a thin OTA entry binary and an embedded container runtime, or as a single binary on desktop OSes with Docker or Podman. Edgelet syncs desired microservice state with the Controller, reports status, and exposes local administration APIs.
 
-## OfflineImage
+In UI prose we say **Edgelet node**. In YAML and API fields you still use **`kind: Agent`**.
 
-OfflineImage enables you to deploy container images to edge nodes that cannot access the internet for pulling images. This feature is essential for air-gapped or network-restricted edge deployments. potctl pulls the images on your local machine (where potctl is installed), transfers them to remote edge hosts via SSH, loads them into Docker on each host, and automatically creates catalog items with registry ID 2 (from_cache). This allows microservices to use these pre-loaded images without requiring internet access on the edge nodes.
+Pair **Edgelet v1.0.0** with **Controller v3.8.0**. Do not connect v3.7 agents to a v3.8 Controller.
 
-[Find out more!](../../yaml-references/reference-offlineimage) and check out the [YAML specification](../../yaml-references/reference-offlineimage)!
+[Find out more!](/edgelet/introduction), [Installation](/edgelet/installation), [Configuration](/edgelet/configuration), and the [Agent YAML specification](/yaml-references/reference-agent).
 
-## Debugging and Exec Sessions
+## EdgeOps Console
 
-Secure debugging is now available across the entire ECN:
+**EdgeOps Console v1.0.9** is a static React SPA embedded in the Controller image. It listens on port **8008** by default (REST API stays on **51121**). You manage Edgelet nodes, applications, microservices, registries, catalogs, exec sessions, and logs from the browser with the same RBAC model as {CLI_NAME}.
 
-- **potctl workflow**: attach a privileged debugger container and open an exec session without handling SSH keys.
-- **RBAC-aware access**: SREs can exec into Agents, microservices, and system microservices; Developers are limited to microservices; Viewers cannot open exec sessions.
-- **ECN Viewer parity**: click the terminal icon in any Agent, microservice, or system microservice slide-over to launch the same exec experience directly in the browser.
+Initial Control Plane deployment and Edgelet provisioning still use {CLI_NAME}. Day-2 operations work from the Console or CLI.
 
-### potctl commands
+Open the Console with <code>{CLI_NAME} view</code> or the URL you set in **`CONSOLE_URL`** / `controller.consoleUrl`.
 
-Attach and exec into a microservice (application or system):
+[Find out more!](/edgeops-console/introduction), [Console features](/edgeops-console/features), and [Console configuration](/edgeops-console/configuration).
+
+## Embedded OIDC authentication
+
+Greenfield deploys use **embedded OIDC** inside the Controller image. The issuer runs at `{CONTROLLER_PUBLIC_URL}/oidc`. EdgeOps Console and {CLI_NAME} share the same OAuth BFF flow. Bootstrap admin credentials come from Control Plane YAML or environment variables.
+
+You do not need Keycloak or any external IdP for a standard lab or production install unless corporate SSO is required.
+
+[Find out more!](/platform-deployment/embedded-oidc) and the [Control Plane YAML specification](/yaml-references/reference-control-plane).
+
+## External OIDC authentication
+
+When you must integrate with an enterprise IdP, set **`auth.mode: external`** and configure **`OIDC_ISSUER_URL`**, **`OIDC_CLIENT_ID`**, and **`OIDC_CLIENT_SECRET`**. Keycloak is one supported provider, not a platform requirement.
+
+[Find out more!](/platform-deployment/external-oidc) and [Controller configuration](/reference-controller/configuration).
+
+## Multi-architecture catalog
+
+Catalog items no longer use legacy `x86` / `arm` fields. Define **`amd64`**, **`arm64`**, **`riscv64`**, and **`arm`** (32-bit) image references under `spec`. The Controller stores them as **`images[]`** with `{ containerImage, archId }`. Microservices reference a catalog ID instead of repeating per-arch images in every manifest.
+
+List built-in catalog entries with <code>{CLI_NAME} get catalog</code>.
+
+[Find out more!](/applications/microservice-registry-catalog) and the [Catalog Item YAML specification](/yaml-references/reference-catalog).
+
+## WebSocket exec and log sessions
+
+Controller **v3.8.0** removes REST `POST/DELETE .../exec` on microservices. Interactive exec and log streaming use **WebSocket sessions** with a unique **`sessionId`** per attachment.
+
+| Concern | v3.8 behavior |
+| ------- | ------------- |
+| Exec transport | WebSocket only (Console, {CLI_NAME}, SDK, REST API dial helpers) |
+| Concurrent exec | Up to **5 sessions per microservice** (Controller quota) |
+| Edgelet field path | `WS .../agent/exec/microservice/{uuid}/{sessionId}` |
+| Local on-node exec | `edgelet ms exec` via EdgeletAPI (no Controller quota) |
+| Logs | Same multi-session WebSocket model as exec |
+
+RBAC still limits who can open sessions. SRE roles can exec into agents and microservices; developer roles are limited to microservices.
+
+[Find out more!](/edgelet/exec-sessions), [Microservice logs](/applications/microservice-logs), and [Console exec features](/edgeops-console/features).
+
+### {CLI_NAME} and Edgelet exec commands
+
+Provision debugger exec on an Edgelet node, then open a shell:
+
+<CliBlock>{`{{CLI_NAME}} attach exec agent <agent-name>
+{{CLI_NAME}} exec agent <agent-name>`}</CliBlock>
+
+Connect to a microservice exec session (WebSocket dial after Controller creates the session row):
+
+<CliBlock>{`{{CLI_NAME}} exec <application>/<microservice>
+{{CLI_NAME}} exec <system-app>/<system-microservice>`}</CliBlock>
+
+On the Edgelet node itself, open a local session without going through the Controller quota:
 
 ```bash
-# Application microservice
-potctl attach exec <app>/<microservice>
-potctl exec <app>/<microservice>
-
-# System microservice
-potctl attach exec <sys-app>/<sys-microservice>
-potctl exec <sys-app>/<sys-microservice>
+edgelet ms exec <uuid|namespace.name>
+edgelet ms exec <uuid> -- /bin/sh -c 'ps aux'
 ```
 
-Attach and exec into an Agent (with optional custom debugger image):
+v3.8 removes **`attach exec microservice`** and **`detach exec microservice`**. Microservice exec dials the session directly.
 
-```bash
-potctl attach exec agent <agent-name> [debuggerImage:tag]
-potctl exec agent <agent-name>
-```
+## EdgeletAPI v1
 
-If no image is provided, the cluster’s catalog debugger image is deployed automatically. Debugger containers run with the required `host`, `pid`, `ipc`, and `net` privileges, giving you SSH-like access without distributing key pairs.
+Every Edgelet node exposes **EdgeletAPI v1** on **`https://127.0.0.1:54321`** (TLS) and a Unix socket at **`/run/edgelet/edgelet.sock`**. The `edgelet` CLI is a thin client over this API. Routes cover system status, microservice lifecycle, image management, RuntimeClass deploy, log streams, and local exec sessions.
 
-## ECN Viewer: Full-Stack Management
+JWT bearer auth protects operator routes. Health and metrics endpoints are unauthenticated for orchestrators.
 
-The browser-based ECN Viewer now provides operational parity with potctl for day-2 workflows. You can deploy and manage applications, edit any resource YAML, configure registries and catalogs, open exec sessions into Agents or microservices, and call the Controller REST API without leaving the UI. Only the installation of Controllers and Agents still requires potctl.
+Browse the OpenAPI spec: [Edgelet API reference](/api/edgelet).
 
-[Find out more!](../../ECN-Viewer)
+[Find out more!](/edgelet/edgelet-api) and [Edgelet architecture](/edgelet/architecture).
 
-## Events and Auditing
+## Wasm workloads
 
-The Events endpoint provides comprehensive tracking and auditing of all Controller API calls. Administrators can filter events by type, endpoint, status, method, resource type, actor, and time range. Export event logs for compliance reporting or delete old events to manage storage. This feature is essential for enterprise deployments requiring audit trails and compliance with security policies.
+On **linux** with **`containerEngine: edgelet`**, Edgelet schedules **Wasm** microservices using **`platform: wasi/wasm`** and a **RuntimeClass** handler. Supported handlers include **`edgelet-wasmtime`**, **`spin`**, and upstream **`wasmtime`**, **`wasmedge`**, **`wasmer`**, and others when the matching shim binary is on `PATH`.
 
-[Find out more!](../../ECN-Viewer#events-and-auditing)
+{CLI_NAME} can stage Wasm shims during Edgelet node install when `package.wasm` is set on the Agent manifest.
 
+[Find out more!](/edgelet/wasm-runtime) and [Container engines](/edgelet/container-engines).
 
+## Container engines
 
+Edgelet selects a **ContainerEngine** at runtime:
+
+| Engine | Use when |
+| ------ | -------- |
+| **`edgelet`** | Embedded containerd on linux. Required for Wasm RuntimeClass workloads. |
+| **`docker`** | Host Docker socket. Supported on linux, darwin, and windows. |
+| **`podman`** | Host Podman socket. Supported on linux, darwin, and windows. |
+
+Agent YAML field **`containerEngineUrl`** (formerly `dockerUrl`) points at the engine socket. **`pruningFrequency`** (formerly `dockerPruningFrequency`) controls image prune cadence.
+
+[Find out more!](/edgelet/container-engines) and the [Agent YAML specification](/yaml-references/reference-agent).
+
+## Controller API and data model
+
+Controller **v3.8.0** aligns REST paths and RBAC with the Edgelet runtime:
+
+| v3.7 | v3.8 |
+| ---- | ---- |
+| `/api/v3/flow/*` | **`/api/v3/application/*`** |
+| RBAC resource `flows` | **`applications`** |
+| `GET /api/v3/fog-types` | **`GET /api/v3/architectures/`** |
+| Catalog `x86Image` / `armImage` | **`images[]`** with `archId` |
+| Microservice create `flowId` query | **`application`** field in body |
+| EdgeResource CRUD | **Removed** |
+| Diagnostics, strace, image snapshot APIs | **Removed** |
+
+Microservices must declare images per **`archId`**. The target Edgelet node **`arch`** / **`archId`** and **`availableRuntimes`** must match the workload.
+
+[Find out more!](/reference-controller/rest-api), [Controller overview](/reference-controller/overview), and the [OpenAPI spec](/api/controller).
+
+## Platform reconcile and HA
+
+Controller v3.8 tracks asynchronous platform provisioning on Edgelet nodes and services. Agent detail responses can include **`platformStatus`** (`phase`, `generation`, `lastError`). When provisioning stalls, retry with:
+
+<CliBlock>{`{{CLI_NAME}} reconcile agent <agent-name>
+{{CLI_NAME}} reconcile service <service-name>`}</CliBlock>
+
+REST equivalents: `POST /api/v3/iofog/{uuid}/reconcile` and `POST /api/v3/services/{name}/reconcile`.
+
+You can run multiple Controllers for resiliency when every Edgelet node has network paths to each instance.
+
+[Find out more!](/reference-controller/rest-api#platform-reconcile-v38) and <a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}_reconcile`}>{CLI_NAME} reconcile commands</a>.
+
+## Kubernetes Operator
+
+The **ioFog Operator v3.8.0** reconciles **`ControlPlane`** custom resources only. It creates Controller, Router, NATS, Services, Ingresses, Secrets, and related cluster objects. It does **not** deploy application workloads.
+
+Removed in v3.8:
+
+- **Application** CRD and reconciler
+- Keycloak auth blocks on ControlPlane
+- ECN Viewer-related Controller fields
+
+Install from **`https://datasance.github.io/iofog-operator`** (Datasance mirror) or the Eclipse ioFog gh-pages index. The legacy **`datasance.github.io/helm`** repo is deprecated.
+
+[Find out more!](/platform-components/operator), [Kubernetes Helm deployment](/platform-deployment/kubernetes-helm), and [Control Plane YAML](/yaml-references/reference-control-plane).
+
+## Router and NATS
+
+**Router v3.8.0** wraps **Skupper Router 3.5.1** inside the platform image. Routers form the messaging mesh between the Controller interior router and edge routers on each Edgelet node. The wrapper reads config from Edgelet LocalAPI v1 in PoT mode or from a mounted file in Kubernetes mode.
+
+**NATS Server** wrapper image pins upstream **NATS 2.14.3**. NATS carries pub/sub, request/reply, KV, and JetStream traffic. The Controller provisions account resolver JWTs, user credentials, and TLS material. Enable NATS on the Control Plane with `nats.enabled: true`.
+
+Both components support **amd64**, **arm64**, **arm** (32-bit), and **riscv64**.
+
+[Find out more!](/platform-components/router), [NATS Server](/platform-components/nats-server), and [NATs JWT authentication](/security/nats-jwt-authentication).
+
+## CLI and Go SDK
+
+**{CLI_NAME} v3.8.0** is the primary operator CLI for greenfield deploys:
+
+- Config directory: **`~/.iofog/v3`**
+- New top-level command: **`reconcile`**
+- Removed: **`legacy`**, **`rename`**, **`attach exec microservice`**, **`detach exec microservice`**
+- Agent YAML: use **`spec.config.arch`** instead of `FogType`
+- Deploy YAML: no Keycloak blocks; use **`auth.mode: embedded`** or **`external`**
+
+The **ioFog Go SDK v3.8.0** (`github.com/eclipse-iofog/iofog-go-sdk/v3`) updates Controller clients for **`applications`**, WebSocket exec and logs, and EdgeletAPI v1 microservice helpers. Legacy messagebus and EdgeResource client methods are removed.
+
+[Find out more!](/potctl/introduction), [{CLI_NAME} getting familiar](/potctl/getting-familiar), and [ioFog Go SDK overview](/platform-components/sdk).
+
+## Agent and environment renames
+
+When you rewrite v3.7 YAML for v3.8, apply these renames:
+
+| v3.7 field or env | v3.8 field or env |
+| ----------------- | ----------------- |
+| `dockerUrl` | **`containerEngineUrl`** |
+| `dockerPruningFrequency` | **`pruningFrequency`** |
+| `fogType` / `fogTypeId` | **`arch`** / **`archId`** |
+| `viewerUrl` | **`consoleUrl`** |
+| `VIEWER_*` | **`CONSOLE_*`** |
+| `SSL_*` | **`TLS_*`** |
+| `keycloak-connect`, `KC_*`, `auth.realm` | **`OIDC_*`**, **`AUTH_MODE`**, **`auth.mode`** |
+
+## Local Control Plane on Edgelet
+
+An Edgelet node can host a local **ControlPlane** workload (`kind: ControlPlane`) for disconnected or hub-and-spoke topologies. Edgelet reconciles the manifest, wires DNS, and runs the Controller as a system microservice on the node.
+
+[Find out more!](/edgelet/control-plane), [ControlPlane microservice runtime](/edgelet/control-plane-microservice), and [Setup Edgelet Nodes](/platform-deployment/setup-your-agents).
+
+## Security and RBAC
+
+Authentication moves from Keycloak-first installs to **embedded OIDC** by default. RBAC for Controller REST and WebSocket APIs still uses **Roles** and **Role Bindings**. NATS access uses **NATS Account Rules** and **NATS User Rules** with automatic JWT provisioning. The **Certificates Manager** continues to issue and rotate TLS material for microservices, Routers, and NATS.
+
+[Find out more!](/security/introduction), [Roles](/security/roles), [Embedded OIDC](/platform-deployment/embedded-oidc), and [Certificates Manager](/security/certificates-manager).
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
 <EditPageAdmonition />
-

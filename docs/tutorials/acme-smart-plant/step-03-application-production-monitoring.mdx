@@ -1,0 +1,115 @@
+---
+title: "Step 3 - Production monitoring Application"
+description: "Acme Smart Plant tutorial. Deploy sensor-simulator, smart-anomaly-detector, and diagnostic-service on site-a with pot-edge-patterns v1.1.0 images."
+keywords: [tutorial, acme smart plant, application, sensor-simulator, anomaly detector, site-a]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 3 - Production monitoring Application
+
+## Goal
+
+Deploy the **production-monitoring** Application on **site-a**. Three microservices start: telemetry replay, anomaly detection, and an HTTP diagnostic API.
+
+## Scenario context
+
+Four CNC/press machines (**M001**–**M004**) send multi-metric JSON on `telemetry.machine.{machineId}`. The **sensor-simulator** replays curated rows from the manufacturing dataset. **smart-anomaly-detector** watches temperature, vibration, error rate, and quality score. When a fault fires, the detector publishes the same alert JSON on `notify.alerts.{machineId}` (live) and `journal.events.{machineId}` (durable).
+
+**diagnostic-service** exposes HTTP runbooks keyed by `faultType`. It has no NATS access. The dashboard reaches it through a Router bridge in later steps.
+
+## YAML walkthrough
+
+The manifest is `deploy/steps/03-application-production-monitoring.yaml`. Key fields:
+
+### Application NATS account binding
+
+<FlavorYaml title="Application header">{`---
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: production-monitoring
+spec:
+  natsConfig:
+    natsAccess: true
+    natsRule: production-monitoring-export
+`}</FlavorYaml>
+
+This creates the **production-monitoring** NATS account tied to the export rule from step 2.
+
+### sensor-simulator
+
+Uses image `ghcr.io/datasance/pot-edge-patterns/sensor-simulator:1.1.0` and user rule `sensor-publisher`.
+
+| Environment variable | Default | Purpose |
+| -------------------- | ------- | ------- |
+| `TELEMETRY_MODE` | `replay` | Replay CSV rows (use `synthetic` only for legacy demos) |
+| `SITE_ID` | `plant-01` | Site label in telemetry JSON |
+| `REPLAY_SPEED` | `1` | Row interval multiplier |
+| `REPLAY_LOOP` | `true` | Loop the CSV after the last row |
+| `REPLAY_SEGMENT` | *(empty)* | Jump to a named fault segment (optional demo tip) |
+
+Override `agent.name` if your Edgelet node is not named `site-a`.
+
+### smart-anomaly-detector
+
+Uses `ghcr.io/datasance/pot-edge-patterns/smart-anomaly-detector:1.1.0` and user rule `anomaly-processor`.
+
+| Environment variable | Value | Purpose |
+| -------------------- | ----- | ------- |
+| `SUBSCRIBE_SUBJECT` | `telemetry.machine.>` | All machine telemetry |
+| `JOURNAL_STREAM` | `JOURNAL_PRODUCTION` | JetStream stream name for journal events |
+| `DEBOUNCE_SEC` | `30` | Suppress repeat alerts for the same machine |
+
+Threshold env vars (`TEMP_THRESHOLD`, `VIBRATION_THRESHOLD`, `ERROR_RATE_THRESHOLD`) tune when synthetic threshold alerts fire alongside dataset fault rows.
+
+### diagnostic-service
+
+Uses `ghcr.io/datasance/pot-edge-patterns/diagnostic-service:1.1.0` with `natsAccess: false`. Container port **8080** maps to external **8081** on the Edgelet node.
+
+## Why this design
+
+Telemetry stays in the plant NATS account until export/import rules deliver selected subjects to **ops-b**. The diagnostic microservice is HTTP-only on purpose: remote ops call it through Router, not through NATS.
+
+Optional demo tip: set `REPLAY_SEGMENT=fault-high-vibration-m002` and `REPLAY_SPEED=5` on sensor-simulator to trigger a fault within ~30 seconds.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/03-application-production-monitoring.yaml`}</CliBlock>
+Wait until all three microservices report healthy:
+
+<CliBlock>{`{{CLI_NAME}} get microservices`}</CliBlock>
+## Verify
+
+On **site-a**, check sensor-simulator logs for four machines publishing:
+
+<CliBlock>{`{{CLI_NAME}} describe microservice sensor-simulator`}</CliBlock>
+You should see log lines with `machineId=M001` through `M004` and subjects under `telemetry.machine.`.
+
+Confirm NATS credentials mounted:
+
+<CliBlock>{`{{CLI_NAME}} describe microservice smart-anomaly-detector`}</CliBlock>
+Look for `natsAccess: true` and `natsRule: anomaly-processor`.
+
+:::info[Account key needed next]
+
+After this deploy, the Controller creates the **production-monitoring** NATS account. Run step 4 to copy its public key before deploying the import rule.
+
+:::
+
+## Common mistakes
+
+- **Wrong image tag.** Use `:1.1.0` for every pot-edge-patterns image. Do not mix `:1.0.0` subjects or payloads.
+- **Missing Edgelet node.** All three microservices default to `agent.name: site-a`. Provision **site-a** first.
+- **Skipping step 2.** The Application references `production-monitoring-export`, which must exist.
+
+## Next step
+
+[Step 4: Copy account key](/tutorials/acme-smart-plant/step-04-copy-account-key): run <code>{CLI_NAME} get nats-accounts</code> and copy the production-monitoring account public key.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

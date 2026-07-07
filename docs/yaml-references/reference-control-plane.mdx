@@ -1,438 +1,640 @@
 ---
 title: Control Plane YAML Specification - potctl Reference
-description: Reference for Control Plane YAML specifications. Deploy Datasance PoT Control Plane on Kubernetes or remote hosts.
-keywords: [control plane yaml, kubernetes control plane, remote control plane, potctl, datasance pot, edge orchestration, ecn setup]
+description: Complete YAML reference for PoT v3.8.0 Control Plane kinds. KubernetesControlPlane, ControlPlane, LocalControlPlane, and Controller add-on with auth, database, NATS, vault, TLS, and system Edgelet fields.
+keywords: [control plane yaml, kubernetes control plane, remote control plane, local control plane, potctl, embedded oidc, vault, system agent, v3.8]
 ---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME, REGISTRY } from '@site/src/config/distribution';
 
 # Control Plane YAML Specification
 
-`potctl` allows users to deploy Edge Compute Networks (ECNs). The resources that make up an ECN—Controller, Router, and NATS—are defined in YAML. This page covers three control plane kinds: **KubernetesControlPlane** (for Kubernetes clusters), **ControlPlane** (for remote hosts), and **LocalControlPlane** (for local Docker). When NATS is enabled, the control plane runs NATS server(s); applications and microservices use [NATS Account Rules](../security/nats-account-rule) and [NATS User Rules](../security/nats-user-rule) for access. For TLS and certificates, see [Certificates for Router and NATS](../security/certificates-manager).
+{CLI_NAME} deploys Edge Compute Networks (ECNs) from YAML. Control plane resources define the Controller, Router, optional NATS, and optional system Edgelet nodes on the same hosts. Platform train **v3.8.0** uses **embedded OIDC** by default.
 
-:::warning[potctl and ECN version compatibility]
-  <p>You can connect to an older ECN with potctl +v1.6.1 for view-only purposes. If you would like full control over the ECN with potctl +v1.6.1, you should delete the ECN with your older potctl and then redeploy with potctl +v1.6.1 .</p>
+| Kind | Deploy target | Primary doc section |
+| ---- | ------------- | ------------------- |
+| `KubernetesControlPlane` | Kubernetes cluster (operator-managed) | [Kubernetes Control Plane](#kubernetes-control-plane) |
+| `ControlPlane` | Remote hosts over SSH | [Remote Control Plane](#remote-control-plane) |
+| `LocalControlPlane` | Local machine (dev / quick start) | [Local Control Plane](#local-control-plane) |
+| `Controller` | Add a Controller to an existing remote Control Plane | [Controller add-on](#controller-add-on) |
+
+See [Embedded OIDC Authentication](/platform-deployment/embedded-oidc) and [External OIDC Authentication](/platform-deployment/external-oidc) for auth setup. When NATS is enabled, use [NATS Account Rules](../security/nats-account-rule) and [NATS User Rules](../security/nats-user-rule). For TLS and certificates, see [Certificates for Router and NATS](../security/certificates-manager) and [Airgap Deployment](/platform-deployment/airgap-deployment).
+
+:::info[Greenfield release: v3.8.0]
+
+Do not copy Keycloak blocks from the [v3.7.3](/v3.7.3/) snapshot. v3.8 Control Plane YAML uses `auth.mode: embedded` or `auth.mode: external` instead of `auth.realm` and `auth.realmKey`.
+
+`metadata.controlPlaneType` is retired. Use `kind: KubernetesControlPlane`, `kind: ControlPlane`, or `kind: LocalControlPlane`.
+
 :::
+
+## Image overrides
+
+Override platform images under `spec.images` (Kubernetes) or `spec.controller.package.image` plus `spec.systemMicroservices` (local and remote). Defaults match the v3.8.0 release train:
+
+| Component | Default tag | YAML key |
+| --------- | ----------- | -------- |
+| Controller | `v3.8.0` | `spec.images.controller` or `spec.controller.package.image` |
+| Operator | `3.8.0` | `spec.images.operator` (Kubernetes only) |
+| Router | `3.8.0` | `spec.images.router` or `spec.systemMicroservices.router` |
+| NATS | `2.14.3` | `spec.images.nats` or `spec.systemMicroservices.nats` |
+| Edgelet (system node) | `1.0.0` | `spec.systemAgent.package.container.image` or `package.version` |
+
+Registry host comes from your build flavor (`{{REGISTRY}}` in examples). Default Edgelet image: **<code>{REGISTRY}/edgelet:1.0.0</code>**.
+
+Router and NATS on local or remote Control Planes use four architecture keys: `amd64`, `arm64`, `riscv64`, and `arm`.
+
+## Shared spec blocks
+
+These blocks appear on one or more Control Plane kinds. The [field availability matrix](#field-availability-by-kind) at the end lists which kind accepts each block.
+
+### `metadata`
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `metadata.name` | Yes | Unique Control Plane name in the {CLI_NAME} namespace. Lowercase alphanumeric; hyphens allowed. |
+| `metadata.namespace` | No | Namespace for {CLI_NAME} state. Defaults to the active namespace from the CLI flag. |
+
+### `spec.iofogUser`
+
+First REST API user created on the Controller after deploy.
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `name` | No | Given name. |
+| `surname` | No | Family name. |
+| `email` | **Yes** | Login email. Deploy fails when empty. |
+| `password` | No | REST API password. If set: at least 12 characters, one uppercase letter, one special character. Omit to enter interactively at deploy time (Kubernetes). |
+| `accessToken` | No | Runtime state. Do not set in deploy YAML. |
+| `refreshToken` | No | Runtime state. Do not set in deploy YAML. |
+
+### `spec.auth`
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `mode` | **Yes** | `embedded` (default quick start) or `external` (corporate IdP). |
+| `insecureAllowHttp` | No | Allow `http://` in `controller.publicUrl`. Use for local dev only. |
+| `insecureAllowBootstrapLog` | No | Log bootstrap admin credentials once at first boot (embedded). |
+| `bootstrap.username` | Yes when `mode: embedded` | First OIDC admin username. |
+| `bootstrap.password` | Yes when `mode: embedded` | Bootstrap admin password in YAML. Same complexity rules as `iofogUser.password`. |
+| `issuerUrl` | Yes when `mode: external` | Full OIDC issuer URL (for example `https://idp.example.com/realms/pot`). |
+| `client.id` | Yes when `mode: external` | OAuth client ID for the Controller. |
+| `client.secret` | Yes when `mode: external` | OAuth client secret. |
+| `consoleClient` | No | EdgeOps Console SPA OAuth client ID. |
+| `consoleClientEnabled` | No | Register and enable the Console OAuth client. |
+| `rateLimit.enabled` | No | Enable OIDC endpoint rate limiting. |
+| `rateLimit.maxRequestsPerWindow` | No | Max requests per window when rate limiting is on. |
+| `rateLimit.windowMs` | No | Rate limit window in milliseconds. |
+| `sessionStore.type` | No | BFF session store: `memory` or `database`. |
+| `sessionStore.ttlMs` | No | Session TTL in milliseconds. |
+| `sessionStore.secret` | No | Encryption secret for BFF sessions. |
+| `tokenTtl.accessTokenTtlSeconds` | No | Access token lifetime. |
+| `tokenTtl.refreshTokenTtlSeconds` | No | Refresh token lifetime. |
+| `oidcTtl.interactionTtlSeconds` | No | OIDC interaction lifetime. |
+| `oidcTtl.grantTtlSeconds` | No | OIDC grant lifetime. |
+| `oidcTtl.sessionTtlSeconds` | No | OIDC session lifetime. |
+| `oidcTtl.idTokenTtlSeconds` | No | ID token lifetime. |
+
+Embedded mode sets the issuer to `{controller.publicUrl}/oidc`. See [Controller configuration](/reference-controller/configuration) for environment variable names.
+
+### `spec.database`
+
+External MySQL or PostgreSQL. Required when you run **more than one** Controller replica (Kubernetes) or **more than one** remote Controller host.
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `provider` | When HA | `postgres` or `mysql`. |
+| `host` | When provider set | Database hostname. |
+| `port` | When provider set | Database port. |
+| `user` | When provider set | Database username. |
+| `password` | When provider set | Database password. |
+| `databaseName` | When provider set | Database name. |
+| `ssl` | No | Enable TLS to the database. |
+| `ca` | No | Base64-encoded CA certificate for database TLS. |
+
+Single Controller installs use embedded SQLite on the host (remote/local) or in the pod (Kubernetes with one replica).
+
+### `spec.events`
+
+Controller audit event settings.
+
+| Field | Description |
+| ----- | ----------- |
+| `auditEnabled` | Enable audit logging. |
+| `retentionDays` | Days to retain audit events. |
+| `cleanupInterval` | Cleanup interval in seconds. |
+| `captureIpAddress` | Record client IP addresses in audit entries. |
+
+### `spec.controller`
+
+Runtime Controller settings applied at deploy time.
+
+| Field | K8s | Remote / local | Description |
+| ----- | --- | -------------- | ----------- |
+| `publicUrl` | Yes | Yes | Public Controller URL. Embedded OIDC issuer is `{publicUrl}/oidc`. |
+| `consoleUrl` | Yes | Yes | Public EdgeOps Console URL for OAuth redirects. {CLI_NAME} backfills from `publicUrl` when empty. |
+| `consolePort` | Yes | No | Console listen port hint for Kubernetes ingress mapping (default cluster binding is port 8008). |
+| `trustProxy` | Yes | No | Honor `X-Forwarded-*` when Controller sits behind a reverse proxy. |
+| `logLevel` | Yes | Yes | Controller log level (for example `info`, `debug`). |
+| `https` | Yes | Yes | Prefer HTTPS when resolving endpoints. |
+| `pidBaseDir` | Yes | Yes | Base directory for Controller PID files on remote/local hosts. |
+| `secretName` | Yes | No | Kubernetes TLS secret for the Controller Service when not using ingress TLS. |
+| `package.image` | Via `images` | Yes | Controller container image on remote/local hosts. |
+| `package.registry` | No | Yes | Private registry host. Required with `username` and `password` when any credential field is set. |
+| `package.username` | No | Yes | Registry username for private Controller image pulls. |
+| `package.password` | No | Yes | Registry password. |
+| `package.email` | No | Yes | Registry email (optional). |
+
+When both `spec.endpoint` and `controller.publicUrl` are set on remote or local Control Planes, they **must match**.
+
+### `spec.vault`
+
+Optional secret store for the Controller. See [Controller configuration](/reference-controller/configuration).
+
+| Field | Description |
+| ----- | ----------- |
+| `enabled` | Enable vault integration. |
+| `provider` | Required when enabled: `hashicorp`, `openbao`, `vault`, `aws`, `aws-secrets-manager`, `azure`, `azure-key-vault`, `google`, or `google-secret-manager`. |
+| `basePath` | Required when enabled. Base path inside the vault. |
+| `hashicorp.address` | Vault server address (HashiCorp / OpenBao / Vault providers). |
+| `hashicorp.token` | Vault token. |
+| `hashicorp.mount` | Secret engine mount path. |
+| `aws.region` | AWS region. |
+| `aws.accessKeyId` | AWS access key ID. |
+| `aws.accessKey` | AWS secret access key. |
+| `azure.url` | Azure Key Vault URL. |
+| `azure.tenantId` | Azure tenant ID. |
+| `azure.clientId` | Azure client ID. |
+| `azure.clientSecret` | Azure client secret. |
+| `google.projectId` | Google Cloud project ID. |
+| `google.credentials` | Google service account credentials JSON. |
+
+### TLS and trust (`spec.ca`, `spec.tls`, site CAs)
+
+Remote and local Control Planes accept base64-encoded PEM material in YAML. All certificate and key values must be valid base64.
+
+| Field | Kinds | Description |
+| ----- | ----- | ----------- |
+| `ca` | All | Trust anchor {CLI_NAME} stores for Controller API verification. |
+| `tls.ca` | Remote, local | Optional CA for Controller listener TLS. |
+| `tls.cert` | Remote, local | Controller TLS certificate (PEM, base64). Must be set together with `tls.key`. |
+| `tls.key` | Remote, local | Controller TLS private key (PEM, base64). |
+| `routerSiteCA.tlsCert` / `tlsKey` | Remote, local | Router site CA certificate and key. |
+| `routerLocalCA.tlsCert` / `tlsKey` | Remote, local | Router local CA certificate and key. |
+| `natsSiteCA.tlsCert` / `tlsKey` | Remote, local | NATS site CA certificate and key. |
+| `natsLocalCA.tlsCert` / `tlsKey` | Remote, local | NATS local CA certificate and key. |
+| `controllers[].tls` | Remote | Per-Controller TLS override (same shape as `spec.tls`). |
+
+On Kubernetes, create secrets `pot-site-ca` and `default-router-local-ca` in the Control Plane namespace when you bring your own Router or NATS CA. See [Certificates for Router and NATS](../security/certificates-manager).
+
+### `spec.systemMicroservices` (remote and local)
+
+Per-architecture Router and NATS images deployed as system microservices.
+
+| Field | Description |
+| ----- | ----------- |
+| `router.amd64` | Router image for amd64 hosts. |
+| `router.arm64` | Router image for arm64 hosts. |
+| `router.riscv64` | Router image for riscv64 hosts. |
+| `router.arm` | Router image for 32-bit ARM hosts. |
+| `nats.amd64` | NATS image for amd64 hosts. |
+| `nats.arm64` | NATS image for arm64 hosts. |
+| `nats.riscv64` | NATS image for riscv64 hosts. |
+| `nats.arm` | NATS image for 32-bit ARM hosts. |
+
+List all four keys when your fleet mixes CPU architectures, especially with `airgap: true`.
 
 ## Kubernetes Control Plane
 
-The **KubernetesControlPlane** kind deploys the Controller, Router, and  NATS on a Kubernetes cluster. The operator manages the lifecycle; you configure replicas, images, services, ingresses, and optional vault and database.
+The **KubernetesControlPlane** kind deploys the Controller, Router, and NATS on a Kubernetes cluster. The operator manages lifecycle, replicas, Services, ingress settings, optional vault, and external database settings.
 
-```yaml
----
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: KubernetesControlPlane
 metadata:
   name: pot
   namespace: default
 spec:
+  config: .kube/config
   iofogUser:
     name: Foo
     surname: Bar
     email: user@domain.com
-    # password: password in the case you are not providing password for user, potctl will ask for password interactively
-  config: .kube/config
+    password: "TestPassword12!"
   replicas:
-    controller: 1
-    nats: 2   # optional; NATS server replicas when NATS is enabled
-  # # if controller replicas is greater than 1, you must configure the external database for the ControlPlane   
-  # database:
-  #   provider: # mysql or postgres 
-  #   user: 
-  #   host:
-  #   port: 
-  #   password: 
-  #   databaseName: 
-  #   # ssl: true
-  #   # ca: # set the base64 encoded string for the CA certificate
+    controller: 2
+    nats: 2
+  controller:
+    publicUrl: https://controller.example.com
+    trustProxy: true
+    consolePort: 8080
+    consoleUrl: https://console.example.com
+    logLevel: info
+    https: true
   auth:
-    url: https://example.com/
-    realm: realm-name
-    realmKey: realm-key
-    ssl: external
-    controllerClient: pot-controller
-    controllerSecret:
-    viewerClient: ecn-viewer
-  events:  # enable/disable or configure controller audit events
-    auditEnabled: true   # true / false
-    retentionDays: 14    # how many days should controller saved events records
-    cleanupInterval: 86400  # controller internal event cleanup job interval in seconds.
-    captureIpAddress: true  # should controller also track IP addresses on events  
+    mode: embedded
+    insecureAllowHttp: false
+    insecureAllowBootstrapLog: false
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  events:
+    auditEnabled: true
+    retentionDays: 14
+    cleanupInterval: 86400
+    captureIpAddress: true
   images:
-   # pullSecret:  # set the K8S pull secret name
-    operator: ghcr.io/datasance/operator:3.7.1
-    controller: ghcr.io/datasance/controller:3.7.1
-    router: ghcr.io/datasance/router:3.7.0
-    nats: ghcr.io/datasance/nats:2.12.4   # used when NATs is enabled
-  # NATs: enable and optionally configure JetStream
+    pullSecret: my-registry-secret
+    operator: {{REGISTRY}}/operator:3.8.0
+    controller: {{REGISTRY}}/controller:v3.8.0
+    router: {{REGISTRY}}/router:3.8.0
+    nats: {{REGISTRY}}/nats:2.14.3
+  nats:
+    enabled: true
+    jetStream:
+      storageSize: "10Gi"
+      memoryStoreSize: "1Gi"
+      storageClassName: ""
   services:
     controller:
-      type:  LoadBalancer # LoadBalancer / ClusterIP / Node Port .. If it is Cluster IP ingress for Controller need to be defined
+      type: ClusterIP
+      annotations: {}
       externalTrafficPolicy: Cluster
-      # annotations: # if type is LoadBalancer user can define annotations in order to map which IP pool they would like to assign for the service
-      #   #service.beta.kubernetes.io/azure-load-balancer-internal: "true"
     router:
-      type: LoadBalancer
-      externalTrafficPolicy: Cluster
-      # annotations: # if type is LoadBalancer user can define annotations in order to map which IP pool they would like to assign for the service
-      #   #service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      type: ClusterIP
+      annotations: {}
     nats:
-      type: LoadBalancer  # or LoadBalancer when using external NATS clients
-      externalTrafficPolicy: Cluster
-      # annotations: {}
+      type: ClusterIP
+      annotations: {}
     natsServer:
-      type: LoadBalancer  # or LoadBalancer when using external NATS clients
-      externalTrafficPolicy: Cluster
-      # annotations: {}
-  nats:  # optional; when present and enabled, NATS is deployed with JetStream
-    enabled: true  # set to false to disable NATS
-    jetStream:
-      storageSize: "10Gi"   # PVC size for JetStream file store
-      memoryStoreSize: "1Gi"   # JetStream memory store size
-      # storageClassName: ""   # optional Kubernetes storage class
-  # vault:  # optional; when set, operator creates a Secret from provider config and injects VAULT_* env vars into the controller
-  #   enabled: true
-  #   provider: openbao  # hashicorp, openbao, vault, aws, aws-secrets-manager, azure, azure-key-vault, google, google-secret-manager
-  #   basePath: "pot/local-test/secrets"  # $namespace is replaced with the ControlPlane namespace
-  #   # Provide only the block for your selected provider. Operator creates Secret "controller-vault-credentials" from these values.
-  #   hashicorp:
-  #     address: "http://192.168.139.3:8200"
-  #     token: "s.JCqRS37hu1VOy7PX3QRVdSY2"   # Vault token (sensitive; consider External Secrets to populate the CR)
-  #     mount: "kv"
-    # aws:
-    #   region: "us-east-1"
-    #   accessKeyId: ""
-    #   accessKey: ""
-    # azure:
-    #   url: "https://your-vault.vault.azure.net"
-    #   tenantId: ""
-    #   clientId: ""
-    #   clientSecret: ""
-    # google:
-    #   projectId: ""
-    #   credentials: ""  # path to service account key or JSON content
-  controller:
-    ecnViewerUrl: # set url for ECN Viewer UI for Controller REST API endpoint 
-    https:  # set to true to enable HTTPS for Controller REST API endpoint
-    secretName:  # set the K8S secret name for the Controller REST API endpoint
-    logLevel: # set the log level for the Controller REST API endpoint
+      type: ClusterIP
+      annotations: {}
   ingresses:
     controller:
-      annotations: # K8S ingress annotations
-        # cert-manager.io/cluster-issuer: letsencrypt-nginx
-        # nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
-        # nginx.ingress.kubernetes.io/backend-protocol: "https"
-      ingressClassName: # set the K8S ingress class name
-      host: # set the host for the Controller endpoints
-      secretName: # set the K8S secret name for the Controller endpoints
+      annotations: {}
+      ingressClassName: nginx
+      host: controller.example.com
+      secretName: controller-tls
     router:
-      address: # set the address for the Router endpoints PS: this will not create an Ingress on Kubernetes, it is just for the configuring default router addresse of the ControlPlane
-      messagePort: # set the message port for the Router endpoints
-      interiorPort: # set the interior port for the Router endpoints
-      edgePort: # set the edge port for the Router endpoints
-  #   nats:  # required when using ingress for NATS (address = hostname)
-  #     address: 
-  #     serverPort: 4222
-  #     clusterPort: 6222
-  #     leafPort: 7422
-  #     mqttPort: 8883
-  #     httpPort: 8222
+      address: router.example.com
+      messagePort: 5671
+      interiorPort: 55671
+      edgePort: 45671
+    nats:
+      address: nats.example.com
+      serverPort: 4222
+      clusterPort: 6222
+      leafPort: 7422
+      mqttPort: 8883
+      httpPort: 8222
+  database:
+    provider: postgres
+    user: dbuser
+    host: db.example.com
+    port: 5432
+    password: secret
+    databaseName: iofog
+    ssl: true
+    ca: "<base64 CA>"
+  vault:
+    enabled: false
+    provider: hashicorp
+    basePath: secret/pot
+    hashicorp:
+      address: https://vault.example.com
+      token: "<token>"
+      mount: secret
+`}</FlavorYaml>
 
-```
+### Kubernetes-only fields
 
-| Field           | Description                                                                                                                                                                                                                             |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| iofogUser       | Credentials registered against ioFog Controller REST API.                                                                                                                                                                               |
-| config          | Path to the Kubernetes configuration file that potctl uses to install the Controller service to the Kubernetes cluster. (Note: The namespace used with potctl will be the Kubernetes namespace where your components are deployed.)     |
-| replicas.controller        | Defines the number of controller replicas to be deployed.                                                                                                                                                                               |
-| replicas.nats   | Optional. Number of NATS server replicas when NATS is enabled.                                                                                                                                                                          |
-| nats            | Optional. Enable NATS and configure JetStream: `enabled`, `jetStream.storageSize`, `jetStream.memoryStoreSize`, optional `jetStream.storageClassName`.                                                                                                                                               |
-| vault           | Optional. Vault integration (HashiCorp, OpenBao, AWS, Azure, Google). When set, the operator creates a Secret and injects `VAULT_*` env vars into the Controller. See commented example in YAML.                                                                                                     |
-| database        | Configuration for the database. Required when controller replicas > 1. Includes provider, user, host, port, password, database name, ssl, ca.                                                                                                                                                         |
-| auth            | Authentication configuration for Keycloak: url, realm, realmKey, ssl, controllerClient, controllerSecret, viewerClient.                                                                                                                                                                            |
-| images          | Image references for operator, controller, router, NATS. Use `images.nats` when NATS is enabled. Optional `pullSecret` for private registries.                                                                                                                                                       |
-| services        | Service type (`LoadBalancer` or `ClusterIP`), optional `externalTrafficPolicy`, and annotations for controller, router, and (when NATS is enabled) `nats` and `natsServer`.                                                                                                                          |
-| controller      | Controller-specific settings: `ecnViewerUrl`, `https`, `secretName`, `logLevel`. See [Controller Configuration](../reference-controller/configuration) for full config options.                                                                                                                     |
-| ingresses       | Ingress configuration for Controller, Router, and (optionally) NATS. Used to set hostnames and ports for external access.                                                                                                                                                                             |
-| ingresses.controller | Annotations, ingressClassName, host, secretName for the Controller REST API.                                                                                                                                                                                                                       |
-| ingresses.router | Address and ports (messagePort, interiorPort, edgePort) for the Router. Does not create a Kubernetes Ingress; configures the Control Plane's default Router address.                                                                                                                                |
-| ingresses.nats  | Optional. When NATS is enabled: address (hostname), serverPort (default 4222), clusterPort, leafPort, mqttPort, httpPort.                                                                                                                                                                              |
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `config` | **Yes** | Path to the kubeconfig {CLI_NAME} uses to install operator resources. |
+| `replicas.controller` | No | Controller pod count (default 1). Values greater than 1 require `database`. |
+| `replicas.nats` | No | NATS StatefulSet replicas when NATS is enabled. Must be **at least 2** when set. Omit for operator default. |
+| `images.pullSecret` | No | Kubernetes imagePullSecret name for private registries. |
+| `images.operator` | No | Operator image. |
+| `images.controller` | No | Controller image. |
+| `images.router` | No | Router image. |
+| `images.nats` | No | NATS image. |
+| `nats.enabled` | No | Enable NATS hub (default **true** when `nats` block is omitted). |
+| `nats.jetStream.storageSize` | No | JetStream PVC size (for example `10Gi`). |
+| `nats.jetStream.memoryStoreSize` | No | JetStream memory store size. |
+| `nats.jetStream.storageClassName` | No | StorageClass for JetStream PVCs. Empty string uses cluster default. |
+| `services.controller.type` | No | Kubernetes Service type (`ClusterIP`, `LoadBalancer`, `NodePort`). |
+| `services.controller.annotations` | No | Service annotations. |
+| `services.controller.externalTrafficPolicy` | No | `Cluster` or `Local`. Use `Cluster` on k3s/OrbStack when type is `LoadBalancer`. |
+| `services.router.*` | No | Same fields as controller Service. |
+| `services.nats.*` | No | Service for NATS leaf/advertised endpoints. |
+| `services.natsServer.*` | No | Service for NATS server cluster port. |
+| `ingresses.controller.host` | When Controller Service is ClusterIP | Ingress hostname for the Controller API. |
+| `ingresses.controller.secretName` | When Controller Service is ClusterIP | TLS secret for Controller ingress. |
+| `ingresses.controller.ingressClassName` | No | Ingress class (for example `nginx`). |
+| `ingresses.controller.annotations` | No | Ingress annotations. |
+| `ingresses.router.address` | When Router Service is ClusterIP | Advertised router hostname. |
+| `ingresses.router.messagePort` | When Router Service is ClusterIP | Skupper messaging port (default 5671). |
+| `ingresses.router.interiorPort` | When Router Service is ClusterIP | Interior router port (default 55671). |
+| `ingresses.router.edgePort` | When Router Service is ClusterIP | Edge router port (default 45671). |
+| `ingresses.nats.address` | No | Advertised NATS hostname. |
+| `ingresses.nats.serverPort` | No | NATS client port (default 4222). |
+| `ingresses.nats.clusterPort` | No | NATS cluster port (default 6222). |
+| `ingresses.nats.leafPort` | No | NATS leaf port (default 7422). |
+| `ingresses.nats.mqttPort` | No | NATS MQTT port (default 8883). |
+| `ingresses.nats.httpPort` | No | NATS monitoring HTTP port (default 8222). |
+| `endpoint` | No | Runtime: Controller URL after deploy. Usually omitted from input YAML. |
+| `controllerPods` | No | Runtime: operator-managed pod list. Do not set in deploy YAML. |
+
+:::warning[Service type and ingress coupling]
+
+When `services.controller.type` is `ClusterIP`, you must set `ingresses.controller.host` and `ingresses.controller.secretName`.
+
+When `services.router.type` is `ClusterIP`, you must set `ingresses.router.address`, `messagePort`, `interiorPort`, and `edgePort`.
+
+Use `LoadBalancer` Services (with `externalTrafficPolicy: Cluster` on lightweight clusters) to skip ingress requirements for dev clusters.
+
+:::
 
 :::warning[Router and NATS ingress]
-  Ingress settings for Router and NATS configure the Control Plane's advertised addresses and ports; they do not necessarily create Kubernetes Ingress resources depending on your setup.
+
+Ingress settings for Router and NATS configure advertised addresses and ports. They do not always create Kubernetes Ingress objects, depending on your cluster setup.
+
 :::
 
 :::warning[Router and NATS TLS]
-  By default, Router and NATS instances are deployed with TLS. If you do not provide your own CA, the operator creates self-signed certificates. To use your own CA, create Kubernetes secrets `pot-site-ca` and `default-router-local-ca` in the Control Plane namespace. See [Certificates for Router and NATS](../security/certificates-manager).
+
+Router and NATS deploy with TLS by default. Without your own CA, the operator creates self-signed certificates. See [Certificates for Router and NATS](../security/certificates-manager).
+
 :::
+
+### Kubernetes dev example (LoadBalancer)
+
+For local Kubernetes (k3s, OrbStack), prefer LoadBalancer Services instead of ingress:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: pot-dev
+spec:
+  config: ~/.kube/config
+  iofogUser:
+    email: user@domain.com
+  controller:
+    trustProxy: false
+    https: false
+  auth:
+    mode: embedded
+    insecureAllowHttp: true
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  images:
+    controller: {{REGISTRY}}/controller:v3.8.0
+    router: {{REGISTRY}}/router:3.8.0
+    nats: {{REGISTRY}}/nats:2.14.3
+  nats:
+    enabled: true
+  services:
+    controller:
+      type: LoadBalancer
+      externalTrafficPolicy: Cluster
+    router:
+      type: LoadBalancer
+      externalTrafficPolicy: Cluster
+    nats:
+      type: LoadBalancer
+      externalTrafficPolicy: Cluster
+`}</FlavorYaml>
 
 ## Remote Control Plane
 
-The **ControlPlane** kind deploys the Controller (and optionally Router, NATS, and a System Agent) on one or more remote hosts. potctl uses SSH to install and configure each Controller. You can enable NATS with `nats.enabled: true` and optionally set `airgap: true` for air-gapped installs.
+The **ControlPlane** kind deploys the Controller (and Router, NATS, and a system Edgelet node) on remote hosts over SSH. Set `nats.enabled: true` to run NATS alongside each Controller. Set `airgap: true` for air-gapped installs.
 
-```yaml
----
-apiVersion: datasance.com/v3
+:::warning[System Edgelet required]
+
+Each entry in `controllers[]` **must** include a `systemAgent` block. Deploy validation fails when it is missing. At minimum set `systemAgent.config.arch` and `containerEngine`.
+
+:::
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: ControlPlane
 metadata:
   name: remote
 spec:
-  # endpoint:  # in the case you would like to set controller behind load balancer, you can set the endpoint here
-  # nats:
-  #   enabled: true   # enable NATS for this control plane
-  # airgap: true      # optional; for air-gapped deployment
+  endpoint: https://controller.example.com
   iofogUser:
     name: Foo
     surname: Bar
     email: user@domain.com
-    # password: password in the case you are not providing password for user, potctl will ask for password interactively
-  controllers:
-  - name: remote-1
-    host: 10.0.128.192
-    ssh:
-      user: foo
-      keyFile: ~/.ssh/id_rsa
-      port: 22
-    # scripts: # in the case you would like to use your own scripts, you can set the scripts here for installation of Controller
-    #   dir: /tmp/my-scripts
-    #   deps:
-    #     entrypoint: install_container_engine.sh
-    #     args: []
-    #   setEnv:
-    #     entrypoint: set_env.sh
-    #     args: []
-    #   install:
-    #     entrypoint: install_iofog.sh
-    #     args:
-    #       - ghcr.io/datasance/controller:3.7.1
-    #   uninstall:
-    #     entrypoint: uninstall_iofog.sh
-    # ecnViewerPort:
-    # ecnViewerUrl:
-    # logLevel:
-    # https:
-    #   enabled: true
-    #   caCert: # set the base64 encoded string for the CA certificate
-    #   tlsCert: # set the base64 encoded string for the TLS certificate
-    #   tlsKey: # set the base64 encoded string for the TLS key
-    # siteCA:
-    #   tlsCert: # set the base64 encoded string for the TLS certificate for Router Site CA if not provided, Controller will create self-signed certificate for Router Site CA
-    #   tlsKey: # set the base64 encoded string for the TLS key for Router Site CA if not provided, Controller will create self-signed certificate for Router Site CA
-    # localCA:
-    #   tlsCert: # set the base64 encoded string for the TLS certificate for Router Local CA if not provided, Controller will create self-signed certificate for Router Local CA
-    #   tlsKey: # set the base64 encoded string for the TLS key for Router Local CA if not provided, Controller will create self-signed certificate for Router Local CA
-    systemAgent: # systemAgent configuration that runs alongside with Controller on the same host
-      # package: # you can set the package for Agent installation if you would like to deploy Agent as a deb or rpm package you can set the version, if you would like to deploy Agent as a container you can set the image
-      #   # version: 3.7.0# set the version for Agent package
-      #   container:
-      #     image: ghcr.io/datasance/agent:3.7.0
-      # scripts: # in the case you would like to use your own scripts, you can set the scripts here for installation of Agent
-      #   dir: /tmp/my-scripts # set the directory for the scripts for installation of Agent
-      #   deps:
-      #     entrypoint: install_container_engine.sh
-      #     args: []
-      #   install:
-      #     entrypoint: install_iofog.sh
-      #     args:
-      #       - ghcr.io/datasance/agent:3.7.0
-      #   uninstall:
-      #     entrypoint: uninstall_iofog.sh
-      #     args: []
-      # config: #configuration for System Agent
-      #   agentType: x86
-      #   deploymentType: container
-      #   containerEngine: docker
-      #   networkInterface: enX0
-      #   dockerUrl: unix:///var/run/docker.sock
-      #   diskLimit: 10
-      #   diskDirectory: /var/lib/iofog-agent/
-      #   memoryLimit: 4096
-      #   cpuLimit: 80
-      #   logLimit: 10
-      #   logDirectory: /var/log/iofog-agent/
-      #   logFileCount: 10
-      #   statusFrequency: 10
-      #   changeFrequency: 10
-      #   deviceScanFrequency: 60
-      #   bluetoothEnabled: false
-      #   watchdogEnabled: false
-      #   gpsMode: manual
-      #   gpsScanFrequency: 60
-      #   gpsDevice: ''
-      #   edgeGuardFrequency: 0
-      #   abstractedHardwareEnabled: false
-      #   logLevel: INFO
-      #   dockerPruningFrequency: 0
-      #   availableDiskThreshold: 20
-      #   timeZone: Etc/UTC
-  - name: remote-2
-    host: 10.0.128.192
-    ssh:
-      user: foo
-      keyFile: ~/.ssh/id_rsa
-      port: 22
-    # ecnViewerPort:
-    ecnViewerUrl: # set the URL for the ECN Viewer UI for Controller REST API endpoint
-    # logLevel:
-    # https:
-    #   enabled: true
-    #   caCert: base64 encoded string
-    #   tlsCert: base64 encoded string
-    #   tlsKey: base64 encoded string
-    # siteCA:
-    #   tlsCert: base64 encoded string
-    #   tlsKey: base64 encoded string
-    # localCA:
-    #   tlsCert: base64 encoded string
-    #   tlsKey: base64 encoded string
-    systemAgent:
-      package:
-        container:
-          image: ghcr.io/datasance/agent:3.7.0
-      # scripts:
-      #   dir: /Users/emirhan/Documents/GitHub/demo.datasance.com/AWS/4-ControlPlanes/z-remote/agent-scrits
-      #   deps:
-      #     entrypoint: install_container_engine.sh
-      #     args: []
-      #   install:
-      #     entrypoint: install_iofog.sh
-      #     args:
-      #       - ghcr.io/datasance/agent:3.7.0
-      #   uninstall:
-      #     entrypoint: uninstall_iofog.sh
-      #     args: []
-      # config:
-      #   deploymentType: container
-      #   containerEngine: docker
-  # package: # you can set the container image for Controller installation
-  #   container:
-  #     image: emirhandurmus/controller:3.7.1
-  # systemMicroservices:
-  #   router:
-  #     x86: ghcr.io/datasance/router:3.7.0
-  #     arm: ghcr.io/datasance/router:3.7.0
-  #   nats:   # when nats.enabled is true
-  #     x86: ghcr.io/datasance/nats:2.12.4
-  #     arm: ghcr.io/datasance/nats:2.12.4
-  # database: # if you would like to use an external database or have multiple controllers for the ControlPlane, you can set the database here
-  #     provider: postgres/mysql  
-  #     user: 
-  #     host: 
-  #     port: 5432
-  #     password: 
-  #     databaseName: 
-  #     ssl: true/false 
-  #     ca: base64 encoded string
+    password: "TestPassword12!"
+  controller:
+    publicUrl: https://controller.example.com
+    consoleUrl: https://console.example.com
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
   auth:
-    url: https://example.com/
-    realm: realm-name
-    realmKey: realm-key
-    ssl: external
-    controllerClient: pot-controller
-    controllerSecret:
-    viewerClient: ecn-viewer
+    mode: embedded
+    insecureAllowHttp: false
+    bootstrap:
+      username: admin
+      password: "RemoteTest12!"
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.8.0
+      arm64: {{REGISTRY}}/router:3.8.0
+      riscv64: {{REGISTRY}}/router:3.8.0
+      arm: {{REGISTRY}}/router:3.8.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.14.3
+      arm64: {{REGISTRY}}/nats:2.14.3
+      riscv64: {{REGISTRY}}/nats:2.14.3
+      arm: {{REGISTRY}}/nats:2.14.3
   nats:
     enabled: true
-  events:  # enable/disable or configure controller audit events
-    auditEnabled: true   # true / false
-    retentionDays: 14    # how many days should controller saved events records
-    cleanupInterval: 86400  # controller internal event cleanup job interval in seconds.
-    captureIpAddress: true  # should controller also track IP addresses on events
-  # vault:  # optional; when set, operator creates a Secret from provider config and injects VAULT_* env vars into the controller
-  #   enabled: true
-  #   provider: openbao  # hashicorp, openbao, vault, aws, aws-secrets-manager, azure, azure-key-vault, google, google-secret-manager
-  #   basePath: "pot/local-test/secrets"  # $namespace is replaced with the ControlPlane namespace
-  #   # Provide only the block for your selected provider. Operator creates Secret "controller-vault-credentials" from these values.
-  #   hashicorp:
-  #     address: "http://192.168.139.3:8200"
-  #     token: "s.JCqRS37hu1VOy7PX3QRVdSY2"   # Vault token (sensitive; consider External Secrets to populate the CR)
-  #     mount: "kv"
-    # aws:
-    #   region: "us-east-1"
-    #   accessKeyId: ""
-    #   accessKey: ""
-    # azure:
-    #   url: "https://your-vault.vault.azure.net"
-    #   tenantId: ""
-    #   clientId: ""
-    #   clientSecret: ""
-    # google:
-    #   projectId: ""
-    #   credentials: ""  # path to service account key or JSON content
+  events:
+    auditEnabled: true
+    retentionDays: 14
+    cleanupInterval: 86400
+    captureIpAddress: true
+  database:
+    provider: postgres
+    user: dbuser
+    host: db.example.com
+    port: 5432
+    password: secret
+    databaseName: iofog
+  controllers:
+    - name: remote-1
+      host: 10.0.128.192
+      ssh:
+        user: foo
+        keyFile: ~/.ssh/id_rsa
+        port: 22
+      systemAgent:
+        package:
+          container:
+            image: {{REGISTRY}}/edgelet:1.0.0
+        config:
+          arch: amd64
+          host: 10.0.128.192
+          containerEngine: edgelet
+          containerEngineUrl: unix:///run/edgelet/containerd.sock
+          deploymentType: native
+    - name: remote-2
+      host: 10.0.128.193
+      ssh:
+        user: foo
+        keyFile: ~/.ssh/id_rsa
+        port: 22
+      systemAgent:
+        package:
+          container:
+            image: {{REGISTRY}}/edgelet:1.0.0
+        config:
+          arch: amd64
+          host: 10.0.128.193
+          containerEngine: edgelet
+          deploymentType: native
+`}</FlavorYaml>
 
+### Remote-only fields
 
-```
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `endpoint` | No | Load-balancer or shared front-end URL. Must match `controller.publicUrl` when both are set. |
+| `airgap` | No | Pull images on the operator machine and transfer over SSH. Requires `systemAgent.config.arch` on each controller. See [Airgap Deployment](/platform-deployment/airgap-deployment). |
+| `nats.enabled` | No | Deploy NATS hub microservice on each Controller host. |
+| `controllers` | **Yes** | List of Controller hosts (at least one). |
+| `controllers[].name` | **Yes** | Unique lowercase alphanumeric name per Controller. |
+| `controllers[].host` | **Yes** | SSH target hostname or IP. |
+| `controllers[].ssh.user` | **Yes** | SSH username. |
+| `controllers[].ssh.keyFile` | **Yes** | Path to SSH private key on the operator machine. |
+| `controllers[].ssh.port` | No | SSH port (default 22). |
+| `controllers[].systemAgent` | **Yes** | System Edgelet node on the Controller host. See [System Edgelet on Control Plane hosts](#system-edgelet-on-control-plane-hosts). |
+| `controllers[].tls` | No | Per-host TLS material (same shape as `spec.tls`). |
+| `controllers[].endpoint` | No | Runtime: resolved Controller URL for this host. |
+| `controllers[].created` | No | Runtime: deploy timestamp. |
 
-| Field                  | Description                                                                                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| iofogUser              | Credentials registered against ioFog Controller REST API.                                                                                                                |
-| controllers            | List of Controller instances.                                                                                                                                            |
-| controller.name        | User-defined unique identifier of Controller instance within an potctl namespace. Must start and end with lowercase alphanumeric character. Can include '-' character. |
-| controller.host        | Hostname of remote host that potctl must SSH into to install Controller service.                                                                                       |
-| controller.ssh.user    | Username of remote host that potctl must SSH into to install Controller service.                                                                                       |
-| controller.ssh.keyFile | Path to private SSH key that potctl must use to SSH into remote host to install Controller service.                                                                    |
-| controller.ssh.port     | Port to use with SSH. Optional (default: 22).                                                                                                                                 |
-| controller.systemAgent | Optional. System Agent that runs alongside the Controller on the same host. Package (version or container image) and scripts for install/uninstall.                         |
-| package.container.image | Optional. Controller container image when deploying to remote hosts. Defaults to a standard image if not set.                                                                |
-| systemMicroservices.router | Optional. Custom Router images (x86, arm) for remote deployment.                                                                                                            |
-| systemMicroservices.nats   | Optional. NATS server images (x86, arm) when `nats.enabled` is true.                                                                                                       |
-| nats.enabled    | Optional. Set to true to enable NATS for this control plane. When true, NATS is deployed alongside each Controller.                                                        |
-| vault           | Optional. Vault integration for Controller secrets (HashiCorp, OpenBao, AWS, Azure, Google). See commented YAML for provider-specific blocks.                             |
-| events          | Optional. Controller audit events: auditEnabled, retentionDays, cleanupInterval, captureIpAddress.                                                                         |
-| database        | Optional. External database when running multiple Controllers. Provider (postgres/mysql), user, host, port, password, databaseName, ssl, ca.                               |
-| auth            | Authentication configuration for Keycloak: url, realm, realmKey, ssl, controllerClient, controllerSecret, viewerClient.                                                 |
+When `controllers` has more than one entry, `database` with a non-empty `provider` is **required**.
+
+### Single remote Controller
+
+For one Controller host, omit `database` and list a single entry under `controllers`:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: remote-single
+spec:
+  endpoint: https://controller.example.com
+  iofogUser:
+    email: user@domain.com
+  controller:
+    publicUrl: https://controller.example.com
+    consoleUrl: https://console.example.com
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "RemoteTest12!"
+  controllers:
+    - name: remote-1
+      host: 10.0.128.192
+      ssh:
+        user: foo
+        keyFile: ~/.ssh/id_rsa
+      systemAgent:
+        config:
+          arch: amd64
+          containerEngine: edgelet
+          host: 10.0.128.192
+`}</FlavorYaml>
 
 ## Local Control Plane
 
-The **LocalControlPlane** kind deploys the Controller (and optionally NATS) as a local Docker container. Use it for quick starts and development. Set `nats.enabled: true` to enable NATS.
+The **LocalControlPlane** kind deploys the Controller with a system Edgelet node on the same machine. Use it for quick starts and development. Set `nats.enabled: true` to enable NATS.
 
-```yaml
-apiVersion: datasance.com/v3
+:::warning[System Edgelet required]
+
+`spec.systemAgent` is **required**. Set `systemAgent.config.arch` at minimum.
+
+:::
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: LocalControlPlane
 metadata:
   name: buffalo
   namespace: default
 spec:
-  # nats:
-  #   enabled: true   # optional; enable NATs for this local control plane
+  endpoint: http://127.0.0.1:51121
   iofogUser:
     name: Foo
     surname: Bar
     email: user@domain.com
-    password: g9hr823rhuoi
+    password: "TestPassword12!"
+  controller:
+    publicUrl: http://127.0.0.1:51121
+    consoleUrl: http://127.0.0.1:8008
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
   auth:
-    url: https://example.com/
-    realm: realm-name
-    realmKey: realm-key
-    ssl: external
-    controllerClient: pot-controller
-    controllerSecret:
-    viewerClient: ecn-viewer
+    mode: embedded
+    insecureAllowHttp: true
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.8.0
+      arm64: {{REGISTRY}}/router:3.8.0
+      riscv64: {{REGISTRY}}/router:3.8.0
+      arm: {{REGISTRY}}/router:3.8.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.14.3
+      arm64: {{REGISTRY}}/nats:2.14.3
+      riscv64: {{REGISTRY}}/nats:2.14.3
+      arm: {{REGISTRY}}/nats:2.14.3
   nats:
     enabled: true
-  events:  # enable/disable or configure controller audit events
-    auditEnabled: true   # true / false
-    retentionDays: 14    # how many days should controller saved events records
-    cleanupInterval: 86400  # controller internal event cleanup job interval in seconds.
-    captureIpAddress: true  # should controller also track IP addresses on events 
-  controller:
-    container:
-      image: ghcr.io/datasance/controller:3.7.1
-```
+  events:
+    auditEnabled: true
+    retentionDays: 14
+  systemAgent:
+    package:
+      container:
+        image: {{REGISTRY}}/edgelet:1.0.0
+    config:
+      arch: amd64
+      containerEngine: edgelet
+      containerEngineUrl: unix:///run/edgelet/containerd.sock
+      deploymentType: native
+`}</FlavorYaml>
 
-| Field            | Description                                               |
-| ---------------- | --------------------------------------------------------- |
-| iofogUser        | Credentials registered against ioFog Controller REST API. |
-| nats.enabled     | Optional. Set to true to enable NATS for this local control plane. |
-| events           | Optional. Controller audit events (auditEnabled, retentionDays, cleanupInterval, captureIpAddress). |
-| controller       | Controller specification. |
-| controller.container.image | Docker image for the Controller (e.g. ghcr.io/datasance/controller:3.7.1). |
-| auth             | Authentication configuration for Keycloak: url, realm, realmKey, ssl, controllerClient, controllerSecret, viewerClient. |       
+### Local-only fields
 
-## Remote Controller
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `airgap` | No | Air-gapped local install. Pair with pinned images under `controller.package` and `systemMicroservices`. |
+| `systemAgent` | **Yes** | System Edgelet node co-deployed with the Controller. |
+| `controllers` | No | Optional list of local Controller records (runtime). Most installs omit this block. |
+| `auth.insecureAllowHttp` | No | Allow `http://` URLs for local development. |
 
-We can expand a Remote Control Plane by deploying a new Controller.
+Shared remote/local fields (`endpoint`, `ca`, `tls`, site CA blocks, `vault`, `database`, `nats.enabled`) use the same shapes as the [shared spec blocks](#shared-spec-blocks).
 
-```yaml
-apiVersion: datasance.com/v3
+## Controller add-on
+
+Add another Controller to an **existing** remote Control Plane with the **Controller** kind. The namespace must already contain a full `ControlPlane` deploy with `auth.mode` and `spec.controller` populated.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: Controller
 metadata:
   name: alpaca
@@ -443,23 +645,117 @@ spec:
     user: foo
     keyFile: ~/.ssh/id_rsa
     port: 22
-```
+  systemAgent:
+    package:
+      container:
+        image: {{REGISTRY}}/edgelet:1.0.0
+    config:
+      arch: amd64
+      host: 30.40.50.5
+      containerEngine: edgelet
+      deploymentType: native
+`}</FlavorYaml>
 
-| Field       | Description                                                                                                                                                              |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| name        | User-defined unique identifier of Controller instance within an potctl namespace. Must start and end with lowercase alphanumeric character. Can include '-' character. |
-| host        | Hostname of remote host that potctl must SSH into to install Controller service.                                                                                       |
-| ssh.user    | Username of remote host that potctl must SSH into to install Controller service.                                                                                       |
-| ssh.keyFile | Path to private SSH key that potctl must use to SSH into remote host to install Controller service.                                                                    |
-| ssh.port    | Port to use with SSH. Optional (default: 22)                                                                                                                             |
+| Field | Description |
+| ----- | ----------- |
+| `metadata.name` | Unique Controller name. Lowercase alphanumeric; hyphens allowed. Must not duplicate an existing controller name or host in the namespace. |
+| `host` | Remote host {CLI_NAME} reaches over SSH. |
+| `ssh.user` | SSH username. |
+| `ssh.keyFile` | Path to the private SSH key. |
+| `ssh.port` | SSH port (default 22). |
+| `systemAgent` | **Required.** System Edgelet on the new Controller host (same shape as `controllers[].systemAgent`). |
+| `tls` | Optional per-Controller TLS override. |
+| `endpoint` | Runtime: resolved URL after deploy. |
+| `created` | Runtime: deploy timestamp. |
+
+:::warning[External database for HA]
+
+You cannot add a second Controller when the stored Control Plane uses SQLite (no `database.provider`). Configure `database` on the original `ControlPlane` YAML before scaling out.
+
+:::
+
+Deploy with <code>{CLI_NAME} connect -f controller.yaml</code> or include the resource in a multi-document file. If the namespace has no prior Control Plane metadata, deploy the full `ControlPlane` YAML first.
+
+## System Edgelet on Control Plane hosts
+
+Remote and local Control Planes deploy a **system Edgelet node** on the Controller host. The YAML shape matches standalone **`Agent`** deploy specs under `systemAgent` (or `controllers[].systemAgent` on remote).
+
+### Package fields
+
+| Field | Description |
+| ----- | ----------- |
+| `package.version` | Edgelet binary release tag for native installs. |
+| `package.container.image` | Edgelet container image (default train: <code>{REGISTRY}/edgelet:1.0.0</code>). |
+| `package.container.registry` | Registry host for air-gapped or private pulls. |
+| `package.container.username` | Registry username. |
+| `package.container.password` | Registry password. |
+| `package.wasm.<handler>.url` | Download URL for a Wasm shim bundle. |
+| `package.wasm.<handler>.path` | Local path to a Wasm shim bundle on the operator machine. |
+| `package.wasm.<handler>.sha256` | Optional SHA-256 digest (64 hex characters). |
+
+Allowed Wasm handlers include `spin` and `edgelet-wasmtime`. Wasm packages are not supported when `containerEngine` is `podman`.
+
+### Script fields
+
+Optional custom install scripts use the same shape as [Agent installation scripts](reference-agent#installation-script-fields): `scripts.dir`, `scripts.deps`, `scripts.install`, and `scripts.uninstall`.
+
+### Config fields
+
+Runtime Edgelet settings live under `systemAgent.config`. They use the same fields as **`Agent`** / **`AgentConfig`** documented in [Configuration fields](reference-agent#configuration-fields).
+
+:::info[System node router and NATS modes]
+
+On Control Plane hosts, when you set router or NATS mode explicitly:
+
+- `routerConfig.routerMode` must be `interior` (not `edge`).
+- `natsConfig.natsMode` must be `server` (not `leaf`).
+
+Omit these fields to accept operator defaults for system nodes.
+
+:::
+
+## External OIDC example
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: remote-oidc
+spec:
+  iofogUser:
+    email: user@domain.com
+  controller:
+    publicUrl: https://controller.example.com
+    consoleUrl: https://console.example.com
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
+  auth:
+    mode: external
+    issuerUrl: https://idp.example.com/realms/pot
+    client:
+      id: pot-controller
+      secret: "<client-secret>"
+    consoleClient: pot-console
+    consoleClientEnabled: true
+  controllers:
+    - name: remote-1
+      host: 10.0.0.10
+      ssh:
+        user: admin
+        keyFile: ~/.ssh/id_rsa
+      systemAgent:
+        config:
+          arch: amd64
+          containerEngine: edgelet
+          host: 10.0.0.10
+`}</FlavorYaml>
 
 ## Edge Compute Network
 
-You can define an entire ECN in one YAML file by listing multiple resources separated by `---`. The example below shows a Control Plane with two Controllers and two Agents; add NATS, Router, or other kinds as needed.
+Define an entire ECN in one YAML file by listing multiple resources separated by `---`. The example below shows a remote Control Plane with two Controllers and two Edgelet nodes.
 
-```yaml
----
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: ControlPlane
 metadata:
   name: buffalo
@@ -469,28 +765,47 @@ spec:
     name: John
     surname: Doe
     email: user@example.com
-    password: mysecretpw
+    password: "TestPassword12!"
+  controller:
+    publicUrl: https://controller.example.com:51121
+    consoleUrl: https://console.example.com:8008
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
   auth:
-    url: https://example.com/
-    realm: realm-name
-    realmKey: realm-key
-    ssl: external
-    controllerClient: pot-controller
-    controllerSecret:
-    viewerClient: ecn-viewer
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  database:
+    provider: postgres
+    user: dbuser
+    host: db.example.com
+    port: 5432
+    password: secret
+    databaseName: iofog
   controllers:
     - name: alpaca-1
       host: 30.40.50.3
       ssh:
         user: john
         keyFile: ~/.ssh/id_rsa
+      systemAgent:
+        config:
+          arch: amd64
+          host: 30.40.50.3
+          containerEngine: edgelet
     - name: alpaca-2
       host: 30.40.50.4
       ssh:
         user: john
         keyFile: ~/.ssh/id_rsa
+      systemAgent:
+        config:
+          arch: amd64
+          host: 30.40.50.4
+          containerEngine: edgelet
 ---
-apiVersion: datasance.com/v3
+apiVersion: {{API_VERSION}}
 kind: Agent
 metadata:
   name: hippo-1
@@ -500,8 +815,11 @@ spec:
   ssh:
     user: john
     keyFile: ~/.ssh/id_rsa
+  config:
+    arch: amd64
+    containerEngine: edgelet
 ---
-apiVersion: datasance.com/v3
+apiVersion: {{API_VERSION}}
 kind: Agent
 metadata:
   name: hippo-2
@@ -511,7 +829,30 @@ spec:
   ssh:
     user: john
     keyFile: ~/.ssh/id_rsa
-```
+  config:
+    arch: amd64
+    containerEngine: edgelet
+`}</FlavorYaml>
+
+## Field availability by kind
+
+| Field / block | K8s | Remote | Local | Controller add-on |
+| ------------- | --- | ------ | ----- | ----------------- |
+| `config` (kubeconfig) | Yes | | | |
+| `replicas` | Yes | | | |
+| `images` | Yes | | | |
+| `services` / `ingresses` | Yes | | | |
+| `nats.jetStream` | Yes | | | |
+| `controller.consolePort` / `trustProxy` / `secretName` | Yes | | | |
+| `endpoint` | Runtime | Yes | Yes | |
+| `airgap` | | Yes | Yes | |
+| `systemMicroservices` | | Yes | Yes | |
+| `routerSiteCA` / `natsSiteCA` / site CA blocks | | Yes | Yes | |
+| `tls` (spec level) | | Yes | Yes | Per-controller |
+| `controllers[]` | | Yes | Optional | N/A (this kind) |
+| `systemAgent` (spec level) | | | **Yes** | |
+| `systemAgent` (per controller) | | **Yes** | | **Yes** |
+| Shared: `iofogUser`, `auth`, `database`, `events`, `controller`, `vault`, `ca`, `nats.enabled` | Yes | Yes | Yes | Inherits from stored CP |
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

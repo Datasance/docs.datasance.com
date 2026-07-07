@@ -53,8 +53,8 @@ spec:
         name: agent-aismall01
         config: {}
       images:
-        x86: nodered/node-red:latest
-        arm: nodered/node-red:latest
+        amd64: nodered/node-red:latest
+        arm64: nodered/node-red:latest
         registry: remote
       config: {}
       container:
@@ -82,8 +82,8 @@ spec:
         name: agent-aismall01
         config: {}
       images:
-        x86: XXX/img1
-        arm: XXX/img2
+        amd64: XXX/img1
+        arm64: XXX/img2
         registry: remote
       config: {}
       container:
@@ -133,11 +133,11 @@ with controller API the same configuration looks like:
       "images": [
         {
           "containerImage": "nodered/node-red:latest",
-          "fogTypeId": 1
+          "archId": 1
         },
         {
           "containerImage": "nodered/node-red:latest",
-          "fogTypeId": 2
+          "archId": 2
         }
       ],
       "registryId": 1,
@@ -180,11 +180,11 @@ with controller API the same configuration looks like:
       "images": [
         {
           "containerImage": " XXX/img1",
-          "fogTypeId": 1
+          "archId": 1
         },
         {
           "containerImage": " XXX/img2",
-          "fogTypeId": 2
+          "archId": 2
         }
       ],
       "registryId": 1,

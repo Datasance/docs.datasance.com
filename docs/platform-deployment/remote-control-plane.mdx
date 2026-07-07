@@ -1,3 +1,9 @@
+
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
 :::tip[Want to deploy on Kubernetes cluster instead?]
   <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Remote Control Plane on a single Linux remote host. Go to <a href="../platform-deployment/kubernetes-prepare-cluster">Kubernetes - Prepare A Cluster</a> to deploy the Control Plane on Kubernetes Cluster instead.</p>
 :::
@@ -8,21 +14,22 @@ Every Edge Compute Network ('ECN') starts with a Control Plane that allows us to
 
 In this guide, our Control Plane will deploy a single Controller instance on a remote host.
 
-:::info[We use YAML to define ioFog resources]
-  <p>The following procedures will define resources in YAML for potctl to consume. Specification of those YAML resources can be found <a href= "/docs/yaml-references/reference-control-plane">here</a>.</p>
+:::info[We use YAML to define PoT resources]
+  <p>The following procedures will define resources in YAML for {CLI_NAME} to consume. Specification of those YAML resources can be found <a href="../yaml-references/reference-control-plane">here</a>.</p>
 :::
 
-:::warning[Prepare your Keycloak Realms for Datasance PoT]
-  <p>We recommened going through the <a href="../platform-deployment/prepare-realm">Keycloak Installation Guide</a> before continuing on here.</p>
+:::info[Authentication]
+
+Set `auth.mode: embedded` in your Control Plane YAML. See [Embedded OIDC Authentication](/platform-deployment/embedded-oidc) for bootstrap credentials and TLS requirements.
+
 :::
 
 ## Deploy a Control Plane on a Remote Host
 
-Create a template of controlplane.yaml like so:
+Create `controlplane.yaml`:
 
-```bash
-echo "---
-apiVersion: datasance.com/v3
+<FlavorYaml title="controlplane.yaml">{`---
+apiVersion: {{API_VERSION}}
 kind: ControlPlane
 metadata:
   name: albatros
@@ -32,14 +39,23 @@ spec:
     surname: Bar
     email: user@domain.com
     password: iht234g9afhe
+  controller:
+    publicUrl: https://38.101.23.2:51121
+    consoleUrl: https://38.101.23.2:8008
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
   auth:
-    url: https://example.com/
-    realm: realm-name
-    realmKey: realm-key
-    ssl: exter
-    controllerClient: pot-controller
-    controllerSecret:
-    viewerClient: ecn-viewer
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: LocalTest12!
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.8.0
+      arm64: {{REGISTRY}}/router:3.8.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.14.3
+      arm64: {{REGISTRY}}/nats:2.14.3
   events:
     auditEnabled: true
     retentionDays: 14
@@ -51,35 +67,21 @@ spec:
     host: 38.101.23.2
     ssh:
       user: bar
-      keyFile: ~/.ssh/id_rsa" > /tmp/controlplane.yaml
-```
+      keyFile: ~/.ssh/id_rsa
+`}</FlavorYaml>
 
-Make sure to edit the `host`, `ssh.user`, and `ssh.keyFile` fields to correspond with the remote host we are deploying to.
+Edit `host`, `ssh.user`, and `ssh.keyFile` for your remote host. Set `systemMicroservices` arch keys to match the host CPU.
 
-Once we have edited the fields to our liking, go ahead and run:
+Deploy:
 
-```bash
-potctl deploy -f /tmp/controlplane.yaml
-```
-
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
 ## Verify the Deployment
 
-We can use the following commands to verify the Control Plane is up and running:
-
-```bash
-potctl get controllers
-```
-
-```bash
-potctl describe controller alpaca-1
-```
-
-```bash
-potctl describe controlplane
-```
-
+<CliBlock>{`{{CLI_NAME}} get controllers`}</CliBlock>
+<CliBlock>{`{{CLI_NAME}} describe controller alpaca-1`}</CliBlock>
+<CliBlock>{`{{CLI_NAME}} describe controlplane`}</CliBlock>
 :::tip[Where to go from here?]
-<p>Having our Control Plane up and running, we can now go to <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+<p>With the Control Plane running, go to <a href="../platform-deployment/setup-your-agents">Setup Edgelet nodes</a> to provision Edgelet v1.0.0 on your edge hosts.</p>
 :::
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';

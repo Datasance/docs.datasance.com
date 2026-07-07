@@ -1,0 +1,136 @@
+---
+title: Edgelet Persistence
+description: SQLite backup and restore for Edgelet nodes. diskDirectory layout, wipe-only upgrade, and secrets-at-rest expectations.
+keywords: [edgelet, persistence, sqlite, backup, restore, edgelet.db, diskDirectory]
+slug: /edgelet/persistence
+---
+
+# SQLite persistence
+
+Edgelet stores on-device state in a single SQLite database. This page covers **backup and restore**, **wipe-only upgrades**, and **secrets-at-rest** expectations.
+
+There is **no** EdgeletAPI or CLI backup command. Operators use filesystem copy after stopping services.
+
+## Database location
+
+| Item | Value |
+| ---- | ----- |
+| Config key | `diskDirectory` (alias `dl`) in `/etc/edgelet/config.yaml` |
+| Default directory | `/var/lib/edgelet/` |
+| Database file | `{diskDirectory}/edgelet.db` |
+| WAL sidecars | `{diskDirectory}/edgelet.db-wal`, `{diskDirectory}/edgelet.db-shm` (when WAL active) |
+
+```bash
+grep diskDirectory /etc/edgelet/config.yaml
+edgelet system info -o json | jq -r '.diskDirectory'
+```
+
+On open, Edgelet creates `diskDirectory` with mode **0700**. SQLite runs with **WAL** journal mode.
+
+**Schema version:** fresh installs apply embedded migration `001_edgelet_schema_v1.sql` and record version **1** in `schema_versions`. There is no in-place upgrade from pre–schema-v1 databases.
+
+## What the database holds
+
+| Prefix | Examples | Contents |
+| ------ | -------- | -------- |
+| `controller_*` | `controller_microservices`, `controller_registries` | Controller snapshot |
+| `agent_*` | `agent_credentials`, `agent_edgeguard_signature` | Agent identity and Edge Guard material |
+| `local_*` | `local_workloads`, `local_registries` | EdgeletAPI deploy, local registries, RBAC tokens |
+| `system_*` | `system_control_plane` | Singleton ControlPlane row |
+| `runtime_*` | `runtime_container_refs` | CRI/Docker workload IDs |
+
+Image layers and containerd state live **outside** `diskDirectory` (for example `/var/lib/edgelet-containerd/`). Backing up `edgelet.db` does **not** back up pulled images.
+
+Stateful **`VOLUME`** data lives under `{diskDirectory}/volumes/data/`. Include that tree for stateful workloads. See [Volumes](/edgelet/volumes).
+
+## Backup runbook
+
+### 1. Stop services
+
+```bash
+sudo systemctl stop edgelet.service
+sudo systemctl stop edgelet-containerd.service 2>/dev/null || true
+```
+
+For `containerEngine: docker` or `podman`, only `edgelet.service` is required.
+
+### 2. Copy database files
+
+```bash
+DISK=/var/lib/edgelet
+BACKUP_DIR=/root/edgelet-db-backup-$(date +%Y%m%d-%H%M%S)
+sudo mkdir -p "$BACKUP_DIR"
+sudo cp -a "$DISK/edgelet.db" "$BACKUP_DIR/"
+[ -f "$DISK/edgelet.db-wal" ] && sudo cp -a "$DISK/edgelet.db-wal" "$BACKUP_DIR/"
+[ -f "$DISK/edgelet.db-shm" ] && sudo cp -a "$DISK/edgelet.db-shm" "$BACKUP_DIR/"
+sudo chmod 700 "$BACKUP_DIR"
+```
+
+After a graceful stop, Edgelet checkpoints WAL; often only `edgelet.db` is needed.
+
+### 3. Start services
+
+```bash
+sudo systemctl start edgelet-containerd.service 2>/dev/null || true
+sudo systemctl start edgelet.service
+```
+
+## Restore runbook
+
+Restore only onto a node running a **schema v1** build with **schema version 1**.
+
+1. Stop `edgelet.service` and `edgelet-containerd.service` (if present).
+2. Remove current DB files and copy backup into `diskDirectory`.
+3. Start `edgelet-containerd.service` (if used), then `edgelet.service`.
+4. On start, Edgelet runs `PRAGMA integrity_check`. Corrupt files block supervisor startup.
+
+```bash
+DISK=/var/lib/edgelet
+sudo systemctl stop edgelet.service edgelet-containerd.service 2>/dev/null || true
+sudo rm -f "$DISK/edgelet.db" "$DISK/edgelet.db-wal" "$DISK/edgelet.db-shm"
+sudo cp -a /path/to/backup/edgelet.db "$DISK/"
+sudo chmod 700 "$DISK"
+sudo systemctl start edgelet-containerd.service 2>/dev/null || true
+sudo systemctl start edgelet.service
+```
+
+## Wipe-only upgrade
+
+Edgelet does **not** migrate in-place from pre–v1 incremental schema to v1. Delete the database before the first schema-v1 binary run on lab nodes with old DBs.
+
+```bash
+sudo systemctl stop edgelet.service edgelet-containerd.service 2>/dev/null || true
+DISK=/var/lib/edgelet
+sudo rm -f "$DISK/edgelet.db" "$DISK/edgelet.db-wal" "$DISK/edgelet.db-shm"
+sudo systemctl start edgelet-containerd.service 2>/dev/null || true
+sudo systemctl start edgelet.service
+```
+
+After wipe:
+
+- Controller microservices and registries are **re-pushed** on the next field-agent sync.
+- Local workloads and ControlPlane require **re-deploy** via EdgeletAPI/CLI.
+
+## Runtime checks
+
+| Event | Behavior |
+| ----- | -------- |
+| **Open** | `PRAGMA integrity_check` must return `ok`; otherwise startup **fails** |
+| **Graceful stop** | `PRAGMA wal_checkpoint(TRUNCATE)` before close |
+
+## Threat model
+
+Sensitive data in SQLite includes registry passwords, agent private keys, Edge Guard JWTs, and service account tokens. Edgelet does **not** encrypt these fields at the application layer in schema v1.
+
+Protection relies on **edge node tenancy** and **host filesystem** controls (`diskDirectory` mode **0700**). Treat backup archives as sensitive.
+
+## See also
+
+- [Installation](/edgelet/installation) — OTA and upgrade
+- [Volumes](/edgelet/volumes) — `volumes/data/` backup scope
+- [Control plane on node](/edgelet/control-plane) — redeploy after DB wipe
+- [Configuration reference](/edgelet/configuration-reference) — `diskDirectory`
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

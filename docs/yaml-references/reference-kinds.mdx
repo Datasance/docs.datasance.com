@@ -4,6 +4,9 @@ description: Reference documentation for all potctl YAML resource kinds includin
 keywords: [potctl, yaml reference, datasance pot, kubernetes edge, control plane, agent, microservice, edge computing resources]
 ---
 
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { API_VERSION } from '@site/src/config/distribution';
+
 # Kinds of Resources
 
 This page lists all YAML resource **kinds** that potctl and the operator support. Each kind has a dedicated specification page in the YAML References section. Control plane kinds (ControlPlane, KubernetesControlPlane, LocalControlPlane), Agent kinds, Application and Microservice, Platform IAM (Role, RoleBinding, NatsAccountRule, NatsUserRule), and other resources are documented below with short examples and links to the full specs.
@@ -23,7 +26,7 @@ spec: ...
 
 | Field              | Description                                                                                                                                                                                                                                                                     |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| apiVersion         | Schema version. Use `datasance.com/v3`. |
+| apiVersion         | Schema version. Use `{API_VERSION}` (flavor-specific). |
 | kind               | The resource type. Supported values: `ControlPlane`, `KubernetesControlPlane`, `LocalControlPlane`, `Controller`, `Agent`, `LocalAgent`, `AgentConfig`, `Registry`, `CatalogItem`, `Application`, `Microservice`, `Secret`, `Certificate`, `CertificateAuthority`, `ConfigMap`, `VolumeMount`, `Service`, `OfflineImage`, `Volume`, `Role`, `RoleBinding`, `NatsAccountRule`, `NatsUserRule`. |
 | metadata           | Object containing metadata (name, optional namespace, optional tags). |
 | metadata.name      | Unique identifier of the resource in its namespace. |
@@ -84,21 +87,16 @@ To learn more about the `KubernetesControlPlane` kind, please see [Control Plane
 
 The `LocalControlPlane` kind specifies all the details required to deploy the ioFog Control Plane locally as a docker container.
 
-```yaml
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: LocalControlPlane
 metadata:
   name: ecn
 spec:
-  iofogUser:
-    name: Quick
-    surname: Start
-    email: user@domain.com
-    password: q1u45ic9kst563art
   controller:
-    container:
-      image: ghcr.io/datasance/controller:3.7.1
-```
+    package:
+      image: {{REGISTRY}}/controller:3.8.0
+`}</FlavorYaml>
 
 To learn more about the `LocalControlPlane` kind, please see [Control Plane YAML Specification](reference-control-plane).
 
@@ -144,43 +142,43 @@ To learn more about the `Agent` kind, please see [Agent YAML Specification](refe
 
 ## LocalAgent
 
-Once a Control Plane is set up, we can deploy Agents as a local container via the `LocalAgent` kind.
+Deploy an **additional** local Edgelet container with the `LocalAgent` kind. A [LocalControlPlane](reference-control-plane#local-control-plane) quick start already includes a system Edgelet via `spec.systemAgent`; use `LocalAgent` only when you need another node on the same machine.
 
-```yaml
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: LocalAgent
 metadata:
   name: local
 spec:
   container:
-    image: ghcr.io/datasance/agent:3.7.0
-```
+    image: {{REGISTRY}}/edgelet:1.0.0
+`}</FlavorYaml>
 
-To learn more about the `LocalAgent` kind, please see the [Quick Start](../getting-started/quick-start-local).
+To learn more about the `LocalAgent` kind, see [Edgelet node YAML Specification](reference-agent#local-edgelet-node-localagent).
 
 ## AgentConfig
 
 We can modify Agent behaviour dynamically via the `AgentConfig` kind.
 
-```yaml
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: AgentConfig
 metadata:
-  name: agent-1 # ioFog Agent name
-spec:
-  # All fields are optional - Only the specified fields will be updated
   name: agent-1
-  description: agent running on VM
+spec:
+  name: agent-1
+  description: Edgelet node running on VM
   latitude: 46.204391
   longitude: 6.143158
-  agentType: auto
-  dockerUrl: unix:///var/run/docker.sock
+  arch: auto
+  containerEngine: edgelet
+  containerEngineUrl: unix:///run/edgelet/containerd.sock
   diskLimit: 50
-  diskDirectory: /var/lib/iofog-agent/
+  diskDirectory: /var/lib/edgelet/
   memoryLimit: 4096
   cpuLimit: 80
   logLimit: 10
-  logDirectory: /var/log/iofog-agent/
+  logDirectory: /var/log/edgelet/
   logFileCount: 10
   statusFrequency: 10
   changeFrequency: 10
@@ -196,30 +194,30 @@ spec:
     messagingPort: 5672
     edgeRouterPort: 56721
     interRouterPort: 56722
-  dockerPruningFrequency: 1
+  pruningFrequency: 1
   logLevel: INFO
   availableDiskThreshold: 90
-```
+`}</FlavorYaml>
 
-To learn more about the `AgentConfig` kind, please see [Agent Configuration](../agent-management/agent-configuration) and [Agent YAML Specification](reference-agent).
+To learn more about the `AgentConfig` kind, please see [Configuration updates](/edgelet-management/configuration-updates) and [Agent YAML Specification](reference-agent).
 
 ## CatalogItem
 
 Microservice Catalogs can be created via the `CatalogItem` kind.
 
-```yaml
-apiVersion: datasance.com/v3
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
 kind: CatalogItem
 metadata:
   name: my-multiplatform-microservice
 spec:
   id: 0
   description: Alpine Linux
-  x86: amd64/alpine:latest
+  amd64: amd64/alpine:latest
   arm: arm32v6/alpine:latest
   registry: remote
   configExample: '{"key": "value"}'
-```
+`}</FlavorYaml>
 
 To learn more about the `CatalogItem` kind, please see [Catalog YAML Specification](reference-catalog).
 
@@ -239,8 +237,8 @@ spec:
       agent:
         name: horse-1
       images:
-        arm: edgeworx/healthcare-heart-rate:arm-v1
-        x86: edgeworx/healthcare-heart-rate:x86-v1
+        amd64: edgeworx/healthcare-heart-rate:x86-v1
+        arm64: edgeworx/healthcare-heart-rate:arm-v1
       container:
         hostNetworkMode: false
         isPrivileged: false
@@ -260,8 +258,8 @@ spec:
       agent:
         name: horse-1
       images:
-        arm: edgeworx/healthcare-heart-rate-ui:arm
-        x86: edgeworx/healthcare-heart-rate-ui:x86
+        amd64: edgeworx/healthcare-heart-rate-ui:x86
+        arm64: edgeworx/healthcare-heart-rate-ui:arm
         registry: remote
       container:
         hostNetworkMode: false
@@ -296,8 +294,8 @@ spec:
   agent:
     name: func-test-0
   images:
-    arm: edgeworx/healthcare-heart-rate:test-arm
-    x86: edgeworx/healthcare-heart-rate:test
+    amd64: edgeworx/healthcare-heart-rate:test
+    arm64: edgeworx/healthcare-heart-rate:test-arm
     registry: remote # public docker
   container:
     hostNetworkMode: false
@@ -341,7 +339,7 @@ spec:
     - agent-2
 ```
 
-To learn more about the `Volume` kind, please see [Volume Management](../agent-management/volumes).
+To learn more about the `Volume` kind, please see [Volume distribution](/edgelet-management/volume-distribution).
 
 ## Registry
 

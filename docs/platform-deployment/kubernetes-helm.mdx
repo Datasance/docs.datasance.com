@@ -1,14 +1,18 @@
 
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
 :::tip[Not interested in using Kubernetes?]
   <p>There are two flavours of Control Plane deployments - Remote and Kubernetes. This guide will focus on deploying a Control Plane on a Kubernetes cluster. Go to <a href="../platform-deployment/remote-control-plane">Remote - Deploy Control Plane</a> to deploy the Control Plane on a Linux host instead. Keep in mind that in such case, it will be necessary to prepare the host for Controller as well.</p>
-  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use potctl instead, go to <a href="../platform-deployment/kubernetes-potctl"> Kubernetes - Deploy Control Plane Using potctl</a>.</p>
+  <p>Also, this guide will use Helm to deploy the Control Plane on the cluster. To use {CLI_NAME} instead, go to <a href="../platform-deployment/kubernetes-potctl">Kubernetes - Deploy Control Plane Using {CLI_NAME}</a>.</p>
 :::
 
 # Kubernetes - Deploy Control Plane Using Helm
 
 In this tutorial, we will install the Datasance PoT Control Plane on Kubernetes using Helm.
 
-The Helm Chart deploys the PoT operator (iofog-operator) and creates a `ControlPlane` custom resource instance automatically. The Operator consumes this CRD and creates deployments for the Controller, Router, and (when enabled) NATs, as well as associated services. Image versions (e.g. operator 3.7.0, controller, router, NATs) are configurable in the chart values; see the [Control Plane YAML Specification](../yaml-references/reference-control-plane) for NATs and Router options.
+The Helm Chart deploys the PoT operator and creates a `ControlPlane` custom resource instance automatically. The Operator consumes this CRD and creates deployments for the Controller, Router, and (when enabled) NATs, as well as associated services. Image versions (operator 3.8.0, controller v3.8.0, router, NATs) are configurable in the chart values; see the [Control Plane YAML Specification](../yaml-references/reference-control-plane) for NATs and Router options.
 
 ## Prerequisites
 
@@ -19,28 +23,24 @@ The Helm Chart deploys the PoT operator (iofog-operator) and creates a `ControlP
 
 ## Add the Helm Repository
 
-Add the Datasance Helm [repotsitory](https://github.com/Datasance/helm) to your local index:
+Add the Datasance Helm [repotsitory](https://datasance.github.io/iofog-operator) to your local index:
 
 ```bash
-helm repo add datasance https://datasance.github.io/helm
+helm repo add datasance https://datasance.github.io/iofog-operator/
 helm repo update
 ```
 
 ## Install the Chart
 
-Install the Chart while specifying the required authentication configuration. The chart requires Keycloak/OpenID Connect authentication settings. You can provide these values either via a values file or using `--set` flags.
+Install the Chart while specifying embedded OIDC authentication. See [Embedded OIDC Authentication](/platform-deployment/embedded-oidc) for bootstrap credentials and TLS. Provide values via a values file or `--set` flags.
 
 ### Quick Install with Flags
 
 ```bash
 helm install pot-operator datasance/pot -n pot --create-namespace \
-  --set controlplane.spec.auth.url=https://keycloak.example.com \
-  --set controlplane.spec.auth.realm=pot \
-  --set controlplane.spec.auth.realmKey=master \
-  --set controlplane.spec.auth.ssl=true \
-  --set controlplane.spec.auth.controllerClient=pot-controller \
-  --set controlplane.spec.auth.controllerSecret=supersecret \
-  --set controlplane.spec.auth.viewerClient=pot-viewer
+  --set controlplane.spec.auth.mode=embedded \
+  --set controlplane.spec.auth.bootstrap.username=admin \
+  --set controlplane.spec.auth.bootstrap.password=LocalTest12!
 ```
 
 ### Install with Values File
@@ -49,7 +49,7 @@ Create a `myvalues.yaml` file with your configuration:
 
 ```yaml
 operator:
-  image: ghcr.io/datasance/operator:3.7.1
+  image: ghcr.io/datasance/operator:3.8.0
 controlplane:
   spec:
     replicas:
@@ -68,13 +68,13 @@ controlplane:
       databaseName: pot
       ssl: false
     auth:
-      url: https://keycloak.example.com
-      realm: pot
-      realmKey: master
-      ssl: true
-      controllerClient: pot-controller
-      controllerSecret: supersecret
-      viewerClient: pot-viewer
+      mode: embedded
+      bootstrap:
+        username: admin
+        password: LocalTest12!
+    controller:
+      publicUrl: https://controller.example.com:51121
+      consoleUrl: https://console.example.com:8008
 ```
 
 Then install using the values file:
@@ -102,7 +102,7 @@ The result should look like this:
 
 ```plain
 NAME          REVISION  UPDATED                   STATUS    CHART        APP VERSION  NAMESPACE
-pot-operator  1         Tue Dec  8 21:34:42 2025  DEPLOYED  pot-3.7.0    3.7.0        pot
+pot-operator  1         Tue Dec  8 21:34:42 2025  DEPLOYED  pot-3.8.0    3.8.0        pot
 ```
 ## Configuration
 
@@ -116,18 +116,18 @@ Edit `values.yaml` or provide your own overrides (e.g. `test-values.yaml`). Key 
 
 Must be set via values or `--set`:
 
-- **Auth** (Keycloak / OIDC): `controlplane.spec.auth.url`, `realm`, `realmKey`, `ssl`, `controllerClient`, `controllerSecret`, `viewerClient`
+- **Auth (embedded OIDC)**: `controlplane.spec.auth.mode=embedded`, `controlplane.spec.auth.bootstrap.username`, `controlplane.spec.auth.bootstrap.password` (≥12 chars, 1 uppercase, 1 special). See [Embedded OIDC](/platform-deployment/embedded-oidc).
 - **Database** (required in ControlPlane CRD v3): `controlplane.spec.database` with at least `provider`, `host`, `port`, `user`, `password`, `databaseName`. For SQLite use `provider: sqlite` with empty host/port/user/password/databaseName as needed.
 
 ### Optional / common overrides
 
-- **Operator**: `operator.image` (default `ghcr.io/datasance/operator:3.7.1`), `operator.replicaCount`, `operator.resources`, `operator.nodeSelector`, `operator.tolerations`, `operator.affinity`, `operator.serviceAccount.create|name`, `operator.imagePullSecrets`
+- **Operator**: `operator.image` (default `ghcr.io/datasance/operator:3.8.0`), `operator.replicaCount`, `operator.resources`, `operator.nodeSelector`, `operator.tolerations`, `operator.affinity`, `operator.serviceAccount.create|name`, `operator.imagePullSecrets`
 - **ControlPlane metadata**: `controlplane.create`, `controlplane.name`, `controlplane.namespace`
 - **Replicas**: `controlplane.spec.replicas.controller`, `controlplane.spec.replicas.nats` (min 2 when NATs enabled)
 - **Images**: `controlplane.spec.images.controller`, `router`, `nats`, `pullSecret`
 - **Services**: `controlplane.spec.services.controller|router|nats|natsServer` with `type`, `address`, `annotations`, `externalTrafficPolicy` (e.g. `Local` or `Cluster`)
 - **NATs**: `controlplane.spec.nats.enabled`, `controlplane.spec.nats.jetStream.memoryStoreSize`, `storageSize`, `storageClassName`
-- **Controller**: `controlplane.spec.controller.logLevel`, `https`, `secretName`, `pidBaseDir`, `ecn`, `ecnViewerPort`, `ecnViewerUrl`
+- **Controller**: `controlplane.spec.controller.logLevel`, `https`, `secretName`, `publicUrl`, `consoleUrl`, `trustProxy`
 - **Ingresses**: `controlplane.spec.ingresses.controller|router|nats` (host, ingressClassName, address, ports)
 - **Events**: `controlplane.spec.events.auditEnabled`, `retentionDays`, `cleanupInterval`, `captureIpAddress`
 - **Vault** (optional): `controlplane.spec.vault.enabled`, `provider`, `basePath`, and provider-specific config (`hashicorp`, `aws`, `azure`, `google`)
@@ -136,13 +136,9 @@ Must be set via values or `--set`:
 
 ```bash
 helm install pot datasance/pot -n pot --create-namespace \
-  --set controlplane.spec.auth.url=https://keycloak.example.com \
-  --set controlplane.spec.auth.realm=pot \
-  --set controlplane.spec.auth.realmKey=master \
-  --set controlplane.spec.auth.ssl=external \
-  --set controlplane.spec.auth.controllerClient=pot-controller \
-  --set controlplane.spec.auth.controllerSecret=supersecret \
-  --set controlplane.spec.auth.viewerClient=pot-viewer \
+  --set controlplane.spec.auth.mode=embedded \
+  --set controlplane.spec.auth.bootstrap.username=admin \
+  --set controlplane.spec.auth.bootstrap.password=LocalTest12! \
   --set controlplane.spec.database.provider=sqlite \
   --set controlplane.spec.database.host="" \
   --set controlplane.spec.database.port=0 \
@@ -156,7 +152,7 @@ helm install pot datasance/pot -n pot --create-namespace \
 
 ```yaml
 operator:
-  image: ghcr.io/datasance/operator:3.7.1
+  image: ghcr.io/datasance/operator:3.8.0
 
 controlplane:
   create: true
@@ -173,20 +169,20 @@ controlplane:
       ssl: false
       ca: ""
     auth:
-      url: https://keycloak.example.com
-      realm: pot
-      realmKey: master
-      ssl: external
-      controllerClient: pot-controller
-      controllerSecret: supersecret
-      viewerClient: pot-viewer
+      mode: embedded
+      bootstrap:
+        username: admin
+        password: LocalTest12!
+    controller:
+      publicUrl: https://controller.example.com:51121
+      consoleUrl: https://console.example.com:8008
     replicas:
       controller: 1
       nats: 2
     images:
-      controller: ghcr.io/datasance/controller:3.7.1
-      router: ghcr.io/datasance/router:3.7.0
-      nats: ghcr.io/datasance/nats:2.12.4
+      controller: ghcr.io/datasance/controller:v3.8.0
+      router: ghcr.io/datasance/router:3.8.0
+      nats: ghcr.io/datasance/nats:2.14.3
     services:
       controller:
         type: LoadBalancer
@@ -235,24 +231,19 @@ kubectl delete crd controlplanes.datasance.com
 
 ## Connection to Installed Control Plane
 
-Once the installation is complete, you can connect to the Controller using [potctl](../potctl/introduction). Make sure the `--namespace` matches the one used during `helm install`:
+Once the installation is complete, you can connect to the Controller using [{CLI_NAME}](../potctl/introduction). Make sure the `--namespace` matches the one used during `helm install`:
 
 #### Connect to Installed Control Plane as a KubernetesControlPlane
-```bash
-potctl create namespace pot
-potctl connect --email foo.bar@example.com --kube ~/.kube/config --namespace pot
-```
-
+<CliBlock>{`{{CLI_NAME}} create namespace pot
+{{CLI_NAME}} connect --email foo.bar@example.com --kube ~/.kube/config --namespace pot`}</CliBlock>
 #### Connect to Installed Control Plane as a RemoteControlPlane
-```bash
-potctl create namespace pot
-potctl connect --email foo.bar@example.com --name pot --ecn-addr <http://controller-endpoint:51121> -n pot
-```
-You will need to authenticate using your Keycloak credentials configured during installation.
+<CliBlock>{`{{CLI_NAME}} create namespace pot
+{{CLI_NAME}} connect --email foo.bar@example.com --name pot --ecn-addr <http://controller-endpoint:51121> -n pot`}</CliBlock>
+You will need to authenticate using the bootstrap admin credentials configured during installation. See [Embedded OIDC Authentication](/platform-deployment/embedded-oidc).
 
 
 :::tip[Where to go from here?]
-  <p>Having our Control Plane up and running, we can now go to <a href="../platform-deployment/setup-your-agents">Setup Agents</a> guide to deploy our Agents and finalize the ECN deployment.</p>
+  <p>With the Control Plane running, go to <a href="../platform-deployment/setup-your-agents">Setup Edgelet nodes</a> to provision Edgelet v1.0.0 on your edge hosts.</p>
 :::
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';

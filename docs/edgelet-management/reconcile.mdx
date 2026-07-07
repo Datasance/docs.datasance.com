@@ -1,0 +1,48 @@
+---
+title: Reconcile Platform on Edgelet Nodes
+description: Retry router and NATS platform provisioning on an Edgelet node with potctl reconcile agent on PoT v3.8.
+keywords: [reconcile, edgelet node, potctl, router, nats, platform]
+slug: /edgelet-management/reconcile
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Reconcile platform
+
+v3.8 adds **`reconcile agent`** to retry async platform provisioning on an Edgelet node. Use it when router or NATS system microservices did not reach a healthy state after deploy or config change.
+
+<CliBlock>{`{{CLI_NAME}} reconcile agent zebra-1`}</CliBlock>
+
+You can also reconcile a **service** (not only the whole agent):
+
+<CliBlock>{`{{CLI_NAME}} reconcile service <SERVICE_NAME>`}</CliBlock>
+
+## When to use
+
+| Situation | Action |
+| --------- | ------ |
+| Router or NATS MS stuck after `AgentConfig` router/NATS changes | `reconcile agent <name>` |
+| Platform service row shows failed async apply | `reconcile service <name>` |
+| Ordinary microservice drift | `rebuild microservice` or controller reconcile, not agent reconcile |
+
+Agent reconcile targets **platform** microservices (router, NATS) tied to the node, not arbitrary application workloads.
+
+## Related configuration
+
+Router and NATS settings are pushed via **`AgentConfig`**:
+
+- `upstreamRouters`, `routerConfig`
+- `upstreamNatsServers`, `natsConfig`
+
+See [Configuration updates](/edgelet-management/configuration-updates) and [Agent YAML specification](/yaml-references/reference-agent).
+
+## See also
+
+- [{CLI_NAME} reconcile agent](/potctl/cli/potctl_reconcile_agent) — CLI reference
+- [Platform Components](/platform-components) — Router and NATS overview
+- [Edgelet troubleshooting](/edgelet/troubleshooting) — connectivity and MS health
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

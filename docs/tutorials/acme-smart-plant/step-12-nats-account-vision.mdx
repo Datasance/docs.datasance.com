@@ -1,0 +1,81 @@
+---
+title: "Step 12 - Vision NATS account rule"
+description: "Acme Smart Plant tutorial. Deploy the in-account vision-inspection NATS account rule. No cross-application export or import."
+keywords: [tutorial, acme smart plant, nats account rule, vision-inspection, in-account]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 12 - Vision NATS account rule
+
+## Goal
+
+Deploy a **NatsAccountRule** named `vision-inspection-local` that scopes the Phase 2 fab pipeline to one NATS account with in-account pub/sub only.
+
+## Scenario context
+
+Phase 1 split plant floor and remote ops into two NATS accounts. **production-monitoring** on **site-a** exported subjects. **operations-center** on **ops-b** imported them (steps 2, 4, and 5).
+
+Phase 2 uses a different pattern. **frame-generator**, **object-detector**, and **snapshot-service** all bind to **vision-inspection-local**. They talk on `vision.wafers.>` and `vision.inspections.>` inside that account even though the microservices run on **site-a**, **edge-c**, and **ops-b**.
+
+There is no export rule, no import rule, and no account public key to copy. PoT provisions one NATS account for the Application and distributes credentials to each microservice user rule from step 11.
+
+## YAML walkthrough
+
+File: `deploy/steps/12-nats-account-vision.yaml`
+
+<FlavorYaml title="vision-inspection-local">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: vision-inspection-local
+spec:
+  description: Vision inspection account - in-account pub/sub only
+  exportsAllowWildcards: true
+`}</FlavorYaml>
+
+The manifest sets account limits (`maxConnections`, JetStream quotas, and similar fields) to `-1` (unlimited) for demo use. It does **not** define `exports` or `imports` blocks.
+
+Compare with Phase 1 step 2, which named three export entries (`live-alerts`, `event-journal`, `fleet-telemetry`) on **production-monitoring-export**.
+
+## Why this design
+
+| Integration style | Phase 1 (Smart factory) | Phase 2 (Fab vision) |
+| ----------------- | ----------------------- | -------------------- |
+| NATS accounts | Two Applications, export + import | One Application, in-account only |
+| Remote data path | NATS stream export/import to **ops-b** | NATS stays local; HTTP gallery via Router (step 14) |
+| When to use | Isolate plant credentials from remote ops | Pipeline microservices share one subject tree across nodes |
+
+Edge inference on **edge-c** needs wafer frames without copying raw plant telemetry across accounts. Keeping vision in one account lets **object-detector** subscribe to `vision.wafers.>` with the same credential model as **frame-generator** on **site-a**.
+
+The dashboard **Fab inspection** link (step 15) uses `SNAPSHOT_URL` over Router HTTP, not a NATS import of `vision.inspections.>`.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/12-nats-account-vision.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get nats-account-rules`}</CliBlock>
+You should see `vision-inspection-local` with no export or import entries in describe output.
+
+After step 13, confirm the Application binds to this rule:
+
+<CliBlock>{`{{CLI_NAME}} describe application vision-inspection`}</CliBlock>
+Look for `natsRule: vision-inspection-local` under `natsConfig`.
+
+## Common mistakes
+
+- **Adding export/import blocks.** Vision demo YAML intentionally has none. Cross-account wiring belongs in Phase 1 only.
+- **Skipping step 11.** User rules must exist before the Application references them.
+- **Confusing account rule with user rules.** `vision-inspection-local` is the account scope. `frame-publisher`, `vision-detector`, and `snapshot-consumer` are per-microservice ACLs inside that account.
+
+## Next step
+
+[Step 13: Vision inspection Application](/tutorials/acme-smart-plant/step-13-application-vision-inspection): deploy frame-generator, object-detector, and snapshot-service across three Edgelet nodes.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

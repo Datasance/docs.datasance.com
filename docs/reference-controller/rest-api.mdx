@@ -1,9 +1,126 @@
 ---
-title: Controller REST API Reference
-description: Link to the comprehensive Datasance PoT Controller REST API documentation. Automate and integrate edge management.
-keywords: [controller api, rest api, datasance pot, api reference, edge orchestration api, automation]
+title: Controller REST API
+description: Controller v3.8.0 REST and WebSocket API. Applications, architectures, OIDC auth, and removed legacy endpoints.
+keywords: [controller api, rest api, v3.8, applications, architectures, websocket, oidc]
+slug: /reference-controller/rest-api
 ---
 
-# Controller REST API Reference
+import { CLI_NAME } from '@site/src/config/distribution';
 
-Please visit [API Docs](http://docs.datasance.com/api)
+# Controller REST API
+
+All public HTTP routes live under **`/api/v3/`** on the Controller listener (default port **51121**). Interactive **exec** and **log** streaming use **WebSocket** paths under the same prefix.
+
+Browse the full OpenAPI spec on this site: [**API reference**](/api/controller).
+
+:::warning[Greenfield release: v3.8.0]
+
+Controller **v3.8.0** uses a new database schema. Do not point a v3.8 Controller at a v3.7 database. See [Migrating to v3.8.0](/migrating-to-v3-8).
+
+:::
+
+## Authentication
+
+Browser login for EdgeOps Console uses the OAuth BFF:
+
+```http
+GET /api/v3/user/oauth/authorize
+```
+
+Automation and {CLI_NAME} use Bearer tokens from your OIDC provider. In **embedded** mode the issuer is at `{CONTROLLER_PUBLIC_URL}/oidc`. See [Embedded OIDC](/platform-deployment/embedded-oidc) and [Configuration](/reference-controller/configuration).
+
+Legacy browser `POST /user/login` and Keycloak-specific routes are removed.
+
+## Terminology changes (v3.7 → v3.8)
+
+| v3.7 | v3.8 |
+| ---- | ---- |
+| `/api/v3/flow/*` | **`/api/v3/application/*`** |
+| RBAC resource `flows` | **`applications`** |
+| `GET /api/v3/fog-types` | **`GET /api/v3/architectures/`** (public) |
+| Microservice create `flowId` query param | **`application`** string in JSON body |
+| Catalog `x86Image` / `armImage` | **`images[]`** with `{ containerImage, archId }` (up to 4 arches) |
+| `fogType` / `fogTypeId` on agents | **`arch`** / **`archId`** |
+
+Error codes follow the same rename: `INVALID_FLOW_*` → **`INVALID_APPLICATION_*`**.
+
+### Architectures
+
+`GET /api/v3/architectures/` returns supported CPU architectures:
+
+| `archId` | Architecture |
+| -------- | -------------- |
+| 0 | auto |
+| 1 | amd64 |
+| 2 | arm64 |
+| 3 | riscv64 |
+| 4 | arm (32-bit) |
+
+Catalog entries and microservices must declare images per `archId`. A microservice **`runtime`** must appear in the target agent's **`availableRuntimes`**.
+
+## Applications and microservices
+
+Application CRUD uses `/api/v3/application/*`. Example create body fields include `name`, `description`, and NATS rule references where applicable.
+
+Microservice create/update:
+
+- Pass **`application`** (application name) in the body. The **`flowId`** query parameter is removed.
+- Use **`images[]`** instead of single-arch image fields.
+- User-supplied **`serviceAccount`** volume mappings are stripped on write; the Controller injects the canonical binding.
+
+System microservice **`controller`** lives in application `system-{agentName}`. User delete returns **403**; user PATCH returns **400**.
+
+## Edgelet node (field agent) API
+
+Edgelet talks to Controller over HTTPS. Notable v3.8 paths:
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/v3/agent/changes` | Poll config and workload changes |
+| `GET` | `/api/v3/agent/exec/sessions` | Discover pending exec sessions |
+| `GET` | `/api/v3/agent/logs/sessions` | Discover pending log sessions |
+| `POST` | `/api/v3/agent/controller/register` | Register local ControlPlane controller workload (system fogs) |
+| `GET` | `/api/v3/agent/version` | Pull agent/Edgelet version (refreshes provision key) |
+
+Agent config field renames: `dockerUrl` → **`containerEngineUrl`**, `dockerPruningFrequency` → **`pruningFrequency`**, `fogType` → **`arch`**.
+
+## WebSocket exec and logs
+
+REST `POST/DELETE .../exec` on microservices is **removed**. Open sessions over WebSocket only.
+
+| Role | Exec attach path |
+| ---- | ---------------- |
+| User / Console | `WS /api/v3/microservices/exec/:uuid` (or `.../system/exec/:uuid`) |
+| Edgelet field agent | `WS /api/v3/agent/exec/microservice/:microserviceUuid/:sessionId` |
+
+Up to **5 concurrent exec sessions** per microservice. Each session has its own `sessionId` and lifecycle. See [Edgelet exec sessions](/edgelet/exec-sessions).
+
+Log streaming follows the same multi-session model with separate user and agent WebSocket paths.
+
+## Platform reconcile (v3.8)
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/v3/iofog/{uuid}` | Optional **`platformStatus`** (`phase`, `generation`, `lastError`) |
+| `POST` | `/api/v3/iofog/{uuid}/reconcile` | Manual retry after failed fog platform reconcile |
+| `POST` | `/api/v3/services/{name}/reconcile` | Manual retry for service platform reconcile |
+
+## Removed APIs
+
+Do not call these on Controller v3.8:
+
+- All **`/api/v3/flow/*`** routes
+- **EdgeResource** CRUD and RBAC
+- **Diagnostics**, **strace**, and image **snapshot** / **download** endpoints
+- Microservice REST **exec** (`POST/DELETE .../exec`)
+- Legacy agent exec WebSocket without **`sessionId`** in the path
+
+## Related docs
+
+- [Configuration](/reference-controller/configuration) - `OIDC_*`, `TLS_*`, `CONSOLE_*`, `AUTH_MODE`
+- [OpenAPI spec](/api/controller) - full route catalog (Plan 11 regen)
+- [Roles and RBAC](/security/roles) - `applications` resource and route bindings
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

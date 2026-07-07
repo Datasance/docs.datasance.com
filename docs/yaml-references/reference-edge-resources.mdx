@@ -7,7 +7,7 @@ keywords: [edge resources, hardware interface, sensor integration, potctl, yaml 
 # Edge Resources YAML Specification
 
 `potctl` allows users to manage a Controller's list of Edge Resources. To learn more about Edge Resources,
-please see [here](../agent-management/edge-resources).
+please see [Edge Resources](/v3.7.3/agent-management/edge-resources).
 
 The Edge Resource is defined as follows:
 
@@ -46,7 +46,7 @@ spec:
 | description       | Human readable description of the Edge Resource                                                                                                                       |
 | interfaceProtocol | Protocol the microservices must use to communicate with the resource. It also determines the schema of the `interface` key. Currently, one of: `http, https, ws, wss` |
 | interface         | Specification of the available communication interface                                                                                                                |
-| display           | Information about how to display the attached Edge Resource in the ECN-Viewer                                                                                         |
+| display           | Information about how to display the attached Edge Resource in EdgeOps Console                                                                                         |
 | display.name      | Display label                                                                                                                                                         |
 | display.icon      | Name of the [material icon](https://material.io/resources/icons/?style=baseline) to be used on the map (optional)                                                     |  |
 | custom            | Free object containing anything else the microservice might need to know about the resource.                                                                          |

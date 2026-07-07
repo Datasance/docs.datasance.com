@@ -1,0 +1,99 @@
+---
+title: "Step 15 - Set SNAPSHOT_URL"
+description: "Acme Smart Plant tutorial. Manual step to read snapshot-service bridgePort and set SNAPSHOT_URL on alert-dashboard."
+keywords: [tutorial, acme smart plant, snapshot-service, router, bridge port, manual step]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 15 - Set SNAPSHOT_URL
+
+## Goal
+
+Read the Router **bridgePort** for **snapshot-service** and redeploy **alert-dashboard** with `SNAPSHOT_URL`. This enables the **Fab inspection** link on the operations dashboard.
+
+## Scenario context
+
+Step 8 deployed **alert-dashboard** with a placeholder:
+
+```text
+http://router.default.svc.bridge.local:<snapshot-bridge-port>
+```
+
+Router assigns the real port only after you create the Service in step 14. This manual gate matches step 7 (`DIAGNOSTIC_URL`) and keeps YAML as the source of truth.
+
+Phase 2 NATS stays in-account. The gallery link is HTTP over Router, not a NATS import of `vision.inspections.>`.
+
+## Procedure
+
+### 1. Read the bridge port
+
+<CliBlock>{`{{CLI_NAME}} describe service snapshot-service`}</CliBlock>
+Find **`bridgePort`** in the output. Write it down as `<snapshot-bridge-port>`.
+
+Example shape (your port will differ):
+
+```text
+NAME: snapshot-service
+BRIDGE PORT: 10456
+TARGET PORT: 8083
+RESOURCE: vision-inspection/snapshot-service
+```
+
+### 2. Update operations-center YAML
+
+Edit `deploy/steps/06-application-operations-center.yaml` in pot-edge-patterns. Set `SNAPSHOT_URL` on **alert-dashboard**:
+
+```yaml
+- key: SNAPSHOT_URL
+  value: "http://router.default.svc.bridge.local:<snapshot-bridge-port>"
+```
+
+Replace `<snapshot-bridge-port>` with the value from describe.
+
+### 3. Redeploy the Application
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/06-application-operations-center.yaml`}</CliBlock>
+## Why this design
+
+Service bridges decouple microservice port maps on **ops-b** from Router listener ports on the mesh. The dashboard always calls `router.default.svc.bridge.local`, not the agent IP directly.
+
+If you skip this step, Phase 2 inference can run while the **Fab inspection** link still points at a placeholder and fails in the browser.
+
+## Verify
+
+### Environment check
+
+<CliBlock>{`{{CLI_NAME}} describe microservice alert-dashboard`}</CliBlock>
+Confirm `SNAPSHOT_URL` contains your real bridge port, not the placeholder.
+
+### Browser check
+
+1. Open the dashboard at `http://router.default.svc.bridge.local:<dashboard-bridge-port>/` (from step 9).
+2. Wait for object-detector to publish at least one inspection (step 13 logs).
+3. Click **Fab inspection**. The wafer gallery should open with the latest defect snapshot.
+
+### curl check
+
+```bash
+curl -s "http://router.default.svc.bridge.local:<snapshot-bridge-port>/inspections/latest"
+```
+
+A JSON body with defect metadata confirms Router routing and NATS consumption before you test the dashboard link.
+
+## Common mistakes
+
+- **Using targetPort 8083 in SNAPSHOT_URL.** Use **bridgePort** from describe, not the Edgelet external port field name alone.
+- **Forgetting to redeploy step 8.** Editing YAML locally without <code>{CLI_NAME} deploy</code> leaves the old env on the running microservice.
+- **Gallery empty but link works.** Re-check steps 11–13: frame-generator publishing, object-detector ONNX logs, snapshot-service subscribed to `vision.inspections.>`.
+- **Expecting NATS import for vision.** The dashboard does not subscribe to `vision.inspections.>`; it opens an HTTP URL served by snapshot-service.
+
+## Tutorial complete
+
+Phase 2 is complete. Return to the [Acme Smart Plant overview](/tutorials/acme-smart-plant) verification checklist, or continue with [Operating the demo](/tutorials/acme-smart-plant/runbook).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

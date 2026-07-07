@@ -1,0 +1,97 @@
+---
+title: "Step 14 - Snapshot Service"
+description: "Acme Smart Plant tutorial. Create the snapshot-service Router bridge on ops-b for the fab inspection gallery."
+keywords: [tutorial, acme smart plant, snapshot-service, service, router, fab inspection]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 14 - Snapshot Service
+
+## Goal
+
+Create the **snapshot-service** Service so operators and the alert dashboard reach the wafer inspection gallery through Router.
+
+## Scenario context
+
+**snapshot-service** listens on external port **8083** on **ops-b** (mapped to HTTP 8080 inside the container). It subscribes to `vision.inspections.fab-01` and exposes REST endpoints such as `/inspections/latest`.
+
+The Service publishes a mesh **bridgePort** for HTTP access at:
+
+```text
+http://router.default.svc.bridge.local:<snapshot-bridge-port>/
+```
+
+Step 15 reads that port into `SNAPSHOT_URL` on **alert-dashboard** so the **Fab inspection** link opens the gallery.
+
+## YAML walkthrough
+
+File: `deploy/steps/14-service-snapshot.yaml`
+
+<FlavorYaml title="snapshot-service Service">{`---
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: snapshot-service
+  tags:
+    - pot-edge-patterns
+spec:
+  type: microservice
+  resource: vision-inspection/snapshot-service
+  targetPort: 8083
+  defaultBridge: default-router
+`}</FlavorYaml>
+
+The `pot-edge-patterns` tag helps Router select the bridge on multi-agent ECNs. `targetPort` matches the external port from step 13, not the internal 8080.
+
+After deploy, run <code>{CLI_NAME} describe service snapshot-service</code> and note **bridgePort** for step 15.
+
+## Why this design
+
+Vision NATS traffic stays in-account (steps 11–12). Remote presentation uses HTTP through Router, the same pattern as **diagnostic-service** (steps 6–7) and **alert-dashboard** (step 9).
+
+The dashboard on **ops-b** already consumes imported plant NATS subjects from Phase 1. The fab gallery is a separate HTTP hop via `SNAPSHOT_URL`, not a second NATS import.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/14-service-snapshot.yaml`}</CliBlock>
+## Verify
+
+### Service describe
+
+<CliBlock>{`{{CLI_NAME}} describe service snapshot-service`}</CliBlock>
+Confirm `resource` points to `vision-inspection/snapshot-service` and **bridgePort** is assigned.
+
+### HTTP reachability
+
+After object-detector has published at least one inspection:
+
+```bash
+curl -s "http://router.default.svc.bridge.local:<snapshot-bridge-port>/inspections/latest"
+```
+
+You should get inspection JSON with defect class and confidence. An empty response usually means object-detector has not published yet or NATS ACLs are wrong (re-check steps 11–13).
+
+### Log cross-check
+
+<CliBlock>{`{{CLI_NAME}} describe microservice object-detector
+{{CLI_NAME}} describe microservice snapshot-service`}</CliBlock>
+object-detector logs should show publishes on `vision.inspections.fab-01`. snapshot-service logs should show received inspections.
+
+## Common mistakes
+
+- **Using internal port 8080 as targetPort.** Service `targetPort` must be **8083** (Edgelet external map from step 13).
+- **Empty gallery before step 15.** The dashboard **Fab inspection** link stays broken until you set `SNAPSHOT_URL` and redeploy step 8.
+- **No inspections in snapshot.** Verify frame-generator and object-detector are healthy on **site-a** and **edge-c** with matching `LINE_ID`.
+- **Skipping Service create.** `SNAPSHOT_URL` needs a real bridgePort from describe, not a guess.
+
+## Next step
+
+[Step 15: Set SNAPSHOT_URL](/tutorials/acme-smart-plant/step-15-snapshot-verify): read the snapshot bridge port and redeploy the operations-center Application so the dashboard opens the gallery.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

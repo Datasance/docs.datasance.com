@@ -1,0 +1,94 @@
+---
+title: Apps package
+description: ioFog Go SDK apps package to deploy Application and Microservice YAML to the Controller. Used by potctl and the Operator.
+keywords: [go sdk, apps, deploy, application, yaml, v3.8]
+slug: /platform-components/sdk/apps
+---
+
+import { API_VERSION, CLI_NAME } from '@site/src/config/distribution';
+
+# Apps package
+
+The **`apps`** package deploys ioFog **Application** and **Microservice** resources to the Controller. {CLI_NAME} and the ioFog Operator use these executors when applying YAML configuration.
+
+Import path: `github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/apps`
+
+It wraps the [client package](/platform-components/sdk/client) and maps Go structs to Controller REST calls. For raw HTTP access, use `client` directly. Route reference: [Controller REST API](/reference-controller/rest-api).
+
+## apiVersion
+
+Deploy YAML emitted by this package includes an `apiVersion` header. The default is **`iofog.org/v3`** (`apps.DefaultAPIVersion`).
+
+For the Datasance docs flavor, pass `WithAPIVersion` at the call site:
+
+```go
+apps.DeployApplication(ctrl, app, name, apps.WithAPIVersion("datasance.com/v3"))
+```
+
+## Deploy an application
+
+```go
+import (
+	"os"
+
+	"github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/apps"
+	"gopkg.in/yaml.v2"
+)
+
+controller := apps.IofogController{
+	Endpoint: "127.0.0.1:51121",
+	Email:    "user@domain.com",
+	Password: "password",
+}
+
+application := apps.Application{
+	Name: "my-app",
+	// ... remaining fields
+}
+
+// OR, read spec from a YAML file
+yamlFile, err := os.ReadFile(filename)
+if err != nil {
+	return err
+}
+var header apps.IofogHeader
+if err := yaml.Unmarshal(yamlFile, &header); err != nil {
+	return err
+}
+
+// Deploy (default apiVersion: iofog.org/v3)
+err = apps.DeployApplication(controller, application, "my-app")
+```
+
+Other entry points:
+
+- `DeployMicroservice`
+- `DeployApplicationTemplate`
+
+Each accepts optional `DeployOption` values (for example `WithAPIVersion`).
+
+## v3.8 deploy type changes
+
+When porting YAML or Go structs from SDK v3.7:
+
+| v3.7 field or key | v3.8 |
+| ----------------- | ---- |
+| `flow` | **`application`** |
+| `dockerUrl` | **`containerEngineUrl`** |
+| Catalog `x86` / `arm` image keys | **`amd64`**, **`arm64`**, **`riscv64`**, **`arm`** |
+| Flow-named REST helpers in `client` | Application-named helpers |
+
+The Operator no longer reconciles Application CRDs. Deploy application workloads with {CLI_NAME}, EdgeOps Console, the REST API, or this package after the Control Plane is up.
+
+## Related docs
+
+| Topic | Page |
+| ----- | ---- |
+| SDK overview | [ioFog Go SDK](/platform-components/sdk) |
+| Application YAML | [Application reference](/yaml-references/reference-application) |
+| Microservice YAML | [Microservice reference](/yaml-references/reference-service) |
+| {CLI_NAME} deploy | [{CLI_NAME} introduction](/potctl/introduction) |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

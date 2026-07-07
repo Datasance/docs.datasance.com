@@ -1,0 +1,175 @@
+---
+title: EdgeOps Console Features
+description: EdgeOps Console v1.0.9 features for applications, microservices, Edgelet nodes, exec sessions, logs, and Controller REST API parity.
+keywords: [edgeops console, features, microservices, applications, exec, websocket, dashboard]
+slug: /edgeops-console/features
+---
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Console features
+
+EdgeOps Console **v1.0.9** mirrors most day-2 {CLI_NAME} workflows in the browser. It uses the same Controller REST API and RBAC rules as the CLI. Audit events record Console actions the same way as API calls from automation.
+
+## Dashboard and fleet view
+
+The landing view shows ECN health, capacity, alerts, and deployment activity. You can review timelines and workload density across namespaces you are allowed to access.
+
+![Dashboard overview with fleet KPIs](/images/docs/edgeops-console/dashboard-kpis.png)
+
+![Edge node and microservice activity widgets](/images/docs/edgeops-console/dashboard-activity.png)
+
+## Edgelet nodes
+
+The **Nodes** section lists every Edgelet node (`kind: Agent` in YAML). For each node you can inspect status, edit YAML, open a remote shell, and review platform setup.
+
+In UI prose we say **Edgelet node**. YAML and API fields still use `Agent`.
+
+### Fleet inventory
+
+Review every Edgelet node status, resource use, and deployment type from the inventory table.
+
+**Memory usage** and **CPU usage** in the table are combined consumption for the Edgelet daemon and embedded containerd. They are not per-microservice totals.
+
+**CPU usage** is not system-wide. It reflects usage on the CPU core Edgelet runs on, not all cores on the host.
+
+For host-wide capacity, open the node slide-over. Node `memoryLimit`, `cpuLimit`, and `diskLimit` in YAML are monitor-only thresholds. See [Edgelet configuration reference](/edgelet/configuration-reference#resource-limits-monitor-vs-enforce).
+
+![Edgelet node inventory with health indicators](/images/docs/edgeops-console/nodes-inventory.png)
+
+### Geographic map
+
+Visualize Edgelet nodes on a map when latitude and longitude are set in the node spec.
+
+![Edgelet node locations on an interactive map](/images/docs/edgeops-console/nodes-map.png)
+
+### Mesh graph
+
+Inspect router topology and Message Fabric links between Edgelet nodes and the control plane hub.
+
+![Mesh graph showing router links between Edgelet nodes](/images/docs/edgeops-console/mesh-graph.png)
+
+### Detailed insights
+
+Each node slide-over exposes platform setup, security status, agent details, and connected resources.
+
+The slide-over also shows host-wide totals: total CPU usage across the node, available memory, and disk usage. Use these fields when you need full-machine capacity, not the combined Edgelet stack figures in the list table.
+
+![Edgelet node slide-over with platform and agent details](/images/docs/edgeops-console/node-slideover.png)
+
+### Declarative editing
+
+Edit the full node spec in YAML. Changes are validated and sent to the Controller the same way {CLI_NAME} applies them.
+
+![Inline YAML editor for Edgelet node configuration](/images/docs/edgeops-console/node-yaml.png)
+
+### Remote shell, exec and log sessions
+
+Open an interactive terminal or tail log session on an Edgelet node and microservices for diagnostics without SSH to the device.
+
+![Browser-based shell session on an Edgelet node](/images/docs/edgeops-console/node-exec.png)
+
+## Applications and microservices
+
+**Workloads** covers user applications and microservices. List, filter, start, stop, scale, and inspect routes from the same views {CLI_NAME} uses.
+
+### Microservice inventory
+
+List and filter every microservice deployed across the ECN.
+
+![Microservice inventory with CPU and memory signals](/images/docs/edgeops-console/microservice-list.png)
+
+![Microservice slide-over with runtime details and NATS config](/images/docs/edgeops-console/microservice-slideover.png)
+
+### Services and routing
+
+Manage TCP bridge services, target ports, and hub provisioning from the Network section.
+
+![Services view showing bridge ports and hub status](/images/docs/edgeops-console/services-routing.png)
+
+### Registries
+
+Browse and manage container registries used by microservice images.
+
+![Registry management panel](/images/docs/edgeops-console/catalog-registries.png)
+
+## Cluster config editors
+
+Dedicated editors cover ConfigMaps, Secrets, volume mounts, and certificates. Each resource supports list views, detail panels, and YAML editing.
+
+![ConfigMap editor with structured data view](/images/docs/edgeops-console/configmap-editor.png)
+
+![Secret inventory with type labels](/images/docs/edgeops-console/secret-editor.png)
+
+![VolumeMount editor for binding ConfigMaps and Secrets to Edgelet nodes](/images/docs/edgeops-console/volumemount-editor.png)
+
+![Certificate management for site and local CAs](/images/docs/edgeops-console/certificate-editor.png)
+
+## Exec and log sessions
+
+Open an interactive terminal on an Edgelet node or inside a microservice container from the Console UI. Stream microservice logs in real time over the same WebSocket transport.
+
+Controller **v3.8.0** uses a **multi-session** exec model:
+
+- REST `POST/DELETE .../exec` on microservices is removed
+- Each exec opens its own WebSocket session with a unique session id
+- Default limit: **5 concurrent exec sessions per microservice** (Controller quota)
+
+The Console and {CLI_NAME} use the same session flow as the REST API. For protocol details, limits, and local `edgelet ms exec`, see [Exec sessions](/edgelet/exec-sessions).
+
+Log streaming uses the same WebSocket channel family. See [Microservice logs](/applications/microservice-logs).
+
+## Identity, access control, and messaging
+
+### NATS account and user rules
+
+Define export and import limits, publish and subscribe permissions, and account quotas under Access Control.
+
+![NATs account rules with import and export spec](/images/docs/edgeops-console/nats-account-rules.png)
+
+![NATs user rules with pub and sub allow lists](/images/docs/edgeops-console/nats-user-rules.png)
+
+### NATS accounts and users
+
+Review provisioned NATS accounts and microservice users under MessageBus.
+
+![NATs accounts linked to applications](/images/docs/edgeops-console/nats-accounts.png)
+
+![NATs users with application and microservice bindings](/images/docs/edgeops-console/nats-users.png)
+
+Roles, role bindings, and service accounts use the same Access Control section. Default greenfield installs use [embedded OIDC](/platform-deployment/embedded-oidc).
+
+## Events and REST API explorer
+
+The **Events** view filters Controller API audit records by type, endpoint, status, actor, and time range. You can export or prune old events.
+
+![Events log with filtering and audit trail](/images/docs/edgeops-console/events-audit.png)
+
+The embedded OpenAPI explorer calls `/api/v3/...` with the same auth context as the rest of the UI. Use it to exercise endpoints beyond what the form editors expose.
+
+![Embedded REST API explorer](/images/docs/edgeops-console/rest-api-explorer.png)
+
+OpenAPI reference: [Controller REST API](/reference-controller/rest-api).
+
+## Operational parity with the CLI
+
+| Area | Console | {CLI_NAME} |
+| ---- | ------- | ---------- |
+| Deploy and edit workloads | Yes | Yes |
+| Cluster config resources | Yes | Yes |
+| Exec and logs (WebSocket) | Yes | Yes |
+| RBAC and audit | Same model | Same model |
+| Initial Control Plane install | No | Yes |
+| Edgelet node provisioning | No | Yes |
+
+For automation-first workflows, use {CLI_NAME} or the REST API. For day-to-day visibility and controlled edits, use the Console.
+
+## See also
+
+- [EdgeOps Console introduction](/edgeops-console/introduction)
+- [Controller overview](/reference-controller/overview)
+- [Application management](/applications/introduction)
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

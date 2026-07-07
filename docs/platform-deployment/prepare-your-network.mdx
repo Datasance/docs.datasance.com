@@ -1,13 +1,15 @@
+import { CLI_NAME } from '@site/src/config/distribution';
+
 # Prepare Network
 
-Once we have a set of remote hosts (and/or a Kubernetes cluster) we need to make sure that we have appropriate firewall rules for the ioFog components that we will start deploying on those remote hosts.
+Once we have a set of remote hosts (and/or a Kubernetes cluster) we need to make sure that we have appropriate firewall rules for the PoT components that we will start deploying on those remote hosts.
 
-The following is an exhaustive list of the ingress firewall rules required for any ioFog Edge Compute Network.
+The following is an exhaustive list of the ingress firewall rules required for any Edge Compute Network.
 
 | Component  | Protocol/Port | Description                                                       |
 | ---------- | ------------- | ----------------------------------------------------------------- |
-| Controller | tcp:51121     | Controller API to be accessible from Agents and potctl.         |
-| Controller | http:80       | ECN Viewer to be accessible by ECN admins or users.               |
+| Controller | tcp:51121     | Controller API to be accessible from Edgelet nodes and {CLI_NAME}. |
+| Controller | http:80       | EdgeOps Console to be accessible by ECN admins or users.           |
 | Router | tcp:5671      | Router Messaging Port           |
 | Router | tcp:45671       | Router Edge Router Connection Port.               |
 | Router | tcp:55671       | Inter Router Connection Port.               |
@@ -16,16 +18,15 @@ The following is an exhaustive list of the ingress firewall rules required for a
 | NATs | tcp:6222       | NATs Cluster Port              |
 | NATs | tcp:8883       | NATs MQTT Port           |
 | *NATs | http:8222       | NATs Monitoring Port               |
-| Agent-Controller   | tcp:22        | potctl SSH access to install **PoT** Controller and Agent on remote hosts. |
+| SSH   | tcp:22        | {CLI_NAME} SSH access to install Controller and Edgelet on remote hosts. |
 
 :::warning[]
-By default all Router ports and NATs Cluster, Leaf, MQTT ports are tls protected. NATs Server and Monitoring ports are for internal connections. Therefore it is highly recommended that do not open those ports to the public for Remote Agents and Remote Controllers, for Kubernetes ControlPlane YAML set  `nats-server` service type as Cluster IP, or assign internal IP via annotations even if type is LoadBalancer.
+By default all Router ports and NATs Cluster, Leaf, MQTT ports are tls protected. NATs Server and Monitoring ports are for internal connections. Therefore it is highly recommended that do not open those ports to the public for remote Edgelet nodes and remote Controllers. For Kubernetes ControlPlane YAML set `nats-server` service type as ClusterIP, or assign internal IP via annotations even if type is LoadBalancer.
 :::
 
 :::tip[Where to go from here?]
-  <p>Regardless of the type of deployment we need, next we have to <a href="../platform-deployment/prepare-your-remote-hosts">prepare remote hosts</a> for Controller and Agents (in case of remote deployment), or just for Agents (in case of Kubernetes deployment).</p>
+  <p>Next, <a href="../platform-deployment/prepare-your-remote-hosts">prepare remote hosts</a> for Controller and Edgelet nodes (remote deployment), or just for Edgelet nodes (Kubernetes deployment).</p>
 :::
-
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

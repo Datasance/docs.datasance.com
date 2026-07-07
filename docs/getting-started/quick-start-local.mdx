@@ -1,78 +1,80 @@
+---
+title: Quick Start With Local Deployment
+description: Install potctl v3.8.0 and deploy a local Control Plane with embedded OIDC and a co-located system Edgelet node on macOS, Windows, or Linux.
+keywords: [quick start, local deployment, potctl, edgelet, embedded oidc, v3.8, macos, linux, docker]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
 # Quick Start With Local Deployment
 
-In this guide we will:
+:::warning[Greenfield release: v3.8.0]
 
-- Install the prerequisites and tools required to create and manage Edge Compute Networks ('ECNs')
-- Create an ECN on a local machine to demonstrate the processes and components involved in an ECN
-- Deploy a set of Microservices on our local ECN
+{PRODUCT_NAME} **v3.8.0** is a greenfield release. There is no in-place upgrade from v3.7 field deployments.
 
-## Prerequisites
+You need a new Controller database, **Edgelet v1.0.0+** on every node, and **{CLI_NAME} v3.8.0**. Legacy Java iofog-agent and v3.7 field agents are not supported on Controller v3.8.
 
-- `Docker v26.0+`: Open platform for developing, shipping, and running applications. ([installation instructions](https://docs.docker.com/install/))
+See [Migrating to v3.8.0](/migrating-to-v3-8) for the step-by-step guide.
 
-#### Install potctl on Mac
-
-Mac users can use Homebrew:
-
-```bash
-brew tap datasance/potctl
-brew install potctl
-```
-
-#### Install potctl on Windows
-
-The Windows binary can be downloaded from [Datasance Packages](https://github.com/Datasance/potctl/releases/download/v1.6.2/potctl.exe).
-
-##### Prepare Windows
-
-In order to use `potctl` to deploy an ECN locally on Windows we will need to configure Docker to run Linux containers:
-
-- Install [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install/)
-- Follow the guidelines for using WSL2 or Hyper-V backend [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
-- Ensure that docker is running with [docker desktop for windows](https://docs.docker.com/desktop/setup/install/windows-install)
-
-#### Install potctl on Linux
-
-The Debian package can be installed like so:
-
-```bash
-wget -qO- https://downloads.datasance.com/datasance.gpg | sudo tee /etc/apt/trusted.gpg.d/datasance.gpg >/dev/null
-echo "deb [arch=all signed-by=/etc/apt/trusted.gpg.d/datasance.gpg] https://downloads.datasance.com/deb stable main" | sudo tee /etc/apt/sources.list.d/datansance.list >/dev/null
-sudo apt update
-sudo apt install potctl -y
-```
-
-And similarly, the RPM package can be installed like so:
-
-```bash
-cd /etc/yum.repos.d ; curl https://downloads.datasance.com/datasance.repo -LO
-sudo yum update
-sudo yum install potctl -y
-```
-
-#### Verify potctl Installation
-
-Run `potctl version` to verify we have successfully installed the CLI.
-
-:::warning[Prepare your Keycloak Realms for Datasance PoT]
-  <p>We recommened going through the <a href="../platform-deployment/prepare-realm">Keycloak Installation Guide</a> before continuing on here.</p>
 :::
 
-## Deploy **PoT** Locally
+This guide deploys a minimal local ECN on one machine:
 
-We can use `potctl deploy` to install and provision ECN components. Here we will deploy a containerized ECN locally.
+1. **LocalControlPlane** with [embedded OIDC](/platform-deployment/embedded-oidc)
+2. A **system Edgelet node** on the same host (via `spec.systemAgent`)
+3. A pointer to deploy sample workloads ([Acme Smart Plant Tutorial](/tutorials/acme-smart-plant))
 
+You do **not** deploy a separate **`LocalAgent`**. The system Edgelet is part of the Control Plane YAML. See [Control Plane YAML Specification](/yaml-references/reference-control-plane#local-control-plane).
 
-:::info[Want to know more about potctl?]
-  <p>We aren't going into detail about potctl here because we want to show you how simple it can be to get going with **PoT**. Please make sure to check out the full potctl documentation <a href="../potctl/introduction">here</a>.</p>
+## Version pins
+
+| Component | Version |
+| --------- | ------- |
+| {CLI_NAME} | v3.8.0 |
+| Controller | v3.8.0 |
+| Edgelet | v1.0.0 |
+| EdgeOps Console | v1.0.9 |
+
+Pair **Edgelet v1.0.0** with **Controller v3.8.0**. Do not run v3.7 agents against a v3.8 Controller.
+
+## Choose your platform
+
+| Platform | Container engine | `containerEngineUrl` | Typical `deploymentType` |
+| -------- | ---------------- | -------------------- | ------------------------ |
+| **macOS / Windows** | `docker` | `unix:///var/run/docker.sock` | `container` |
+| **Linux** | `edgelet` | `unix:///run/edgelet/containerd.sock` | `native` |
+
+Use the manifest and prerequisites for your OS below. Both paths produce the same local ECN: Controller, Router, and system Edgelet on one host.
+
+:::info[Authentication]
+
+PoT **v3.8.0** uses [embedded OIDC](/platform-deployment/embedded-oidc) by default. You do not need Keycloak or an external IdP for this quick start.
+
 :::
 
+:::info[Want to know more about {CLI_NAME}?]
 
-Go ahead and paste the following commands into the terminal:
+We keep this guide short. For CLI design and workflows, see [{CLI_NAME} introduction](/potctl/introduction).
 
-```bash
-echo "---
-apiVersion: datasance.com/v3
+:::
+
+## macOS and Windows
+
+### Prerequisites
+
+- **Docker v26.0+** running ([Docker Desktop](https://docs.docker.com/desktop/))
+- **{CLI_NAME} v3.8.0** - see [Download and install {CLI_NAME}](/potctl/download)
+
+On Windows, use Docker Desktop with **Linux containers** (WSL2 or Hyper-V backend). Run {CLI_NAME} from an environment that can reach the Docker socket (WSL2 is recommended).
+
+### Manifest
+
+Save as `quick-start.yaml`:
+
+<FlavorYaml title="quick-start.yaml (macOS / Windows)">{`---
+apiVersion: {{API_VERSION}}
 kind: LocalControlPlane
 metadata:
   name: ecn
@@ -81,94 +83,182 @@ spec:
     name: Quick
     surname: Start
     email: user@domain.com
-    password: q1u45ic9kst563art
-  auth:
-    url: https://example.com/
-    realm: realm-name
-    realmKey: realm-key
-    ssl: exter
-    controllerClient: pot-controller
-    controllerSecret:
-    viewerClient: ecn-viewer
-  nats:
-    enabled: false
+    password: QuickStartUser12!
   controller:
-    container:
-      image: ghcr.io/datasance/controller:3.7.1
----
-apiVersion: datasance.com/v3
-kind: LocalAgent
+    publicUrl: http://<your-host-ip>:51121
+    consoleUrl: http://<your-host-ip>
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
+  auth:
+    mode: embedded
+    insecureAllowHttp: true
+    bootstrap:
+      username: admin
+      password: QuickStart12!
+  nats:
+    enabled: true
+  systemAgent:
+    package:
+      container:
+        image: {{REGISTRY}}/edgelet:1.0.0
+    config:
+      arch: amd64
+      deploymentType: container
+      containerEngine: docker
+      containerEngineUrl: unix:///var/run/docker.sock
+`}</FlavorYaml>
+
+### Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f quick-start.yaml`}</CliBlock>
+
+Continue with [Verify the deployment](#verify-the-deployment).
+
+## Linux
+
+### Prerequisites
+
+- **Linux** (amd64, arm64, or another [supported arch](/yaml-references/reference-agent#configuration-fields))
+- **{CLI_NAME} v3.8.0** - see [Download and install {CLI_NAME}](/potctl/download)
+- **sudo** access on the host ({CLI_NAME} installs Edgelet and starts `edgelet.service` during deploy)
+
+Docker is **not** required on this path. The system Edgelet uses the embedded **edgelet** engine and containerd socket.
+
+### Manifest
+
+Save as `quick-start.yaml`:
+
+<FlavorYaml title="quick-start.yaml (Linux)">{`---
+apiVersion: {{API_VERSION}}
+kind: LocalControlPlane
 metadata:
-  name: local-agent
+  name: ecn
 spec:
-  container:
-    image: ghcr.io/datasance/agent:3.7.0
-" > /tmp/quick-start.yaml
-potctl deploy -f /tmp/quick-start.yaml
-```
+  iofogUser:
+    name: Quick
+    surname: Start
+    email: user@domain.com
+    password: QuickStartUser12!
+  controller:
+    publicUrl: http://<your-host-ip>:51121
+    consoleUrl: http://<your-host-ip>
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
+  auth:
+    mode: embedded
+    insecureAllowHttp: true
+    bootstrap:
+      username: admin
+      password: QuickStart12!
+  nats:
+    enabled: true
+  systemAgent:
+    package:
+      version: 1.0.0
+    config:
+      arch: amd64
+      deploymentType: native
+      containerEngine: edgelet
+      containerEngineUrl: unix:///run/edgelet/containerd.sock
+`}</FlavorYaml>
 
-After the deployment has successfully completed, we can verify the resources we specified in the YAML file are running on our local machine.
+Set `systemAgent.config.arch` to match your CPU (`arm64`, `riscv64`, or `arm` on 32-bit ARM hosts).
 
-```bash
-potctl get all
-```
+### Deploy
 
-Which should output something similar to:
+<CliBlock>{`{{CLI_NAME}} deploy -f quick-start.yaml`}</CliBlock>
+
+Continue with [Verify the deployment](#verify-the-deployment).
+
+## Verify the deployment
+
+Check {CLI_NAME} resources:
+
+<CliBlock>{`{{CLI_NAME}} get all`}</CliBlock>
+
+Expected output (fields may vary):
 
 ```plain
 NAMESPACE
 default
 
 CONTROLLER      STATUS    AGE           UPTIME      ADDR             PORT
-local           online    22m29s        22m35s      0.0.0.0          51121
+ecn             online    22m29s        22m35s      0.0.0.0          51121
 
 AGENT           STATUS    AGE           UPTIME      ADDR             VERSION
-local-agent     RUNNING   22m7s         22m7s       150.179.102.91   3.0.0
+ecn             RUNNING   22m7s         22m7s       192.168.1.10     1.0.0
 
 APPLICATION     STATUS    MICROSERVICES
 
 MICROSERVICE    STATUS    AGENT         ROUTES      VOLUMES          PORTS
 
-VOLUME          SOURCE    DESTINATION   PERMISSIONS	AGENTS
+VOLUME          SOURCE    DESTINATION   PERMISSIONS   AGENTS
 
 ROUTE           SOURCE MSVC     DEST MSVC
-
 ```
 
-**NB:** The Agent status might say `UNKNOWN` for up to 30s. It is the time for the agent to report back its liveness to the controller.
+The **Controller** row is the control plane API. The **Agent** row named **`ecn`** is the system Edgelet node from `spec.systemAgent` (same name as `metadata.name`).
 
-The `Controller` acts as a control plane, it will be our main point of access and communication with our ECN. If we want to find out more about Controller, please read <a href="../reference-controller/overview">this</a>.
+**Note:** Edgelet node status may show `UNKNOWN` for up to 30 seconds while the node reports liveness to the Controller.
 
-The `Agent` is the component that is meant to run on our edge devices. Once it has registered itself with a Controller, the Agent will be in charge of actually pulling the microservices images and starting / stopping the microservices on our edge device. If we want to find out more about Agent, please read <a href="../reference-agent/overview">this</a>.
+### macOS / Windows: Docker containers
 
-Those components are all currently running as separate Docker containers on our local machine. We can list the active containers by running:
+On the Docker path, Controller, Router, and Edgelet workloads run as containers:
 
 ```bash
 docker ps
 ```
 
-Which should output something similar to:
+Example output:
 
 ```plain
-CONTAINER ID        IMAGE                          COMMAND                  CREATED             STATUS              PORTS                                                          NAMES
-71927882293f        iofog/router:3.0.1             "/qpid-dispatch/laun…"   15 minutes ago      Up 15 minutes       0.0.0.0:5672->5672/tcp, 0.0.0.0:56721-56722->56721-56722/tcp   iofog_PJFbk3ZHjX3RkNWxwcRqzDXnKV6mLHmq
-8454ca70755b        iofog/agent:3.0.0              "sh /start.sh"           15 minutes ago      Up 15 minutes                                                                      iofog-agent
-dc7568ad1708        ghcr.io/datasance/controller:3.7.1         "node /usr/local/lib…"   16 minutes ago      Up 16 minutes       0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->80/tcp                 iofog-controller
+CONTAINER ID   IMAGE                              COMMAND                  STATUS          PORTS                                           NAMES
+71927882293f   ghcr.io/datasance/router:3.8.0     "/qpid-dispatch/laun…"   Up 15 minutes   0.0.0.0:5671->5671/tcp                          ...
+8454ca70755b   ghcr.io/datasance/edgelet:1.0.0    "edgelet daemon"         Up 15 minutes                                                   ...
+dc7568ad1708   ghcr.io/datasance/controller:v3.8.0 "node /usr/local/lib…"  Up 16 minutes   0.0.0.0:51121->51121/tcp, 0.0.0.0:8008->8008/tcp  ...
 ```
+
+### Linux: Edgelet service
+
+On the native Linux path, confirm Edgelet is running:
+
+<CliBlock>{`edgelet system status`}</CliBlock>
+
+Or:
+
+```bash
+systemctl status edgelet
+```
+
+List system microservices (Controller, Router) deployed through Edgelet:
+
+<CliBlock>{`edgelet ms ls`}</CliBlock>
+
+See [Edgelet introduction](/edgelet/introduction) and [Control Plane YAML](/yaml-references/reference-control-plane) for field details.
+
+## Sign in to EdgeOps Console
+
+Open `http://<your-host-ip>` in a browser, or run <code>{CLI_NAME} view</code>. Sign in with bootstrap user **`admin`** and password **`QuickStart12!`**, or reigstered `ìofogUser:` **`user@domain.com`** and password **`QuickStartUser12!`** . See [Embedded OIDC](/platform-deployment/embedded-oidc) for MFA and CLI login.
+
+## Deploy sample workloads
+
+This quick start stops after the Control Plane and system Edgelet node are running. To deploy applications and microservices on your local ECN:
+
+- **[Acme Smart Plant Tutorial](/tutorials/acme-smart-plant)** - end-to-end plant demo (recommended next step)
+- [Developing microservices](/developing-microservices/overview) - write your own workloads
+- [Application YAML reference](/yaml-references/reference-application) - deploy from YAML with <code>{CLI_NAME}</code>
 
 ## Teardown
 
-To remove our ECN and any microservices deployed on it, we can run the following command:
+Remove the local ECN and any deployed microservices:
 
-```bash
-potctl delete all
-```
+<CliBlock>{`{{CLI_NAME}} delete all`}</CliBlock>
 
-## Next Steps
+## Next steps
 
-Now that you have seen what **PoT** is about, you can create a real ECN with remote hosts. Instructions are found [here](../platform-deployment/introduction).
-
-We can also try deploying other Microservices on the local ECN. We can find instructions on writing our own Microservice [here](../developing-microservices/overview) and a step-by-step [tutorial](../tutorial/introduction).
+- **[Platform Deployment](/platform-deployment/introduction)** - remote hosts, Kubernetes, air-gap, and production auth
+- **[PoT Architecture](/getting-started/architecture)** - how Controller, Router, NATS, Edgelet, and EdgeOps Console fit together
+- **[Acme Smart Plant Tutorial](/tutorials/acme-smart-plant)** - full demo topology
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

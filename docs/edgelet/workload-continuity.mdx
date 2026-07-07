@@ -1,0 +1,112 @@
+---
+title: Edgelet Workload Continuity
+description: Keep microservices running across Edgelet control plane restarts. Runtime split, shutdownPolicy, and embedded vs docker/podman behavior.
+keywords: [edgelet, workload continuity, restart, shutdownPolicy, edgelet-containerd, systemd]
+slug: /edgelet/workload-continuity
+---
+
+# Workload continuity
+
+## Principle
+
+Restarting **`edgelet`** (control plane) must **not** stop microservice containers unless you restart the **runtime** unit or perform a **cold engine change**.
+
+| Layer | systemd unit | Owns |
+| ----- | ------------ | ---- |
+| Data plane | `edgelet-containerd.service` | embedded containerd, CRI socket, MS containers |
+| Control plane | `edgelet.service` | supervisor, field agent, Edgelet API, reconcile |
+
+**docker / podman:** the host engine **is** the data plane. Edgelet does not stop microservices on control restart.
+
+## docker / podman (leave-running)
+
+Default **`shutdownPolicy=leave-running`** for external engines.
+
+| Action | MS containers |
+| ------ | ------------- |
+| `systemctl restart edgelet` | **Keep running** — same container ID |
+| `edgelet shutdown` (control stop) | **No drain** — reconcile reattaches on start |
+
+Config (`/etc/edgelet/config.yaml`):
+
+```yaml
+shutdownPolicy: leave-running   # default for docker/podman
+shutdownGracePeriodSeconds: 90  # used for optional maintenance / data-plane stops
+pruningFrequency: 24            # hours between image prune cycles
+watchdogEnabled: true           # orphan container cleanup
+```
+
+Verify after control restart:
+
+```bash
+docker ps --filter label=edgelet.iofog.org/microservice-uid
+edgelet system status -o json | jq '."runtime.agentPhase", ."runtime.shutdownPolicy"'
+```
+
+Reattach uses **labels + DB**, not Docker `RestartPolicy`.
+
+## Embedded engine (runtime split)
+
+Production embedded installs use two units:
+
+```bash
+systemctl restart edgelet              # control only — MS survive
+systemctl restart edgelet-containerd   # data plane — MS stop then reconcile
+```
+
+`edgelet-containerd.service` is **not** `PartOf=edgelet.service`. Stopping or restarting **only** `edgelet` leaves the data plane running.
+
+**Full embedded shutdown** (backup, uninstall, wipe):
+
+```bash
+sudo systemctl stop edgelet-containerd.service edgelet.service
+```
+
+### Wrong-order manual restart (embedded split)
+
+When both units need a restart, restart the **data plane before the control plane**:
+
+```bash
+# Wrong — bypasses After= ordering on manual restart:
+systemctl restart edgelet && systemctl restart edgelet-containerd
+
+# Correct:
+systemctl restart edgelet-containerd.service
+sleep 3
+systemctl restart edgelet.service
+```
+
+## Before runtime split (monolithic embedded)
+
+Until **`edgelet-containerd.service`** is active with runtime split, a monolithic `systemctl restart edgelet` still **drains MS** (`shutdownPolicy=drain-all` default). Expect brief MS outage.
+
+**Migration:** enable `edgelet-containerd`, install the `edgelet.service.d/edgelet.conf` drop-in, restart data plane then control.
+
+## Status during control restart
+
+- Brief MS **UNKNOWN** on the Controller dashboard is OK.
+- Local status exposes **`runtime.agentPhase=restarting`** during control stop/start.
+- Field-agent status POST **annotates** MS entries with `controlRestart: true`.
+
+## Cold engine change
+
+Changing **`containerEngine`** still requires quiesce, MS cleanup, `pendingRestart`, service restart, and recreate from DB. Workload continuity does **not** relax this path. See [Deployment](/edgelet/deployment) and [Container engines](/edgelet/container-engines).
+
+## OTA restart matrix
+
+| Bundle change | Restart |
+| ------------- | ------- |
+| Thin **edgelet** binary only | `systemctl restart edgelet` |
+| Fat / containerd runtime bundle | `systemctl restart edgelet-containerd` then `edgelet` |
+
+See [Installation](/edgelet/installation) for hash-based OTA details.
+
+## See also
+
+- [Configuration reference](/edgelet/configuration-reference) — `shutdownPolicy`, `shutdownGracePeriodSeconds`
+- [Persistence](/edgelet/persistence) — backup before full shutdown
+- [Troubleshooting](/edgelet/troubleshooting) — cgroup and unit ordering
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

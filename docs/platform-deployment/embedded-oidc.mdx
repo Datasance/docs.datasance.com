@@ -1,0 +1,150 @@
+---
+title: Embedded OIDC Authentication
+description: Default authentication mode for PoT v3.8.0 Control Plane deployments using embedded OIDC.
+slug: /platform-deployment/embedded-oidc
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
+# Embedded OIDC Authentication
+
+:::warning[Greenfield release: v3.8.0]
+
+Platform train **v3.8.0** uses **embedded OIDC** as the default auth mode. You do not need Keycloak or any external IdP for a standard deploy. Legacy Keycloak-first guides live in the [v3.7.3](/v3.7.3/) snapshot.
+
+:::
+
+Embedded OIDC ships inside the Controller image. The issuer runs at `{CONTROLLER_PUBLIC_URL}/oidc`. EdgeOps Console and {CLI_NAME} use the same OAuth BFF and RBAC model.
+
+For enterprise IdP integration (Okta, Azure AD, Keycloak, or any OIDC provider), see [External OIDC Authentication](/platform-deployment/external-oidc).
+
+## When to use embedded OIDC
+
+| Scenario | Use embedded OIDC |
+| -------- | ----------------- |
+| Greenfield PoT v3.8 deploy | Yes (default) |
+| Lab or single-site install | Yes |
+| Quick start and tutorials | Yes |
+| Corporate SSO required | No - use [External OIDC](/platform-deployment/external-oidc) |
+
+## Minimal Control Plane YAML
+
+Set `auth.mode: embedded` and bootstrap credentials in your Control Plane manifest. {CLI_NAME} maps these fields to Controller environment variables at deploy time.
+
+```yaml
+auth:
+  mode: embedded
+  bootstrap:
+    username: admin
+    password: "LocalTest12!"   # ≥12 chars, 1 uppercase, 1 special character
+controller:
+  publicUrl: https://controller.example.com:51121
+  consoleUrl: https://console.example.com:8008
+```
+
+Local Docker installs can set `auth.insecureAllowHttp: true` when `publicUrl` uses `http://`. Production deploys should use HTTPS and valid TLS certificates.
+
+Full YAML field reference: [Control Plane YAML](/yaml-references/reference-control-plane). Runtime env mapping: [Controller configuration](/reference-controller/configuration).
+
+## Core environment variables
+
+These are the primary knobs for embedded auth. YAML keys under `auth.*` and `controller.*` map to the same names.
+
+| Environment variable | YAML key | Embedded mode |
+| -------------------- | -------- | ------------- |
+| **`AUTH_MODE`** | `auth.mode` | Set to `embedded` (default) |
+| **`CONTROLLER_PUBLIC_URL`** | `controller.publicUrl` | Required. Issuer base is `{CONTROLLER_PUBLIC_URL}/oidc` |
+| **`CONSOLE_URL`** | `controller.consoleUrl` | Public EdgeOps Console URL for OAuth redirects |
+| **`CONSOLE_PORT`** | `controller.consolePort` | Console listen port (default **8008**) |
+| **`OIDC_BOOTSTRAP_ADMIN_USERNAME`** | `auth.bootstrap.username` | First admin login name |
+| **`OIDC_BOOTSTRAP_ADMIN_PASSWORD`** | `auth.bootstrap.password` | Bootstrap admin password |
+| **`AUTH_INSECURE_ALLOW_HTTP`** | `auth.insecureAllowHttp` | Allow `http://` in `CONTROLLER_PUBLIC_URL` (dev only) |
+| **`TRUST_PROXY`** | `controller.trustProxy` | Honor `X-Forwarded-*` behind a reverse proxy |
+
+Optional embedded-only settings (`AUTH_SESSION_*`, token TTL overrides, rate limits) are listed in [Controller configuration](/reference-controller/configuration).
+
+## TLS environment variables
+
+Controller v3.8 renamed **`SSL_*`** to **`TLS_*`**. Listener certificates are used for HTTPS, agent trust on provision, and embedded OAuth token exchange.
+
+| Environment variable | YAML key | Purpose |
+| -------------------- | -------- | ------- |
+| **`TLS_PATH_CERT`** | `controller.tls.cert` or mounted secret | TLS certificate |
+| **`TLS_PATH_KEY`** | `controller.tls.key` | TLS private key |
+| **`TLS_PATH_INTERMEDIATE_CERT`** | `controller.tls.intermediateCert` | Intermediate / chain certificate |
+| **`TLS_BASE64_CERT`** | base64 in YAML | Alternative to file paths |
+| **`TLS_BASE64_KEY`** | base64 in YAML | Alternative to file paths |
+
+On Kubernetes, the operator can inject TLS from a Secret (`controller.secretName`) instead of path env vars.
+
+## First login
+
+### Bootstrap admin
+
+On first startup, Controller creates the bootstrap admin when no admin user exists. Set credentials in deploy YAML or env before the first boot:
+
+```yaml
+auth:
+  mode: embedded
+  bootstrap:
+    username: admin
+    password: "LocalTest12!"
+```
+
+If env credentials change later, Controller **reconciles** the bootstrap user (greenfield behavior). Plan credential rotation during a maintenance window.
+
+### EdgeOps Console (browser)
+
+1. Open the Console at **`CONSOLE_URL`** (or run <code>{CLI_NAME} view</code>).
+2. Click **Sign in**.
+3. Complete the embedded login form at `{CONSOLE_URL}/login/oauth?interaction=…`.
+4. Enroll MFA when prompted (required for users in the `admin` group after first login).
+
+Browser login uses the OAuth BFF (`GET /api/v3/user/oauth/authorize`). The Console does not POST passwords directly to the IdP.
+
+### {CLI_NAME} (CLI)
+
+<CliBlock>{`{{CLI_NAME}} login`}</CliBlock>
+Or call the REST API:
+
+```bash
+curl -sS -X POST "${CONTROLLER_PUBLIC_URL}/api/v3/user/login" \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin","password":"LocalTest12!","totp":""}'
+```
+
+Use the bootstrap username as `email` when it is not an email address.
+
+## What embedded OIDC replaces
+
+| Removed (v1.6 / v3.7) | v3.8 embedded |
+| --------------------- | ------------- |
+| Keycloak realm setup before deploy | Not required |
+| `auth.url`, `auth.realm`, `viewerClient` | `auth.mode: embedded` |
+| ECN Viewer OAuth client | EdgeOps Console via Controller BFF |
+| `KC_*` env vars | `OIDC_*`, `AUTH_*`, `TLS_*` |
+
+## HA notes
+
+| Database | Controller replicas | Embedded issuer |
+| -------- | ------------------- | --------------- |
+| SQLite (default) | 1 only | Supported |
+| MySQL / PostgreSQL | 2+ | Supported (shared DB) |
+
+For multi-replica browser login with **external** IdP, use `AUTH_SESSION_STORE_TYPE=database`. Embedded mode with mysql/postgres auto-selects database-backed BFF sessions when configured.
+
+## Next steps
+
+| Document | Topic |
+| -------- | ----- |
+| [Platform Deployment Introduction](/platform-deployment/introduction) | Remote or Kubernetes Control Plane |
+| [Quick Start With Local Deployment](/getting-started/quick-start-local) | Local ECN with embedded auth |
+| [External OIDC Authentication](/platform-deployment/external-oidc) | Optional enterprise IdP |
+| [EdgeOps Console configuration](/edgeops-console/configuration) | `consoleUrl` and runtime `auth.*` paths |
+| [Controller configuration](/reference-controller/configuration) | Full env var tables |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

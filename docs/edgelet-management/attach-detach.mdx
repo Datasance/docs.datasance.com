@@ -1,0 +1,51 @@
+---
+title: Attach and Detach Edgelet Nodes
+description: Transfer Edgelet nodes between ECNs and namespaces with potctl detach, attach, and move agent commands.
+keywords: [edgelet node, detach, attach, move agent, potctl, namespace, ecn]
+slug: /edgelet-management/attach-detach
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Attach and detach
+
+You can transfer an **Edgelet node** from one ECN to another by detaching it and attaching it elsewhere.
+
+:::warning[Detach stops workloads]
+
+Detaching an Edgelet node removes its Controller connection. Microservices on that node are shut down.
+
+:::
+
+Detach from the current namespace:
+
+<CliBlock>{`{{CLI_NAME}} detach agent zebra-1 -n factory-a`}</CliBlock>
+
+List detached resources:
+
+<CliBlock>{`{{CLI_NAME}} get all --detached`}</CliBlock>
+
+Attach to another namespace or ECN:
+
+<CliBlock>{`{{CLI_NAME}} attach agent zebra-1 -n factory-b`}</CliBlock>
+
+Move between namespaces in one step:
+
+<CliBlock>{`{{CLI_NAME}} move agent zebra-1 factory-b -n factory-a`}</CliBlock>
+
+## Delete vs detach
+
+Use **`delete agent`** to remove the node from the Controller **and** run uninstall scripts on the host (unless you customized teardown).
+
+Use **`detach agent`** when you want to keep Edgelet installed on the host but deprovision it from the current ECN.
+
+## See also
+
+- [{CLI_NAME} detach agent](/potctl/cli/potctl_detach_agent) — CLI reference
+- [Setup Edgelet Nodes](/platform-deployment/setup-your-agents) — first-time deploy
+- [Upgrade and rollback](/edgelet-management/upgrade-rollback) — version changes while attached
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

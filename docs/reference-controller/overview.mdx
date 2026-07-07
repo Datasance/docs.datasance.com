@@ -1,20 +1,56 @@
 ---
-title: Controller Overview - Reference
-description: Overview of the Controller component in Datasance PoT. Learn how it orchestrates agents and microservices in an Edge Compute Network.
-keywords: [controller overview, edge orchestration, ecn management, datasance pot, edge controller, microservice orchestration]
+title: Controller Overview
+description: Controller v3.8.0 orchestrates Edgelet nodes, microservices, and applications on your Edge Compute Network.
+keywords: [controller, v3.8, edge orchestration, ecn, edgelet, edgeops console, control plane]
+slug: /reference-controller/overview
 ---
 
-# Overview
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
 
-Since your Edge Compute Network is likely distributed—composed of many different devices across networks, each with potentially differing microservices—a piece of software called the **Controller** is used for orchestration of the different [Agents](../reference-agent/overview).
+# Controller
 
-Because the Controller daemon keeps track of all your Agents, even across complicated network configurations, you can use it to maintain the entire fleet, remotely. Small Edge Compute Networks will only need a single Controller, however, running multiple Controllers is also supported for increased resiliency.
+:::warning[Greenfield release: v3.8.0]
 
-The Controller can run on any compatible hardware that is network accessible by all of your edge nodes running an Agent. Usually that means either having a static IP address or DNS records. A common solution is to run your Controller on a cloud provider like [Amazon Web Services](https://aws.amazon.com/) or [Google Cloud Platform](https://cloud.google.com/), but it's also possible to run the Controller directly on one of your edge nodes or other local hardware.
+Platform train **v3.8.0** needs a fresh Controller database, **Edgelet v1.0.0+** on every node, and **{CLI_NAME} v3.8.0**. There is no in-place upgrade from v3.7. See [Migrating to v3.8.0](/migrating-to-v3-8).
 
-Once your Edge Compute Network running ioFog is up and running, you'll use your Controller as the primary interface to maintaining your microservices and the nodes they run on.
+:::
 
-For full usage details see the [Controller CLI Usage](../reference-controller/cli-usage) page.
+The **Controller** is the control plane for {PRODUCT_NAME}. It tracks Edgelet nodes, applications, microservices, routes, and platform services (router, NATS) across your Edge Compute Network (ECN).
+
+Small ECNs often run one Controller. You can run multiple Controllers for resiliency. Each Controller needs a network path every Edgelet node can reach (static IP, DNS, or load balancer).
+
+## Default ports
+
+| Service | Default port | Purpose |
+| ------- | ------------ | ------- |
+| Controller REST API | **51121** | `/api/v3/...` for {CLI_NAME}, SDK, and automation |
+| EdgeOps Console | **8008** | Web UI embedded in the Controller image |
+
+## What you use it for
+
+- Provision and manage **Edgelet nodes** (YAML `kind: Agent`)
+- Deploy **applications** and **microservices**
+- Configure **routes**, **services**, **registries**, and **catalog** entries
+- Open **exec** and **log** sessions (WebSocket, multi-session)
+- Authenticate users via **embedded OIDC** (default) or an external IdP
+
+Manage the ECN with [{CLI_NAME}](/potctl/introduction), the [EdgeOps Console](/edgeops-console/introduction), or the [REST API](/reference-controller/rest-api).
+
+## Requirements
+
+- **Node.js 24.x** for development and CI builds of the Controller image
+- **Edgelet v1.0.0+** on every edge node (legacy Java Agent and v3.7 field agents are not supported)
+- A **new database** on first install (no v3.7 → v3.8 migrator)
+
+## Reference pages
+
+| Document | Description |
+| -------- | ----------- |
+| [Configuration](/reference-controller/configuration) | YAML config, TLS, OIDC, Console, and environment variables |
+| [REST API](/reference-controller/rest-api) | v3.8 API paths, breaking changes, and OpenAPI |
+| [Embedded OIDC](/platform-deployment/embedded-oidc) | Default auth mode for greenfield deployments |
+| [EdgeOps Console](/edgeops-console/introduction) | Web UI for day-2 cluster operations |
+| [Edgelet exec sessions](/edgelet/exec-sessions) | WebSocket exec model and session limits |
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

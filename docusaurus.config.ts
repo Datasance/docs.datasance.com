@@ -3,9 +3,14 @@ import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import type * as Redocusaurus from 'redocusaurus';
 import path from 'path';
+import { FLAVOR, PRODUCT_NAME } from './src/config/distribution';
 
 const config: Config = {
-  title: 'Datasance PoT Documentation',
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+  title: `${PRODUCT_NAME} Documentation`,
   tagline: 'Securely deploy, manage, and scale containerized workloads across thousands of heterogeneous far-edge and IoT environments.',
   favicon: 'img/favicon.ico',
 
@@ -33,13 +38,59 @@ const config: Config = {
 
   plugins: [
     [
-        '@docusaurus/plugin-google-gtag',
-        {
-            trackingID: 'G-KGPCD08K90',
-            anonymizeIP: false,
-        },
+      '@docusaurus/plugin-google-gtag',
+      {
+        trackingID: 'G-KGPCD08K90',
+        anonymizeIP: false,
+      },
     ],
-],
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          { from: '/ECN-Viewer/', to: '/edgeops-console/introduction' },
+          { from: '/edgeops-console', to: '/edgeops-console/introduction' },
+          { from: '/agent-management', to: '/edgelet-management/introduction' },
+          { from: '/agent-management/introduction', to: '/edgelet-management/introduction' },
+          {
+            from: '/agent-management/agent-configuration',
+            to: '/edgelet-management/configuration-updates',
+          },
+          { from: '/agent-management/attach-detach', to: '/edgelet-management/attach-detach' },
+          {
+            from: '/agent-management/docker-image-pruning',
+            to: '/edgelet-management/image-pruning',
+          },
+          {
+            from: '/agent-management/edge-resources',
+            to: '/v3.7.3/agent-management/edge-resources',
+          },
+          {
+            from: '/agent-management/upgrade-rollback',
+            to: '/edgelet-management/upgrade-rollback',
+          },
+          { from: '/agent-management/volumes', to: '/edgelet-management/volume-distribution' },
+          { from: '/reference-agent', to: '/edgelet/introduction' },
+          { from: '/reference-agent/overview', to: '/edgelet/introduction' },
+          { from: '/reference-agent/cli-usage', to: '/v3.7.3/reference-agent/cli-usage' },
+          {
+            from: '/reference-agent/configuration',
+            to: '/v3.7.3/reference-agent/configuration',
+          },
+          { from: '/reference-agent/local-api', to: '/v3.7.3/reference-agent/local-api' },
+          { from: '/reference-agent/agent-logs', to: '/v3.7.3/reference-agent/agent-logs' },
+          {
+            from: '/platform-deployment/prepare-realm',
+            to: '/v3.7.3/platform-deployment/prepare-realm',
+          },
+          {
+            from: '/platform-deployment/keycloak-deployment',
+            to: '/v3.7.3/platform-deployment/keycloak-deployment',
+          },
+        ],
+      },
+    ],
+  ],
 
   presets: [
     [
@@ -51,11 +102,14 @@ const config: Config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: 'v1.6.2',
-              // path: 'v1.4.5',
+              label: 'v3.8.0',
             },
           },
-          exclude: ['**/potctl/md/**'],
+          exclude: [
+            '**/potctl/md/**',
+            '**/iofogctl/md/**',
+            ...(FLAVOR === 'iofog' ? ['**/potctl/cli/**'] : ['**/iofogctl/cli/**']),
+          ],
         },
         blog: false,
         theme: {
@@ -83,8 +137,12 @@ const config: Config = {
           // Pass it a path to a local OpenAPI YAML file
           {
             // Redocusaurus will automatically bundle your spec into a single file during the build
-            spec: 'openapi/datasance-api.yaml',
-            route: '/api/',
+            spec: 'openapi/controller-api.yaml',
+            route: '/api/controller',
+          },
+          {
+            spec: 'openapi/edgelet-api.yaml',
+            route: '/api/edgelet',
           },
         ],
         // Theme Options for modifying how redoc renders them
@@ -146,7 +204,7 @@ const config: Config = {
     navbar: {
       title: '',
       logo: {
-        alt: 'Datasance',
+        alt: PRODUCT_NAME,
         src: 'img/logo.svg',
         srcDark: 'img/logo-white.svg',
       },
@@ -158,14 +216,24 @@ const config: Config = {
           label: 'Documents',
         },
         {
+          type: 'doc',
+          docId: 'tutorials/acme-smart-plant/overview',
+          label: 'Tutorials',
+          position: 'left',
+        },
+        {
           label: 'API',
           position: 'left',
           items: [
             {
-              label: 'Datasance PoT Controller REST-API v3.7.1',
-              to: '/api',
-            }
-          ]
+              label: 'Controller API (v3.8.0)',
+              to: '/api/controller',
+            },
+            {
+              label: 'Edgelet API (v1.0.0)',
+              to: '/api/edgelet',
+            },
+          ],
         },
         {
           type: "docsVersionDropdown",
@@ -206,6 +274,19 @@ const config: Config = {
             {
               label: 'Eclipse ioFog Slack',
               href: 'https://iofog.slack.com/join/shared_invite/enQtNTQxMDczNjE0Mjc5LTRhMTE2YjgwNmRhOTg5ZmI3MGQ5OGM0N2E1MDg0OTJmMWYxZTgxZjE2MjA3NzY2MTFlZmEyYzc3OGQ5NmM4ZjI',
+            },
+          ],
+        },
+        {
+          title: 'Documentation',
+          items: [
+            {
+              label: 'EdgeOps Console',
+              to: '/edgeops-console/introduction',
+            },
+            {
+              label: 'Acme Smart Plant Tutorial',
+              to: '/tutorials/acme-smart-plant',
             },
           ],
         },

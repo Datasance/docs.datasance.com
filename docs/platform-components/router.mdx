@@ -1,0 +1,98 @@
+---
+title: Router
+description: PoT Router v3.8.0 wraps Skupper Router 3.5.1 for secure cross-network messaging. Pot and Kubernetes modes, Edgelet LocalAPI integration.
+keywords: [router, skupper, messaging, edgelet, v3.8, localapi]
+slug: /platform-components/router
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { REGISTRY } from '@site/src/config/distribution';
+
+# Router
+
+The **Router** image is a Go wrapper around **[Skupper Router](https://github.com/skupperproject/skupper-router)**. It supervises embedded **`skrouterd`** with config watch and AMQP hot reload. Routers form the messaging mesh between the Controller and Edgelet nodes.
+
+## Version pins
+
+| Component | Version |
+| --------- | ------- |
+| Wrapper release | **v3.8.0** |
+| Embedded Skupper Router | **3.5.1** |
+| Default image | <code>{REGISTRY}/router:3.8.0</code> |
+| Edgelet workload label | **`iofog-router`** |
+
+Override the image in `spec.images.router` or `spec.systemMicroservices.router` on your ControlPlane CR. See [Control Plane YAML](/yaml-references/reference-control-plane).
+
+Supported platforms: **amd64**, **arm64**, **arm** (32-bit), and **riscv64**.
+
+## Topology
+
+Each Control Plane hosts an **interior** Router by default. Each Edgelet node hosts an **edge** Router that connects to the interior Router. You can change the topology with Agent `routerConfig` and `upstreamRouter` fields. See [Architecture](/getting-started/architecture#router) for examples.
+
+Router deploys with TLS by default. The Controller tracks Router configuration and certificate volume mounts. For custom CAs, see [Certificates for Router and NATS](/security/certificates-manager).
+
+## Runtime modes
+
+Set `SKUPPER_PLATFORM` to choose how the wrapper loads configuration.
+
+| Mode | `SKUPPER_PLATFORM` | Config source |
+| ---- | ------------------ | ------------- |
+| PoT / Edgelet | `pot` or `iofog` (alias) | Edgelet LocalAPI v1 via ioFog Go SDK |
+| Kubernetes | `kubernetes` | File at `QDROUTERD_CONF` (operator volume-mounts ConfigMap) |
+
+In **PoT mode**, the wrapper reads config from Edgelet LocalAPI v1 (`GET /v1/microservices/config`) and listens for update signals on the control websocket (`/v1/microservices/control`).
+
+In **Kubernetes mode**, the wrapper does not call the Kubernetes API. The Operator mounts router config at `QDROUTERD_CONF`. File changes trigger the same AMQP hot-reload path as PoT mode.
+
+## Edgelet LocalAPI requirements
+
+In PoT/iofog mode, mount Edgelet service-account material in the Router container:
+
+- Token: `/var/run/secrets/edgelet.iofog.org/serviceaccount/token`
+- CA: `/var/run/secrets/edgelet.iofog.org/serviceaccount/ca.crt`
+
+Set **`EDGELET_MICROSERVICE_UID`** to the Edgelet microservice identity the SDK client uses.
+
+## Key environment variables
+
+| Variable | Default | Description |
+| -------- | ------- | ----------- |
+| `SKUPPER_PLATFORM` | `pot` | `pot`, `iofog`, or `kubernetes` |
+| `QDROUTERD_CONF` | `/tmp/skrouterd.json` | Router JSON config path |
+| `QDROUTERD_HOME` | `/home/skrouterd` | Skupper home directory |
+| `SSL_PROFILE_PATH` | `/etc/skupper-router-certs` | TLS certs per profile (`ca.crt`, `tls.crt`, `tls.key`) |
+| `EDGELET_MICROSERVICE_UID` | *(required in pot mode)* | Edgelet microservice UID for SDK client |
+| `SSL` | `true` | Enables HTTPS/WSS for LocalAPI in pot/iofog mode |
+
+## Agent YAML example
+
+Edge Router on an Edgelet node (interior Router runs on the Control Plane by default):
+
+<FlavorYaml title="Edge Router on an Edgelet node">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-node-1
+spec:
+  config:
+    upstreamRouter:
+      - default-router
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671`}</FlavorYaml>
+
+For Service-based TCP bridges between microservices, see [Service YAML](/yaml-references/reference-service) and [Architecture](/getting-started/architecture#router).
+
+## Related docs
+
+| Document | Description |
+| -------- | ----------- |
+| [Control Plane YAML](/yaml-references/reference-control-plane) | Router replicas, images, ingress, TLS |
+| [Agent YAML](/yaml-references/reference-agent) | `routerConfig` and `upstreamRouter` on Edgelet nodes |
+| [Certificates Manager](/security/certificates-manager) | Router TLS and site CA secrets |
+
+Source: [Datasance/Router](https://github.com/Datasance/Router) (mirror of [eclipse-iofog/router](https://github.com/eclipse-iofog/router)).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

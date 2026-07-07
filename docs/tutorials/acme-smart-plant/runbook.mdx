@@ -1,0 +1,166 @@
+---
+title: Operating the demo
+description: Run the Acme Smart Plant demo after deployment. Replay faults, show dual NATS delivery, diagnose through Router, validate smoke tests, and recover from a bad state.
+keywords: [tutorial, acme smart plant, demo, replay, fault, nats, router, validate, troubleshoot]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Operating the demo
+
+Use this page after you complete the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant). You already deployed Phase 1 (smart factory) and optionally Phase 2 (fab vision). Here you replay faults, walk through the dashboard, and confirm the deployment works end to end.
+
+For first-time setup, start at the [tutorial overview](/tutorials/acme-smart-plant). For placeholder tokens and the step index, see the [placeholder cheat sheet](/tutorials/acme-smart-plant#placeholder-cheat-sheet) and [step index](/tutorials/acme-smart-plant#step-index) on the overview.
+
+## How fault replay works
+
+The **sensor-simulator** replays curated manufacturing rows from a CSV dataset. Named fault windows live in `segments.json` inside the pot-edge-patterns repo. Each segment maps to a machine and fault type, for example high vibration on **M002**.
+
+The **smart-anomaly-detector** subscribes to `telemetry.machine.>`. It evaluates each row against thresholds and dataset fault markers. When a fault condition is met, it publishes one alert JSON payload on two NATS subjects (covered in the next section).
+
+By default the simulator loops the full CSV. Rows arrive at real-time intervals unless you change replay speed. You can also jump directly to a named segment when you need a predictable fault for a live walkthrough.
+
+### Replay environment variables
+
+Set these on **sensor-simulator** in `deploy/steps/03-application-production-monitoring.yaml`, then redeploy [Step 3](/tutorials/acme-smart-plant/step-03-application-production-monitoring):
+
+```yaml
+# sensor-simulator container.env
+- key: REPLAY_SEGMENT
+  value: fault-high-vibration-m002
+- key: REPLAY_SPEED
+  value: "5"
+```
+
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `TELEMETRY_MODE` | `replay` | Replay CSV rows. Use `synthetic` only for legacy random-walk demos |
+| `REPLAY_SEGMENT` | *(empty)* | Jump to a named segment: `fault-high-vibration-m002`, `fault-overheating-m003`, `fault-quality-m004` |
+| `REPLAY_SPEED` | `1` | Row interval multiplier. `5` replays five times faster |
+| `REPLAY_LOOP` | `true` | Loop the CSV after the last row |
+
+:::tip[Accelerate a fault for a live walkthrough]
+
+Set `REPLAY_SEGMENT=fault-high-vibration-m002` and `REPLAY_SPEED=5`, then redeploy Step 3. Alerts usually appear within about 30 seconds. Clear `REPLAY_SEGMENT` to loop the full CSV and let fault windows appear organically from the dataset.
+
+:::
+
+## Demonstrate dual NATS delivery
+
+When the detector raises an alert, PoT delivers the same JSON on two paths. This separates real-time operations from audit history.
+
+| Path | Subject | NATS kind | What the operator sees |
+| ---- | ------- | --------- | ---------------------- |
+| Live panel | `notify.alerts.{machineId}` | Service export/import | Ephemeral delivery. The dashboard live alerts row updates immediately |
+| History panel | `journal.events.{machineId}` | Stream export/import | Durable JetStream delivery. The event journal keeps the same alert after a page refresh |
+
+Cross-account export and import rules wire both paths from **production-monitoring** on **site-a** to **operations-center** on **ops-b**. See [NATS subjects and cross-account rules](/tutorials/acme-smart-plant#nats-subjects-and-cross-account-rules) on the overview for the full subject map.
+
+### Walkthrough
+
+1. Open **Acme Smart Plant - Operations Center** at `http://router.default.svc.bridge.local:<dashboard-bridge-port>/`. Find the bridge port with <code>{CLI_NAME} describe service alert-dashboard</code> ([Step 9](/tutorials/acme-smart-plant/step-09-service-alert-dashboard)).
+2. Confirm the **fleet panel** shows sparklines for **M001** through **M004**.
+3. Trigger a fault with a replay segment or wait for a dataset fault window. The **live alerts** panel shows a row with `faultType`, severity, and mini metrics.
+4. Refresh the page. The **event journal** shows the same machine and event. JetStream history survives restarts on **ops-b**.
+
+The alert payload includes `faultType`. Downstream services and the diagnostic API use that field to select a maintenance runbook.
+
+If live alerts stay empty, verify the import rule account ID in [Step 5](/tutorials/acme-smart-plant/step-05-nats-account-import), `ops-viewer` user rules, and that your replay segment includes fault rows. See [Common mistakes](/tutorials/acme-smart-plant/step-05-nats-account-import#common-mistakes) on the import step.
+
+## Diagnose through Router
+
+**diagnostic-service** runs on **site-a** as HTTP only. It has no NATS access. The dashboard on **ops-b** calls it through a Router Service bridge.
+
+The dashboard reads `DIAGNOSTIC_URL`, which points at:
+
+```text
+http://router.default.svc.bridge.local:<diagnostic-bridge-port>
+```
+
+Set this value in [Step 8](/tutorials/acme-smart-plant/step-08-application-operations-center) after you note the bridge port in [Step 7](/tutorials/acme-smart-plant/step-07-note-bridge-port).
+
+### Walkthrough
+
+1. In the dashboard, click an alert row, then **Diagnose**.
+2. The panel shows JSON keyed by `faultType`: `recommendedAction`, `estimatedDowntimeMin`, and `partsRequired`.
+
+This pattern keeps NATS for events and Router for request/response. Remote ops centers can call plant-local HTTP APIs without exposing factory NATS credentials outside **site-a**.
+
+Optional check from an **ops-b** shell (replace the port with your diagnostic bridge port):
+
+```bash
+curl -s "http://router.default.svc.bridge.local:8081/diagnose/M002?faultType=high_vibration"
+```
+
+If **Diagnose** returns 502 or 503, confirm the diagnostic Service exists, `DIAGNOSTIC_URL` uses the correct bridge port, and Router is healthy on both Edgelet nodes. See [Step 6](/tutorials/acme-smart-plant/step-06-service-diagnostic) and [Step 8](/tutorials/acme-smart-plant/step-08-application-operations-center).
+
+## Demonstrate fab inspection (Phase 2)
+
+After Phase 2 steps 11 through 15, **frame-generator** on **site-a** publishes wafer thumbnails on `vision.wafers.fab-01`. **object-detector** on **edge-c** runs wafer-defect ONNX inference and publishes results on `vision.inspections.fab-01`. **snapshot-service** on **ops-b** serves a gallery the dashboard links through `SNAPSHOT_URL`.
+
+1. Confirm object-detector logs show defect class and confidence.
+2. Open the **Fab inspection** link on the dashboard (requires `SNAPSHOT_URL` from [Step 15](/tutorials/acme-smart-plant/step-15-snapshot-verify)).
+3. The gallery shows recent inspection snapshots from the edge inference pipeline.
+
+Skip this section for a plant-floor-only walkthrough. Phase 1 steps 1 through 9 are enough for telemetry, alerts, journal, and diagnose.
+
+## Validate your deployment
+
+Run these checks after deploy. Each item links to the step that owns verification detail.
+
+### Phase 1
+
+| Check | Expected result | Detail |
+| ----- | --------------- | ------ |
+| Telemetry | Four machines publish on `telemetry.machine.{machineId}` | [Step 3 verify](/tutorials/acme-smart-plant/step-03-application-production-monitoring#verify) |
+| Fleet charts | Sparklines for **M001** through **M004** on the dashboard | [Step 9 verify](/tutorials/acme-smart-plant/step-09-service-alert-dashboard#verify) |
+| Live alert | Fault replay produces a row with `faultType` | [Demonstrate dual NATS delivery](#demonstrate-dual-nats-delivery) |
+| Event journal | Same alert after page refresh | [Demonstrate dual NATS delivery](#demonstrate-dual-nats-delivery) |
+| Diagnose | Runbook JSON returns through Router | [Diagnose through Router](#diagnose-through-router) |
+
+### Phase 2
+
+| Check | Expected result | Detail |
+| ----- | --------------- | ------ |
+| Wafer frames | `waferId` values on `vision.wafers.fab-01` | [Step 13 verify](/tutorials/acme-smart-plant/step-13-application-vision-inspection#verify) |
+| Inspections | Defect class and confidence on `vision.inspections.fab-01` | [Step 13 verify](/tutorials/acme-smart-plant/step-13-application-vision-inspection#verify) |
+| Gallery | Dashboard **Fab inspection** link opens snapshots | [Step 15 verify](/tutorials/acme-smart-plant/step-15-snapshot-verify#verify) |
+
+## Recover from a bad state
+
+### Roll back the demo
+
+Remove Applications and Services in this order, then delete NATS rules in reverse deploy order:
+
+<CliBlock>{`{{CLI_NAME}} delete application operations-center
+{{CLI_NAME}} delete application production-monitoring
+{{CLI_NAME}} delete application vision-inspection
+{{CLI_NAME}} delete service alert-dashboard
+{{CLI_NAME}} delete service diagnostic-service
+{{CLI_NAME}} delete service snapshot-service
+# delete NATS rules in reverse deploy order`}</CliBlock>
+
+Redeploy from [Step 1](/tutorials/acme-smart-plant/step-01-nats-user-rules) when you want a clean demo again.
+
+### Upgrade from v1.0.0 images
+
+Do not mix `:1.0.0` and `:1.1.0` pot-edge-patterns images. A partial upgrade breaks NATS ACLs or leaves dashboard panels empty. Roll back, then follow the [full redeploy guidance](/tutorials/acme-smart-plant#demo-image-version-v110) on the overview.
+
+### Common issues during a walkthrough
+
+| Symptom | Likely cause | Where to look |
+| ------- | ------------ | ------------- |
+| Blank live alerts | Wrong import account ID or missing user rules | [Step 5](/tutorials/acme-smart-plant/step-05-nats-account-import) |
+| Empty fleet charts | Export/import rules or sensor not publishing | [Steps 2 and 5](/tutorials/acme-smart-plant/step-02-nats-account-export) |
+| Journal empty, live alerts work | Stream export/import or JetStream stream | [Step 2](/tutorials/acme-smart-plant/step-02-nats-account-export), detector logs |
+| No fault after segment set | Typo in `REPLAY_SEGMENT` or slow replay | [Step 3](/tutorials/acme-smart-plant/step-03-application-production-monitoring), increase `REPLAY_SPEED` |
+| Diagnose 502 or 503 | Wrong `DIAGNOSTIC_URL` or missing Service | [Steps 6, 7, and 8](/tutorials/acme-smart-plant/step-06-service-diagnostic) |
+| Empty fab gallery | `SNAPSHOT_URL` unset or snapshot NATS subscribe | [Steps 14 and 15](/tutorials/acme-smart-plant/step-14-service-snapshot) |
+
+For a longer symptom list, see troubleshooting tables in the step pages and the [pot-edge-patterns deploy runbook](https://github.com/Datasance/pot-edge-patterns/blob/main/docs/deploy-runbook.md) in the demo repo.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

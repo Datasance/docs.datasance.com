@@ -1,0 +1,140 @@
+---
+title: Edgelet Container Engines
+description: Container engine selection for Edgelet nodes. edgelet embedded engine, Docker, Podman, RuntimeClass, and platform capability matrix.
+keywords: [edgelet, container engine, containerd, docker, podman, runtimeclass, amd64, arm64]
+slug: /edgelet/container-engines
+---
+
+# Container engines
+
+Edgelet routes all container operations through a single `ContainerEngine` interface. The process manager, reconciliation loop, and healthcheck runner behave the same regardless of engine. Selection is via `containerEngine` in config.
+
+Supported values: **`edgelet`**, **`docker`**, **`podman`**.
+
+## Platform capability matrix
+
+| Platform | `containerEngine` allowed | Default | Embedded bundle |
+| -------- | ------------------------- | ------- | --------------- |
+| **linux** | `edgelet`, `docker`, `podman` | **`edgelet`** | Yes - extract when engine is `edgelet` |
+| **darwin** | `docker`, `podman` | `docker` | No |
+| **windows** | `docker`, `podman` | `docker` | No |
+
+Invalid pairings fail at **config** validation (for example `edgelet` on darwin/windows).
+
+```yaml
+profiles:
+  production:
+    containerEngine: edgelet
+    containerEngineUrl: unix:///run/edgelet/containerd.sock
+    arch: auto
+    pruningFrequency: 24
+    watchdogEnabled: true
+```
+
+Use **`arch`**: `auto`, `amd64`, `arm64`, `arm`, or `riscv64`. Controller catalog images use **`archId`** for the same architecture set.
+
+## Engine selection
+
+| Value | Platform | Socket / backend |
+| ----- | -------- | ---------------- |
+| `edgelet` | **linux only** | Embedded containerd at `/run/edgelet/containerd.sock` |
+| `docker` | linux, darwin, windows | Host Docker (`containerEngineUrl`, e.g. `unix:///var/run/docker.sock`) |
+| `podman` | linux, darwin, windows | Host Podman socket |
+
+**No engine fallback:** If docker or podman is configured, Edgelet does not switch to the embedded engine on failure.
+
+On linux, if host Docker or Podman sockets are visible while `containerEngine=edgelet`, Edgelet logs an informational warning. It does not interfere with the host engine.
+
+## Path layout (edgelet engine)
+
+Isolated from host Docker/Podman installations:
+
+| Path | Purpose |
+| ---- | ------- |
+| `/usr/local/bin/edgelet` | **Thin** download binary (linux): CLI + embed; systemd entry |
+| `/var/lib/edgelet/data/current/bin/edgelet` | **Fat** runtime ELF (linux): daemon + in-process containerd |
+| `/var/lib/edgelet/data/current/bin/` | Shim (`containerd-shim-runc-v2`), `crun`, CNI multicall + symlinks |
+| `/var/lib/edgelet/` | User data (`diskDirectory`); workload volume data under `volumes/data/` |
+| `/var/lib/edgelet-containerd/` | Containerd images, snapshots, CNI state |
+| `/run/edgelet/containerd.sock` | Containerd API socket |
+| `/run/edgelet/edgelet.sock` | EdgeletAPI Unix socket |
+
+Private bridge network: `edgelet0` (CIDR `172.18.0.0/16`). Container name prefix: `edgelet_`.
+
+## Embedded containerd (linux, `containerEngine: edgelet`)
+
+Production starts via **`/usr/local/bin/edgelet daemon`** (thin). The thin process extracts the zstd bundle when needed, then execs **`/var/lib/edgelet/data/current/bin/edgelet daemon`** (fat). The fat binary runs the supervisor and in-process containerd.
+
+Bundled runtimes (inside the extracted `bin/` directory):
+
+- `containerd-shim-runc-v2` - OCI shim
+- `crun` - default low-level runtime
+- CNI plugins: `bridge`, `host-local`, `portmap`, `loopback`
+
+Containerd config roots (typical):
+
+```toml
+root   = "/var/lib/edgelet-containerd/root"
+state  = "/var/lib/edgelet-containerd/state"
+address = "/run/edgelet/containerd.sock"
+```
+
+On data-plane bootstrap, Edgelet runs **stale runtime task cleanup** under the state directory. Orphaned task directories missing a valid `address` file are removed. Image cache is preserved.
+
+## Docker and Podman (linux + desktop)
+
+Connect to an external engine. Docker and Podman support native OCI `HEALTHCHECK`; the in-agent healthcheck runner is **edgelet engine only**.
+
+On linux, use systemd `After=docker.service` (or podman) when relying on an external engine at boot. The daemon retries socket connection before reporting engine-ready status.
+
+If the socket is unavailable at start, the daemon continues in **WARNING** state and retries in the background until the engine connects.
+
+## RuntimeClass (edgelet engine only)
+
+Runtime extensions use EdgeletAPI deploy manifests:
+
+- `apiVersion: edgelet.iofog.org/v1`
+- `kind: RuntimeClass`
+- fields: `metadata.name`, `handler`
+
+Built-in catalog handlers include `spin`, `edgelet-wasmtime` (WASM shim), and upstream `wasmtime` / `wasmedge` when the matching shim binary is on `PATH`.
+
+Example WASM RuntimeClass:
+
+```yaml
+apiVersion: edgelet.iofog.org/v1
+kind: RuntimeClass
+metadata:
+  name: edgelet-wasmtime
+handler: edgelet-wasmtime
+```
+
+Pin a microservice: `spec.container.runtime: edgelet-wasmtime` (references `metadata.name`, not `containerEngine`).
+
+Apply via CLI:
+
+```bash
+edgelet deploy -f runtimeclass.yaml
+edgelet deploy -f runtimeclass.yaml --dry-run
+```
+
+Unsupported when `containerEngine` is docker or podman:
+
+```text
+Error[INVALID_ARGUMENT]: runtimeclass is supported only when containerEngine=edgelet
+```
+
+## Engine change behavior
+
+Changing `containerEngine` always recreates microservices. This is expected and unrelated to control-plane OTA workload continuity. See [Troubleshooting](/edgelet/troubleshooting) for restart and cgroup notes.
+
+## See also
+
+- [Configuration](/edgelet/configuration) - `containerEngine`, `containerEngineUrl`, `arch`
+- [Deployment](/edgelet/deployment) - production defaults and systemd
+- [EdgeletAPI v1](/edgelet/edgelet-api) - RuntimeClass deploy endpoints
+- [Architecture](/edgelet/architecture) - thin/fat binary and engine factory
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

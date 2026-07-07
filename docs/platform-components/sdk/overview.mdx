@@ -1,0 +1,72 @@
+---
+title: ioFog Go SDK
+description: Go SDK v3.8.0 for Edgelet microservices and Controller REST automation. Module path, packages, and v3.8 breaking changes.
+keywords: [go sdk, iofog-go-sdk, v3.8, edgelet, controller api, microservices]
+slug: /platform-components/sdk
+---
+
+import { API_VERSION, CLI_NAME } from '@site/src/config/distribution';
+
+# ioFog Go SDK
+
+The **ioFog Go SDK** (v3.8.0) helps you build microservices that run on Edgelet nodes and automate the Controller REST API. It ships as a single Go module with three packages.
+
+**Upstream:** [eclipse-iofog/iofog-go-sdk](https://github.com/eclipse-iofog/iofog-go-sdk) · **Datasance mirror:** [Datasance/iofog-go-sdk](https://github.com/Datasance/iofog-go-sdk) (same commit SHA; import path is neutral upstream)
+
+## Install
+
+Requires **Go 1.26.4+** (see `go.mod` in the repo).
+
+```bash
+go get github.com/eclipse-iofog/iofog-go-sdk/v3
+```
+
+Import paths use the **`/v3`** suffix:
+
+```go
+import "github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/client"
+```
+
+If you still import `github.com/datasance/iofog-go-sdk/v3`, update to the neutral path above. The Datasance git mirror ships the same code.
+
+## Packages
+
+| Package | Import path | Use when |
+| ------- | ----------- | -------- |
+| [Microservices](/platform-components/sdk/microservices) | `.../pkg/microservices` | Your service runs on an Edgelet node and reads config or control signals from EdgeletAPI v1 |
+| [Client](/platform-components/sdk/client) | `.../pkg/client` | You call the Controller REST API or open exec/log WebSocket sessions |
+| [Apps](/platform-components/sdk/apps) | `.../pkg/apps` | You deploy `Application` or `Microservice` YAML programmatically (same helpers as {CLI_NAME} and the Operator) |
+
+For data-plane messaging between microservices, use **NATS**. The microservices package does not expose legacy LocalAPI v2 messagebus APIs.
+
+## v3.8 breaking changes
+
+| Area | Change |
+| ---- | ------ |
+| Module path | Neutral upstream `github.com/eclipse-iofog/iofog-go-sdk/v3` |
+| Controller client | **`flows`** APIs removed; use **`applications`**. `fogType`/`fogTypeId` → **`arch`/`archId`**. **EdgeResource** client methods removed (Controller no longer exposes those routes) |
+| Microservice exec | REST attach/detach removed; dial **WebSocket** exec sessions instead |
+| Log streaming | Remote tail via **WebSocket** (`DialMicroserviceLogs`, `DialFogLogs`, …) |
+| `pkg/microservices` | EdgeletAPI v1 only (`NewDefaultEdgeletAPIClient`, `/v1/microservices/*`). Legacy `IoFogClient` and messagebus types removed |
+| `pkg/apps` deploy YAML | Default `apiVersion`: `iofog.org/v3`. Datasance flavor: `apps.WithAPIVersion("datasance.com/v3")`. Field **`flow`** → **`application`**; image keys **`amd64`**, **`arm64`**, **`riscv64`**, **`arm`** |
+
+See [Controller REST API](/reference-controller/rest-api) for the full v3.7 → v3.8 route map and [Migrating to v3.8.0](/migrating-to-v3-8) for platform migration.
+
+## API reference
+
+Browse the Controller OpenAPI spec on this site: [**API reference**](/api/controller).
+
+Package READMEs in the repo mirror these docs pages. For edge runtime contracts, see [EdgeletAPI](/edgelet/edgelet-api).
+
+## Related docs
+
+| Topic | Page |
+| ----- | ---- |
+| Build a microservice | [Developing microservices](/developing-microservices/overview) |
+| Controller routes and auth | [REST API](/reference-controller/rest-api) |
+| Deploy YAML kinds | [Application](/yaml-references/reference-application), [Microservice](/yaml-references/reference-service) |
+| Edgelet runtime | [Edgelet introduction](/edgelet/introduction) |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

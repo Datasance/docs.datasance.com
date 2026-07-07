@@ -1,0 +1,93 @@
+---
+title: "Step 9 - Alert dashboard Service"
+description: "Acme Smart Plant tutorial. Create the alert-dashboard Service bridge on ops-b and verify Phase 1 Smart Factory deployment."
+keywords: [tutorial, acme smart plant, alert-dashboard, service, verification]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 9 - Alert dashboard Service
+
+## Goal
+
+Create the **alert-dashboard** Service so operators reach the dashboard through Router. Complete Phase 1 verification for the Smart Factory story.
+
+## Scenario context
+
+**alert-dashboard** listens on external port **8082** on **ops-b**. The Service publishes a mesh **bridgePort** for browser access at:
+
+```text
+http://router.default.svc.bridge.local:<dashboard-bridge-port>/
+```
+
+This is the primary UI for Phase 1: fleet sparklines, live alerts, event journal, and **Diagnose** actions.
+
+## YAML walkthrough
+
+File: `deploy/steps/07-service-alert-dashboard.yaml`
+
+<FlavorYaml title="alert-dashboard Service">{`---
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: alert-dashboard
+  tags:
+    - pot-edge-patterns
+spec:
+  type: microservice
+  resource: operations-center/alert-dashboard
+  targetPort: 8082
+  defaultBridge: default-router
+`}</FlavorYaml>
+
+After deploy, run <code>{CLI_NAME} describe service alert-dashboard</code> and note **bridgePort** for your browser URL.
+
+## Optional step 10: direct agent IP access
+
+For lab demos without Router DNS, set `ports.external` on the alert-dashboard microservice in step 8 YAML so the dashboard also listens on a host port on **ops-b**. This is optional. Router access is the recommended path for production-style demos.
+
+## Why this design
+
+The dashboard is HTTP like diagnostic-service, but it runs on **ops-b** while consuming NATS data imported from **site-a**. The Service bridge gives presenters one stable URL on the Router mesh.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/07-service-alert-dashboard.yaml`}</CliBlock>
+## Verify
+
+### Service and browser
+
+<CliBlock>{`{{CLI_NAME}} describe service alert-dashboard`}</CliBlock>
+Open `http://router.default.svc.bridge.local:<dashboard-bridge-port>/` in a browser.
+
+### Phase 1 checklist
+
+1. **Fleet panel**: sparklines for **M001**–**M004** updating from `telemetry.machine.{machineId}`
+2. **Live alerts**: set `REPLAY_SEGMENT=fault-high-vibration-m002` and `REPLAY_SPEED=5` on sensor-simulator (redeploy step 3) or wait for dataset fault rows; alert shows `faultType`
+3. **Event journal**: same alert persists after page refresh (JetStream path)
+4. **Diagnose**: click an alert row; runbook JSON returns via `DIAGNOSTIC_URL`
+
+### Log checks
+
+<CliBlock>{`{{CLI_NAME}} describe microservice sensor-simulator
+{{CLI_NAME}} describe microservice smart-anomaly-detector`}</CliBlock>
+Sensor logs should show four machines publishing. Detector logs should show subscription to `telemetry.machine.>`.
+
+## Common mistakes
+
+- **Empty live alerts.** Re-check step 4 account key and step 5 import rule.
+- **Empty fleet charts.** Confirm **fleet-telemetry** export (step 2) and import (step 5), plus `TELEMETRY_SUBJECT` on dashboard.
+- **Journal empty but live works.** Verify JetStream export/import and detector stream create logs.
+- **Diagnose 502.** Wrong `DIAGNOSTIC_URL` port; redeploy step 8 with bridgePort from step 7.
+- **Using v1.0.0 images.** Redeploy all Applications with `:1.1.0` and matching subject names.
+
+## Next step
+
+Phase 1 is complete. Continue with [Step 11: Vision NATS user rules](/tutorials/acme-smart-plant/step-11-nats-user-rules-vision) for fab wafer inspection, or return to the [Acme Smart Plant overview](/tutorials/acme-smart-plant) verification checklist.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,12 +1,20 @@
+---
+title: Connect and Disconnect
+description: Connect potctl or iofogctl to remote or Kubernetes Control Planes.
+keywords: [potctl, iofogctl, connect, disconnect, control plane]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
 # Connecting To Existing Edge Compute Networks
 
-Instead of deploying our own ECN, we can connect to an existing one.
+Connect to an existing ECN instead of deploying a new one.
 
-Note that we must always specify an empty or non-existent namespace when we use the connect command. This is because each cluster should be in its own namespace. Don't forget that not specifying the namespace means potctl will use the `default` namespace.
+Use an empty or non-existent namespace for `connect`. Each cluster should live in its own namespace. When you omit `-n`, <code>{CLI_NAME}</code> uses `default`.
 
-```bash
-echo "---
-apiVersion: datasance.com/v3
+<FlavorYaml title="remote-controlplane.yaml">{`apiVersion: {{API_VERSION}}
 kind: ControlPlane
 metadata:
   name: albatros
@@ -16,20 +24,13 @@ spec:
     password: h9g84q
   controllers:
   - name: alpaca-1
-    host: 30.40.50.1" > /tmp/remote-controlplane.yaml
-```
+    host: 30.40.50.1`}</FlavorYaml>
 
-After editing the email, password, and host fields, we can go ahead and connect.
+<CliBlock>{`{{CLI_NAME}} connect -f /tmp/remote-controlplane.yaml`}</CliBlock>
 
-```bash
-potctl connect -f /tmp/remote-controlplane.yaml
-```
+For Kubernetes Control Planes, the `--namespace` flag must match the Kubernetes namespace where the Control Plane runs.
 
-Or for Kubernetes Control Planes, we can use Kube Config to connect. Keep in mind that the `potctl --namespace` flag must match the Kubernetes namespace where the Control Plane is deployed, otherwise `potctl` will be unable to find the deployment.
-
-```bash
-echo "---
-apiVersion: datasance.com/v3
+<FlavorYaml title="k8s-controlplane.yaml">{`apiVersion: {{API_VERSION}}
 kind: KubernetesControlPlane
 metadata:
   name: albatros
@@ -37,54 +38,31 @@ spec:
   iofogUser:
     email: user@domain.com
     password: h9g84q
-  config: ~/.kube/config" > /tmp/k8s-controlplane.yaml
-```
+  config: ~/.kube/config`}</FlavorYaml>
 
-After editing the email, password, and kube config fields, we can go ahead and connect.
+<CliBlock>{`{{CLI_NAME}} connect -f /tmp/k8s-controlplane.yaml`}</CliBlock>
 
-```bash
-potctl connect -f /tmp/k8s-controlplane.yaml
-```
+Connect without a YAML file:
 
-We can also connect to an ECN without providing a YAML file (and without configuring SSH details automatically).
+<CliBlock>{`{{CLI_NAME}} connect --ecn-addr 40.50.60.70 --name albatros --email user@domain.com --pass h9g84q
+{{CLI_NAME}} connect --kube ~/.kube/config --email user@domain.com --pass h9g84q`}</CliBlock>
 
-For Remote Control Planes (i.e. not on Kubernetes) we can run the following command and connect via the Controller endpoint.
+Add SSH details manually with `configure`:
 
-```bash
-potctl connect --ecn-addr 40.50.60.70 --name albatros --email user@domain.com --pass h9g84q
-```
-
-For Kubernetes Control Planes we can run the same command but provide the Kubernetes config file instead of a Controller endpoint.
-
-```bash
-potctl connect --kube ~/.kube/config --email user@domain.com --pass h9g84q
-```
-
-After using these commands, we can manually add SSH details where necessary using the `configure` command. The `configure` command lets us configure a single component or a group of components or all components at once.
-
-```plain
-potctl configure controlplane --kube KUBECONFIG
-potctl configure controller NAME --user USER --key KEYFILE --port PORTNUM
-potctl configure agent NAME --user USER --key KEYFILE --port PORTNUM
-
-potctl configure current-namespace NAMESPACE
-
-potctl configure controllers --user USER --key KEYFILE --port PORTNUM
-potctl configure agents --user USER --key KEYFILE --port PORTNUM
-```
+<CliBlock>{`{{CLI_NAME}} configure controlplane --kube KUBECONFIG
+{{CLI_NAME}} configure controller NAME --user USER --key KEYFILE --port PORTNUM
+{{CLI_NAME}} configure agent NAME --user USER --key KEYFILE --port PORTNUM
+{{CLI_NAME}} configure current-namespace NAMESPACE
+{{CLI_NAME}} configure controllers --user USER --key KEYFILE --port PORTNUM
+{{CLI_NAME}} configure agents --user USER --key KEYFILE --port PORTNUM`}</CliBlock>
 
 ## Disconnect From Edge Compute Network
 
-When we are finished working with the cluster, we can disconnect from it and release the corresponding namespace from `potctl`.
-
-```bash
-potctl disconnect
-```
+<CliBlock>{`{{CLI_NAME}} disconnect`}</CliBlock>
 
 :::info[Next steps?]
   <ul>
-    <li><a href="../potctl/legacy">Legacy commands.</a></li>
-    <li><a href="../yaml-references/reference-kinds">potctl reference.</a></li>
+    <li><a href="../yaml-references/reference-kinds">YAML kinds reference.</a></li>
   </ul>
 :::
 

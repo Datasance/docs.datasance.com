@@ -1,0 +1,128 @@
+# =============================================================================
+# Edgelet ControlPlane manifest — annotated reference (edgelet.iofog.org/v1)
+#
+# Apply:  edgelet deploy -f controlplane.yaml
+#         edgelet deploy -f controlplane.yaml --timeout=20m   # async; default 15m poll
+# Prose:  docs/edgelet/manifest-reference.md · docs/edgelet/control-plane.md
+# DNS:    docs/edgelet/dns.md (FQDNs from metadata.namespace + metadata.name)
+# Schema: internal/models/control_plane_manifest.go
+#
+# Rules:
+#   - At most one ControlPlane per Edgelet node.
+#   - metadata.labels are forbidden.
+#   - spec.auth is required (mode embedded | external).
+#   - spec.siteCA / spec.localCA are forbidden (import via Controller REST after deploy).
+#   - spec.tls.path and spec.tls.base64 are mutually exclusive.
+#   - Legacy keys (auth.url, ecnViewer*, spec.https, Keycloak fields) are rejected.
+# =============================================================================
+
+apiVersion: edgelet.iofog.org/v1 # required
+kind: ControlPlane                 # required
+
+metadata:
+  name: pot                        # required — DNS-1123 label (≤63 chars); microservice name
+  namespace: default               # optional — defaults to "default" if omitted; drives DNS FQDNs
+  # labels: {}                     # FORBIDDEN — validation rejects metadata.labels
+
+spec:
+  controller:
+    image: ghcr.io/datasance/controller:3.8.0-beta.0 # required — controller container image
+    registry: 1                    # optional — local registry row ID for image pull
+    port: 51121                    # optional — API port (host 51121 + container); default 51121
+    publicUrl: https://controller.example.com # recommended — CONTROLLER_PUBLIC_URL
+    trustProxy: true               # optional — honor X-Forwarded-* when TLS terminates at ingress
+
+  console:                         # optional — EdgeOps Console (embedded in Controller image)
+    port: 8008                     # optional — container console port; host maps port 80
+    url: https://console.example.com # optional — CONSOLE_URL (defaults to publicUrl)
+
+  auth:                            # required — OIDC configuration (embedded or external IdP)
+    mode: embedded                 # required — embedded | external
+    insecureAllowHttp: false       # dev only — AUTH_INSECURE_ALLOW_HTTP
+    insecureAllowBootstrapLog: false # dev only — AUTH_INSECURE_ALLOW_BOOTSTRAP_LOG
+    bootstrap:                     # required when mode=embedded
+      username: admin              # OIDC_BOOTSTRAP_ADMIN_USERNAME
+      password: "<replace-me>"     # OIDC_BOOTSTRAP_ADMIN_PASSWORD (≥12 chars, 1 upper, 1 special)
+    # issuerUrl: https://auth.example.com/realms/myrealm  # required when mode=external
+    # client:                      # required when mode=external; optional overrides in embedded
+    #   id: controller
+    #   secret: "<replace-me>"
+    # consoleClient: ecn-viewer    # OIDC_CONSOLE_CLIENT_ID
+    # consoleClientEnabled: false  # AUTH_CONSOLE_CLIENT_ENABLED
+    # rateLimit:
+    #   enabled: true
+    #   maxRequestsPerWindow: 60
+    #   windowMs: 60000
+    # sessionStore:
+    #   type: memory                 # memory | database
+    #   ttlMs: 600000
+    #   secret: ""
+    # tokenTtl:
+    #   accessTokenTtlSeconds: 900
+    #   refreshTokenTtlSeconds: 3600
+    # oidcTtl:
+    #   interactionTtlSeconds:
+    #   grantTtlSeconds:
+    #   sessionTtlSeconds:
+    #   idTokenTtlSeconds:
+
+  # database:                      # optional — external database (multi-controller setups)
+  #   provider: postgres             # postgres or mysql
+  #   user: dbuser
+  #   host: db.example.com
+  #   port: 5432
+  #   password: "<replace-me>"
+  #   databaseName: controller
+  #   ssl: true
+  #   ca: "<base64-encoded-ca>"
+
+  events:                          # optional — controller audit event settings
+    auditEnabled: true
+    retentionDays: 14
+    cleanupInterval: 86400         # seconds between internal cleanup runs
+    captureIpAddress: true
+
+  systemMicroservices:             # optional — router/NATS images per CPU architecture
+    router:
+      amd64: ghcr.io/datasance/router:3.8.0-beta.0
+      arm64: ghcr.io/datasance/router:3.8.0-beta.0
+      arm: ghcr.io/datasance/router:3.8.0-beta.0
+      riscv64: ghcr.io/datasance/router:3.8.0-beta.0
+    nats:                          # required when spec.nats.enabled is true
+      amd64: ghcr.io/datasance/nats:2.12.4
+      arm64: ghcr.io/datasance/nats:2.12.4
+      arm: ghcr.io/datasance/nats:2.12.4
+      riscv64: ghcr.io/datasance/nats:2.12.4
+
+  nats:                            # optional — deploy NATS system microservice (JetStream)
+    enabled: false                 # set true to deploy NATS using systemMicroservices.nats images
+
+  # logLevel: info                 # optional — controller log level
+
+  # tls:                             # optional — listener TLS (path OR base64, not both)
+  #   path: /etc/edgelet/controller-tls   # absolute host dir with tls.crt + tls.key (+ optional ca.crt)
+  #   base64:
+  #     ca: "<base64>"               # optional — TLS_BASE64_INTERMEDIATE_CERT
+  #     cert: "<base64>"             # required when base64 block is used
+  #     key: "<base64>"              # required when base64 block is used
+
+  # vault:                           # optional — inject VAULT_* env into controller
+  #   enabled: true
+  #   provider: hashicorp            # hashicorp, openbao, vault, aws, azure, google, ...
+  #   basePath: "pot/$namespace/secrets"  # $namespace → metadata.namespace
+  #   hashicorp:                     # provide ONE provider block matching provider
+  #     address: "http://vault.example.com:8200"
+  #     token: "<replace-me>"
+  #     mount: "kv"
+  #   aws:
+  #     region: us-east-1
+  #     accessKeyId: ""
+  #     accessKey: ""
+  #   azure:
+  #     url: "https://your-vault.vault.azure.net"
+  #     tenantId: ""
+  #     clientId: ""
+  #     clientSecret: ""
+  #   google:
+  #     projectId: ""
+  #     credentials: ""              # service account JSON or path

@@ -1,189 +1,99 @@
-# Getting Familiar With potctl
+---
+title: Getting Familiar
+description: Learn core potctl or iofogctl commands, namespaces, and ECN introspection.
+keywords: [potctl, iofogctl, cli, namespaces, commands]
+---
 
-To list all available commands, just run `potctl` without any arguments. The available commands should look something like this:
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
 
-```console
-$ potctl
+# Getting Familiar With {CLI_NAME}
 
+Run <code>{CLI_NAME}</code> without arguments to list top-level commands. v3.8.0 adds `reconcile` and auth-group helpers. The `legacy` and `rename` subcommands from v3.7 are removed.
 
+<CliBlock>{`{{CLI_NAME}} version`}</CliBlock>
 
- ██████╗  ██████╗ ████████╗ ██████╗████████╗██╗  
- ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝╚══██╔══╝██║  
- ██████╔╝██║   ██║   ██║   ██║        ██║   ██║ 
- ██╔═══╝ ██║   ██║   ██║   ██║        ██║   ██║  
- ██║     ╚██████╔╝   ██║   ╚██████╗   ██║   ███████╗
- ╚═╝      ╚═════╝    ╚═╝    ╚═════╝   ╚═╝   ╚══════╝
+Top-level commands in v3.8.0:
 
+- `attach`, `completion`, `configure`, `connect`, `create`, `delete`, `deploy`, `describe`, `detach`, `disconnect`, `exec`, `get`, `logs`, `move`, `nats`, `prune`, `rebuild`, `reconcile`, `rollback`, `start`, `stop`, `upgrade`, `version`, `view`
 
+Full per-command docs live in the <a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>{CLI_NAME} CLI Reference</a>.
 
-Potctl is the CLI for Datasance PoT, an Enterprise version of Eclipse iofog. Think of it as a mix between terraform and kubectl.
+Try `--help` on any command:
 
-Use `potctl version` to display the current version.
-
-Find more information at: https://docs.datasance.com 
-
-
-Usage:
-  potctl [flags]
-  potctl [command]
-
-Available Commands:
-  attach        Attach one ioFog resource to another
-  completion    Generate the autocompletion script for the specified shell
-  configure     Configure potctl or ioFog resources
-  connect       Connect to an existing Control Plane
-  create        Create a resource
-  delete        Delete an existing ioFog resource
-  deploy        Deploy Edge Compute Network components on existing infrastructure
-  describe      Get detailed information of an existing resources
-  detach        Detach one ioFog resource from another
-  disconnect    Disconnect from an ioFog cluster
-  exec          Connect to an Exec Session of a resource
-  get           Get information of existing resources
-  help          Help about any command
-  legacy        Execute commands using legacy CLI
-  logs          Get log contents of deployed resource
-  move          Move an existing resources inside the current Namespace
-  nats          Manage NATs resources
-  prune         prune ioFog resources
-  rebuild       Rebuilds a microservice or system-microservice
-  rename        Rename the iofog resources that are currently deployed
-  rollback      Rollback ioFog resources
-  start         Starts a resource
-  stop          Stops a resource
-  upgrade       Upgrade ioFog resources
-  version       Get CLI application version
-  view          Open ECN Viewer
-
-Flags:
-      --debug              Toggle for displaying verbose output of API clients (HTTP and SSH)
-  -h, --help               help for potctl
-  -n, --namespace string   Namespace to execute respective command within (default "default")
-  -v, --verbose            Toggle for displaying verbose output of potctl
-
-Use "potctl [command] --help" for more information about a command.
-```
-
-You can also find all available commands and detailed documentation in the [potctl CLI Reference](/potctl/cli/potctl).
-
-You can use the `--help` flag on every command to learn more. Go ahead and try some of the following:
-
-```bash
-potctl deploy --help
-potctl create --help
-potctl connect --help
-potctl get --help
-potctl attach --help
-```
+<CliBlock>{`{{CLI_NAME}} deploy --help
+{{CLI_NAME}} create --help
+{{CLI_NAME}} connect --help
+{{CLI_NAME}} get --help
+{{CLI_NAME}} attach --help`}</CliBlock>
 
 ## Working with Namespaces
 
-All actions performed with `potctl` are scoped to a single namespace. The default namespace ('default') is used if the user does not specify a namespace explicitly in the command. Note that namespaces in `potctl` map to a Kubernetes namespace when `potctl` is used to deploy an Edge Compute Network's ('ECN') Control Plane on Kubernetes.
+All actions are scoped to a single namespace. The default namespace (`default`) is used when you omit `-n`. On Kubernetes, a <code>{CLI_NAME}</code> namespace maps to a Kubernetes namespace when you deploy a Control Plane with Helm or <code>{CLI_NAME}</code>.
 
-Try creating, listing, and deleting namespaces now with the following commands.
-
-```bash
-potctl create namespace zoo-1
-potctl get namespaces
-potctl delete namespace zoo-1
-```
+<CliBlock>{`{{CLI_NAME}} create namespace zoo-1
+{{CLI_NAME}} get namespaces
+{{CLI_NAME}} delete namespace zoo-1`}</CliBlock>
 
 ### Configuring your current namespace
 
-It is possible to specify the namespace to use as current namespace by using the `potctl configure` command.
-
-```bash
-potctl configure current-namespace NAMESPACE
-```
-
-To revert to the default configuration, you can always run `potctl configure current-namespace default`.
+<CliBlock>{`{{CLI_NAME}} configure current-namespace NAMESPACE
+{{CLI_NAME}} configure current-namespace default`}</CliBlock>
 
 ## View Edge Compute Network Details
 
-Once we are connected to a live ECN, we can go ahead and do some introspection.
+Once connected to a live ECN, list resources with `get`:
 
-Try to display individual resources or all resources within a namespace with the get command:
+<CliBlock>{`{{CLI_NAME}} get controllers
+{{CLI_NAME}} get agents
+{{CLI_NAME}} get applications
+{{CLI_NAME}} get microservices
+{{CLI_NAME}} get all`}</CliBlock>
 
-```bash
-potctl get controllers
-potctl get agents
-potctl get applications
-potctl get microservices
-potctl get all
-```
+For detailed status, use `describe`:
 
-To get more detailed information, we can use the describe command:
+<CliBlock>{`{{CLI_NAME}} describe controlplane
+{{CLI_NAME}} describe controller alpaca-1
+{{CLI_NAME}} describe agent kiwi-1
+{{CLI_NAME}} describe application health-care-app
+{{CLI_NAME}} describe microservice health-care-ui`}</CliBlock>
 
-```bash
-potctl describe controlplane
-potctl describe controller alpaca-1
-potctl describe agent kiwi-1
-potctl describe application health-care-app
-potctl describe microservice health-care-ui
-```
+## Check log output of components
 
-## Check the log output of components
+You need SSH access to remote resources for this feature.
 
-Note: You will need ssh access to any remote resources to use this feature.
+<CliBlock>{`{{CLI_NAME}} logs controller NAME
+{{CLI_NAME}} logs agent NAME
+{{CLI_NAME}} logs microservice NAME`}</CliBlock>
 
-To check the log output of any resource, use `logs` e.g.
+## Move microservices to another Edgelet node
 
-```bash
-potctl logs controller NAME
-potctl logs agent NAME
-potctl logs microservice NAME
-```
+<CliBlock>{`{{CLI_NAME}} move microservice NAME AGENT_NAME`}</CliBlock>
 
-This will return either the log file from the machine, or the docker logs output of the running microservice.
+## Prune images on an Edgelet node
 
-## Move microservices to another Agent
+<CliBlock>{`{{CLI_NAME}} prune agent AGENT_NAME`}</CliBlock>
 
-```bash
-potctl move microservice NAME AGENT_NAME
-potctl move microservice health-case-ui zebra-1
-```
+See [Image and disk pruning](/edgelet-management/image-pruning) for scheduled `pruningFrequency` and on-device `edgelet system prune`.
 
-## Prune Docker on an Agent
+## Detach / Attach an Edgelet node
 
-We can now manually prune the docker images on our Agents, if our Agent is running out of diskspace.
+Detaching an Edgelet node removes its Controller connection and stops microservices on that node. See [Attach and detach](/edgelet-management/attach-detach) for the full workflow.
 
-```bash
-potctl prune agent AGENT_NAME
-```
+<CliBlock>{`{{CLI_NAME}} detach agent AGENT_NAME
+{{CLI_NAME}} attach agent AGENT_NAME
+{{CLI_NAME}} get all --detached`}</CliBlock>
 
-## Detach / Attach an Agent
+Move an Edgelet node between namespaces:
 
-We can transfer an Agent from one ECN to another by detaching the agent and attaching it to another ECN.
-Note: detaching an agent will delete its connection with the Controller, and all microservices will be shut down.
-
-```bash
-potctl detach agent AGENT_NAME
-```
-
-Switch to another ECN / namespace
-
-```bash
-potctl attach agent AGENT_NAME
-```
-
-To display all resources in dettached state with the get command
-
-```bash
-potctl get all --detached
-```
-
-We can also move Agents between Namespaces with a single command. The following command will move agent-1 from namespace-1 to namespace-2:
-
-```bash
-potctl move agent agent-1 namespace-2 -n namespace-1
-```
+<CliBlock>{`{{CLI_NAME}} move agent agent-1 namespace-2 -n namespace-1`}</CliBlock>
 
 :::info[Next steps?]
   <ul>
-    <li><a href="../potctl/resource-management">Resources management with potctl.</a></li>
-    <li><a href="../potctl/cli/potctl">CLI reference.</a></li>
+    <li><a href="../edgelet-management/introduction">Edgelet node management</a> — configuration, pruning, upgrade, reconcile.</li>
+    <li><a href="../potctl/resource-management">Resource management with {CLI_NAME}.</a></li>
+    <li><a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>CLI reference.</a></li>
     <li><a href="../yaml-references/reference-kinds">YAML reference.</a></li>
-
   </ul>
 :::
 

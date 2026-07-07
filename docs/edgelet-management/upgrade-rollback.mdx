@@ -1,0 +1,70 @@
+---
+title: Edgelet Upgrade and Rollback
+description: Upgrade and rollback Edgelet nodes with potctl upgrade agent and rollback agent. Controller-driven OTA and on-host install.sh paths.
+keywords: [edgelet upgrade, rollback, potctl, ota, edgelet node, v1.0.0]
+slug: /edgelet-management/upgrade-rollback
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Upgrade and rollback
+
+{CLI_NAME} upgrades **Edgelet nodes** to the version the Controller expects and can roll back to the previous release on the host.
+
+Platform train **v3.8.0** requires **Edgelet v1.0.0+**. Greenfield migrations need new nodes, not in-place Agent upgrades. See [Migrating to v3.8.0](/migrating-to-v3-8).
+
+## Upgrade from the orchestrator
+
+<CliBlock>{`{{CLI_NAME}} upgrade agent zebra-1`}</CliBlock>
+
+The node downloads and applies the target Edgelet release. Upgrade can take several minutes.
+
+Verify version:
+
+<CliBlock>{`{{CLI_NAME}} get agents
+{{CLI_NAME}} describe agent zebra-1`}</CliBlock>
+
+If the version does not change, check logs on the host:
+
+```bash
+sudo journalctl -u edgelet -n 100 --no-pager
+tail -f /var/log/edgelet/daemon-startup.log
+```
+
+## Rollback from the orchestrator
+
+<CliBlock>{`{{CLI_NAME}} rollback agent zebra-1`}</CliBlock>
+
+Rollback uses the previous release recorded on the node during the last successful upgrade.
+
+## On-host OTA (linux)
+
+Fleet upgrades on linux use **two layers** (thin binary + fat embed). Operators may also run:
+
+```bash
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.0.0
+sudo sh /usr/share/edgelet/install.sh --rollback
+```
+
+See [Edgelet installation](/edgelet/installation) for airgap, controller-driven OTA, and runtime split restart order.
+
+## Workload impact
+
+| Action | Typical workload impact |
+| ------ | ----------------------- |
+| Thin binary upgrade | Brief control-plane restart; MS may survive with runtime split |
+| Fat bundle upgrade | Restart `edgelet-containerd` then `edgelet`; reconcile recreates MS |
+| `rollback agent` | Same as upgrade path in reverse |
+
+See [Workload continuity](/edgelet/workload-continuity) for embedded engine restart ordering.
+
+## See also
+
+- [{CLI_NAME} upgrade agent](/potctl/cli/potctl_upgrade) — CLI reference
+- [Edgelet installation](/edgelet/installation) — `install.sh` and OTA receipts
+- [Persistence](/edgelet/persistence) — backup before major upgrades
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

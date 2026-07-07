@@ -1,0 +1,116 @@
+---
+title: "Step 11 - Vision NATS user rules"
+description: "Acme Smart Plant tutorial. Deploy NATS user rules for frame-generator, object-detector, and snapshot-service before the vision-inspection Application."
+keywords: [tutorial, acme smart plant, nats user rule, vision.wafers, vision.inspections, fab inspection]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Step 11 - Vision NATS user rules
+
+## Goal
+
+Deploy three **NatsUserRule** resources for Phase 2 fab inspection. User rules must exist before you deploy the **vision-inspection** Application in step 13.
+
+## Scenario context
+
+Phase 2 adds wafer map thumbnails, ONNX defect inference, and an inspection gallery. All three microservices share one NATS account (**vision-inspection-local**, step 12) but run on different Edgelet nodes:
+
+- **frame-generator** on **site-a** publishes wafer metadata on `vision.wafers.fab-01`
+- **object-detector** on **edge-c** subscribes to wafer frames and publishes results on `vision.inspections.fab-01`
+- **snapshot-service** on **ops-b** subscribes to inspections and serves an HTTP gallery
+
+This step creates user rules only. No microservices run yet.
+
+Unlike Phase 1 step 1, there is no **ops-viewer** import path. Vision traffic stays in one account across three nodes.
+
+## YAML walkthrough
+
+The manifest `deploy/steps/11-nats-user-rules-vision.yaml` in [pot-edge-patterns](https://github.com/Datasance/pot-edge-patterns) defines three rules.
+
+### frame-publisher
+
+The frame generator publishes one JSON message per wafer on subjects like `vision.wafers.fab-01`. The rule allows publish on the wildcard `vision.wafers.>`.
+
+<FlavorYaml title="frame-publisher">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: frame-publisher
+spec:
+  description: frame-generator - publish wafer map metadata (in-account)
+  pubAllow:
+    - vision.wafers.>
+`}</FlavorYaml>
+
+### vision-detector
+
+The object detector subscribes to all wafer frames, runs wafer-defect ONNX inference, and publishes inspection JSON with defect class and confidence.
+
+<FlavorYaml title="vision-detector">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: vision-detector
+spec:
+  description: object-detector - subscribe wafer frames, publish inspections (in-account)
+  pubAllow:
+    - vision.inspections.>
+  subAllow:
+    - vision.wafers.>
+`}</FlavorYaml>
+
+### snapshot-consumer
+
+The snapshot service subscribes to inspection results. It does not publish vision data on NATS. HTTP responses come from the microservice port map instead.
+
+<FlavorYaml title="snapshot-consumer">{`---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: snapshot-consumer
+spec:
+  description: snapshot-service - subscribe inspections for HTTP snapshot API (in-account)
+  subAllow:
+    - vision.inspections.>
+`}</FlavorYaml>
+
+## Why this design
+
+| Subject pattern | Who uses it | Purpose |
+| --------------- | ----------- | ------- |
+| `vision.wafers.{lineId}` | frame-generator → object-detector | Wafer thumbnail metadata (v1.1.0) |
+| `vision.inspections.{lineId}` | object-detector → snapshot-service | Defect class, confidence, bounding boxes |
+
+PoT mounts NATS credentials from these rules when a microservice sets `natsConfig.natsRule`. Tight pub/sub lists prevent the gallery user from publishing fake wafer frames back into the inspection pipeline.
+
+**Cross-account vs in-account:** Phase 1 used export/import between **production-monitoring** and **operations-center** (steps 2 and 5). Phase 2 keeps all vision subjects inside **vision-inspection-local**. Router bridges HTTP to **ops-b** for the gallery, but NATS never crosses Applications.
+
+Do not use v1.0.0 subject names (`vision.frames.*`, `vision.detections.*`). This tutorial uses v1.1.0 `vision.wafers.>` and `vision.inspections.>`.
+
+## Deploy
+
+From the pot-edge-patterns repo root:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/11-nats-user-rules-vision.yaml`}</CliBlock>
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} get nats-user-rules`}</CliBlock>
+You should see `frame-publisher`, `vision-detector`, and `snapshot-consumer`.
+
+## Common mistakes
+
+- **Deploying the Application first.** Step 13 references these rule names. Deploy user rules before any Application.
+- **Mixing v1.0.0 subject names.** Use `vision.wafers.>` and `vision.inspections.>`, not deprecated `vision.frames.*` / `vision.detections.*`.
+- **Expecting cross-account import.** Vision does not use export/import like Phase 1. Step 12 is an in-account account rule only.
+
+## Next step
+
+[Step 12: Vision NATS account rule](/tutorials/acme-smart-plant/step-12-nats-account-vision): deploy the in-account **NatsAccountRule** that binds the vision-inspection Application.
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

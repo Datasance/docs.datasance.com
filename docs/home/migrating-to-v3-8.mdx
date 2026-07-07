@@ -1,0 +1,45 @@
+---
+title: Migrating to v3.8.0
+description: No in-place upgrade from v3.7 or v1.6.x. Greenfield migration steps to PoT v3.8.0 with Edgelet v1.0.0+ and a new Controller database.
+keywords: [migration, v3.8, greenfield, edgelet, v3.7]
+slug: /migrating-to-v3-8
+---
+
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
+# Migrating to v3.8.0
+
+:::warning[Greenfield release: v3.8.0]
+
+There is no in-place upgrade from v3.7 or v1.6.x field deployments. You need a new Controller database, **Edgelet v1.0.0+** on every node, and **{CLI_NAME} v3.8.0**.
+
+:::
+
+## Before you start
+
+1. Export application YAML you need to keep.
+2. Inventory Edgelet nodes and plan downtime.
+3. Read the field rename cheat sheet below.
+
+## Migration steps
+
+1. **Export application YAML** from the v3.7 Controller.
+2. **Uninstall legacy operator and v3.7 CRDs**, including the Application CRD.
+3. **Deploy v3.8 Control Plane** with embedded OIDC (see [Platform Deployment](/platform-deployment/introduction)).
+4. **Provision Edgelet v1.0.0+** on every node. Do not reuse Java iofog-agent or v3.7 field agents.
+5. **Re-import or redeploy applications** on the new Controller.
+
+## Legacy documentation
+
+Agent Management, ECN Viewer, and Keycloak-first deployment guides live in the [v3.7.3 snapshot](/v3.7.3/). For the deprecated Java Agent runtime, see [Legacy Agent (v3.7)](/legacy-agent-v3-7).
+
+## Field rename cheat sheet
+
+| v3.7 field | v3.8 field |
+|------------|------------|
+| `dockerUrl` | `containerEngineUrl` |
+| `dockerPruningFrequency` | `pruningFrequency` |
+| `fogType` / `fogTypeId` | `arch` / `archId` |
+| `viewerUrl` | `consoleUrl` |
+| `VIEWER_*` env vars | `CONSOLE_*` |
+| `SSL_*` env vars | `TLS_*` |

@@ -1,25 +1,106 @@
 # Datasance PoT Documentation
 
-Datasance PoT (Platform of Things) is an Enterprise Open Source Fog and Distributed Edge Computing Platform.
-Securely deploy, manage, and scale containerized workloads across thousands of heterogeneous far-edge and IoT environments.
+> Official docs for Datasance PoT platform train v3.8.0. Greenfield release: Edgelet nodes, EdgeOps Console, Controller with embedded OIDC, and containerized edge workloads.
 
+## Platform summary (v3.8.0)
 
-## Core Concepts
-- **Edge Computing**: Distributed computing paradigm bringing computation and data storage closer to the sources of data.
-- **EdgeOps**: DevOps for the Edge.
-- **Microservices**: Deploy and manage container microservices at the edge.
-- **potctl**: The command-line interface for managing Datasance PoT.
+Datasance PoT (Platform of Things) is an enterprise open-source fog and distributed edge computing platform. You deploy a Control Plane on Kubernetes or remote hosts, connect **Edgelet nodes** at the edge, and run containerized microservices across heterogeneous hardware.
 
-## Key Sections
-- Introduction: https://docs.datasance.com/
-- Getting Started: https://docs.datasance.com/getting-started/
-- Architecture: https://docs.datasance.com/getting-started/architecture
-- Developing Microservices: https://docs.datasance.com/developing-microservices/overview
-- Platform Deployment: https://docs.datasance.com/platform-deployment/introduction
-- Reference Deployment Manifests: https://docs.datasance.com/yaml-references/reference-kinds
-- API Reference: https://docs.datasance.com/api/
+**v3.8.0 is a greenfield release.** There is no in-place upgrade from v3.7 field deployments. You need a new Controller database, **Edgelet v1.0.0+** on every node, and **potctl v3.8.0**. Legacy Java iofog-agent and v3.7 field agents are not supported on Controller v3.8.
+
+The v3.8 web UI is **EdgeOps Console** (embedded in the Controller image). Authentication defaults to **embedded OIDC** in the Control Plane.
+
+## Migration
+
+- [Migrating to v3.8.0](https://docs.datasance.com/migrating-to-v3-8): Greenfield migration steps from v3.7 or v1.6.x field deployments.
+
+## Version matrix (platform train v3.8.0)
+
+| Component | Version |
+| --------- | ------- |
+| PoT platform | v3.8.0 |
+| Controller | v3.8.0 |
+| potctl | v3.8.0 |
+| ioFog Operator | v3.8.0 |
+| Router (wrapper image) | v3.8.0 |
+| Edgelet | v1.0.0 |
+| EdgeOps Console | v1.0.9 |
+| ioFog Go SDK | v3.8.0 |
+
+Full release notes: [What's New](https://docs.datasance.com/home/whats-new) (classic format published in Plan 12).
+
+## apiVersion policy
+
+The Controller accepts uploaded YAML with either `datasance.com/v3` or `iofog.org/v3` as `apiVersion`. Build-time flavor selects which apiVersion appears in doc examples (`datasance` vs `iofog` distribution builds). Registry paths and CLI name also vary by flavor.
+
+## Core concepts
+
+- **Edge computing**: Distributed computation and data storage close to data sources.
+- **EdgeOps**: DevOps for the edge.
+- **Microservices**: Deploy and manage container microservices at Edgelet nodes.
+- **potctl**: Command-line interface for managing Datasance PoT.
+- **Edgelet node**: Current v3.8 node runtime (YAML kind remains `Agent`).
+
+## Documentation index
+
+### Home and getting started
+
+- [Welcome](https://docs.datasance.com/): v3.8.0 platform overview and component versions.
+- [Getting Started](https://docs.datasance.com/getting-started/core-concepts): Core concepts for PoT.
+- [Architecture](https://docs.datasance.com/getting-started/architecture): v3.8 Control Plane, Edgelet nodes, NATS, Router, and Skupper.
+- [Quick Start With Local Deployment](https://docs.datasance.com/getting-started/quick-start-local): Local Control Plane and Edgelet node walkthrough.
+
+### Platform deployment
+
+- [Platform Deployment](https://docs.datasance.com/platform-deployment/introduction): Deploy the v3.8 Control Plane on Kubernetes or remote hosts.
+- [Embedded OIDC Authentication](https://docs.datasance.com/platform-deployment/embedded-oidc): Default auth path for new v3.8 deployments.
+
+### Edgelet
+
+- [Edgelet Introduction](https://docs.datasance.com/edgelet/introduction): v3.8 node runtime for Edgelet nodes.
+- [Edgelet Installation](https://docs.datasance.com/edgelet/installation): Install Edgelet v1.0.0+ on edge hosts.
+- [Edgelet CLI Reference](https://docs.datasance.com/edgelet/cli/): Local node management commands.
+
+### EdgeOps Console
+
+- [EdgeOps Console Introduction](https://docs.datasance.com/edgeops-console/introduction): v3.8 web UI for cluster and workload management.
+
+### Controller
+
+- [Controller Overview](https://docs.datasance.com/reference-controller/overview): Controller v3.8.0 architecture and responsibilities.
+- [Controller REST API](https://docs.datasance.com/reference-controller/rest-api): REST API overview and auth.
+
+### YAML references
+
+- [YAML Kinds](https://docs.datasance.com/yaml-references/reference-kinds): Index of PoT YAML resource kinds.
+- [Control Plane](https://docs.datasance.com/yaml-references/reference-control-plane): ControlPlane manifest reference.
+- [Agent (Edgelet node)](https://docs.datasance.com/yaml-references/reference-agent): Edgelet node manifest reference.
+
+### Platform components
+
+- [Platform Components](https://docs.datasance.com/platform-components): Operator, Router, NATS Server, and ioFog Go SDK.
+- [Operator](https://docs.datasance.com/platform-components/operator): ioFog Operator v3.8.0.
+- [Router](https://docs.datasance.com/platform-components/router): Skupper-based Router wrapper.
+- [NATS Server](https://docs.datasance.com/platform-components/nats-server): In-cluster NATS for PoT messaging.
+- [ioFog Go SDK](https://docs.datasance.com/platform-components/sdk/overview): Build edge microservices in Go.
+
+### Tutorials
+
+- [Acme Smart Plant](https://docs.datasance.com/tutorials/acme-smart-plant): End-to-end tutorial for production monitoring and vision inspection.
+- [Acme Smart Plant Runbook](https://docs.datasance.com/tutorials/acme-smart-plant/runbook): Operator notes and troubleshooting for the tutorial scenario.
+
+### Developing microservices
+
+- [Developing Microservices](https://docs.datasance.com/developing-microservices/overview): Build and debug edge microservices.
+- [SDK Guide (legacy page)](https://docs.datasance.com/developing-microservices/sdk): Older SDK overview; see Platform Components for v3.8 SDK pages.
 
 ## API
-Datasance PoT Controller provides a comprehensive REST API for controlling the platform.
-OpenAPI Spec: https://docs.datasance.com/api/
 
+Datasance PoT Controller provides a REST API for controlling the platform.
+
+- [Controller REST API (OpenAPI)](https://docs.datasance.com/api/controller): Interactive Controller API docs (v3.8.0).
+- [Edgelet API (OpenAPI)](https://docs.datasance.com/api/edgelet): Interactive EdgeletAPI docs (v1.0.0).
+
+## Legacy documentation snapshot
+
+- [v3.7.3 docs snapshot](https://docs.datasance.com/v3.7.3/): Frozen legacy docs (Java Agent, ECN Viewer, Keycloak-first deployment). Not current for v3.8.0.

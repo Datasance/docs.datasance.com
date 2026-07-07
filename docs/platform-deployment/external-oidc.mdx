@@ -1,0 +1,247 @@
+---
+title: External OIDC Authentication
+description: Optional appendix for PoT v3.8.0 - register an OIDC client with your enterprise IdP when embedded OIDC is not enough.
+slug: /platform-deployment/external-oidc
+---
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# External OIDC Authentication
+
+:::info[Appendix - not the default path]
+
+PoT **v3.8.0** ships with [Embedded OIDC Authentication](/platform-deployment/embedded-oidc) enabled by default. Use this page only when your organization requires a dedicated identity provider (Okta, Azure AD, Keycloak, or any OIDC-compliant IdP).
+
+:::
+
+External mode sets **`AUTH_MODE=external`**. Controller uses one **confidential** OIDC client for browser (EdgeOps Console) and CLI ({CLI_NAME}) authentication. Access and refresh tokens are **issued by the IdP**. Controller validates access JWTs via the issuer JWKS and maps claims to RBAC.
+
+## When to use external OIDC
+
+| Scenario | Use external OIDC |
+| -------- | ----------------- |
+| Corporate SSO required | Yes |
+| Greenfield lab or quick start | No - use [Embedded OIDC](/platform-deployment/embedded-oidc) |
+| IdP-managed MFA and password policy | Yes |
+| No external IdP available | No |
+
+## Minimal Control Plane YAML
+
+Set `auth.mode: external` and point to your IdP issuer. {CLI_NAME} maps these fields to Controller environment variables at deploy time.
+
+```yaml
+auth:
+  mode: external
+  issuerUrl: https://auth.example.com/realms/myrealm
+  client:
+    id: pot-controller
+    secret: "<confidential-client-secret>"
+controller:
+  publicUrl: https://controller.example.com:51121
+  consoleUrl: https://console.example.com:8008
+```
+
+Local Docker installs can set `auth.insecureAllowHttp: true` when `publicUrl` uses `http://`. Production deploys should use HTTPS and valid TLS certificates.
+
+Full YAML field reference: [Control Plane YAML](/yaml-references/reference-control-plane). Runtime env mapping: [Controller configuration](/reference-controller/configuration).
+
+## Controller environment (minimum)
+
+| Variable | Required | Example |
+| -------- | -------- | ------- |
+| **`AUTH_MODE`** | Yes | `external` |
+| **`OIDC_ISSUER_URL`** | Yes | `https://auth.example.com/realms/myrealm` |
+| **`OIDC_CLIENT_ID`** | Yes | `pot-controller` |
+| **`OIDC_CLIENT_SECRET`** | Yes | Confidential client secret |
+| **`CONTROLLER_PUBLIC_URL`** | Yes | `https://controller.example.com` |
+| **`CONSOLE_URL`** | Yes (browser login) | `https://console.example.com` |
+| **`AUTH_INSECURE_ALLOW_HTTP`** | Development only | `true` when using `http://localhost:*` |
+
+## Flows and endpoints
+
+| Use case | Grant / flow | Controller endpoint |
+| -------- | ------------ | ------------------- |
+| Browser (EdgeOps Console) | Authorization code + PKCE S256 | `GET /api/v3/user/oauth/authorize` → IdP → `GET /api/v3/user/oauth/callback` |
+| CLI ({CLI_NAME}) | Resource owner password (direct access) | `POST /api/v3/user/login` |
+| Session refresh | Refresh token | `POST /api/v3/user/refresh` |
+| Profile | Bearer access token (+ UserInfo) | `GET /api/v3/user/profile` |
+
+Browser login uses the OAuth BFF. The Console does not POST passwords directly to the IdP. Legacy browser `POST /user/login` is removed in v3.8.
+
+## IdP client - required settings
+
+### Client type
+
+- OpenID Connect
+- **Confidential client** (client authentication enabled; uses `OIDC_CLIENT_SECRET`)
+- Public clients are not supported for the Controller OAuth BFF
+
+### Enabled grant types / flows
+
+| Flow | Required for | Notes |
+| ---- | ------------ | ----- |
+| Standard flow (authorization code) | Browser Sign in | Required |
+| Direct access grants (ROPC) | CLI `POST /user/login` | Required if {CLI_NAME} uses password login against the IdP |
+| Implicit flow | - | Off (not used) |
+
+### PKCE
+
+Controller always sends PKCE S256 on browser authorize (`code_challenge`, `code_challenge_method=S256`).
+
+| Provider | Setting |
+| -------- | ------- |
+| Keycloak | PKCE Method = **S256** (Capability config) |
+| Others | Allow or require PKCE S256 on the authorization code flow |
+
+Disabling PKCE on the IdP is a development workaround only, not recommended for production.
+
+### Redirect URIs
+
+Register exactly:
+
+```text
+{CONTROLLER_PUBLIC_URL}/api/v3/user/oauth/callback
+```
+
+Examples:
+
+- Production: `https://controller.example.com/api/v3/user/oauth/callback`
+- Local: `http://localhost:51121/api/v3/user/oauth/callback`
+
+Avoid overly broad wildcards in production.
+
+### Web origins (CORS)
+
+If the Console calls the Controller API from the browser, allow:
+
+```text
+{CONSOLE_URL}
+```
+
+Example: `http://localhost:8008`
+
+## Scopes
+
+### Requested by Controller (browser OAuth BFF)
+
+Controller sends this scope string on authorize:
+
+```text
+openid profile email groups offline_access
+```
+
+| Scope | Purpose |
+| ----- | ------- |
+| `openid` | OIDC baseline; `sub`, `id_token` |
+| `profile` | `preferred_username`, display name |
+| `email` | Email claim; identity linking |
+| `groups` | RBAC group membership (see below) |
+| `offline_access` | Refresh token on authorization code flow |
+
+### IdP client scope assignment
+
+Every requested scope must be assigned to the client as a **default** and/or **optional** client scope.
+
+| Scope | Typical assignment |
+| ----- | ------------------- |
+| `openid`, `profile`, `email`, `roles` | Default |
+| `groups` | Optional (scope name must be **`groups`**, not `group`) |
+| `offline_access` | Optional |
+
+**Common error:** `invalid_scope` when a scope is requested but not assigned to the client, or when the scope name is wrong (`group` vs `groups`).
+
+## RBAC / groups mapping
+
+Controller resolves RBAC **Group** subjects from the access token (in order):
+
+1. `resource_access[{OIDC_CLIENT_ID}].roles` - client roles on the OAuth client (recommended)
+2. Top-level `roles` array (if present)
+3. `groups` array - from the `groups` scope and a group mapper
+
+Group names are lowercased before RBAC lookup. IdP role and group names should align with Controller RBAC groups (for example `admin`, `viewer`).
+
+### User identity (User subject)
+
+Controller reads the User subject from JWT claims (first match):
+
+`preferred_username` → `username` → `email` → `sub`
+
+Ensure at least one stable identifier is present for RBAC User bindings.
+
+### Provider notes
+
+| IdP pattern | RBAC mapping |
+| ----------- | ------------ |
+| Client roles on the OAuth client matching `OIDC_CLIENT_ID` | Uses `resource_access` (simplest) |
+| Realm or group mappers | Create a client scope named **`groups`** with a Group Membership mapper that emits a `groups` claim |
+
+## Issuer discovery (minimum metadata)
+
+The issuer at `OIDC_ISSUER_URL` must expose:
+
+| Endpoint | Used for |
+| -------- | -------- |
+| `authorization_endpoint` | Browser OAuth BFF |
+| `token_endpoint` | Code exchange, ROPC, refresh |
+| `jwks_uri` | Bearer JWT validation |
+| `userinfo_endpoint` | `GET /user/profile` in external mode |
+| `revocation_endpoint` | Optional; best-effort logout |
+
+## MFA and forced password change
+
+- **Browser:** enforced by the IdP during authorize (for example a required password update action)
+- **CLI:** IdP password-grant policy applies
+- Controller does not run embedded interaction UI in external mode
+
+## Verification
+
+### Browser
+
+1. EdgeOps Console **Sign in** → IdP login page (no `invalid_scope` or PKCE errors)
+2. Callback → `{CONSOLE_URL}/login#accessToken=...&refreshToken=...`
+3. `GET /api/v3/user/profile` with `Authorization: Bearer <accessToken>` → 200
+
+### CLI
+
+```bash
+curl -sS -X POST '{CONTROLLER_PUBLIC_URL}/api/v3/user/login' \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"<user>","password":"<pass>","totp":""}'
+```
+
+Expect `{ "accessToken", "refreshToken" }` (IdP tokens).
+
+### Refresh
+
+```bash
+curl -sS -X POST '{CONTROLLER_PUBLIC_URL}/api/v3/user/refresh' \
+  -H 'Content-Type: application/json' \
+  -d '{"refreshToken":"<refresh>"}'
+```
+
+## Troubleshooting
+
+| Error | Likely cause |
+| ----- | ------------ |
+| `invalid_scope` | Missing `groups` or `offline_access` on the client; wrong scope name (`group` vs `groups`) |
+| `Missing parameter: code_challenge_method` | PKCE required on IdP but not sent by Controller (upgrade Controller) |
+| `redirect_uri` mismatch | Callback URL not registered exactly |
+| Login works, no `refreshToken` in browser hash | `offline_access` not requested or not assigned on the IdP client |
+| 403 on API routes | Token valid but RBAC groups/roles not mapped; check client roles or `groups` claim |
+
+## HA notes
+
+For multi-replica browser login with an external IdP, set **`AUTH_SESSION_STORE_TYPE=database`**. See [Controller configuration](/reference-controller/configuration).
+
+## Related docs
+
+| Document | Topic |
+| -------- | ----- |
+| [Embedded OIDC Authentication](/platform-deployment/embedded-oidc) | Default auth mode |
+| [Controller configuration](/reference-controller/configuration) | Full env var tables |
+| [Controller REST API](/reference-controller/rest-api) | `/user/oauth/*`, `/user/login`, `/user/profile` |
+| [EdgeOps Console configuration](/edgeops-console/configuration) | `consoleUrl` and runtime `auth.*` paths |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

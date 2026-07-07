@@ -1,16 +1,24 @@
-# potctl - ioFog Unified Command Line Interface
+---
+title: Introduction
+description: Install, configure, and operate Edge Compute Networks with the platform CLI.
+keywords: [potctl, iofogctl, cli, ecn, edge compute]
+---
 
-`potctl` is a CLI tool for installation, configuration, and operation of ioFog Edge Compute Networks (ECNs).
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
 
-It can be used to remotely manage multiple different clusters from a single host. It is built for an ioFog user and a DevOps engineer who may want to manage ioFog clusters.
+# {CLI_NAME} - Platform Command Line Interface
 
-This section will explain key aspects of `potctl's` design and functionality for the purposes of understanding the CLI in greater detail.
+{CLI_NAME} is the CLI for **{PRODUCT_NAME}**. Use it to install, configure, and operate Edge Compute Networks (ECNs).
 
+You can manage multiple clusters from a single host. Platform train **v3.8.0** is a greenfield release. There is no in-place upgrade from v3.7. See [Migrating to v3.8.0](/migrating-to-v3-8) before you upgrade field deployments.
+
+Datasance and Eclipse ioFog ship the same feature set under different binary names (`potctl` vs `iofogctl`). Pick the binary that matches your distribution.
 
 :::info[Next steps?]
   <ul>
     <li><a href="../potctl/download">Download and installation.</a></li>
-    <li><a href="../yaml-references/reference-kinds">potctl reference.</a></li>
+    <li><a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>CLI reference.</a></li>
+    <li><a href="../yaml-references/reference-kinds">YAML kinds reference.</a></li>
   </ul>
 :::
 

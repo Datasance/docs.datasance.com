@@ -1,0 +1,93 @@
+---
+title: ControlPlane Runtime Module
+description: How Edgelet builds and reconciles the local Controller microservice from a kind ControlPlane manifest. Ports, volumes, DNS, and EdgeletAPI endpoints.
+keywords: [edgelet, controlplane, microservice, reconcile, runtime module, local controller]
+slug: /edgelet/control-plane-microservice
+---
+
+# ControlPlane runtime module
+
+Edgelet hosts at most **one** local Controller container per Edgelet node when you apply a `kind: ControlPlane` manifest. The runtime module converts the manifest into a microservice model, persists it in SQLite, and reconciles the container on every process manager tick.
+
+For operator workflows (deploy, restart, delete), see [Control plane on node](/edgelet/control-plane).
+
+## Manifest to microservice
+
+When you apply a ControlPlane manifest, Edgelet builds a `Microservice` with these defaults:
+
+| Aspect | Default / rule |
+| ------ | -------------- |
+| UUID | Generated controller UUID (stable in SQLite) |
+| `IsController` | `true`, `IsSystem` |
+| Host API port | **51121** → `spec.controller.port` (default 51121) |
+| Host console port | **80** → `spec.console.port` (default 8008) |
+| Volumes | `iofog-controller-db`, `iofog-controller-log` |
+| TLS | Optional bind mount to `/etc/iofog/controller-cert/` |
+| Registry | Local default registry id |
+
+Environment variables for the controller container are built from the manifest and the stable controller UUID.
+
+## Persistence and reconcile
+
+| Layer | Responsibility |
+| ----- | -------------- |
+| SQLite `system_control_plane` | Singleton deployment row + manifest YAML (`id=1`) |
+| EdgeletAPI / runtime facade | Async apply, validation, operation polling |
+| Process manager | `reconcileControlPlane()` each monitor tick |
+| DNS resolver | Upsert/remove bridge-local FQDN records for the CP workload |
+
+At most **one** ControlPlane deployment per node. Reconcile recreates the container if the SQLite row exists but the engine container was removed manually.
+
+## EdgeletAPI surface
+
+| Endpoint | Role |
+| -------- | ---- |
+| `POST /v1/deploy/controlplane:apply` | Start async apply |
+| `GET /v1/deploy/controlplane:apply/{operationId}` | Poll apply status |
+| `GET /v1/system/controlplane` | Deployment status |
+| `POST /v1/system/controlplane/restart` | Bounce container; optional `?pull=true` |
+| `DELETE /v1/system/controlplane` | Remove deployment and volumes |
+
+Registry apply remains synchronous. ControlPlane apply is asynchronous by default (long container pull/start).
+
+## DNS FQDNs
+
+When the embedded engine is active, the controller microservice gets bridge-local names consumed by the DNS resolver:
+
+1. `edgelet.controller.svc.bridge.local` - stable alias
+2. `controller.<metadata.namespace>.svc.bridge.local` - namespace alias
+3. `<metadata.namespace>.<metadata.name>.svc.bridge.local` - standard `appName.microserviceName` pattern
+
+Edgelet does not auto-update `controllerUrl` in config when you deploy. Set it separately. See [Configuration](/edgelet/configuration).
+
+## Controller registration
+
+After the local ControlPlane container is running and the Edgelet node is provisioned, Edgelet registers the controller workload once with the remote Controller (`POST /api/v3/agent/controller/register`). The Controller lists the controller microservice with `isController: true`.
+
+The system fog must exist on Controller with **`isSystem: true`**. Registration fails with **403** on non-system fogs.
+
+Spec updates from Controller `microserviceList` merge into the local ControlPlane deployment. The process manager does not add or delete a duplicate controller container.
+
+## Failure modes
+
+| Symptom | Cause / fix |
+| ------- | ----------- |
+| Reconcile recreates container | Row exists; external `docker rm` or engine drift |
+| `ms rm` rejected on CP UUID | Use `edgelet controlplane delete` |
+| `ms restart` rejected when provisioned | Use `edgelet controlplane restart` |
+| Need image/env change | Redeploy: `edgelet deploy -f controlplane.yaml` (not restart) |
+| Second apply 409 | Apply already in progress; wait or poll operation status |
+
+## Watchdog
+
+Edgelet does **not** delete the controller container when labels match the DB row (`edgelet.iofog.org/system=true`, `role=controller`, UUID, container ID, image ref). Manual `docker run` without matching identity may be removed by the watchdog.
+
+## See also
+
+- [Control plane on node](/edgelet/control-plane) - deploy, restart, delete operator guide
+- [EdgeletAPI v1](/edgelet/edgelet-api) - ControlPlane routes under `/v1/deploy` and `/v1/system`
+- [Architecture](/edgelet/architecture) - process manager and reconcile loop
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
