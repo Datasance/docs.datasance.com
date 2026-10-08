@@ -1,0 +1,54 @@
+---
+title: Edgelet Node Management
+description: Day-to-day operations on provisioned Edgelet nodes via potctl or iofogctl. Configuration, EdgeGuard, attach, volumes, pruning, upgrades, and debugging.
+keywords: [edgelet node management, agentconfig, edgelet, fleet operations, logs agent, exec agent, v3.9]
+slug: /get-started/edgelet-nodes/introduction
+---
+
+import { CLI_NAME, EDGELET_VERSION, PLATFORM_TRAIN } from '@site/src/config/distribution';
+
+# Edgelet node management
+
+:::tip[Prerequisite: ECN with Edgelet nodes]
+
+You need a working Edge Compute Network (ECN) with provisioned **Edgelet nodes**. If you have not deployed nodes yet, start with [Platform Deployment](/get-started/deploy/introduction) and [Setup Edgelet Nodes](/get-started/deploy/setup-edgelet-nodes).
+
+:::
+
+Once Edgelet nodes are registered with the Controller, you run day-to-day operations from the orchestrator with **{CLI_NAME}**. In YAML the resource kind is still **`Agent`**; in prose we say **Edgelet node**.
+
+Platform train **v{PLATFORM_TRAIN}** pairs with **Edgelet v{EDGELET_VERSION}** on every node.
+
+This section covers fleet operations. For how the Edgelet daemon works on the device, see [Edgelet](/learn/edgelet).
+
+## What you can manage
+
+| Topic | Page | Typical command |
+| ----- | ---- | --------------- |
+| Runtime settings pushed from Controller | [Configuration updates](/get-started/edgelet-nodes/configuration-updates) | {CLI_NAME} deploy -f agent-config.yaml |
+| Hardware attestation | [EdgeGuard](/get-started/edgelet-nodes/edgeguard) | {CLI_NAME} deploy -f agent-config.yaml |
+| Move nodes between ECNs or namespaces | [Attach and detach](/get-started/edgelet-nodes/attach-detach) | {CLI_NAME} detach agent, {CLI_NAME} attach agent, {CLI_NAME} move agent |
+| Push host directories to nodes | [Volume distribution](/get-started/edgelet-nodes/volume-distribution) | {CLI_NAME} deploy -f volume.yaml |
+| Reclaim disk on nodes | [Image and disk pruning](/get-started/edgelet-nodes/image-pruning) | {CLI_NAME} prune agent |
+| Fleet Edgelet version changes | [Upgrade and rollback](/get-started/edgelet-nodes/upgrade-rollback) | {CLI_NAME} upgrade agent, {CLI_NAME} rollback agent |
+| Router/NATS platform on a node | [Reconcile platform](/get-started/edgelet-nodes/reconcile) | {CLI_NAME} reconcile agent |
+| Daemon logs and node debug shell | [Debugging](/get-started/edgelet-nodes/debugging) | {CLI_NAME} logs agent, {CLI_NAME} exec agent |
+
+## Orchestrator vs on-device changes
+
+| Layer | Tool | Use when |
+| ----- | ---- | -------- |
+| **Controller push** | {CLI_NAME} + AgentConfig | Fleet-wide config from the control plane |
+| **On-device** | edgelet config, edgelet provision | Break-glass or air-gapped node admin |
+
+See [Edgelet configuration](/learn/edgelet/configuration) and [Configuration reference](/learn/edgelet/configuration) for on-device keys.
+
+## See also
+
+- [Edgelet nodes in Learn](/learn/edgelet-nodes) - `Agent`, `AgentConfig`, and `spec.config` fields
+- [{CLI_NAME} Getting Familiar](/get-started/cli/getting-familiar) - namespaces, `get`, `describe`, `logs`
+- [Edgelet installation](/learn/edgelet/installation) - manual install and OTA on the host
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

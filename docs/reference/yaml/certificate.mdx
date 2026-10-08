@@ -1,0 +1,75 @@
+---
+title: Certificate fields
+description: Field reference for kind Certificate. Subject, hosts, expiration, and the issuing ca block.
+keywords: [certificate, yaml, fields, subject, hosts, ca, self-signed]
+slug: /reference/yaml/certificate
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Certificate fields
+
+Reference for `kind: Certificate`. Deploy and rotation are on [Certificates](/learn/config/certificates).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Certificate # required, string
+metadata:
+  name: api-tls # required, string
+  namespace: my-ecn # no, string
+spec:
+  subject: "CN=api.example.com,O=Example" # required, string
+  hosts: "api.example.com,api.internal" # required, string. Comma-separated SAN names
+  expiration: 365 # no, int. Days
+  ca:
+    type: direct # required, string. self-signed or direct. self-signed omits secretName
+    secretName: ecn-root-ca # required when type is direct, string
+```
+
+</FlavorYaml>
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `subject` | Yes | X.509 subject DN. |
+| `hosts` | Yes | Comma-separated SAN hostnames or IPs. |
+| `expiration` | No | Leaf validity in days. |
+| `ca.type` | Yes | `self-signed` or `direct`. |
+| `ca.secretName` | Conditional | CA catalog name. Required for `direct`. |
+
+## `ca.type`
+
+| `ca.type` | Meaning |
+| --------- | ------- |
+| `self-signed` | The Controller issues this leaf without a named CA. Omit `secretName`. |
+| `direct` | Issue from a [certificate authority](/learn/config/certificate-authorities). Set `secretName` to that CA `metadata.name`. |
+
+Other values can return 400.
+
+```yaml
+ca:
+  type: self-signed
+```
+
+```yaml
+ca:
+  type: direct
+  secretName: ecn-root-ca
+```
+
+## Deploy
+
+| Case | CLI |
+| ---- | --- |
+| Name not found | Create the leaf. |
+| Name exists | Error. Updating is not allowed. |
+
+Rotation is `delete certificate`, then deploy again.
+
+Describe returns `kind: Certificate` and `data` with the leaf cert, private key, chain metadata, and expiry. That output is sensitive.
+
+<EditPageAdmonition />

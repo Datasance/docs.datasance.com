@@ -1,0 +1,148 @@
+---
+title: Access control
+description: How an OIDC caller and a workload ServiceAccount are allowed to use a Controller Role.
+keywords: [access control, rbac, role, role binding, service account, oidc]
+slug: /learn/access-control
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import ProductName from '@site/src/components/flavor/ProductName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Access control
+
+Controller access on <ProductName /> uses one Role object for two callers.
+
+- A person or group calls the Controller HTTP API. The token is OIDC. A [RoleBinding](/learn/access-control/role-bindings) grants a Role to a User or Group subject.
+- A workload uses a [ServiceAccount](/learn/access-control/service-accounts). That identity belongs to one application. A microservice names the Role with `spec.serviceAccount.roleRef`.
+
+Sign-in and user records stay in Get started: [Embedded OIDC](/get-started/deploy/embedded-oidc), [External OIDC](/get-started/deploy/external-oidc), and [Identity and sign-in](/get-started/edgeops-console/identity). This section is what an authenticated caller is allowed to do.
+
+| Page | What it covers |
+| ---- | -------------- |
+| [Roles](/learn/access-control/roles) | Rules for one namespace. Create, replace, and the resource list. |
+| [Role fields](/reference/yaml/role) | `rules` at the document root. |
+| [Role bindings](/learn/access-control/role-bindings) | One Role granted to subjects. |
+| [RoleBinding fields](/reference/yaml/role-binding) | `roleRef` and `subjects` at the document root. |
+| [Service accounts](/learn/access-control/service-accounts) | Application-scoped identity. CLI name `application/name`. |
+| [ServiceAccount fields](/reference/yaml/service-account) | `metadata.applicationName` and root `roleRef`. |
+
+Deploy with <CliName /> `deploy -f`. There is no `apply`.
+
+Subjects a workload may use on the bus are [account rules](/learn/message-bus/account-rules) and [user rules](/learn/message-bus/user-rules). Permission checks on the Edgelet API are [API RBAC](/learn/edgelet/api-rbac). A Kubernetes Role from the operator install is a different object. See [Kubernetes](/learn/control-plane/kubernetes).
+
+## Request path
+
+A human caller sends an OIDC bearer token. The Controller maps the route to a resource and a verb. RoleBindings for that User and Group decide whether the Role allows the pair.
+
+| Subject | Claim on the token |
+| ------- | ------------------ |
+| User | `preferred_username`, `username`, `email`, or `sub` |
+| Group | `resource_access[<client id>].roles`, `roles`, or `groups`, lowercased |
+
+Group names should match the identity provider role names. `admin`, `developer`, and `viewer` are the usual examples.
+
+| Route class | Token | Role check |
+| ----------- | ----- | ---------- |
+| Public | None | None |
+| Auth-only | Bearer token | Skipped. The catalog verb list is empty. |
+| User RBAC | Bearer token | Resource and verb from the route |
+| Fog token | Fog provisioning token | Separate from this user RBAC |
+
+Public routes include `GET /api/v3/live`, `GET /api/v3/status`, and `GET /api/v3/architectures/`. Auth-only routes include `POST /api/v3/user/login` and the OAuth browser routes. Routes under `/api/v3/agent/*` use a fog provisioning token. They are not this user RBAC.
+
+When the token carries `password_change_required`, the caller may only use `GET /api/v3/user/profile` and `POST /api/v3/user/change-password`. Other protected routes return 403 until the password changes.
+
+The route list is the [Controller API](/api/v3.9.0/controller).
+
+## System roles
+
+`admin` cannot be modified or deleted.
+
+| Role | Scope |
+| ---- | ----- |
+| `admin` | All resources, all verbs |
+| `sre` | Operational resources. Read-only on `roles`, `roleBindings`, and the NATS operator, bootstrap, and hub resources |
+| `developer` | Create and update workloads. Read-only on infrastructure |
+| `viewer` | `get` and `list` |
+| `agent-admin` | Edgelet API group. Not a human Controller user |
+| `microservice` | Limited self-service on the Edgelet API group for a running workload |
+
+`agent-admin` and `microservice` are for the Edgelet API group. See [API RBAC](/learn/edgelet/api-rbac).
+
+Which resources `sre`, `developer`, and `viewer` include is on [Roles](/learn/access-control/roles).
+
+## Verbs
+
+| Verb | Typical HTTP |
+| ---- | ------------ |
+| `get` | GET one resource, HEAD |
+| `list` | GET a collection |
+| `create` | POST |
+| `update` | PUT |
+| `patch` | PATCH, and some POST actions such as start and stop |
+| `delete` | DELETE |
+
+WebSocket routes use `get`. Some sub-resource actions use `patch`.
+
+## Workload stack
+
+Deploy in this order: Role, then RoleBinding, then ServiceAccount, then the microservice that names the account. Inside one file, the CLI sorts kinds in that order.
+
+`metadata.applicationName` on the ServiceAccount must match an [Application](/learn/workloads/applications). The CLI name is `application/name`. Deploy the Application first when that name is not already on the Controller.
+
+<FlavorYaml title="rbac-stack.yaml">
+
+```yaml
+# The CLI deploys Role, then RoleBinding, then ServiceAccount.
+# metadata.applicationName must match an Application.
+apiVersion: {{API_VERSION}}
+kind: Role
+metadata:
+  name: app-worker
+  namespace: my-ecn
+rules:
+  - apiGroups: [""]
+    resources: ["microservices"]
+    verbs: ["get", "list"]
+---
+apiVersion: {{API_VERSION}}
+kind: RoleBinding
+metadata:
+  name: app-worker-binding
+  namespace: my-ecn
+roleRef:
+  kind: Role
+  name: app-worker
+subjects:
+  - kind: ServiceAccount
+    name: worker
+    apiGroup: ""
+---
+apiVersion: {{API_VERSION}}
+kind: ServiceAccount
+metadata:
+  name: worker
+  namespace: my-ecn
+  applicationName: my-app
+roleRef:
+  kind: Role
+  name: app-worker
+```
+
+</FlavorYaml>
+
+The microservice then sets `spec.serviceAccount.roleRef` to that Role. See [Microservices](/learn/workloads/microservices).
+
+## Console
+
+Roles, Role Bindings, and Service Accounts are on [Access control](/get-started/edgeops-console/access-control). NATS account rules and NATS user rules on that same screen are [Message bus](/learn/message-bus).
+
+## When a call returns 403
+
+Check the RoleBinding for the OIDC user or group, and the verbs on that resource. A token with `password_change_required` also returns 403 outside the profile and change-password routes.
+
+A denied publish or subscribe on the bus is a [user rule](/learn/message-bus/user-rules) or an [account rule](/learn/message-bus/account-rules). Audit rows are under [Events and API](/get-started/edgeops-console/events).
+
+<EditPageAdmonition />

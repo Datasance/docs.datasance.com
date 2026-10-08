@@ -1,0 +1,110 @@
+---
+title: User rules
+description: NatsUserRule is user policy. A microservice binds it by name. The Controller signs a user JWT.
+keywords: [nats, NatsUserRule, user rule, jwt, default-user, mqtt]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# User rules
+
+A `NatsUserRule` is user policy on the Controller. A microservice binds it with `spec.natsConfig.natsRule`, either as a standalone `Microservice` or as an entry under `Application.spec.microservices`. The Controller signs a user JWT (permissions, limits, and connection constraints).
+
+Account policy is a `NatsAccountRule` on the application only. See [Account rules](/learn/message-bus/account-rules).
+
+Fields are on [User rule fields](/reference/yaml/nats-user-rule). Credentials, environment variables, and the resolver are on [NATS access](/learn/workloads/nats-access).
+
+The NATS username comes from the microservice, not from `metadata.name` on the rule.
+
+A microservice can turn NATS on only when its application already has `natsConfig.natsAccess: true`. See [NATS access](/learn/workloads/nats-access).
+
+## Reserved names
+
+Reserved names cannot be created, updated, or deleted (HTTP 400). Inspect them with `describe`. Do not deploy a document whose `metadata.name` is reserved.
+
+| Reserved name | Role |
+| ------------- | ---- |
+| `default-user` | Used when the microservice sets `natsAccess: true` and omits `natsRule` |
+| `default-mqtt-user` | MQTT bearer user |
+| `default-leaf-user` | Leaf connection |
+| `controller-user` | Publish and subscribe only on `controller.relay.v1.>` |
+
+`default-user` allows `STANDARD` and `WEBSOCKET`, is not a bearer token, and sets numeric limits to `-1`. `default-mqtt-user` is a bearer user and allows `MQTT` and `STANDARD`. `default-leaf-user` allows `LEAFNODE` and `WEBSOCKET`.
+
+## Deploy
+
+Create, update, and delete match [account rules](/learn/message-bus/account-rules).
+
+<CliBlock>{`{{CLI_NAME}} deploy -f nats-user-rule.yaml -n my-ecn
+{{CLI_NAME}} get nats-user-rules -n my-ecn
+{{CLI_NAME}} describe nats-user-rule checkout-user -n my-ecn
+{{CLI_NAME}} delete nats-user-rule checkout-user -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> creates the rule or updates it when the name already exists. There is no `apply`.
+
+`metadata.name` is the rule name (1 to 255 characters). `metadata` and `spec` are required.
+
+Update returns immediately. Affected JWTs are reissued in the background. Delete rebinds microservices to `default-user` and reissues in the background.
+
+Strings that land in a JWT must be Latin-1. ASCII is safe. Any other character on a subject, tag, `src`, `times`, or `timesLocation` returns HTTP 400.
+
+`describe` supports `yaml`, `json`, and `wide`.
+
+Live users, after workloads deploy, are `get nats-users` and `describe nats-user`. See [Message bus](/learn/message-bus).
+
+## Bind a microservice
+
+Set `spec.natsConfig.natsAccess: true` and `spec.natsConfig.natsRule` to the rule name. Omit `natsRule` and the Controller uses `default-user`.
+
+`natsEnabled` on microservice YAML is an alias of `natsConfig.natsAccess`. The application must already have `natsConfig.natsAccess: true`. See [NATS access](/learn/workloads/nats-access).
+
+## Example
+
+<FlavorYaml title="nats-user-rule.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: checkout-user
+  namespace: my-ecn
+spec:
+  description: Checkout service user
+  maxSubscriptions: -1
+  maxData: -1
+  maxPayload: 1m
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+    - WEBSOCKET
+  pubAllow:
+    - "orders.>"
+  pubDeny:
+    - "orders.secret"
+  subAllow:
+    - "orders.>"
+    - "orders.work workers"
+  subDeny: []
+  respMax: 100
+  respTtl: 5000000000
+  tags:
+    - checkout
+    - prod
+```
+
+</FlavorYaml>
+
+## Console
+
+Edit the rule under **Access control**, on NATS User Rules. See [Access control](/get-started/edgeops-console/access-control).
+
+Issued users are under **MessageBus**. See [Message bus](/get-started/edgeops-console/message-bus).
+
+HTTP create, update, and delete are on the [Controller API](/api/v3.9.0/controller).
+
+<EditPageAdmonition />

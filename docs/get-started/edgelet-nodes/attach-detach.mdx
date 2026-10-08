@@ -1,0 +1,76 @@
+---
+title: Attach and Detach Edgelet Nodes
+description: Transfer Edgelet nodes between ECNs and namespaces with detach, attach, and move agent. Delete agent and configure agent for SSH updates.
+keywords: [edgelet node, detach, attach, move agent, delete agent, namespace, ecn, v3.9]
+slug: /get-started/edgelet-nodes/attach-detach
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Attach and detach
+
+You can transfer an **Edgelet node** from one ECN to another by detaching it and attaching it elsewhere.
+
+:::warning[Detach stops workloads]
+
+Detaching an Edgelet node deprovisions it on the Controller. Microservices on that node are shut down. Detach does **not** uninstall Edgelet from the host.
+
+:::
+
+Detach from the current namespace:
+
+<CliBlock>{`{{CLI_NAME}} detach agent zebra-1 -n factory-a`}</CliBlock>
+
+If microservices still run on the node, the command fails unless you pass **`--force`**.
+
+List detached resources:
+
+<CliBlock>{`{{CLI_NAME}} get all --detached`}</CliBlock>
+
+Attach to another namespace or ECN:
+
+<CliBlock>{`{{CLI_NAME}} attach agent zebra-1 -n factory-b`}</CliBlock>
+
+Attach expects Edgelet to **still be installed** on the host from before detach. It pushes AgentConfig, runs provision, and restores the namespace cache. If the host was wiped, run **`deploy -f`** with a fresh **`Agent`** manifest instead.
+
+Move between namespaces in one step:
+
+<CliBlock>{`{{CLI_NAME}} move agent zebra-1 factory-b -n factory-a`}</CliBlock>
+
+This runs **`detach agent`** in the source namespace (honors **`--force`** when passed) then **`attach agent`** in the destination namespace.
+
+## Delete vs detach
+
+| Command | Controller | Host |
+| ------- | ---------- | ---- |
+| **`detach agent`** | Deletes agent record; saves spec in **detached** store | Deprovision only; binaries remain |
+| **`delete agent`** | Deletes agent record | Deprovision + **uninstall** (`uninstall.sh`, optional data removal) |
+
+Use **`delete agent`** when the node should leave the fleet and the host should be cleaned up.
+
+<CliBlock>{`{{CLI_NAME}} delete agent zebra-1 -n factory-a`}</CliBlock>
+
+Unless **`--force`** is set, delete refuses when microservices are still scheduled on the node. **`--force`** skips that check.
+
+If SSH details are missing from namespace config, delete skips deprovision and uninstall with a notify message. Restore SSH with **`configure agent`**, then retry delete.
+
+**System agents** on control plane hosts are removed via **control plane delete**, not ordinary **`delete agent`** on reserved system names.
+
+## Configure SSH only
+
+**`configure agent`** updates **`ssh.user`**, **`ssh.keyFile`**, and **`ssh.port`** in namespace or detached config. It does **not** change AgentConfig on the Controller.
+
+<CliBlock>{`{{CLI_NAME}} configure agent zebra-1 --user ubuntu --key ~/.ssh/new_key --port 22`}</CliBlock>
+
+Use **`deploy -f`** with **`AgentConfig`** (or agent **`spec.config`**) for runtime limits, router, NATS, and EdgeGuard settings.
+
+## See also
+
+- [{CLI_NAME} detach agent](/reference/cli/potctl/potctl_detach_agent) - CLI reference
+- [Setup Edgelet Nodes](/get-started/deploy/setup-edgelet-nodes) - first-time deploy
+- [Upgrade and rollback](/get-started/edgelet-nodes/upgrade-rollback) - version changes while attached
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

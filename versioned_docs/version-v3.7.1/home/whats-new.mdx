@@ -1,6 +1,6 @@
 # What's New in PoT?
 
-- [NATS messaging](../../security/nats-jwt-authentication) is now available as default pub/sub, request/reply, KV store and JetStream messaging inside **PoT** clusters; use [NATS Account Rules](../../security/nats-account-rule) at application level and [NATS User Rules](../../security/nats-user-rule) at microservice level—the Controller provisions credentials automatically with no manual JWT handling.
+- [NATS messaging](../../security/nats-jwt-authentication) is now available as default pub/sub, request/reply, KV store and JetStream messaging inside **PoT** clusters; use [NATS Account Rules](../../security/nats-account-rule) at application level and [NATS User Rules](../../security/nats-user-rule) at microservice level-the Controller provisions credentials automatically with no manual JWT handling.
 - [Access Control](../../security/roles) is now available with fine-grained [Roles](../../security/roles) and [Role Bindings](../../security/role-bindings) for the Controller REST and WS APIs, plus [NATS Account Rule](../../security/nats-account-rule) and [NATS User Rule](../../security/nats-user-rule) for NATS access.
 - [Security](../../security/introduction) is now documented in a dedicated section: [NATS JWT Authentication](../../security/nats-jwt-authentication) and [Certificates Manager](../../security/certificates-manager) for Microservices. For Routers and NATs instances TLS by default, with support for custom CAs and volume-mounted certs.
 - Legacy ioFog Messagebus is deprecated.
@@ -14,7 +14,7 @@
 - [ConfigMap](../../yaml-references/reference-configmap) is now available for managing non-sensitive configuration data that can be mounted to microservices.
 - [VolumeMount](../../yaml-references/reference-volumemount) is now available for attaching ConfigMaps or Secrets to Agents as volumes, enabling easy volume management for microservices.
 - [OfflineImage](../../yaml-references/reference-offlineimage) is now available for deploying container images to edge nodes that cannot access the internet, enabling potctl to pull images locally and transfer them to remote hosts via SSH.
-- [Debugging & Exec Sessions](#debugging-and-exec-sessions) deliver role-aware remote terminals for Agents, microservices, and system microservices—powered by potctl and ECN Viewer.
+- [Debugging & Exec Sessions](#debugging-and-exec-sessions) deliver role-aware remote terminals for Agents, microservices, and system microservices-powered by potctl and ECN Viewer.
 - [ECN Viewer](../ECN-Viewer) now mirrors nearly every potctl operation, enabling full-cluster workload management, remote exec, resource editing, and deployments directly from the browser.
 - [Events and Auditing](#events-and-auditing) provides comprehensive tracking and auditing of all Controller API endpoint calls for compliance and troubleshooting.
 

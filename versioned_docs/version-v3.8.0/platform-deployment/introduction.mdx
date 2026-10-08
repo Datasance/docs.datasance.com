@@ -1,0 +1,72 @@
+---
+title: Platform Deployment Guide
+description: Deploy the control plane on remote hosts or Kubernetes and connect Edgelet nodes. Step-by-step ECN setup with embedded OIDC.
+keywords: [platform deployment, kubernetes edge, remote deployment, edge compute network, ecn setup, edgelet, embedded oidc, v3.8]
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import CliDocsLink from '@site/src/components/flavor/CliDocsLink';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+:::info[Authentication first]
+
+**<ProductName /> v3.8.0** uses [embedded OIDC](/platform-deployment/embedded-oidc) by default. You do not need Keycloak or an external IdP for a greenfield deploy. Set `auth.mode: embedded` and bootstrap credentials in your Control Plane YAML before you deploy.
+
+There is no in-place upgrade from **v3.7** field deployments. See [Migrating to v3.8.0](/migrating-to-v3-8).
+
+:::
+
+:::tip[New to {CLI_NAME}?]
+
+Download and install **<CliName />** from the <CliDocsLink path="/download">download page</CliDocsLink> before continuing.
+
+:::
+
+:::tip[Deployed a local ECN first?]
+
+Try the [Quick Start Guide](/getting-started/quick-start-local) before this guide. It covers the same <CliName /> workflows on a single machine.
+
+:::
+
+# Introduction
+
+An **Edge Compute Network (ECN)** has two main parts: a **Control Plane** (Controller, Router, optional NATS) and **Edgelet nodes** at the edge.
+
+<CliName /> deploys and manages both from YAML manifests. This guide walks through a distributed ECN on remote hosts or a Kubernetes cluster.
+
+For architecture context, see [Architecture](/getting-started/architecture).
+
+## Deployment path
+
+Follow these steps in order:
+
+1. **[Embedded OIDC](/platform-deployment/embedded-oidc)** - Set `auth.mode: embedded` and bootstrap credentials in your Control Plane YAML. For a corporate IdP, see [External OIDC](/platform-deployment/external-oidc).
+2. **[Prepare your network](/platform-deployment/prepare-your-network)** - Open firewall ports for Controller, Router, NATS, and EdgeOps Console.
+3. **[Prepare remote hosts](/platform-deployment/prepare-your-remote-hosts)** - SSH keys and passwordless sudo for <CliName />.
+4. **Deploy the Control Plane** - Choose [remote](/platform-deployment/remote-control-plane) or [Kubernetes](/platform-deployment/kubernetes-prepare-cluster) (<CliName /> or [Helm](/platform-deployment/kubernetes-helm)).
+5. **[Setup Edgelet nodes](/platform-deployment/setup-your-agents)** - Install Edgelet **v1.0.0** on edge hosts (pair with Controller **v3.8.0**).
+
+## Deployment options
+
+### Remote Control Plane
+
+Deploy the Controller on one or more Linux hosts over SSH. Prepare the Controller host and each Edgelet node host. See [Remote Control Plane](/platform-deployment/remote-control-plane).
+
+### Kubernetes Control Plane
+
+Deploy the Controller, Operator, Router, and NATS on a Kubernetes cluster. You only need remote hosts for Edgelet nodes. Start at [Kubernetes - Prepare A Cluster](/platform-deployment/kubernetes-prepare-cluster).
+
+## Air-gapped networks
+
+For hosts that cannot reach the internet or container registries, see [Airgap Deployment](/platform-deployment/airgap-deployment). That page covers Edgelet image bundles, multi-arch offline transfer, and [OfflineImage](/yaml-references/reference-offlineimage) for microservice images.
+
+:::tip[Where to go from here?]
+
+Start with [Embedded OIDC Authentication](/platform-deployment/embedded-oidc), then [Prepare your network](/platform-deployment/prepare-your-network).
+
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

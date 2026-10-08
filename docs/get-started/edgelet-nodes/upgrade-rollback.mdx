@@ -1,0 +1,83 @@
+---
+title: Edgelet Upgrade and Rollback
+description: Upgrade and rollback Edgelet nodes with upgrade agent and rollback agent. Controller-driven OTA versus redeploy with package.version.
+keywords: [edgelet upgrade, rollback, ota, edgelet node, v3.9]
+slug: /get-started/edgelet-nodes/upgrade-rollback
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME, EDGELET_VERSION, PLATFORM_TRAIN } from '@site/src/config/distribution';
+
+# Upgrade and rollback
+
+{CLI_NAME} upgrades **Edgelet nodes** to the version the Controller expects and can roll back to the previous release on the host.
+
+Platform train **v{PLATFORM_TRAIN}** requires **Edgelet v{EDGELET_VERSION}+** on every node.
+
+## Upgrade from the orchestrator
+
+<CliBlock>{`{{CLI_NAME}} upgrade agent zebra-1`}</CliBlock>
+
+Optional target pin:
+
+<CliBlock>{`{{CLI_NAME}} upgrade agent zebra-1 --semver {{EDGELET_VERSION}}`}</CliBlock>
+
+The Controller schedules an **asynchronous** upgrade on the node. Poll status with **`describe agent`** (`isReadyToUpgrade`, version fields). Upgrade can take several minutes.
+
+Verify:
+
+<CliBlock>{`{{CLI_NAME}} get agents
+{{CLI_NAME}} describe agent zebra-1`}</CliBlock>
+
+If the version does not change, check logs on the host:
+
+```bash
+sudo journalctl -u edgelet -n 100 --no-pager
+tail -f /var/log/edgelet/daemon-startup.log
+```
+
+### Upgrade vs redeploy
+
+| Path | When to use |
+| ---- | ----------- |
+| **`upgrade agent`** | Node already enrolled; Controller-driven OTA to the expected train version |
+| **`deploy -f`** with new **`spec.package.version`** or image | Re-run bootstrap install path (for example major jump, broken OTA, or host repair) |
+
+Greenfield migration from legacy Java Agent to Edgelet requires new nodes, not in-place upgrade. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+## Rollback from the orchestrator
+
+<CliBlock>{`{{CLI_NAME}} rollback agent zebra-1`}</CliBlock>
+
+Rollback uses the previous release recorded on the node during the last successful upgrade.
+
+## On-host OTA (linux)
+
+Fleet upgrades on linux use **two layers** (thin binary + fat embed). Operators may also run:
+
+```bash
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v{EDGELET_VERSION}
+sudo sh /usr/share/edgelet/install.sh --rollback
+```
+
+See [Edgelet installation](/learn/edgelet/installation) for airgap, controller-driven OTA, and runtime split restart order.
+
+## Workload impact
+
+| Action | Typical workload impact |
+| ------ | ----------------------- |
+| Thin binary upgrade | Brief control-plane restart; MS may survive with runtime split |
+| Fat bundle upgrade | Restart `edgelet-containerd` then `edgelet`; reconcile recreates MS |
+| `rollback agent` | Same as upgrade path in reverse |
+
+See [Workload continuity](/learn/edgelet/workload-continuity) for embedded engine restart ordering.
+
+## See also
+
+- [{CLI_NAME} upgrade agent](/reference/cli/potctl/potctl_upgrade) - CLI reference
+- [Edgelet installation](/learn/edgelet/installation) - `install.sh` and OTA receipts
+- [Persistence](/learn/edgelet/persistence) - backup before major upgrades
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

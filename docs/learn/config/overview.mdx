@@ -1,0 +1,81 @@
+---
+title: Configuration
+description: Declare registries, catalogs, models, secrets, certificates, and volumes before the microservice that names them.
+keywords: [configuration, registry, catalog item, model, knowledge, secret, config map, certificate, volume, offline image]
+slug: /learn/config
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Configuration
+
+These objects are created before the microservice that names them. Deploy each file with <CliName /> `deploy -f`. There is no `apply`.
+
+The short map is [Registries and catalog](/get-started/workloads/registries), [Models and knowledge](/get-started/workloads/models-and-knowledge), and [Config, secrets, and volumes](/get-started/workloads/config). This section is how each object is declared, updated, and consumed. Field tables sit on the fields page beside each guide.
+
+## Objects
+
+| Object | Kind | Consumed by |
+| ------ | ---- | ----------- |
+| [Registry](/learn/config/registries) | `Registry` | Catalog items, models, knowledge, and image pulls. Built-in aliases: `remote` is id 1, `local` is id 2. |
+| [Catalog item](/learn/config/catalog-microservices) | `CatalogItem` | Microservice `images.catalogId` or catalog name. Multi-arch image set. |
+| [Model](/learn/config/ai-model-catalog) | `Model` | Attach to Edgelet nodes, then `spec.models` on the microservice. |
+| [Knowledge](/learn/config/ai-knowledge-catalog) | `Knowledge` | Attach, then `spec.knowledge`. |
+| [Runtime class](/learn/config/runtime-classes) | `RuntimeClass` | Attach, then `container.runtime` on the microservice. |
+| [Config map](/learn/config/config-maps) | `ConfigMap` | `valueFromConfigMap`, or a volume mount. |
+| [Secret](/learn/config/secrets) | `Secret` | `valueFromSecret`, or a volume mount. |
+| [Certificate authority](/learn/config/certificate-authorities) | `CertificateAuthority` | Signs leaf certificates. Router and NATS site CAs on control plane deploy are a different path. See [Securing the cluster](/learn/security/securing-cluster). |
+| [Certificate](/learn/config/certificates) | `Certificate` | Leaf cert signed by a CA, or `ca.type: self-signed` on the leaf. |
+| [Volume](/learn/config/volumes) | `Volume` | Stages a directory from the operator machine onto nodes. Microservice `type: volume`. The CLI stores the record in namespace config. It is not a Controller API object. |
+| [Volume mount](/learn/config/volume-mounts) | `VolumeMount` | Attaches a Secret or ConfigMap onto nodes. Microservice `type: volumeMount`. |
+| [Offline image](/learn/config/offline-images) | `OfflineImage` | Pulls on the operator machine, copies to remote nodes, and upserts a catalog item on registry id 2. Re-running deploy repeats the transfer. It is not a long-lived Controller object. |
+
+A Controller `kind: Registry` registers a pull endpoint with the Controller API. The Edgelet host registry uses `edgelet.iofog.org/v1`. That manifest is on [Manifests](/learn/edgelet/manifests).
+
+A Volume lists Edgelet nodes in its own spec. Attach applies to the volume mount, the model, the knowledge object, and the runtime class.
+
+## Deploy order
+
+When one file holds several documents, <CliName /> sorts them by kind. Write the file in an order a person can read. The CLI still uses its own kind order.
+
+```text
+Secret, CertificateAuthority, Certificate, ConfigMap
+Agent or LocalAgent
+Volume, OfflineImage, VolumeMount
+Registry, Model, Knowledge, RuntimeClass, CatalogItem
+Application, Microservice
+```
+
+- Put the Secret and the ConfigMap before the volume mount, and before microservice env that names them.
+- Put the CertificateAuthority before the Certificate.
+- Enroll Edgelet nodes before a Volume, an OfflineImage, or `attach`.
+- Put the Registry before a Model, Knowledge, or standalone CatalogItem. OfflineImage registers the catalog row on registry id 2 itself.
+- Put the catalog item or the offline image before the microservice that uses that image.
+
+## Order of operations checklist {#order-of-operations-checklist}
+
+1. Registry and catalog item, or an offline image, before the microservice image.
+2. Attach the model, the knowledge object, the runtime class, and the volume mount before the microservice that binds them.
+3. Secret and ConfigMap before the volume mount that names them.
+
+Skipping attach is a common cause of `lastError` on `describe microservice`. See [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
+
+## Console
+
+| Console | Objects |
+| ------- | ------- |
+| [Catalog and templates](/get-started/edgeops-console/catalog-and-templates) | Registries, catalog microservices, AI Model Catalog, AI Knowledge Catalog |
+| [Configuration](/get-started/edgeops-console/configuration) | Config maps, secrets, certificates, volume mounts, runtime classes |
+
+Offline images and Volumes are CLI flows. The console chapter has no screen for those two kinds. After an offline image deploy, the catalog row appears under Catalog Microservices.
+
+Application and microservice templates are workload objects. See [Application templates](/learn/workloads/application-templates) and [Microservice templates](/learn/workloads/microservice-templates).
+
+## Related
+
+- [Workloads](/learn/workloads)
+- [Edgelet nodes](/learn/edgelet-nodes)
+- [Securing the cluster](/learn/security/securing-cluster)
+
+<EditPageAdmonition />

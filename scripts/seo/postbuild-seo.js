@@ -7,12 +7,19 @@ const fs = require('fs');
 const path = require('path');
 const {
   SITE_URL,
+  DOCS_BASE_PATH,
   CLI_NAME,
   PRODUCT_NAME,
   docLink,
   loadDocContent,
 } = require('./doc-utils');
-const { LLMS_FULL_DOC_IDS } = require('./llms-config');
+
+function sitePath(pathname) {
+  const base = DOCS_BASE_PATH.replace(/\/$/, '');
+  const pathPart = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${SITE_URL}${base}${pathPart}`;
+}
+const { listLlmsFullDocIds } = require('./llms-config');
 const {
   isLegacyDocPath,
   isUtilityPath,
@@ -22,124 +29,83 @@ const {
   sitemapPriorityForUrl,
 } = require('./sitemap-utils');
 
-const BUILD_DIR = path.join(__dirname, '..', '..', 'build');
+const BUILD_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  process.env.DOCUSAURUS_BUILD_DIR ?? 'build',
+);
 const SITEMAP_PATH = path.join(BUILD_DIR, 'sitemap.xml');
 
 /** @returns {Array<{ heading: string, entries: Array<{ docId: string, title?: string, note?: string, url?: string }> }>} */
 function getLlmsSections() {
-  const cli = CLI_NAME;
   return [
     {
-      heading: 'Home and getting started',
+      heading: 'Get started',
       entries: [
-        { docId: 'home/welcome', title: 'Welcome' },
-        { docId: 'home/whats-new', title: "What's New" },
-        { docId: 'home/migrating-to-v3-8', title: 'Migrating to v3.8.0' },
-        { docId: 'getting-started/core-concepts', title: 'Core Concepts' },
-        { docId: 'getting-started/architecture', title: 'Architecture' },
-        {
-          docId: 'getting-started/quick-start-local',
-          title: 'Quick Start With Local Deployment',
-        },
+        { docId: 'get-started/welcome' },
+        { docId: 'get-started/core-concepts' },
+        { docId: 'get-started/architecture' },
+        { docId: 'get-started/quick-start-local' },
+        { docId: 'get-started/deploy/introduction' },
+        { docId: 'get-started/deploy/embedded-oidc' },
+        { docId: 'get-started/deploy/external-oidc' },
+        { docId: 'get-started/edgelet-nodes/introduction' },
+        { docId: 'get-started/workloads/overview' },
+        { docId: 'get-started/cli/introduction' },
+        { docId: 'get-started/edgeops-console/shell' },
+        { docId: 'get-started/edgeops-console/hosting' },
       ],
     },
     {
-      heading: 'Platform deployment',
+      heading: 'Learn',
       entries: [
-        { docId: 'platform-deployment/introduction' },
-        { docId: 'platform-deployment/embedded-oidc', title: 'Embedded OIDC Authentication' },
-        { docId: 'platform-deployment/external-oidc', title: 'External OIDC Authentication' },
-        { docId: 'platform-deployment/setup-your-agents', title: 'Setup Edgelet Nodes' },
-        { docId: 'platform-deployment/airgap-deployment', title: 'Airgap Deployment' },
-      ],
-    },
-    {
-      heading: 'Edgelet node management',
-      entries: [
-        { docId: 'edgelet-management/introduction' },
-        { docId: 'edgelet-management/configuration-updates' },
-        { docId: 'edgelet-management/attach-detach' },
-        { docId: 'edgelet-management/upgrade-rollback' },
-      ],
-    },
-    {
-      heading: 'Edgelet',
-      entries: [
-        { docId: 'edgelet/introduction' },
-        { docId: 'edgelet/installation' },
-        { docId: 'edgelet/configuration' },
-        { docId: 'edgelet/troubleshooting' },
-        { docId: 'edgelet/cli/index', title: 'Edgelet CLI Reference' },
-      ],
-    },
-    {
-      heading: 'EdgeOps Console',
-      entries: [
-        { docId: 'edgeops-console/introduction' },
-        { docId: 'edgeops-console/features' },
-        { docId: 'edgeops-console/configuration' },
-      ],
-    },
-    {
-      heading: 'Controller',
-      entries: [
-        { docId: 'reference-controller/overview' },
-        { docId: 'reference-controller/configuration' },
-        { docId: 'reference-controller/rest-api' },
-      ],
-    },
-    {
-      heading: 'YAML references',
-      entries: [
-        { docId: 'yaml-references/reference-kinds', title: 'YAML Kinds' },
-        { docId: 'yaml-references/reference-control-plane' },
-        { docId: 'yaml-references/reference-agent', title: 'Agent (Edgelet node)' },
-        { docId: 'yaml-references/reference-application' },
-        { docId: 'yaml-references/reference-nats-account-rule' },
-        { docId: 'yaml-references/reference-nats-user-rule' },
-      ],
-    },
-    {
-      heading: 'Platform components',
-      entries: [
-        { docId: 'platform-components/README', title: 'Platform Components' },
-        { docId: 'platform-components/operator' },
-        { docId: 'platform-components/router' },
-        { docId: 'platform-components/nats-server' },
-        { docId: 'platform-components/sdk/overview', title: 'ioFog Go SDK' },
-      ],
-    },
-    {
-      heading: 'Applications',
-      entries: [
-        { docId: 'applications/introduction' },
-        { docId: 'applications/application-templates' },
-        { docId: 'applications/microservice-lifecycle-management' },
-      ],
-    },
-    {
-      heading: 'Security',
-      entries: [
-        { docId: 'security/introduction', title: 'Securing Cluster' },
-        { docId: 'security/roles' },
-        { docId: 'security/nats-user-rule' },
-        { docId: 'security/nats-jwt-authentication' },
+        { docId: 'learn/overview' },
+        { docId: 'learn/control-plane/overview' },
+        { docId: 'learn/edgelet-nodes/overview' },
+        { docId: 'learn/edgelet/overview', title: 'Get to know Edgelet' },
+        { docId: 'learn/workloads/overview' },
+        { docId: 'learn/config/overview' },
+        { docId: 'learn/network/overview' },
+        { docId: 'learn/message-bus/overview' },
+        { docId: 'learn/access-control/overview' },
+        { docId: 'learn/security/securing-cluster' },
+        { docId: 'learn/platform-components/overview' },
+        { docId: 'learn/operate/overview' },
+        { docId: 'learn/operate/node-debugging', title: 'Node logs and exec' },
       ],
     },
     {
       heading: 'Tutorials',
       entries: [
+        { docId: 'tutorials/overview', title: 'Learn by example' },
+        { docId: 'tutorials/edge-ai-wafer-defect/overview', title: 'Edge AI wafer defect' },
         { docId: 'tutorials/acme-smart-plant/overview', title: 'Acme Smart Plant' },
-        { docId: 'tutorials/acme-smart-plant/runbook', title: 'Acme Smart Plant Runbook' },
       ],
     },
     {
-      heading: 'CLI and microservices',
+      heading: 'Reference',
       entries: [
-        { docId: `${cli}/introduction` },
-        { docId: `${cli}/download` },
-        { docId: `${cli}/cli/${cli}`, title: `${cli} CLI Reference` },
-        { docId: 'developing-microservices/overview' },
+        { docId: 'reference/overview' },
+        { docId: 'reference/documentation-archive' },
+        { docId: 'reference/controller/controller-config' },
+        { docId: 'reference/cli/edgelet/index', title: 'Edgelet CLI' },
+        {
+          docId: `reference/cli/${CLI_NAME}/${CLI_NAME}`,
+          title: `${CLI_NAME} CLI`,
+        },
+      ],
+    },
+    {
+      heading: 'Release notes',
+      entries: [
+        { docId: 'release-notes/index', title: 'Release notes' },
+        { docId: 'release-notes/whats-new' },
+        { docId: 'release-notes/upgrading-to-v3-9' },
+        {
+          docId: 'release-notes/migrating-to-v3-8',
+          note: 'Greenfield move from v3.7.',
+        },
       ],
     },
     {
@@ -147,26 +113,32 @@ function getLlmsSections() {
       entries: [
         {
           docId: '__url__',
-          title: 'Controller REST API (OpenAPI)',
-          note: 'Interactive Controller API docs (v3.8.0).',
-          url: `${SITE_URL}/api/controller`,
+          title: 'Controller API',
+          note: 'Interactive Controller API docs (v3.9.0).',
+          url: sitePath('/api/v3.9.0/controller'),
         },
         {
           docId: '__url__',
-          title: 'Edgelet API (OpenAPI)',
-          note: 'Interactive Edgelet API docs (v1.0.0).',
-          url: `${SITE_URL}/api/edgelet`,
+          title: 'Edgelet API',
+          note: 'Interactive Edgelet API docs (v1.1.0).',
+          url: sitePath('/api/v1.1.0/edgelet'),
         },
       ],
     },
     {
-      heading: 'Legacy documentation snapshot',
+      heading: 'Older docs',
       entries: [
         {
           docId: '__url__',
+          title: 'v3.8.0 docs snapshot',
+          note: 'Previous supported train.',
+          url: sitePath('/v3.8.0/'),
+        },
+        {
+          docId: '__url__',
           title: 'v3.7.3 docs snapshot',
-          note: 'Frozen legacy docs (Java Agent, ECN Viewer, Keycloak-first deployment). Not current for v3.8.0.',
-          url: `${SITE_URL}/v3.7.3/`,
+          note: 'Frozen (Java Agent, ECN Viewer, Keycloak-first). Not the current train.',
+          url: sitePath('/v3.7.3/'),
         },
       ],
     },
@@ -185,7 +157,11 @@ function splitSitemap() {
   const legacy = [];
 
   for (const item of items) {
-    const pathname = item.url.replace(SITE_URL, '').replace(/\/$/, '') || '/';
+    const pathname =
+      item.url
+        .replace(SITE_URL, '')
+        .replace(new RegExp(`^${DOCS_BASE_PATH.replace(/\/$/, '')}(?=\\/|$)`), '')
+        .replace(/\/$/, '') || '/';
     if (isUtilityPath(pathname)) {
       continue;
     }
@@ -210,13 +186,17 @@ function splitSitemap() {
     path.join(BUILD_DIR, 'sitemap-legacy.xml'),
     sitemapItemsToXml(legacy),
   );
+  const sitemapPrefix = DOCS_BASE_PATH.replace(/\/$/, '') || '';
   fs.writeFileSync(
     SITEMAP_PATH,
-    sitemapIndexXml(SITE_URL, ['/sitemap-current.xml', '/sitemap-legacy.xml']),
+    sitemapIndexXml(SITE_URL, [
+      `${sitemapPrefix}/sitemap-current.xml`,
+      `${sitemapPrefix}/sitemap-legacy.xml`,
+    ]),
   );
 
   console.log(
-    `postbuild-seo: sitemap split — current=${current.length}, legacy=${legacy.length}`,
+    `postbuild-seo: sitemap split - current=${current.length}, legacy=${legacy.length}`,
   );
 }
 
@@ -240,16 +220,15 @@ function generateLlmsTxt() {
   const lines = [
     `# ${PRODUCT_NAME} Documentation`,
     '',
-    '> Official docs for PoT platform train v3.8.0. Greenfield release: Edgelet nodes, EdgeOps Console, Controller with embedded OIDC, and containerized edge workloads.',
+    '> Official docs for platform train v3.9.0. In-place upgrade from v3.8.0. A move from v3.7 field deployments is greenfield.',
     '',
-    `${PRODUCT_NAME} (Platform of Things) is an enterprise open-source fog and distributed edge computing platform. You deploy a Control Plane on Kubernetes or remote hosts, connect **Edgelet nodes** at the edge, and run containerized microservices across heterogeneous hardware.`,
+    'Deploy a Control Plane on Kubernetes or remote hosts, connect Edgelet nodes, and run containerized microservices.',
     '',
-    '**v3.8.0 is a greenfield release.** There is no in-place upgrade from v3.7 field deployments. You need a new Controller database, **Edgelet v1.0.0+** on every node, and **' +
-      `${CLI_NAME} v3.8.0**. Legacy Java iofog-agent and v3.7 field agents are not supported on Controller v3.8.`,
+    `v3.9.0 upgrades in place from v3.8.0. A move from v3.7 needs a new Controller database, Edgelet v1.1.0 on every node, and ${CLI_NAME} v3.9.0. Legacy Java iofog-agent and v3.7 field agents are not supported on this Controller.`,
     '',
-    'The v3.8 web UI is **EdgeOps Console** (embedded in the Controller image). Authentication defaults to **embedded OIDC** in the Control Plane.',
+    'The web UI is EdgeOps Console, embedded in the Controller image. Authentication defaults to embedded OIDC.',
     '',
-    'Full inline corpus: [llms-full.txt](' + `${SITE_URL}/llms-full.txt` + ').',
+    `Full corpus: [llms-full.txt](${sitePath('/llms-full.txt')}).`,
     '',
   ];
 
@@ -270,16 +249,13 @@ function generateLlmsTxt() {
 
 function generateLlmsFullTxt() {
   const blocks = [
-    `# ${PRODUCT_NAME} Documentation (full corpus excerpt)`,
+    `# ${PRODUCT_NAME} Documentation (full corpus)`,
     '',
-    `> Priority v3.8.0 pages from ${SITE_URL}. Generated at build time.`,
+    '> Full text of the current v3.9.0 guides. Generated at build time. CLI command pages and OpenAPI specs are linked from llms.txt.',
     '',
   ];
 
-  const cliIntroId = `${CLI_NAME}/introduction`;
-  const docIds = LLMS_FULL_DOC_IDS.includes('potctl/introduction')
-    ? LLMS_FULL_DOC_IDS.map((id) => (id === 'potctl/introduction' ? cliIntroId : id))
-    : LLMS_FULL_DOC_IDS;
+  const docIds = listLlmsFullDocIds();
 
   for (const docId of docIds) {
     const page = loadDocContent(docId);
@@ -306,4 +282,10 @@ function main() {
   generateLlmsFullTxt();
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  getLlmsSections,
+};

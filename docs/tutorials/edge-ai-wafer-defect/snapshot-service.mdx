@@ -1,0 +1,65 @@
+---
+title: Snapshot service
+description: Create the snapshot-service Router bridge so the inspection gallery has an HTTP address.
+keywords: [tutorial, edge ai, snapshot-service, service, router, gallery]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Snapshot service
+
+## Goal
+
+Create `kind: Service` for the gallery. snapshot-service is already deployed on **ops-b** and listens on external port **8083**.
+
+The file is `deploy/steps/14-service-snapshot.yaml`.
+
+## YAML
+
+<FlavorYaml title="snapshot-service">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: snapshot-service
+  tags:
+    - pot-edge-patterns
+spec:
+  type: microservice
+  resource: vision-inspection/snapshot-service
+  targetPort: 8083
+  defaultBridge: default-router
+```
+
+</FlavorYaml>
+
+`targetPort` is the Edgelet external port, not container port 8080. Tag **ops-b** with `service.iofog.org/tag: pot-edge-patterns` when that node should open the listener. See [Distribution tags](/learn/network/distribution).
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/14-service-snapshot.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} describe service snapshot-service`}</CliBlock>
+
+`resource` is `vision-inspection/snapshot-service`, and `bridgePort` is set. Copy that port. The verify page opens the gallery with it.
+
+```text
+http://router.default.svc.bridge.local:<snapshot-bridge-port>/
+```
+
+## Common mistakes
+
+`targetPort` is 8080. Use **8083**.
+
+The Service is created before the snapshot-service microservice exists.
+
+## Next
+
+[Verify](/tutorials/edge-ai-wafer-defect/verify)
+
+<EditPageAdmonition />

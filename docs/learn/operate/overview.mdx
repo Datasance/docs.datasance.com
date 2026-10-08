@@ -1,0 +1,78 @@
+---
+title: Operate
+description: Day-2 management with EdgeOps Console and potctl or iofogctl. Deploy, describe, attach, logs, exec, and platform train upgrades.
+keywords: [operate, edgeops console, cli, day-2, control plane, edgelet nodes]
+slug: /learn/operate
+---
+
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
+# Operate
+
+**Operate** guides cover day-2 tasks after cluster resources exist: deploy updates, inspect status, move nodes, stream logs, open exec sessions, and roll the platform train forward.
+
+Each **Configure** page includes a short **Operate this resource** section with Console paths and common CLI verbs. Use this hub when you need end-to-end walkthroughs.
+
+## Prerequisites
+
+Before you operate an ECN:
+
+1. Install **{CLI_NAME}** matching your platform train (see the [{CLI_NAME} download page](/get-started/cli/download)).
+2. **Connect** to the control plane or deploy a new one. See [Control plane](/learn/control-plane).
+3. Sign in to **EdgeOps Console** with the same OIDC identity as the CLI. Open it with [<code>{CLI_NAME} view</code>](/reference/cli/potctl/potctl_view) or your `controller.consoleUrl`.
+
+Namespaces scope every command. Use `-n` or [<code>{CLI_NAME} configure current-namespace</code>](/reference/cli/potctl/potctl_configure) when you work outside `default`.
+
+## Console and CLI together
+
+| Tool | Best for |
+| ---- | -------- |
+| **EdgeOps Console** | Fleet visibility, YAML edits with validation, exec and logs in the browser, audit events |
+| **{CLI_NAME}** | First control plane install, Edgelet provisioning over SSH, automation, CI pipelines |
+
+Console menu labels match the **Configure** sidebar: **Platform**, **Nodes**, **Workloads**, **Config**, **Network**, **Message bus**, and **Access control**. The dashboard summarizes ECN health before you drill into a section.
+
+Initial control plane deploy and Edgelet node install are CLI-only. After resources exist, Console and CLI share the same Controller REST API and RBAC rules.
+
+## Operate guides
+
+Guides follow the same order as **Configure**:
+
+| Area | Guide | Configure reference |
+| ---- | ----- | ------------------- |
+| Control plane | [Control plane](/learn/control-plane) | [Control plane](/learn/control-plane) |
+| Edgelet nodes | [Lifecycle](/learn/edgelet-nodes/lifecycle) | [Edgelet nodes](/learn/edgelet-nodes) |
+| Workloads | [Workloads](/learn/workloads) | [Applications](/learn/workloads/applications), [Microservices](/learn/workloads/microservices) |
+| Configuration | [Configuration](/learn/config) | Registries, secrets, catalogs, and related objects |
+| Network and messaging | [Network](/learn/network), [Message bus](/learn/message-bus) | [Services](/learn/network/services), [Account rules](/learn/message-bus/account-rules), [User rules](/learn/message-bus/user-rules) |
+| Access control | [Access control](/learn/access-control) | Roles, bindings, and service accounts. Bus subjects are on [Message bus](/learn/message-bus). |
+| Observe and troubleshoot | [Observe and troubleshoot](/learn/operate/observe-troubleshoot) | [Edgelet troubleshooting](/learn/edgelet/troubleshooting), Controller logs |
+| Node logs and exec | [Node logs and exec](/learn/operate/node-debugging) | `logs agent` and `exec agent` |
+
+For production install paths before day-2 work, start at [Platform deployment](/get-started/deploy/introduction) or [Quick start (local)](/get-started/quick-start-local).
+
+## Typical workflows
+
+### Stand up a new ECN
+
+1. Author control plane YAML ([Configure control plane](/learn/control-plane)).
+2. [<code>{CLI_NAME} deploy -f controlplane.yaml</code>](/reference/cli/potctl/potctl_deploy).
+3. [<code>{CLI_NAME} view</code>](/reference/cli/potctl/potctl_view) and sign in to Console.
+4. Deploy fleet Edgelet nodes with `kind: Agent` YAML ([Edgelet nodes](/learn/edgelet-nodes)).
+
+### Join an existing ECN
+
+1. [<code>{CLI_NAME} connect</code>](/reference/cli/potctl/potctl_connect) with a minimal control plane manifest or flags.
+2. Confirm with [<code>{CLI_NAME} describe controlplane</code>](/reference/cli/potctl/potctl_describe_controlplane).
+3. Use Console or CLI for workloads and config.
+
+### Move the platform train (v3.8 → v3.9)
+
+Stay on one train across Controller, Operator, Router, NATS, **{CLI_NAME}**, and Edgelet. High-level steps live in [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train) and [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet). Release notes and breaking YAML changes are in [What's New](/release-notes/whats-new).
+
+## Related
+
+- [Learn overview](/learn)
+- [{CLI_NAME} getting familiar](/get-started/cli/getting-familiar) - `get`, `describe`, namespaces
+- [EdgeOps Console features](/get-started/edgeops-console) - UI parity with the CLI
+- [Cluster resources index](/reference)

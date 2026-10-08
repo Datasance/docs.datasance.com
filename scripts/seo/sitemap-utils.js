@@ -17,6 +17,16 @@ function isUtilityPath(path) {
 }
 
 /**
+ * Exact path or a child path. Avoids prefix collisions such as
+ * `/reference` matching `/reference-controller`.
+ * @param {string} path
+ * @param {string} prefix
+ */
+function isPathOrChild(path, prefix) {
+  return path === prefix || path.startsWith(`${prefix}/`);
+}
+
+/**
  * @param {string} url
  * @param {string} siteUrl
  * @returns {number | null}
@@ -30,22 +40,20 @@ function sitemapPriorityForUrl(url, siteUrl) {
   if (path === '/' || path === '') {
     return 1.0;
   }
-  if (path.includes('migrating-to-v3-8') || path.startsWith('/getting-started')) {
+  if (isPathOrChild(path, '/get-started') || isPathOrChild(path, '/release-notes')) {
     return 0.9;
   }
-  if (path.startsWith('/tutorials')) {
+  if (isPathOrChild(path, '/learn')) {
+    return 0.88;
+  }
+  if (isPathOrChild(path, '/reference')) {
+    return 0.86;
+  }
+  if (isPathOrChild(path, '/tutorials')) {
     return 0.85;
   }
-  if (path.startsWith('/yaml-references') || path.startsWith('/api')) {
+  if (isPathOrChild(path, '/api')) {
     return 0.8;
-  }
-  if (
-    path.startsWith('/reference-controller') ||
-    path.startsWith('/edgelet') ||
-    path.startsWith('/edgelet-management') ||
-    path.startsWith('/platform-deployment')
-  ) {
-    return 0.75;
   }
   if (isLegacyDocPath(path)) {
     return 0.2;

@@ -1,0 +1,142 @@
+---
+title: Applications
+description: kind Application groups microservices, holds NATS account policy, and can instantiate an application template.
+keywords: [application, yaml, nats, template, deploy, microservice, v3.9]
+slug: /learn/workloads/applications
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Applications
+
+An **application** is a named group of microservices on the Controller. It is the unit you start and stop together. NATS account policy lives on the application. The application can also instantiate an [application template](/learn/workloads/application-templates).
+
+Every user microservice belongs to exactly one application name. System workloads use `system-<agentName>` applications the Controller creates. Inspect those with `get system-applications` and `get system-microservices`. See [Networking](/learn/edgelet-nodes/networking). You do not deploy them as user `kind: Application` documents.
+
+Field tables are on [Application fields](/reference/yaml/application).
+
+## When to use it
+
+| Approach | Use it when |
+| -------- | ----------- |
+| `spec.microservices` on the application | The app is small and one file should create the group and its services. |
+| Application plus separate `kind: Microservice` documents | Each service has its own lifecycle. CLI names stay `application/microservice`. |
+| `spec.template` | The same layout is deployed many times from an [application template](/learn/workloads/application-templates). |
+| Microservice only | The application already exists and you are adding a service. |
+
+A standalone microservice still needs `spec.application`, or a `metadata.name` that already contains `/`.
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f application.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> parses the spec, looks up the application by name, then creates or updates it. After create or update, the Controller starts the application.
+
+Inline `spec.microservices` travel with the application document. A separate `kind: Microservice` in the same file is deployed on the microservice path.
+
+Deploy the same `metadata.name` again to update. An update does not delete microservices that you removed from `spec.microservices`. Check `get microservices` and `describe` after the deploy.
+
+## NATS at application and microservice level {#nats-at-application-and-microservice-level}
+
+`natsAccess` and `natsRule` sit under `natsConfig`. A top-level `natsAccess` is rejected.
+
+Set `spec.natsConfig.natsAccess: true` on the application before any microservice in that application sets `natsConfig.natsAccess: true`. Omit `natsRule` and the Controller uses the `default-account` account rule. A named rule must already exist. See [NATS account rules](/learn/message-bus/account-rules).
+
+What the Controller does after the flag is on (account JWT, resolver, microservice users) is [NATS access](/learn/workloads/nats-access). Per-service users are on the same pages and under [Microservice fields](/reference/yaml/microservice).
+
+## Examples
+
+### From a template
+
+The template `edge-app-template` is on [Application templates](/learn/workloads/application-templates). This file only supplies the name and the variable values.
+
+<FlavorYaml title="from-template.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: shop
+  namespace: my-ecn
+spec:
+  template:
+    name: edge-app-template
+    variables:
+      - key: agent-name
+        value: edge-01
+      - key: external-port
+        value: 9090
+      - key: application-name
+        value: shop
+  natsConfig:
+    natsAccess: false
+```
+
+</FlavorYaml>
+
+You can still add `microservices` for services that are not in the template.
+
+### Inline microservices
+
+One file creates the application and a WASM service on Edgelet node `edge-01`. The runtime handler `spin` must already be available on that node. See [Runtime classes](/learn/config/runtime-classes).
+
+<FlavorYaml title="wasm-inline-microservices.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: wasm
+  namespace: my-ecn
+spec:
+  microservices:
+    - name: wasm
+      agent:
+        name: edge-01
+      images:
+        registry: remote
+        amd64: ghcr.io/spinframework/containerd-shim-spin/examples/spin-rust-hello:v0.22.0
+        arm64: ghcr.io/spinframework/containerd-shim-spin/examples/spin-rust-hello:v0.22.0
+      container:
+        hostNetworkMode: false
+        isPrivileged: false
+        platform: wasi/wasm
+        runtime: spin
+        ports:
+          - internal: 80
+            external: 8080
+            protocol: tcp
+        commands:
+          - "/"
+```
+
+</FlavorYaml>
+
+Each inline entry uses the same fields as [Microservice fields](/reference/yaml/microservice).
+
+## Commands
+
+<CliBlock>{`{{CLI_NAME}} get applications -n my-ecn
+{{CLI_NAME}} describe application myapp -n my-ecn
+{{CLI_NAME}} start application myapp -n my-ecn
+{{CLI_NAME}} stop application myapp -n my-ecn
+{{CLI_NAME}} delete application myapp -n my-ecn`}</CliBlock>
+
+Deleting an application removes its microservices. `delete application` does not remove system applications.
+
+Running apps are in [EdgeOps Console → Workloads](/get-started/edgeops-console/workloads). Container logs and shells are on [Logs and exec](/learn/workloads/debugging).
+
+## Related
+
+- [Application fields](/reference/yaml/application)
+- [Microservices](/learn/workloads/microservices)
+- [Application templates](/learn/workloads/application-templates)
+- [NATS access](/learn/workloads/nats-access)
+- [Applications and microservices](/get-started/workloads/applications)
+
+<EditPageAdmonition />

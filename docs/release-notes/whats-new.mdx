@@ -1,0 +1,152 @@
+---
+title: What's New
+description: PoT v3.9.0 release highlights. AI Model and Knowledge catalogs, OCI and Hugging Face registries, microservice container fields, NATS 2.15, Edgelet 1.1, and EdgeOps Console 1.1.
+keywords: [pot v3.9, release notes, whats new, ai model catalog, knowledge catalog, edgelet 1.1, nats 2.15, upgrade]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# What's New in <ProductName />
+
+:::info[Upgrade from v3.8.0]
+
+**v3.9.0** is an in-train upgrade on the same Controller database. Bump control plane image tags, roll **Edgelet v1.1.0** on nodes, and upgrade **<CliName />** to **v3.9.0**.
+
+See [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9). **v3.7.x and older** still require a greenfield move to **v3.8.0** first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+:::
+
+Platform train **v3.9.0** ships **Controller v3.9.0**, **{CLI_NAME} v3.9.0**, **Edgelet v1.1.0**, **EdgeOps Console v1.1.0**, **ioFog Operator v3.9.0**, and updated **Router** and **NATS** wrapper images. Pair every component on the same train.
+
+- [Platform train v3.9.0](#platform-train-v390) pins Controller, Edgelet, Console, and messaging wrappers for in-place upgrades from v3.8.
+- [**AI Model Catalog**](#ai-model-and-knowledge-catalogs) stores fleet LLM weights from Hugging Face Hub or OCI artifacts. Attach to Edgelet nodes and bind in **`spec.models`**.
+- [**AI Knowledge Catalog**](#ai-model-and-knowledge-catalogs) stores RAG datasets and document bundles. Bind in **`spec.knowledge`** on microservices.
+- [**Registries (`oci` / `hf`)**](#registries-oci-and-hugging-face) replace legacy TLS cert flags with **`type`**, **`ca`**, and **`insecure`**.
+- [**Microservice `container` fields**](#microservice-container-fields) add limits, security context, devices, tmpfs, entrypoint, and volume scope options for production workloads.
+- [**Edgelet v1.1.0**](#edgelet-v110) is required on every node. Agent YAML drops HAL scan fields; use **`edgeGuardFrequency`** for attestation when needed.
+- [**EdgeOps Console v1.1.0**](#edgeops-console-v110) adds editors for AI catalogs, models attach state, and v3.9 cluster config flows.
+- [**NATS Server 2.15.0**](#nats-and-router-pins) wrapper upgrade with the same volume-mount contract as v3.8.
+- [**Router wrapper v3.9.0**](#nats-and-router-pins) embeds **Skupper Router 3.5.3**.
+- [**Upgrade and migration paths**](#upgrade-and-migration-paths) summarize who can move in place vs greenfield.
+- [**v3.8 foundation**](#v38-foundation) (Edgelet-only nodes, embedded OIDC, WebSocket exec) remains documented in the [v3.8.0 snapshot](/v3.8.0/).
+
+## Platform train v3.9.0
+
+| Component | v3.9.0 default |
+| --------- | -------------- |
+| PoT platform | **v3.9.0** |
+| Controller | v3.9.0 |
+| {CLI_NAME} | v3.9.0 |
+| ioFog Operator | v3.9.0 |
+| Router (wrapper image) | v3.9.0 (Skupper **3.5.3** inside) |
+| NATS (wrapper image) | **2.15.0** (upstream NATS **2.15.0**) |
+| Edgelet | **v1.1.0** |
+| EdgeOps Console | **v1.1.0** |
+| Go SDK | v3.9.0 |
+
+Override tags in control plane YAML when you need a hotfix pin. Defaults and YAML keys: [Control plane](/learn/control-plane#default-image-pins-v390). Step-by-step upgrade: [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9) and [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train).
+
+## AI Model and Knowledge catalogs
+
+v3.9 adds fleet **`kind: Model`** and **`kind: Knowledge`** resources. The Controller pulls weights or datasets from **`type: hf`** or **`type: oci`** [registries](/learn/config/registries), tracks attach state per Edgelet node, and mounts ready content into microservices.
+
+| Catalog | Purpose | Microservice bind |
+| ------- | ------- | ----------------- |
+| **Model** | LLM and inference weights (GGUF, safetensors, OCI model-spec) | **`spec.models.items[]`** |
+| **Knowledge** | RAG corpora, Hub datasets, OCI document bundles | **`spec.knowledge.items[]`** |
+
+Console path: **Config → AI Model Catalog** and **Config → AI Knowledge Catalog**. CLI: **`deploy`**, **`describe model`**, **`attach model`**, and the matching **`knowledge`** commands.
+
+Edgelet nodes can also hold local **`edgelet.iofog.org/v1`** models for lab workflows. Fleet operators usually use the Controller catalog.
+
+[Find out more!](/learn/config/ai-model-catalog), [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog), and [Microservices - models and knowledge](/learn/workloads/microservices#v39-container-models-and-knowledge).
+
+## Registries (OCI and Hugging Face)
+
+Registry rows now declare a backend with **`spec.type`**: **`oci`** (container registries) or **`hf`** (Hugging Face Hub). Private Hub pulls use a token in **`password`**.
+
+v3.9 removes **`requiresCert`**, **`certificate`**, and **`isSecure`**. Use optional **`ca`** (PEM or base64) and **`insecure`** for lab TLS instead.
+
+Microservices and catalog items reference registries by numeric ID or aliases **`remote`** / **`local`**.
+
+[Find out more!](/learn/config/registries) and [Catalog microservices](/learn/config/catalog-microservices).
+
+## Microservice container fields
+
+**`spec.container`** on microservices expands for parity with OCI runtime options:
+
+- Resource limits: **`cpus`**, **`memoryReservation`**, **`memorySwap`**, **`shmSize`**
+- Security: **`runAsGroup`**, **`readOnlyRootFilesystem`**, **`capAdd`** / **`capDrop`**
+- Devices and mounts: **`devices`**, **`tmpfs`**, **`cdiDevices`**, volume **`scope`** for named volumes
+- Process: **`workingDir`**, **`entrypoint`**, **`commands`**, **`ulimits`**, **`sysctls`**
+
+Wasm and alternate runtimes still use **`container.platform`** and **`container.runtime`** with [runtime classes](/learn/config/runtime-classes).
+
+[Find out more!](/learn/workloads/microservices) and [Microservice fields](/reference/yaml/microservice).
+
+## Edgelet v1.1.0
+
+**Edgelet v1.1.0** pairs with **Controller v3.9.0**. Upgrade fleet nodes after you roll the control plane. Default image: **`edgelet:1.1.0`** on your flavor registry.
+
+Agent YAML changes in v3.9:
+
+- Removed: **`deviceScanFrequency`**, **`bluetoothEnabled`**, **`abstractedHardwareEnabled`**
+- Use **`edgeGuardFrequency`** when you need hardware attestation ([EdgeGuard](/learn/edgelet-nodes#edgeguard))
+
+Upgrade on a node:
+
+```bash
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.0
+```
+
+Or use **`upgrade agent`** as described in [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
+
+[Find out more!](/learn/edgelet-nodes), [Edgelet introduction](/learn/edgelet), and [Edgelet management](/get-started/edgelet-nodes/introduction).
+
+## EdgeOps Console v1.1.0
+
+**EdgeOps Console v1.1.0** ships embedded in the Controller image (default port **8008**). v3.9 adds first-class UI for AI catalogs, registry **`type`** editing, and refreshed console flows aligned with the Learn guides.
+
+Open with <code>{CLI_NAME} view</code> or **`controller.consoleUrl`**.
+
+[Find out more!](/get-started/edgeops-console), [Console features](/get-started/edgeops-console/overview), and [Operate overview](/learn/operate).
+
+## NATS and Router pins
+
+**NATS** wrapper image tag **`2.15.0`** pins upstream **[NATS Server 2.15.0](https://github.com/nats-io/nats-server)**. Config volume paths and JWT provisioning match v3.8.
+
+**Router** wrapper image tag **`3.9.0`** embeds **Skupper Router 3.5.3** (v3.8 used Skupper **3.5.1**).
+
+[Find out more!](/learn/platform-components/nats-server), [Router](/learn/platform-components/router), and [Message bus in Learn](/learn/message-bus).
+
+## Upgrade and migration paths
+
+| Starting version | Path |
+| ---------------- | ---- |
+| **v3.8.0** | In-place upgrade: [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9) |
+| **v3.7.x or v1.6.x** | Greenfield to v3.8 first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8), [Documentation archive](/reference/documentation-archive) |
+| **Greenfield v3.9** | [Quick start (local)](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction) |
+
+After upgrade, reconcile stalled platform microservices on Controller hosts if Router or NATS pods look stale: [Reconcile](/get-started/edgelet-nodes/reconcile).
+
+## v3.8 foundation
+
+PoT **v3.8.0** introduced Edgelet-only nodes, embedded OIDC, EdgeOps Console in the Controller image, WebSocket exec, multi-arch **`images[]`** catalogs, and the greenfield migration from v3.7. That behavior still applies on v3.9; the [v3.8.0 docs snapshot](/v3.8.0/) keeps the full v3.8 release narrative and greenfield warnings.
+
+New to the platform? Start with [Welcome](/), [Learn](/learn), and the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant) on **pot-edge-patterns v1.1.0** images.
+
+## CLI and Go SDK
+
+**{CLI_NAME} v3.9.0** adds catalog commands for **Model** and **Knowledge**, registry describe output with **`type`**, and deploy validation for v3.9 YAML. Config directory remains **`~/.iofog/v3`**.
+
+**Go SDK v3.9.0** tracks the same Controller API and catalog kinds.
+
+[Find out more!](/get-started/cli/introduction), [{CLI_NAME} getting familiar](/get-started/cli/getting-familiar), and [Go SDK](/learn/platform-components/sdk).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,0 +1,74 @@
+---
+title: CertificateAuthority fields
+description: Field reference for kind CertificateAuthority. self-signed, direct, and k8s-secret import.
+keywords: [certificate authority, yaml, fields, self-signed, direct, k8s-secret]
+slug: /reference/yaml/certificate-authority
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# CertificateAuthority fields
+
+Reference for `kind: CertificateAuthority`. Deploy and the control-plane CA split are on [Certificate authorities](/learn/config/certificate-authorities).
+
+The CLI sets the API name from `metadata.name`. A `spec.name` in the file is overwritten.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: CertificateAuthority # required, string
+metadata:
+  name: ecn-root-ca # required, string. For direct and k8s-secret this must match the secret name
+  namespace: my-ecn # no, string
+spec:
+  subject: "CN=ECN Root CA,O=Example" # recommended, string. Set it for self-signed
+  type: self-signed # required, string. self-signed, direct, or k8s-secret
+  expiration: 3650 # no, int. Days. Common on self-signed
+  secretName: ecn-root-ca # import types, string. Unused for self-signed. Defaults to metadata.name
+```
+
+</FlavorYaml>
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `subject` | Recommended | X.509 subject DN. Set it for `self-signed`. |
+| `type` | Yes | `self-signed`, `direct`, or `k8s-secret`. Other strings return 400. |
+| `expiration` | No | Validity in days. Common on `self-signed`. |
+| `secretName` | Import types | Secret that holds the cert and key. If omitted, the CLI uses `metadata.name`. |
+
+`secretName` is unused for `self-signed`.
+
+## Types
+
+| `type` | Prerequisites |
+| ------ | ------------- |
+| `self-signed` | Controller generates the key pair. No backing Secret. |
+| `direct` | A `kind: Secret` with `spec.type: tls` and base64 PEM in `data` is already deployed. `metadata.name` matches that secret name. |
+| `k8s-secret` | A Kubernetes Secret exists on the control plane cluster. Set `secretName` when that name differs from `metadata.name`. |
+
+For `direct` and `k8s-secret`, `metadata.name` must equal the effective secret name. The error is `Name must match Secret name`. An existing CA fails with an update-not-allowed error. There is no CA update.
+
+`type: direct` secret keys are `tls.crt`, `tls.key`, and optional `ca.crt`. See [Secret fields](/reference/yaml/secret).
+
+```yaml
+kind: CertificateAuthority
+metadata:
+  name: my-import-ca
+spec:
+  subject: "CN=Imported CA,O=Example"
+  type: direct
+```
+
+## Describe and delete
+
+`describe certificate NAME` for a CA returns `kind: CertificateAuthority` and `data` with `certificate`, `privateKey`, validity, and serial. That output is sensitive.
+
+`delete certificate NAME` sees `IsCA` and prompts before deleting the CA.
+
+A leaf that should be signed by this CA sets `ca.secretName` to `metadata.name`. See [Certificate fields](/reference/yaml/certificate).
+
+<EditPageAdmonition />

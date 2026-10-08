@@ -9,7 +9,7 @@ keywords: [router, nats, tls, certificates, security, datasance pot, volume moun
 The Datasance PoT Controller includes a built-in **X.509 certificate manager** for creating and managing TLS certificates and certificate authorities (CAs).
 
 :::info Certificate resources
-You can use the PoT [Certificate](../yaml-references/reference-certificate) and **CertificateAuthority** YAML resources to create and manage certificates. See the [Certificate & CA YAML Specification](../yaml-references/reference-certificate) for the full field reference.
+You can use the PoT [Certificate](/learn/config/certificates) and **CertificateAuthority** YAML resources to create and manage certificates. See [Certificates in Learn](/learn/config/certificates) for the full field reference.
 :::
 
 **Example: CA from an existing secret and a certificate signed by it.** Define a Secret with your CA/key material, then a CertificateAuthority that references it, then a Certificate that uses that CA:
@@ -116,4 +116,4 @@ Router and NATs instances in Datasance PoT are secured by default with **TLS**. 
 
 For a Kubernetes ControlPlane, the **Operator** generates server certificates for Router and NATs instances on the control plane. The Controller obtains CA certificates from Kubernetes Secrets and manages TLS for Router and NATs instances running on PoT Agents.
 
-For full control plane deployment options (including NATs and Router images and replicas), see the [Control Plane YAML Specification](../yaml-references/reference-control-plane), [Kubernetes Helm](../platform-deployment/kubernetes-helm), and [Kubernetes potctl](../platform-deployment/kubernetes-potctl).
+For full control plane deployment options (including NATs and Router images and replicas), see [Control plane in Learn](/learn/control-plane), [Kubernetes Helm](/get-started/deploy/kubernetes-helm), and [Kubernetes potctl](/get-started/deploy/kubernetes-cli).

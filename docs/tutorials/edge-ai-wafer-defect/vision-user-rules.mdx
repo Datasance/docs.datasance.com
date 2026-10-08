@@ -1,0 +1,119 @@
+---
+title: Vision user rules
+description: Deploy NATS user rules for frame-generator, object-detector, and snapshot-service.
+keywords: [tutorial, edge ai, nats user rule, vision.wafers, vision.inspections]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Vision user rules
+
+## Goal
+
+Deploy three `NatsUserRule` objects. The vision inspection Application references them by name. Nothing from the plant example is required.
+
+- **frame-publisher** lets frame-generator publish `vision.wafers.>`.
+- **vision-detector** lets object-detector subscribe to wafers and publish `vision.inspections.>`.
+- **snapshot-consumer** lets snapshot-service subscribe to inspections.
+
+The file is `deploy/steps/11-nats-user-rules-vision.yaml`.
+
+## YAML
+
+<FlavorYaml title="frame-publisher">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: frame-publisher
+spec:
+  description: frame-generator - publish wafer map metadata (in-account)
+  maxSubscriptions: -1
+  maxPayload: -1
+  maxData: -1
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+  pubAllow:
+    - vision.wafers.>
+```
+
+</FlavorYaml>
+
+<FlavorYaml title="vision-detector">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: vision-detector
+spec:
+  description: object-detector - subscribe wafer frames, publish inspections (in-account)
+  maxSubscriptions: -1
+  maxPayload: -1
+  maxData: -1
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+  pubAllow:
+    - vision.inspections.>
+  subAllow:
+    - vision.wafers.>
+```
+
+</FlavorYaml>
+
+<FlavorYaml title="snapshot-consumer">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: snapshot-consumer
+spec:
+  description: snapshot-service - subscribe inspections for HTTP snapshot API (in-account)
+  maxSubscriptions: -1
+  maxPayload: -1
+  maxData: -1
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+  subAllow:
+    - vision.inspections.>
+```
+
+</FlavorYaml>
+
+The repo file also sets connection limits. Deploy that file. These blocks show the subject lists.
+
+| Subject | Who uses it |
+| --- | --- |
+| `vision.wafers.>` | frame-generator publishes. object-detector subscribes. |
+| `vision.inspections.>` | object-detector publishes. snapshot-service subscribes. |
+
+Subjects are `vision.wafers.>` and `vision.inspections.>`. Older demos used `vision.frames.*` and `vision.detections.*`.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/11-nats-user-rules-vision.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} get nats-user-rules`}</CliBlock>
+
+`frame-publisher`, `vision-detector`, and `snapshot-consumer` are listed. No microservices are running yet.
+
+## Common mistakes
+
+Deploying the Application before these rules exist. The Application names them.
+
+These rules can exist before the vision account, or you can deploy them with it. The Application must come after both.
+
+## Next
+
+[Vision account](/tutorials/edge-ai-wafer-defect/vision-account)
+
+<EditPageAdmonition />

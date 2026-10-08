@@ -1,0 +1,49 @@
+---
+title: Account public key
+description: Copy the production-monitoring NATS account id after the plant Application exists.
+keywords: [tutorial, acme smart plant, nats accounts, account id]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Account public key
+
+## Goal
+
+Copy the **production-monitoring** account id. The import rule pastes it into `account`. The production-monitoring Application is already deployed, so the account exists.
+
+## Copy the id
+
+<CliBlock>{`{{CLI_NAME}} get nats-accounts`}</CliBlock>
+
+Find the row for **production-monitoring**. Copy the id. CLI output may label it `id` or `publicKey`.
+
+```text
+NAME                     ID
+production-monitoring    ABCD1234...
+```
+
+Replace every `<production-monitoring-account-id>` in `deploy/steps/04-nats-account-import.yaml`. Paste the id only. Do not keep the angle brackets.
+
+## What you should see
+
+The id is a non-empty string from the **production-monitoring** row.
+
+<CliBlock>{`{{CLI_NAME}} describe application production-monitoring`}</CliBlock>
+
+`natsConfig.natsRule` is `production-monitoring-export`.
+
+## Common mistakes
+
+Copying a different account. Use **production-monitoring**.
+
+Running this before production monitoring is deployed. The account does not exist yet.
+
+Deploying the import file while the placeholder text is still in `account`. Alerts and fleet charts on **ops-b** stay empty.
+
+## Next
+
+[Account import](/tutorials/acme-smart-plant/account-import)
+
+<EditPageAdmonition />

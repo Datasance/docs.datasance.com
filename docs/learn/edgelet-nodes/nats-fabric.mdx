@@ -1,0 +1,112 @@
+---
+title: NATS fabric
+description: NATS roles on an Edgelet node. Leaf, server, and none modes, JetStream, TLS, upstream servers, and resolver bundles.
+keywords: [nats, natsMode, leaf, jetstream, upstreamNatsServers, edgelet node, v3.9]
+slug: /learn/edgelet-nodes/nats-fabric
+---
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# NATS fabric
+
+The NATS fabric is the broker mesh: servers, leaves, cluster routes, and MQTT. Application and microservice clients receive user JWTs through `natsAccess`. Rule templates are [NATS account rules](/learn/message-bus/account-rules) and [NATS user rules](/learn/message-bus/user-rules). See also [Message bus](/learn/message-bus).
+
+Set the fabric on `Agent` or `LocalAgent` `spec.config`, or on `AgentConfig` `spec`. Field tables are on [AgentConfig fields](/reference/yaml/agent-config). How reconcile creates the microservice is on [Networking](/learn/edgelet-nodes/networking).
+
+## What you declare
+
+The default `natsMode` is `leaf`.
+
+| `natsMode` | Role | Listeners |
+| ---------- | ---- | --------- |
+| `leaf` | Local NATS. Dials upstream servers over TLS. | Client 4222, MQTT 8883, monitor 8222. No cluster or leaf listen. |
+| `server` | Full server. Accepts cluster and leaf connections. | The leaf ports, plus cluster 6222 and leafnode 7422. |
+| `none` | No NATS process on this node | None. Workloads use the hub URL. |
+
+Both leaf and server publish the full port set on the system microservice. A leaf only listens on client, MQTT, and monitor ports. It dials upstreams on 7422.
+
+`host` is required unless both `routerMode` and `natsMode` are `none`.
+
+`upstreamNatsServers` is an Edgelet node name, a UUID, or `default-nats-hub`. A leaf cannot be an upstream. If you omit the list, the Controller uses `default-nats-hub` plus every NATS server on a system Edgelet node.
+
+On a remote control plane, the first node is forced to `natsMode: server` when it is promoted to the system Edgelet node. On Kubernetes, the hub is platform NATS. Added server nodes join cluster routes. Routes that contain `nats-headless` are preserved. See [Kubernetes networking](/learn/control-plane/kubernetes#networking) and [Remote networking](/learn/control-plane/remote#networking).
+
+## What the Controller builds
+
+For `leaf` or `server`:
+
+1. Fabric CAs, plus server and MQTT certificates for this node.
+2. A JetStream encryption key in secret `nats-jetstream-key-<agent>`, injected as `JETSTREAM_KEY`.
+3. A NATS operator and system account. A leaf also gets `SYS-leaf-<agentName>`.
+4. System application `system-<agentName>` and catalog microservice `nats`. See [Applications](/get-started/workloads/applications).
+5. `server.conf` or `leaf.conf` in ConfigMap `nats-server-conf-<agent>`, mounted at `/etc/nats/config`.
+6. An account-JWT resolver bundle. The scope differs for server and leaf.
+7. TLS secret mounts. A server also gets system-user credentials.
+8. On a leaf: upstream remotes, per-account `leaf-<agent>` users (`default-leaf-user`), and credentials ConfigMap `nats-leaf-creds-<agent>`.
+9. Published ports. Health check `http://localhost:8222/healthz`.
+
+The container is not on the host network. It receives `NET_RAW` and a service account.
+
+JetStream uses volume `<agentName>-nats-jetstream` at `/home/runner/data`. Defaults are `jsStorageSize` `10g` and `jsMemoryStoreSize` `1g`, encrypted with ChaChaPoly. The JetStream domain is the Controller namespace on a server, and the node name on a leaf.
+
+Resource names slug the node name: lowercase, at most 48 characters.
+
+## TLS and ports
+
+Auto CAs `nats-site-ca` and `default-nats-local-ca` last 60 months. They are not [catalog CertificateAuthority](/learn/config/certificates) resources.
+
+| Path | Protection |
+| ---- | ---------- |
+| Client 4222 | Operator JWT mode. Workloads use user JWT credentials. See [Applications](/learn/workloads/applications). |
+| Cluster 6222 and leafnode 7422 on servers | TLS verify and handshake first |
+| Leaf remotes | `tls://<upstreamHost>:7422`, mutual TLS |
+| MQTT 8883 | TLS (`nats-mqtt-server-<agent>`, including `nats.default.svc.bridge.local`) |
+| JetStream disk | ChaChaPoly with a per-node key |
+
+The operator seed stays in `nats-operator-seed`. The operator JWT is in the generated config only.
+
+## Server
+
+Generated `server.conf` includes the operator, the system account, JetStream, cluster routes, a leafnode listener, MQTT, and a full resolver directory.
+
+The resolver bundle holds account JWTs only, not user credentials: the system account, every application with `natsAccess`, and the controller relay when that relay is enabled. The hub uses ConfigMap `iofog-nats-jwt-bundle` at `/tmp/nats/jwt`.
+
+System users are `admin-hub` on the hub and `admin-server-<agent>` on other servers. Credentials are under `/etc/nats/creds`.
+
+Adding or removing server nodes recomputes cluster routes for every server. A single-member cluster that gains a second member rebuilds the NATS container config.
+
+How account JWTs update when applications change is in [NATS JWT authentication](/security/nats-jwt-authentication) and [Message bus](/learn/message-bus).
+
+## Leaf
+
+`leaf.conf` includes JetStream, MQTT, the operator, and a resolver. It does not listen for cluster connections. Upstream remotes are added for each application with `natsAccess` and a microservice on this node, and for each upstream server.
+
+Leaf user `leaf-<agentName>` exists in each of those application accounts (`default-leaf-user`). Credentials live in `nats-leaf-creds-<agent>` at `/etc/nats/creds`.
+
+The leaf resolver bundle `nats-jwt-bundle-<agent>` holds `SYS-leaf-<agent>` plus application accounts that have workloads here. It is smaller than the hub bundle.
+
+System user `admin-leaf-<agent>` is on the leaf system account.
+
+## Mode changes and none
+
+| Change | Effect |
+| ------ | ------ |
+| leaf to server | Remove leaf JWT and credential ConfigMaps and the leaf system account. Enable cluster. |
+| server to leaf | Build leaf artifacts. Drop cluster routes. |
+| `natsMode: none` | Delete the NATS microservice and leaf artifacts. Microservice `natsAccess` uses the hub URL. |
+
+A host change, or a role that crosses `none`, reissues certificates and flags volume mounts.
+
+## What you declare
+
+| You set with `natsMode` | The platform does |
+| ----------------------- | ----------------- |
+| `leaf`, `server`, or `none` | Issues NATS, MQTT, and leaf certificates from `nats-site-ca` and `default-nats-local-ca` |
+| Role plus `upstreamNatsServers` | Writes `server.conf` or leaf remotes |
+| Application `natsAccess` | Creates operator, system, and leaf users during reconcile |
+| Rule changes and redeploy | Copies account JWTs through resolver ConfigMaps |
+| `jsStorageSize` and `jsMemoryStoreSize` | Stores a per-node JetStream key and sets `JETSTREAM_KEY` |
+
+Default `leaf` is enough for most Edgelet nodes. The Controller provisions the process, trust, and links.
+
+<EditPageAdmonition />

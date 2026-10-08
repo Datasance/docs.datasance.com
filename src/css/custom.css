@@ -13,14 +13,14 @@
   --alert-highlight: rgba(230, 100, 102, 0.2);
   --alert-foreground: #10253D;
 
-  /* Compact layout */
-  --doc-sidebar-width: 240px !important;
+  /* Sidebar width (aligned with classic Docusaurus / NATS-style docs) */
+  --doc-sidebar-width: 280px;
   /* Use more horizontal space on large screens */
   --ifm-container-width: 1280px;
   --ifm-container-width-xl: 1600px;
-  --ifm-menu-link-padding-vertical: 0.25rem;
-  --ifm-menu-link-padding-horizontal: 0.5rem;
-  --ifm-font-size-base: 95%;
+  --ifm-menu-link-padding-vertical: 0.375rem;
+  --ifm-menu-link-padding-horizontal: 0.75rem;
+  --ifm-font-size-base: 100%;
   --ifm-line-height-base: 1.6;
   --ifm-leading-desktop: 1.2;
   --ifm-paragraph-margin-bottom: 1rem;
@@ -142,13 +142,42 @@
   }
 }
 
-/* Compact sidebar typography */
+/* Sidebar typography */
 .theme-doc-sidebar-container .menu__link {
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
 }
 .theme-doc-sidebar-container .menu__list-item-collapsible {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
+}
+
+/* Navbar (NATS-style alignment) */
+.navbar__logo {
+  height: 2rem;
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.navbar__item svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar__item:hover svg {
+  opacity: 1;
+}
+
+.navbar__link {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35rem;
+  font-size: 0.9375rem;
+  padding: 0.375rem 0.65rem;
+}
+
+.navbar__link:hover {
+  text-decoration: none;
 }
 
 /* Compact right-hand TOC */
@@ -239,4 +268,45 @@
   font-size: 0.9rem;
   color: var(--ifm-color-content-secondary);
   margin-top: 0.5rem;
+}
+
+/* Eclipse ioFog flavor (iofog.org release/3.7 palette) */
+html[data-distribution='iofog'] {
+  --ifm-color-primary: #4668fd;
+  --ifm-color-primary-dark: #3d5ce0;
+  --ifm-color-primary-darker: #3956d4;
+  --ifm-color-primary-darkest: #2f46ae;
+  --ifm-color-primary-light: #5f7bfd;
+  --ifm-color-primary-lighter: #6b85fd;
+  --ifm-color-primary-lightest: #8fa2fe;
+  --homepage-accent-teal: #6abec1;
+  --homepage-accent-navy: #375c93;
+}
+
+html[data-distribution='iofog'] .button.button--primary {
+  background-color: #4668fd;
+  border-color: #4668fd;
+}
+
+html[data-distribution='iofog'] .button {
+  background-color: #4668fd;
+  border-color: #375c93;
+}
+
+html[data-distribution='iofog'][data-theme='dark'] {
+  --ifm-color-primary: #6b85fd;
+  --ifm-color-primary-dark: #4668fd;
+  --ifm-color-primary-darker: #3d5ce0;
+  --ifm-color-primary-darkest: #2f46ae;
+  --ifm-color-primary-light: #8fa2fe;
+  --ifm-color-primary-lighter: #9fafff;
+  --ifm-color-primary-lightest: #c2ccff;
+}
+
+html[data-distribution='datasance'] .footer--dark {
+  --ifm-footer-background-color: #10253d;
+}
+
+html[data-distribution='iofog'] .footer--dark {
+  --ifm-footer-background-color: #375c93;
 }

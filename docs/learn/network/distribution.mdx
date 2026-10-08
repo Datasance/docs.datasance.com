@@ -1,0 +1,81 @@
+---
+title: Distribution tags
+description: Which Edgelet nodes open a local listener for a Service. Bare tokens, the service tag prefix, and the all tag.
+keywords: [service, tags, distribution, bridge port, edgelet node]
+---
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Distribution tags
+
+An Edgelet node opens a local listener on `bridgePort` only when its tags select the Service. Hub `ready` does not mean every node is listening. Kubernetes annotation tags are a second use of the same list.
+
+How the connector and listener are shaped is on [TCP bridge](/learn/network/interconnection). Controller placement and the objects written on each router are on [Service interconnection](/reference/controller/service-interconnection).
+
+## Prefix
+
+The Service stores the bare token in `metadata.tags` (for example `checkout`). The node stores the prefixed tag `service.iofog.org/tag: checkout`.
+
+| Tag on the Edgelet node | Matches |
+| ----------------------- | ------- |
+| `service.iofog.org/tag: checkout` | Services whose `metadata.tags` include `checkout` |
+| `service.iofog.org/tag: all` | Every Service |
+| `checkout` | Nothing. A bare tag on the node matches nothing. |
+| `service.iofog.org/tag:checkout` | Nothing. The stored value has a space after the colon. |
+
+The tag `all` matches every Service. Put it on the node as `service.iofog.org/tag: all`. The Service does not need its own `all` tag.
+
+Set the prefixed tag on `kind: Agent` or `kind: AgentConfig`. See [Edgelet nodes](/learn/edgelet-nodes#service-distribution-tags).
+
+## Service tags
+
+| Tag on the Service | Distribution | Kubernetes annotation |
+| ------------------ | ------------ | --------------------- |
+| `checkout` | Yes. Matches nodes tagged `service.iofog.org/tag: checkout`. | `checkout` with an empty value |
+| `service.beta.kubernetes.io/aws-load-balancer-type: nlb` | No. A tag that contains `:` is skipped. | The key and the value |
+| A tag that contains `=` | No | Controller annotation rules |
+
+On create or update, the Controller includes every node tagged `service.iofog.org/tag: all`. For each Service tag without `:` or `=`, it includes nodes tagged `service.iofog.org/tag: {token}`. It then reconciles those nodes.
+
+On a Kubernetes control plane, the same `metadata.tags` list is copied onto the Kubernetes Service. Each tag is split on the first `:`. A tag with no colon becomes an annotation with an empty value. Text after a second colon is dropped. An update replaces the annotation map the Controller wrote. Those annotations are not distribution tags.
+
+A node with `routerMode: none` does not get listeners.
+
+## Which nodes listen
+
+| Node | Tags | Listeners after reconcile |
+| ---- | ---- | ------------------------- |
+| plant-a | `service.iofog.org/tag: checkout` | The `checkout` listener only |
+| plant-b | `service.iofog.org/tag: all` | A listener for every Service |
+| plant-c | `checkout` only | None |
+
+The connector for a microservice is written on the Edgelet node that runs the microservice, whether or not that node's tags select the Service. The listener on that same node appears only when the tags select it.
+
+A microservice on the bridge network of a node that received the listener dials the router on that node. Edgelet DNS reserves `router.default.svc.bridge.local` for the router microservice. See [Bridge DNS](/learn/workloads/microservices#bridge-dns) and [DNS](/learn/edgelet/dns).
+
+`checkout-listener` binds bridge port `10024`. A microservice on plant-a or plant-b reaches that listener at `router.default.svc.bridge.local:10024`. Use the `bridgePort` assigned to the Service.
+
+`edgelet.default.svc.bridge.local` is the Edgelet node. The connector uses that name when the backend is on the host network. Clients of the distributed Service use the router name and `bridgePort`.
+
+A tag edit reconciles nodes from the old tags and the new tags. A node that lost the tag drops the listener.
+
+## Reconcile from the node
+
+Create and update start from the Service and find Edgelet nodes. A later reconcile starts from the node.
+
+1. Keep tags that start with `service.iofog.org/tag`.
+2. Take the text after the first colon and trim it.
+3. If one value is `all`, select every Service.
+4. Otherwise select each Service whose tag equals that token.
+
+That pass rebuilds `tcpListeners` on the node. Entries whose name ends with `-listener` are removed and replaced by the current match. `tcpConnectors` on the same node stay.
+
+| Field | Value |
+| ----- | ----- |
+| Name | `{name}-listener`, for example `checkout-listener` |
+| Port | The assigned `bridgePort` |
+| Address | The Service name |
+
+The router joins a listener and a connector that share `address`. A microservice on the bridge network dials `router.default.svc.bridge.local` and that `bridgePort`. Traffic for that address goes to the connector on the backend node.
+
+<EditPageAdmonition />

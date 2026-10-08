@@ -1,0 +1,82 @@
+---
+title: Role bindings
+description: A RoleBinding grants one Role to User, Group, or ServiceAccount subjects.
+keywords: [role binding, rbac, subjects, user, group, service account]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Role bindings
+
+A RoleBinding grants one [Role](/learn/access-control/roles) to subjects. Subjects are User, Group, or ServiceAccount.
+
+`roleRef` and `subjects` sit at the document root. They are not fields of `spec`.
+
+Fields are on [RoleBinding fields](/reference/yaml/role-binding).
+
+A User `name` is the login name from the token (`preferred_username`, `username`, `email`, or `sub`). A Group `name` comes from `resource_access[<client id>].roles`, `roles`, or `groups`, lowercased, and should match an identity provider role name. `admin`, `sre`, `developer`, and `viewer` are the usual examples. A ServiceAccount subject uses the account `metadata.name` only. The `application/name` form belongs on [describe and delete](/learn/access-control/service-accounts) for the account itself.
+
+`agent-admin` and `microservice` are Edgelet local API roles. A binding that grants them does not authorize `/api/v3/*`. Workload tokens use `serviceAccount.roleRef` on the microservice. See [Roles](/learn/access-control/roles).
+
+Changing `roles` or `roleBindings` requires `admin` or a custom role. `sre`, `developer`, and `viewer` can `get` and `list` those resources. The verb table is on [Roles](/learn/access-control/roles). The operator note is [RBAC](/reference/controller/rbac-reference).
+
+Who may sign in is [Embedded OIDC](/get-started/deploy/embedded-oidc), [External OIDC](/get-started/deploy/external-oidc), and [Identity and sign-in](/get-started/edgeops-console/identity). This page is the grant after that sign-in.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f rolebinding.yaml -n my-ecn
+{{CLI_NAME}} get rolebindings -n my-ecn
+{{CLI_NAME}} describe rolebinding alice-developer -n my-ecn
+{{CLI_NAME}} delete rolebinding alice-developer -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> creates the binding when the name is missing. The same name replaces `roleRef` and `subjects`. There is no `apply`.
+
+Deploy the Role before a binding that names it. Inside one file, the CLI deploys Role, then RoleBinding, then ServiceAccount.
+
+After you change a binding, sign out and sign in again. The next token carries the new permissions.
+
+`metadata.namespace` is the <CliName /> namespace (`-n`).
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_rolebinding`}>describe rolebinding</Link> prints `roleRef` and `subjects` at the document root. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_rolebinding`}>delete rolebinding</Link> takes the binding name.
+
+## Example
+
+<FlavorYaml title="rolebinding.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: RoleBinding
+metadata:
+  name: alice-developer
+  namespace: my-ecn
+roleRef:
+  kind: Role
+  name: developer
+subjects:
+  - kind: User
+    name: alice@example.com
+```
+
+</FlavorYaml>
+
+`developer` is a system role. See [Access control](/learn/access-control). A ServiceAccount subject in a full stack is on that same page.
+
+## Console
+
+Open **Access control**, then **Role Bindings**. See [Access control](/get-started/edgeops-console/access-control).
+
+## Related
+
+- [RoleBinding fields](/reference/yaml/role-binding)
+- [Roles](/learn/access-control/roles)
+- [Service accounts](/learn/access-control/service-accounts)
+- [Embedded OIDC](/get-started/deploy/embedded-oidc)
+- [External OIDC](/get-started/deploy/external-oidc)
+- [RBAC](/reference/controller/rbac-reference)
+
+<EditPageAdmonition />

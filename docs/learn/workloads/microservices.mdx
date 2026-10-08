@@ -1,0 +1,246 @@
+---
+title: Microservices
+description: kind Microservice is one container on one Edgelet node. Naming, deploy, bridge DNS, and model and knowledge binds.
+keywords: [microservice, yaml, deploy, bridge dns, models, knowledge, edgelet node, v3.9]
+slug: /learn/workloads/microservices
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Microservices
+
+A **microservice** is one container, or one WASM module, on one Edgelet node. It has an image, ports, environment, and optional fleet model and knowledge mounts. It belongs to one application.
+
+The YAML field `spec.agent.name` is the Edgelet node name. The node kind in YAML is `Agent`.
+
+Field tables, including volume mappings, environment, and `extraHosts`, are on [Microservice fields](/reference/yaml/microservice). <CliName /> unmarshals this kind strictly. Unknown keys fail at deploy.
+
+## Where it runs
+
+The container shape follows the target node's `containerEngine`. See [Container engines](/learn/edgelet/container-engines).
+
+| `containerEngine` | What runs |
+| ----------------- | --------- |
+| `edgelet` | One container on Edgelet's built-in engine. |
+| `docker` or `podman` | The same microservice as one container on that engine. |
+
+The Controller schedules pull, create, and health checks on that node.
+
+## When to use it
+
+Deploy `kind: Microservice` when the application already exists, or when you want a separate document from `kind: Application`. Put the service inline under `spec.microservices` when one application file should carry the whole group. See [Applications](/learn/workloads/applications).
+
+Use `spec.template` when the container shape comes from a [microservice template](/learn/workloads/microservice-templates).
+
+User deploy cannot create system microservices. Updates to those use the system microservice API. See [Logs and exec](/learn/workloads/debugging).
+
+## Name
+
+| Source | Result |
+| ------ | ------ |
+| `metadata.name: api` and `spec.application: myapp` | `myapp/api` |
+| `metadata.name: myapp/api` | Application `myapp`, microservice `api` |
+
+`describe`, `logs`, `exec`, and `delete` use `application/microservice`.
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f microservice.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> without patch flags calls the full microservice deploy. The Controller creates the service or updates it when that name already exists in the application. It decides whether the container is rebuilt. Set `spec.rebuild: true` when you need a rebuild on that deploy.
+
+| Mode | CLI | Requirement |
+| ---- | --- | ----------- |
+| Full deploy | `deploy -f` | Normal create or update. |
+| Models only | `--patch-model` | Microservice-only file, and `spec.models` is required. |
+| Knowledge only | `--patch-knowledge` | Microservice-only file, and `spec.knowledge` is required. |
+| Both flags | both on one command | Models are patched first, then knowledge. |
+
+Patch flags fail when the file contains any kind other than `Microservice`.
+
+Before the first deploy:
+
+1. The application exists, or it is earlier in the same file.
+2. The Edgelet node exists, and its architecture matches the images.
+3. Registry, catalog item, model, and knowledge objects already exist when the microservice names them.
+
+## Update, move, and rename
+
+Re-deploy the same file to change the image, container, node, or template. Export first when you are editing a live service:
+
+<CliBlock>{`{{CLI_NAME}} describe microservice myapp/api -o msvc.yaml -n my-ecn`}</CliBlock>
+
+Describe output includes read-only status. Remove `status`, `uuid`, and `created` before you deploy that file again.
+
+<CliBlock>{`{{CLI_NAME}} rebuild microservice myapp/api -n my-ecn
+{{CLI_NAME}} start microservice myapp/api -n my-ecn
+{{CLI_NAME}} stop microservice myapp/api -n my-ecn
+{{CLI_NAME}} delete microservice myapp/api -n my-ecn`}</CliBlock>
+
+Move a microservice to another Edgelet node in the same namespace:
+
+<CliBlock>{`{{CLI_NAME}} move microservice api edge-02 -n my-ecn`}</CliBlock>
+
+The `rename` subcommand is gone. To change the `application/microservice` name, export the YAML, deploy it under the new name, then delete the old microservice.
+
+A model-only patch file:
+
+<FlavorYaml title="patch-models.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: inference
+  namespace: my-ecn
+spec:
+  application: myapp
+  agent:
+    name: edge-01
+  models:
+    bindPath: /models
+    permissions: ro
+    items:
+      - name: smollm2-135m
+      - name: org-llm
+```
+
+</FlavorYaml>
+
+<CliBlock>{`{{CLI_NAME}} deploy -f patch-models.yaml --patch-model -n my-ecn`}</CliBlock>
+
+Catalog item changes may or may not rebuild the container. The Controller decides.
+
+Node limits, the engine URL, and NATS leaf settings belong on `Agent` or `AgentConfig`. On a microservice, `agent` is the name only.
+
+## Bridge DNS {#bridge-dns}
+
+Two microservices on the **same** Edgelet node can reach each other by name when they use the bridge (`container.hostNetworkMode: false`). Host-network containers do not get these names.
+
+The default zone is `svc.bridge.local`.
+
+For application `myapp` and microservice `worker`:
+
+| Form | Name |
+| ---- | ---- |
+| Short name on the bridge | `myapp.worker` |
+| FQDN | `myapp.worker.svc.bridge.local` |
+
+Reserved names on that same bridge are `router.default.svc.bridge.local`, `nats.default.svc.bridge.local`, and `edgelet.default.svc.bridge.local`.
+
+The engine, the resolver, Docker and Podman aliases, and `extraHosts` are documented on [DNS](/learn/edgelet/dns).
+
+## Models, knowledge, and runtime classes {#fleet-models-knowledge-and-runtime-classes}
+
+`spec.models` and `spec.knowledge` bind fleet catalog rows into the container. `container.runtime` selects a runtime handler. The field shapes are on [Microservice fields](/reference/yaml/microservice). Catalog rows are [AI Model Catalog](/learn/config/ai-model-catalog), [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog), and [Runtime classes](/learn/config/runtime-classes).
+
+### `spec.models` and `spec.knowledge` {#specmodels-and-specknowledge}
+
+Each item names a catalog row. `bindPath` is the mount inside the container. `permissions` is `ro` or `rw`.
+
+### Container models and knowledge {#v39-container-models-and-knowledge}
+
+`container.runtime` is the handler name from a runtime class attached to the Edgelet node. `container.platform` is the OCI platform, such as `wasi/wasm`.
+
+Attach the blobs to the Edgelet node before the microservice expects them:
+
+<CliBlock>{`{{CLI_NAME}} attach model MODEL_NAME AGENT_NAME -n my-ecn
+{{CLI_NAME}} attach knowledge KNOWLEDGE_NAME AGENT_NAME -n my-ecn
+{{CLI_NAME}} attach runtimeclass RUNTIME_CLASS AGENT_NAME -n my-ecn`}</CliBlock>
+
+Confirm `modelStatus`, `activeModels`, `knowledgeStatus`, `activeKnowledge`, and runtime class status with `describe agent`.
+
+## Examples
+
+### Minimal service
+
+Application `myapp` must already exist, or sit above this document in the same file. Edgelet node `edge-01` must already be registered.
+
+<FlavorYaml title="minimal.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: api
+  namespace: my-ecn
+spec:
+  application: myapp
+  agent:
+    name: edge-01
+  images:
+    registry: remote
+    amd64: {{REGISTRY}}/example/api:1.0.0
+    arm64: {{REGISTRY}}/example/api:1.0.0
+  container:
+    ports:
+      - internal: 8080
+        external: 8080
+        protocol: tcp
+  config: {}
+  natsConfig:
+    natsAccess: false
+```
+
+</FlavorYaml>
+
+### Template, model, and runtime
+
+The template `inference-ms` is on [Microservice templates](/learn/workloads/microservice-templates). The model `smollm2-135m` is a fleet catalog row attached to `edge-01`. `container.runtime: spin` needs that handler on the node.
+
+<FlavorYaml title="template-and-models.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: inference
+  namespace: my-ecn
+spec:
+  application: myapp
+  template:
+    name: inference-ms
+    variables:
+      - key: agent-name
+        value: edge-01
+      - key: model1
+        value: smollm2-135m
+  agent:
+    name: edge-01
+  models:
+    bindPath: /models
+    permissions: ro
+    items:
+      - name: smollm2-135m
+  images:
+    registry: remote
+    amd64: {{REGISTRY}}/inference:1.0.0
+  container:
+    runtime: spin
+    platform: wasi/wasm
+    ports:
+      - internal: 8080
+        external: 8080
+        protocol: tcp
+```
+
+</FlavorYaml>
+
+## Console
+
+Running microservices are in [EdgeOps Console → Workloads](/get-started/edgeops-console/workloads). Logs and shells are on [Logs and exec](/learn/workloads/debugging). Node daemon logs stay on [Node logs and exec](/learn/operate/node-debugging).
+
+## Related
+
+- [Microservice fields](/reference/yaml/microservice)
+- [Applications](/learn/workloads/applications)
+- [NATS access](/learn/workloads/nats-access)
+- [DNS](/learn/edgelet/dns)
+- [Applications and microservices](/get-started/workloads/applications)
+
+<EditPageAdmonition />

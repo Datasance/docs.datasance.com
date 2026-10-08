@@ -1,0 +1,355 @@
+---
+title: Setup Edgelet Nodes
+description: Deploy remote and local Edgelet nodes with potctl or iofogctl over SSH. Bootstrap, AgentConfig, LocalAgent, and custom install scripts on platform train v3.9.0.
+keywords: [edgelet node, agent yaml, deploy, ssh, bootstrap, localagent, v3.9]
+slug: /get-started/deploy/setup-edgelet-nodes
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliBlock from '@site/src/components/CliBlock';
+import {
+  CLI_NAME,
+  CLI_REPO_EDGELET_ASSETS_URL,
+  EDGELET_VERSION,
+  PLATFORM_TRAIN,
+} from '@site/src/config/distribution';
+
+:::warning[Make sure your remote hosts are ready for Edgelet installation via {CLI_NAME}!]
+<p>Go to <a href="/get-started/deploy/prepare-your-remote-hosts">Prepare your Remote Hosts</a> to find out how to prepare Edgelet node hosts for installation.</p>
+:::
+
+# Setup Edgelet nodes
+
+The edge of an Edge Compute Network (ECN) is made of **Edgelet nodes**. Controllers can run anywhere, including cloud infrastructure. Edgelet nodes run on standalone hosts at the edge.
+
+Platform train **v{PLATFORM_TRAIN}** requires **Edgelet v{EDGELET_VERSION}** on every node. For manual installs outside {CLI_NAME}, see [Edgelet Installation](/learn/edgelet/installation).
+
+## Prerequisites
+
+Before you deploy **`kind: Agent`**:
+
+- A **control plane** must exist in the target namespace (`ControlPlane`, `KubernetesControlPlane`, or `LocalControlPlane`).
+- The remote host allows **passwordless sudo** for the SSH user. See [Prepare your Remote Hosts](/get-started/deploy/prepare-your-remote-hosts).
+- Set **`spec.config.arch`** (`amd64`, `arm64`, `arm`, `riscv64`, or `auto`). Required for airgap, WASM shims, and arch-sensitive packages.
+- **`metadata.name`** must be lowercase alphanumeric. The name **`default-router`** is reserved.
+- Do not deploy a non-system **Agent** on the same hostname as the Controller **public URL**. Use the control plane **`systemAgent`** block for Edgelet on Controller hosts.
+
+Disconnected installs: set **`spec.airgap: true`** and pin **`spec.package.version`** (native, recommended) or a container image. See [Airgap Deployment](/get-started/deploy/airgap-deployment).
+
+## Deploy sequence
+
+When you run **`deploy -f`** with one or more agent documents:
+
+1. **AgentConfig phase** — Explicit **`kind: AgentConfig`** documents run first. For each **`Agent`** or **`LocalAgent`** without a matching AgentConfig, {CLI_NAME} **synthesizes** AgentConfig from **`spec.config`** (matched by **`metadata.name`**).
+2. **Bootstrap** — Embedded scripts (or your **`spec.scripts`** overrides) install Edgelet on the host.
+3. **Provision** — **`edgelet config`** and **`edgelet provision`** register the node with the Controller.
+4. **Namespace cache** — SSH details and agent metadata are stored under **`~/.iofog/v3`**.
+
+**Order in multi-document YAML:** Upstream **`upstreamRouters`** and **`upstreamNatsServers`** values are **agent names**. Those nodes must already exist on the Controller, or appear **earlier** in the same file.
+
+Optional **`spec.controllerEndpoint`** overrides the Controller URL used during provision when it differs from the control plane stored in the namespace.
+
+Field reference: [Edgelet nodes in Learn](/learn/edgelet-nodes).
+
+## Deploy Edgelet nodes on remote hosts
+
+Create `agent.yaml`:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: zebra-1
+spec:
+  host: 38.101.23.10
+  ssh:
+    user: foo
+    keyFile: ~/.ssh/id_rsa
+  package:
+    version: "{{EDGELET_VERSION}}"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+    upstreamRouters:
+      - default-router
+    upstreamNatsServers:
+      - default-nats-hub
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+`}</FlavorYaml>
+
+Edit `host`, `ssh.user`, and `ssh.keyFile` for your remote host.
+
+When you omit `scripts`, {CLI_NAME} runs the embedded Edgelet bootstrap bundle on the host over SSH, writes `config.yaml`, then runs `edgelet config` and `edgelet provision`.
+
+Deploy:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f agent.yaml`}</CliBlock>
+
+## Verify the deployment
+
+<CliBlock>{`{{CLI_NAME}} get agents`}</CliBlock>
+
+<CliBlock>{`{{CLI_NAME}} describe agent zebra-1`}</CliBlock>
+
+## LocalAgent on the CLI machine
+
+Use **`kind: LocalAgent`** when you need an **extra** Edgelet node on the same machine that runs {CLI_NAME}. A **`LocalControlPlane`** deploy already provisions a **system** node via **`spec.systemAgent`**. Use **`LocalAgent`** only when you need another local node (for example desktop dev with docker).
+
+- No SSH block. Bootstrap runs locally with the same layered scripts as remote agents.
+- **`spec.scripts`** overrides work the same way as on **`Agent`**.
+- **OfflineImage** targets remote **`Agent`** names only, not **`LocalAgent`**.
+
+See [LocalAgent fields](/reference/yaml/local-agent).
+
+## Deploy Edgelet as a container
+
+Set `deploymentType: container` and pin the Edgelet image:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-1
+spec:
+  host: 38.101.23.10
+  ssh:
+    user: foo
+    keyFile: ~/.ssh/id_rsa
+  package:
+    container:
+      image: {{REGISTRY}}/edgelet:{{EDGELET_VERSION}}
+  config:
+    arch: amd64
+    deploymentType: container
+    containerEngine: docker
+`}</FlavorYaml>
+
+When `containerEngine` is `docker` or `podman`, the bootstrap installs or configures that engine on the host unless you override **`scripts.deps`**. When `containerEngine` is `edgelet` (linux native default), the deps step is a no-op.
+
+## Default bootstrap (no custom scripts)
+
+{CLI_NAME} installs Edgelet through **embedded shell layers** staged under `/tmp/edgelet-scripts` on the target host, then Go-side configuration and provisioning. The CLI does not call the upstream Edgelet monolith `install.sh` directly at runtime.
+
+Embedded scripts ship in the CLI repository: <a href={CLI_REPO_EDGELET_ASSETS_URL}>assets/edgelet</a>.
+
+| Phase | What runs |
+| ----- | --------- |
+| **Bootstrap** | Stage scripts, pre-install (prereqs, detect init, deps, install), materialize `config.yaml`, post-install (init units, start, wait, bundled) |
+| **Provision** | `edgelet config`, optional CA install, `edgelet provision` |
+
+Pre-install order:
+
+```text
+check_prereqs → detect_init → deps → install [→ install_wasm_runtimes if WASM scope allows]
+```
+
+Post-install order:
+
+```text
+install_init_units → start_edgelet → configure_container_edgelet → wait_edgelet_ready → bundled
+```
+
+Defaults when omitted: `deploymentType: native`, `containerEngine: edgelet` on linux. For Wasm handlers, set `package.wasm` on the Agent (linux native only). See [Wasm runtime](/learn/edgelet/container-engines).
+
+## Customize Edgelet installation
+
+{CLI_NAME} can install Edgelet on many Linux distributions out of the box. To support other host environments, supply custom installation scripts for Edgelet and its dependencies.
+
+### What you can override in YAML
+
+Only three layers are overridable under `spec.scripts`:
+
+| YAML key | Layer | Empty `entrypoint` | Set `entrypoint` |
+| -------- | ----- | ------------------ | ---------------- |
+| `scripts.deps` | Dependencies (docker/podman) | Embedded `install_deps.sh` runs | Your script from `scripts.dir` runs; embedded deps are not added |
+| `scripts.install` | Edgelet binary or container prep | Embedded `install.sh` or `install_container.sh` runs | Your script runs; embedded install bundle and `lib/*.sh` are **not** staged |
+| `scripts.uninstall` | Teardown on delete | Embedded `uninstall.sh` runs | Your script runs; embedded uninstall is not added |
+
+**Prerequisites** (`check_prereqs.sh`) is always embedded and always runs on remote hosts. Post-install layers (`install_init_units.sh`, `start_edgelet.sh`, `wait_edgelet_ready.sh`, `bundled.sh`, and others) always run with fixed script names. You cannot point them at alternate entrypoints in YAML.
+
+`scripts.dir` is a directory on the **operator machine**. {CLI_NAME} reads files locally, then stages them to `/tmp/edgelet-scripts` on the target host.
+
+### Custom install behavior
+
+When you set `scripts.install.entrypoint`, the CLI sets **custom install** mode:
+
+- {CLI_NAME} does **not** inject `package.version` or `package.container.image` into install args. Pass `--version=` or `--image=` in `scripts.install.args`.
+- Embedded `install.sh`, `install_container.sh`, and `lib/*.sh` are not staged. Your `scripts.dir` must contain every script the bootstrap sequence still invokes (detect init, post-install layers, and any libs your install script sources).
+- Airgap binary transfer still works. Include `--airgap` and `--bin-path=` in `scripts.install.args` when needed.
+
+When you override only `scripts.deps.entrypoint`, the full embedded install bundle and post-install scripts still run.
+
+### Example: custom deps only
+
+Use this pattern for a corporate docker mirror or custom engine setup. Embedded install and post-install scripts still run.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: meerkat-1
+spec:
+  host: 34.82.205.186
+  ssh:
+    user: bob
+    keyFile: ~/.ssh/id_rsa
+  package:
+    version: "{{EDGELET_VERSION}}"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: docker
+  scripts:
+    dir: assets/edgelet
+    deps:
+      entrypoint: install_deps.sh
+      args:
+        - docker
+        - native
+`}</FlavorYaml>
+
+Place your custom `install_deps.sh` in `assets/edgelet`.
+
+### Example: all three layers overridden
+
+When you set entrypoints for deps, install, and uninstall, `scripts.dir` must contain every script the bootstrap sequence invokes, not just the three entrypoints.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: meerkat-2
+spec:
+  host: 34.82.205.186
+  ssh:
+    user: bob
+    keyFile: ~/.ssh/id_rsa
+  package:
+    version: "{{EDGELET_VERSION}}"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+  scripts:
+    dir: assets/edgelet
+    deps:
+      entrypoint: install_deps.sh
+    install:
+      entrypoint: install.sh
+      args:
+        - "--version={{EDGELET_VERSION}}"
+        - "--skip-config"
+        - "--skip-start"
+    uninstall:
+      entrypoint: uninstall.sh
+      args:
+        - "--remove-data"
+`}</FlavorYaml>
+
+Example script layout (minimum when install is custom):
+
+```bash
+$ ls assets/edgelet
+check_prereqs.sh      # optional in dir; CLI always embeds this
+detect_init.sh
+install_deps.sh
+install.sh
+install_init_units.sh
+start_edgelet.sh
+configure_container_edgelet.sh
+wait_edgelet_ready.sh
+bundled.sh
+uninstall.sh
+lib/
+```
+
+Default embedded `install.sh` always receives `--skip-config` and `--skip-start` because Go writes config and `start_edgelet.sh` owns the start layer. Use the same flags when you override install.
+
+### Example: airgap with custom install args
+
+Set `airgap: true` on the Agent. {CLI_NAME} transfers the binary to the host before bootstrap. With a custom install entrypoint, pass airgap flags explicitly:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: airgap-1
+spec:
+  host: 10.0.0.5
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+  airgap: true
+  package:
+    version: "{{EDGELET_VERSION}}"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+  scripts:
+    dir: ./scripts
+    install:
+      entrypoint: install.sh
+      args:
+        - "--airgap"
+        - "--bin-path=/tmp/edgelet-linux-amd64"
+        - "--version={{EDGELET_VERSION}}"
+        - "--skip-config"
+        - "--skip-start"
+`}</FlavorYaml>
+
+For default bootstrap airgap (no custom install), see [Airgap Deployment](/get-started/deploy/airgap-deployment).
+
+### Example: control plane system agent scripts
+
+Edgelet on a remote Control Plane host uses the same bootstrap during CP deploy. Declare scripts under `controllers[].systemAgent.scripts`:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: cp-1
+spec:
+  controllers:
+    - name: cp-host-1
+      host: 10.0.0.10
+      ssh:
+        user: ubuntu
+        keyFile: ~/.ssh/id_rsa
+      systemAgent:
+        config:
+          arch: amd64
+          deploymentType: native
+          containerEngine: edgelet
+        scripts:
+          dir: ./cp-scripts
+`}</FlavorYaml>
+
+Bootstrap runs when the Control Plane host is prepared. Provision runs later when the system agent registers.
+
+### Troubleshooting custom scripts
+
+| Symptom | Likely cause | Action |
+| ------- | ------------ | ------ |
+| Post-install script not found | Custom install set; embedded post-install scripts not staged | Add missing scripts to `scripts.dir` |
+| Version or image ignored | Custom install entrypoint set | Pass `--version=` or `--image=` in `scripts.install.args` |
+| Remote deploy fails at prereqs | Passwordless sudo missing | Fix sudoers for the SSH user |
+| `install_deps` exits immediately | `containerEngine: edgelet` | Expected no-op; not an error |
+| WASM step skipped | Scope gate (linux native only) | See [Wasm runtime](/learn/edgelet/container-engines) |
+
+Check out the [Edgelet nodes in Learn](/learn/edgelet-nodes) for all fields.
+
+:::tip[Where to go from here?]
+<p>Manage provisioned nodes in <a href="/get-started/edgelet-nodes/introduction">Edgelet node management</a> (configuration, attach, pruning, upgrade).</p>
+<p>Deploy microservices next: <a href="/get-started/quick-start-local">Quick Start With Local Deployment</a> or <a href="/get-started/workloads/applications">Microservice Management</a>.</p>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

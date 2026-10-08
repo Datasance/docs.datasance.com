@@ -1,0 +1,87 @@
+---
+title: RuntimeClass fields
+description: Field reference for kind RuntimeClass. The handler is a root field, and the name is metadata.name.
+keywords: [runtime class, yaml, fields, handler, wasm, wasmtime]
+slug: /reference/yaml/runtime-class
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# RuntimeClass fields
+
+Reference for Controller `kind: RuntimeClass`. Attach and microservice binding are on [Runtime classes](/learn/config/runtime-classes).
+
+`handler` is a top-level field, beside `metadata`. Describe uses the same shape and has no `spec` block. Author the root `handler` so a later describe round-trips.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: RuntimeClass # required, string
+metadata:
+  name: wasmtime # required, string. Lowercase alphanumeric
+  namespace: my-ecn # no, string
+handler: wasmtime # required, string. Document root. Not under spec. spin, slight, lunatic, wws, wasmedge, wasmer, wasmtime, or edgelet-wasmtime
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+status:
+  linkedAgents: [] # describe only
+```
+
+
+## Fields
+
+| Field | Location | Required | Description |
+| ----- | -------- | -------- | ----------- |
+| `metadata.name` | metadata | Yes | Controller resource name. Lowercase alphanumeric. Often the same string as `handler`. |
+| `handler` | document root | Yes | Runtime key. The microservice copies it to `container.runtime`. |
+
+## Handler keys
+
+The key must match a shim installed on the Edgelet node. Deploying this object does not install the binary. See [Container engines](/learn/edgelet/container-engines).
+
+| Handler | Shim |
+| ------- | ---- |
+| `spin` | Spin |
+| `slight` | Slight |
+| `lunatic` | Lunatic |
+| `wws` | Wasmer WWS |
+| `wasmedge` | WasmEdge |
+| `wasmer` | Wasmer |
+| `wasmtime` | Wasmtime |
+| `edgelet-wasmtime` | Edgelet Wasmtime |
+
+## Validation
+
+| Condition | Error |
+| --------- | ----- |
+| Missing `metadata.name` | Name must be specified. |
+| Invalid name | Lowercase alphanumeric. |
+| Missing `handler` | handler must be specified. |
+
+The Controller can reject an unknown handler or a link request with 400 or 409.
+
+## Describe
+
+```yaml
+kind: RuntimeClass
+metadata:
+  name: wasmtime
+  namespace: my-ecn
+handler: wasmtime
+status:
+  linkedAgents:
+    - edge-01
+```
+
+Attach and detach accept Edgelet node names. The link API accepts Edgelet nodes.
+
+<EditPageAdmonition />

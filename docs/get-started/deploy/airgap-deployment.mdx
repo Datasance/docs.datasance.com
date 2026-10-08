@@ -1,0 +1,207 @@
+---
+title: Airgap Deployment
+description: Deploy the control plane and Edgelet nodes without outbound registry access. Native airgap, container airgap, and OfflineImage for microservices on platform train v3.9.0.
+keywords: [airgap, offline deployment, restricted network, control plane, edgelet, OfflineImage, edge deployment, multi-arch]
+slug: /get-started/deploy/airgap-deployment
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import {
+  CLI_NAME,
+  CLI_REPO_EDGELET_ASSETS_URL,
+  EDGELET_VERSION,
+  PLATFORM_TRAIN,
+} from '@site/src/config/distribution';
+
+# Airgap deployment
+
+Use this guide when **remote Control Plane hosts** or **Edgelet node hosts** cannot reach the public internet or container registries. **<CliName />** runs on a connected operator machine. It pulls or caches artifacts locally, then transfers them over SSH.
+
+This page covers **SSH deploy paths only** (remote **`ControlPlane`** and fleet **`Agent`**). Kubernetes and Helm installs are out of scope here.
+
+## End-to-end workflow
+
+1. Prepare remote hosts ([SSH and sudo](/get-started/deploy/prepare-your-remote-hosts)).
+2. Deploy a remote **`ControlPlane`** with **`spec.airgap: true`** and pinned image tags.
+3. Deploy fleet **`Agent`** documents with **`spec.airgap: true`** (recommended: **native** + **`package.version`**).
+4. Apply **`OfflineImage`** manifests so microservice images load on nodes before application deploy.
+5. Deploy applications that reference offline catalog entries ([Offline images in Learn](/learn/config/offline-images)).
+
+Set **`spec.airgap: true`** on the YAML kind, or **`controllers[].airgap`** per host when only some Controller hosts are disconnected. Field rules: [Remote ControlPlane schema](/reference/yaml/remote-control-plane) and [Multi-controller HA](/learn/control-plane/remote-ha#airgap).
+
+## Native vs container on edge hosts
+
+| | **Native + `package.version` (recommended)** | **Container + `package.container.image`** |
+| --- | --- | --- |
+| **Edge host engine** | Embedded **`edgelet`** engine (default) | **docker** or **podman** must exist on the host |
+| **What <CliName /> stages** | Edgelet binary from operator cache (`~/.iofog/v3/airgap-binaries/`) | Container images loaded on the host |
+| **Typical use** | Production air-gapped edges | Standardize on containerized Edgelet |
+
+:::warning[Container airgap only]
+For **`deploymentType: container`**, remote hosts need a working **docker** or **podman** before deploy. Native airgap does **not** require a separate container engine on the edge host.
+:::
+
+## Remote ControlPlane
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: remote
+spec:
+  airgap: true
+  iofogUser:
+    name: Foo
+    surname: Bar
+    email: mail@example.com
+  controller:
+    publicUrl: https://controller.example.com:51121
+    consoleUrl: https://console.example.com:8008
+    package:
+      image: {{REGISTRY}}/controller:v{{PLATFORM_TRAIN}}
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:{{PLATFORM_TRAIN}}
+      arm64: {{REGISTRY}}/router:{{PLATFORM_TRAIN}}
+      riscv64: {{REGISTRY}}/router:{{PLATFORM_TRAIN}}
+      arm: {{REGISTRY}}/router:{{PLATFORM_TRAIN}}
+    nats:
+      amd64: {{REGISTRY}}/nats:2.14.3
+      arm64: {{REGISTRY}}/nats:2.14.3
+      riscv64: {{REGISTRY}}/nats:2.14.3
+      arm: {{REGISTRY}}/nats:2.14.3
+  nats:
+    enabled: true
+  controllers:
+    - name: remote-1
+      host: 10.0.23.66
+      ssh:
+        user: admin
+        keyFile: ~/.ssh/id_rsa
+      systemAgent:
+        package:
+          version: "{{EDGELET_VERSION}}"
+        config:
+          deploymentType: native
+          containerEngine: edgelet
+          arch: amd64
+          host: 192.168.139.148
+`}</FlavorYaml>
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
+
+With **`spec.airgap: true`**, <CliName /> downloads Controller, Router, NATS, debugger, and system Edgelet artifacts on the operator machine and transfers them over SSH.
+
+Requirements:
+
+- Set **`controllers[].systemAgent.config.arch`** on every controller when airgap is enabled (global or per-host).
+- List all four architecture keys under **`systemMicroservices`** when the fleet mixes CPU types.
+- Pin **`controller.package.image`** and router tags to your **v{PLATFORM_TRAIN}** train.
+
+Custom bootstrap scripts: **`controllers[].systemAgent.scripts`** (same merge rules as fleet **`Agent`**). Embedded layers live in the CLI repo: <a href={CLI_REPO_EDGELET_ASSETS_URL}>assets/edgelet</a>.
+
+Full **`ControlPlane`** field reference: [Remote deploy guide](/learn/control-plane/remote).
+
+## Remote Edgelet nodes (recommended: native airgap)
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-airgap-1
+spec:
+  host: 10.0.0.51
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+  airgap: true
+  package:
+    version: "{{EDGELET_VERSION}}"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+    upstreamRouters:
+      - default-router
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+    upstreamNatsServers:
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+`}</FlavorYaml>
+
+Set **`spec.airgap: true`**, pin **`spec.package.version`**, and set **`spec.config.arch`**. <CliName /> stages the Edgelet binary and runs the default bootstrap on the host.
+
+First-time remote install steps: [Setup Edgelet nodes](/get-started/deploy/setup-edgelet-nodes).
+
+### Container airgap (alternative)
+
+When Edgelet runs as a container on the edge host, pre-install **docker** or **podman**, then use:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-container-airgap
+spec:
+  host: 192.168.139.148
+  ssh:
+    user: foo
+    keyFile: ~/.ssh/id_rsa
+    port: 22
+  airgap: true
+  package:
+    container:
+      image: {{REGISTRY}}/edgelet:{{EDGELET_VERSION}}
+  config:
+    deploymentType: container
+    containerEngine: docker
+    arch: arm64
+`}</FlavorYaml>
+
+<CliName /> pulls Edgelet, Router, NATS, and debugger images on the operator machine, transfers them over SSH, and loads them into the host engine.
+
+## OfflineImage for microservices
+
+Edgelet nodes still cannot pull application images at runtime in an air-gapped site. Use **`kind: OfflineImage`** after agents exist in the namespace.
+
+[Offline images in Learn](/learn/config/offline-images) is the reference for multi-arch keys (`amd64`, `arm64`, `riscv64`, `arm`), **`spec.auth`**, and CLI flags (`--no-cache`, `--transfer-pool`).
+
+Steps:
+
+1. Define **`OfflineImage`** YAML with image tags per architecture and **`spec.agent`** names (remote **`Agent`** only).
+2. Run <code>{CLI_NAME} deploy -f offline-image.yaml</code>. <CliName /> pulls on the operator machine, transfers over SSH, and loads images on each node. Catalog items use registry **`from_cache`** (ID **`2`**).
+3. Deploy microservices that reference the offline catalog name.
+
+Example:
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: OfflineImage
+metadata:
+  name: my-app-offline
+spec:
+  amd64: {{REGISTRY}}/my-app:1.0
+  arm64: {{REGISTRY}}/my-app:1.0
+  agent:
+    - edge-airgap-1
+    - edge-airgap-2
+`}</FlavorYaml>
+
+Deploy order: **Control Plane → fleet Agents → OfflineImage → applications**.
+
+For the full platform path, see [Platform deployment introduction](/get-started/deploy/introduction).
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

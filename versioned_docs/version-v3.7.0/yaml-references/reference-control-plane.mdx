@@ -6,7 +6,7 @@ keywords: [control plane yaml, kubernetes control plane, remote control plane, p
 
 # Control Plane YAML Specification
 
-`potctl` allows users to deploy Edge Compute Networks (ECNs). The resources that make up an ECN—Controller, Router, and optionally NATS—are defined in YAML. This page covers three control plane kinds: **KubernetesControlPlane** (for Kubernetes clusters), **ControlPlane** (for remote hosts), and **LocalControlPlane** (for local Docker). When NATS is enabled, the control plane runs NATS server(s); applications and microservices use [NATS Account Rules](../security/nats-account-rule) and [NATS User Rules](../security/nats-user-rule) for access. For TLS and certificates, see [Certificates for Router and NATS](../security/certificates-manager).
+`potctl` allows users to deploy Edge Compute Networks (ECNs). The resources that make up an ECN-Controller, Router, and optionally NATS-are defined in YAML. This page covers three control plane kinds: **KubernetesControlPlane** (for Kubernetes clusters), **ControlPlane** (for remote hosts), and **LocalControlPlane** (for local Docker). When NATS is enabled, the control plane runs NATS server(s); applications and microservices use [NATS Account Rules](../security/nats-account-rule) and [NATS User Rules](../security/nats-user-rule) for access. For TLS and certificates, see [Certificates for Router and NATS](../security/certificates-manager).
 
 :::warning[potctl and ECN version compatibility]
   <p>You can connect to an older ECN with potctl +v1.6.0 for view-only purposes. If you would like full control over the ECN with potctl +v1.6.0, you should delete the ECN with your older potctl and then redeploy with potctl +v1.6.0 .</p>

@@ -1,0 +1,93 @@
+---
+title: AI Model Catalog
+description: kind Model is a fleet artifact in a registry. Attach it to Edgelet nodes, then bind spec.models on the microservice.
+keywords: [ai model catalog, model, fleet model, attach, registry, microservice]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# AI Model Catalog
+
+A fleet **model** is a registry-backed artifact on the Controller, such as weights or a GGUF bundle. It is not a container. Attach it to the Edgelet nodes that should hold a copy, then bind it on the microservice.
+
+The short map is [Models and knowledge](/get-started/workloads/models-and-knowledge). Fields are on [Model fields](/reference/yaml/model).
+
+A Model and a [Knowledge](/learn/config/ai-knowledge-catalog) object may share a name. They are separate lists.
+
+## When to use it
+
+Use `kind: Model` when the artifact lives in a registry and more than one Edgelet node may need it. The [registry](/learn/config/registries) row must exist. Aliases `remote` and `local` are valid. A new registry id is known only after `get registries`.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f model.yaml -n my-ecn`}</CliBlock>
+
+Deploy upserts by `metadata.name`. A missing name creates the row. The same name updates `repo`, `revision`, `files`, `format`, or the registry reference. Omit `spec.uuid`. The Controller decides whether linked nodes need a refresh.
+
+<FlavorYaml title="model.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Model
+metadata:
+  name: defect-weights
+  namespace: my-ecn
+spec:
+  repo: org/defect-weights
+  registry: remote
+  format: gguf
+```
+
+</FlavorYaml>
+
+## How a microservice uses it
+
+Attach the model to the Edgelet node first. Then set `spec.models` on the microservice. Item names match `metadata.name`. The field shape is on [Microservice fields](/reference/yaml/microservice).
+
+<FlavorYaml title="bind.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  models:
+    items:
+      - name: defect-weights
+```
+
+</FlavorYaml>
+
+A model-only change on an existing microservice can use `deploy -f --patch-model`. See [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get models -n my-ecn
+{{CLI_NAME}} describe model defect-weights -n my-ecn
+{{CLI_NAME}} attach model defect-weights edge-01 -n my-ecn
+{{CLI_NAME}} detach model defect-weights edge-01 -n my-ecn
+{{CLI_NAME}} delete model defect-weights -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_model`}>describe model</Link> includes `status.linkedAgents`. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_attach_model`}>attach model</Link> and <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_detach_model`}>detach model</Link> take the model name and one or more Edgelet node names. Confirm `modelStatus` and `activeModels` with `describe agent`. Delete can fail while a microservice or a link still uses the model.
+
+## Edgelet-local models {#edgelet-local-models}
+
+On-node model files use `edgelet deploy`. That path has no Controller catalog row and no `attach model`. See [Models](/learn/edgelet/models).
+
+## Console
+
+**Config → AI Model Catalog** lists models, edits YAML, and attaches nodes. See [Catalog and templates](/get-started/edgeops-console/catalog-and-templates).
+
+## Related
+
+- [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog)
+- [Registries](/learn/config/registries)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

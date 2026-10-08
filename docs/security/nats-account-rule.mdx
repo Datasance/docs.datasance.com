@@ -4,17 +4,21 @@ description: Authorization policy for a NATs account. Define limits, JetStream, 
 keywords: [nats account rule, nats, messaging, datasance pot, jetstream, account policy]
 ---
 
+:::tip[YAML field reference]
+See [NATS account rules](/learn/message-bus/account-rules) in Learn for canonical YAML.
+:::
+
 # NATS Account Rule
 
-A **NATS Account Rule** is an authorization policy that applies to a **NATS account**. It defines connection and resource limits, JetStream limits, and which subjects the account can publish to or subscribe to (via allow/deny lists). The Controller uses these rules when generating NATS account configuration and JWTs so that microservices with [NATS access](../applications/introduction) get the correct permissions.
+A **NATS Account Rule** is an authorization policy that applies to a **NATS account**. It defines connection and resource limits, JetStream limits, and which subjects the account can publish to or subscribe to (via allow/deny lists). The Controller uses these rules when generating NATS account configuration and JWTs so that microservices with [NATS access](/get-started/workloads) get the correct permissions.
 
-For the YAML spec and a short example, see [NatsAccountRule YAML Specification](../yaml-references/reference-nats-account-rule).
+For the YAML spec and a short example, see [NATS account rules in Learn](/learn/message-bus/account-rules).
 
 ## Relation to Applications and microservices
 
-**Application level:** An [Application](../yaml-references/reference-application) can set `spec.natsConfig.natsAccess: true` and `spec.natsConfig.natsRule` to the **name of this NATs Account Rule**. That assigns the application (and its NATs traffic) to this account's policy.
+**Application level:** An [Application](/learn/workloads/applications) can set `spec.natsConfig.natsAccess: true` and `spec.natsConfig.natsRule` to the **name of this NATs Account Rule**. That assigns the application (and its NATs traffic) to this account's policy.
 
-**Microservice level:** Each [Microservice](../yaml-references/reference-application) sets `natsConfig.natsRule` to a **NATs User Rule** name. The Controller issues credentials for that user within the account. So: Application → Account Rule (account policy); Microservice → [NATs User Rule](nats-user-rule) (user permissions within that account).
+**Microservice level:** Each [Microservice](/learn/workloads/microservices) sets `natsConfig.natsRule` to a **NATs User Rule** name. The Controller issues credentials for that user within the account. So: Application → Account Rule (account policy); Microservice → [NATs User Rule](nats-user-rule) (user permissions within that account).
 
 ## Main fields
 

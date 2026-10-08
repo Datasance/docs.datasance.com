@@ -97,13 +97,13 @@ spec:
 
 At **application** level you can enable NATs and bind the application to a NATs account:
 
-- **`spec.natsConfig.natsAccess`** — Set to `true` to enable NATs for the application.
-- **`spec.natsConfig.natsRule`** — Name of a [NATs Account Rule](../security/nats-account-rule) that defines the account policy (limits, imports/exports, JetStream).
+- **`spec.natsConfig.natsAccess`** - Set to `true` to enable NATs for the application.
+- **`spec.natsConfig.natsRule`** - Name of a [NATs Account Rule](../security/nats-account-rule) that defines the account policy (limits, imports/exports, JetStream).
 
 At **microservice** level, each microservice that needs NATs credentials specifies:
 
-- **`natsConfig.natsAccess`** — Set to `true` to enable NATs for that microservice.
-- **`natsConfig.natsRule`** — Name of a [NATs User Rule](../security/nats-user-rule) that defines the user's permissions within the application's account.
+- **`natsConfig.natsAccess`** - Set to `true` to enable NATs for that microservice.
+- **`natsConfig.natsRule`** - Name of a [NATs User Rule](../security/nats-user-rule) that defines the user's permissions within the application's account.
 
 Example: Application uses `natsRule: test-export` (Account Rule); a microservice uses `natsRule: default-user` (User Rule). The Controller provisions credentials accordingly. See [NATs JWT Authentication](../security/nats-jwt-authentication) for how credentials are issued.
 

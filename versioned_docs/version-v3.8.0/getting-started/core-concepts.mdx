@@ -1,0 +1,107 @@
+---
+title: Core Concepts
+description: Edge orchestration concepts for v3.8.0. Edgelet nodes, declarative workloads, secure connectivity, and EdgeOps Console on the greenfield platform train.
+keywords: [core concepts, edge computing, edgeops, microservices, edgelet, iofog, datasance, v3.8]
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorOnly from '@site/src/components/flavor/FlavorOnly';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Core Concepts
+
+The enterprise edge has become a business-critical frontier. Today, up to 75% of enterprise data is created outside the data centers. It is generated across factories, stores, remote sites, vehicles, and infrastructure. The scale is massive.
+
+At the same time, edge environments remain resource-constrained by design. They operate in real-world conditions, with limited connectivity and tight operational margins. Yet the hardware landscape is changing fast. New generations of edge CPUs and GPUs are now powerful, affordable, and widely available. This makes real-time analytics, Edge AI, and autonomous decision-making practical at the edge.
+
+Traditional centralized cloud models cannot keep up. Latency is dictated by physics. Costs grow with every round trip. When connectivity is degraded, remote sites lose autonomy. That creates risk, complexity, and operational friction for distributed deployments.
+
+<FlavorOnly distribution="datasance">
+
+**<ProductName />** is an enterprise-grade unified edge orchestration platform designed for large-scale distributed edge environments. It enables organizations to manage, secure, and operate thousands of applications and software workloads across heterogeneous **Edgelet nodes**, from a single, consistent operating model.
+
+**<ProductName />** brings cloud-native principles to the edge without ignoring real-world constraints. It is secure, vendor-agnostic, and open by design. By reducing operational complexity and restoring local autonomy, it helps enterprises regain control of their edge strategy.
+
+## Enterprise edge challenges
+
+Edge computing runs some or all processing and storage at the wide-area **edge** instead of only in a central data center or cloud.
+
+Running IT at the enterprise edge, in standalone or hybrid mode, is fundamentally different from running it in the cloud. Edge solutions must embrace the constraints of real sites, real hardware, and unreliable networks.
+
+### Scale and diversity
+
+Enterprises rarely operate at the edge in only a few locations. They operate in tens, hundreds, or thousands of sites: factories, retail stores, energy assets, vehicles, and remote infrastructure. Edge environments combine different CPU architectures, GPUs, operating systems, and hardware generations. Point solutions and custom scripts do not scale and become fragile quickly.
+
+### Increasing applications and changing requirements
+
+Enterprise applications need more real-time or near-real-time processing. Workloads are more latency-sensitive. Unstable upstream bandwidth, high egress cost, and lack of redundancy push critical processing closer to the edge and require more autonomous operation when the WAN is down.
+
+### Security and management
+
+Edge devices are often physically exposed and untrusted. Securing them at scale is hard. Traffic between headquarters and edge sites, and between edge sites, must be encrypted. Distributed edge platforms need built-in trust, automation, and verifiable control. Lifecycle management (onboarding, updates, patching, monitoring) is costly without a unified control plane.
+
+### Cost
+
+Digitalization increases infrastructure spend. Siloed edge stacks duplicate capex. Manual operations and parallel toolchains inflate opex. A single orchestration layer reduces redundant hardware and operational toil.
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+**<ProductName />** brings cloud-native principles to the edge without ignoring real-world constraints. It is secure, vendor-agnostic, and open by design, reducing operational complexity while preserving local autonomy at each site.
+
+</FlavorOnly>
+
+## Introducing <ProductName />
+
+**<ProductName />** operates edge environments as a managed cluster even when individual **Edgelet nodes** must stay isolated for reliability and security. It shifts work from manual, site-by-site operations to a unified, cluster-wide model while preserving local autonomy at each edge location.
+
+## Key capabilities
+
+**<ProductName />** provides the capabilities required to run and operate software workloads across distributed edge environments. It focuses on the full lifecycle of **applications**, **services**, and **edge operations** with unified control at scale.
+
+### Edge environment and Edgelet nodes
+
+**<ProductName />** simplifies how edge environments are onboarded. **Edgelet nodes** use the **Edgelet** runtime to establish secure identity and connectivity to the **Control Plane**. Installation and upgrades are automated through **<CliName />** and the [EdgeOps Console](/edgeops-console/introduction), without deep per-site customization.
+
+The platform provides an open operational layer above hardware and operating systems. You manage diverse environments as one cluster while preserving local isolation.
+
+### Application and workload lifecycle orchestration
+
+**<ProductName />** orchestrates the complete lifecycle of containerized workloads at the edge. Applications are deployed, updated, versioned, and retired consistently using declarative YAML manifests.
+
+Environmental differences are abstracted so teams focus on what should run and where, not on per-site wiring. That enables repeatable deployments, controlled rollouts, and safe updates across edge clusters.
+
+### Configuration, secrets, and policy management
+
+Configuration values and secrets are defined centrally and distributed securely to edge workloads at runtime. Role-based access control (RBAC) ensures users, automation, and workloads stay within intended scope.
+
+### Secure connectivity
+
+**<ProductName />** establishes trust between the **Control Plane** and edge devices. Each **Edgelet node** and workload uses verified identity with built-in certificate management.
+
+A secure service mesh (**Router**, Skupper-based) and distributed message bus (**NATS**) are provided by default. Services communicate with encryption across nodes and sites while edge networks can remain isolated from a routing perspective.
+
+### Observability and operations
+
+Teams observe workload status, connectivity, and health across sites from one operational view. **<CliName />** supports automation-first workflows. The [EdgeOps Console](/edgeops-console/introduction) supports day-two operational visibility and cluster management.
+
+<FlavorOnly distribution="datasance">
+
+### Open-source foundation with enterprise support
+
+**<ProductName />** is built on an open-source foundation shared with **Eclipse ioFog**, with transparency and extensibility. Datasance complements that foundation with enterprise-grade support for mission-critical deployments.
+
+</FlavorOnly>
+
+:::info[Ready for more?]
+
+- For component relationships and deployment topologies, see [Architecture overview](/getting-started/architecture).
+- To run a lab cluster locally, follow [Quick start with local deployment](/getting-started/quick-start-local).
+- For production paths, see [Platform deployment](/platform-deployment/introduction) and [Prepare your Kubernetes cluster](/platform-deployment/kubernetes-prepare-cluster).
+- For an end-to-end walkthrough, try the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant).
+
+:::
+
+<EditPageAdmonition />

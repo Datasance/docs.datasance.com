@@ -1,0 +1,79 @@
+---
+title: Download
+description: Install the platform CLI v3.9.0 on macOS, Linux, or Windows.
+keywords: [potctl, iofogctl, install, homebrew, download, v3.9]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import CliDownloadWindowsSteps from '@site/src/components/docs/CliDownloadWindowsSteps';
+import CliDocsLink from '@site/src/components/flavor/CliDocsLink';
+import { CLI_NAME, FLAVOR } from '@site/src/config/distribution';
+
+export const CLI_VERSION = '3.9.0';
+
+# Download and Install {CLI_NAME}
+
+Platform train **v3.9.0** ships **{CLI_NAME}** v{CLI_VERSION}. Install the binary that matches your distribution.
+
+## Install on macOS
+
+Mac users can use Homebrew:
+
+{FLAVOR === 'datasance' ? (
+<CliBlock>{`brew tap Datasance/potctl
+brew install potctl`}</CliBlock>
+) : (
+<CliBlock>{`brew tap eclipse-iofog/iofogctl
+brew install iofogctl`}</CliBlock>
+)}
+
+## Install on Linux
+
+{FLAVOR === 'datasance' ? (
+<>
+<p>Install the Debian package:</p>
+<CliBlock>{`wget -qO- https://downloads.datasance.com/datasance.gpg | sudo tee /etc/apt/trusted.gpg.d/datasance.gpg >/dev/null
+echo "deb [arch=all signed-by=/etc/apt/trusted.gpg.d/datasance.gpg] https://downloads.datasance.com/deb stable main" | sudo tee /etc/apt/sources.list.d/datasance.list >/dev/null
+sudo apt update
+sudo apt install potctl -y`}</CliBlock>
+<p>Or install the RPM package:</p>
+<CliBlock>{`cd /etc/yum.repos.d
+curl https://downloads.datasance.com/datasance.repo -LO
+sudo yum update
+sudo yum install potctl`}</CliBlock>
+</>
+) : (
+<>
+<p>Install the Debian package:</p>
+<CliBlock>{`wget -qO- https://iofog.datasance.com/iofog.gpg | sudo tee /etc/apt/trusted.gpg.d/iofog.gpg >/dev/null
+echo "deb [arch=all signed-by=/etc/apt/trusted.gpg.d/iofog.gpg] https://iofog.datasance.com/deb stable main" | sudo tee /etc/apt/sources.list.d/iofog.list >/dev/null
+sudo apt update
+sudo apt install iofogctl -y`}</CliBlock>
+<p>Or install the RPM package:</p>
+<CliBlock>{`cd /etc/yum.repos.d
+curl https://iofog.datasance.com/iofog.repo -LO
+sudo yum update
+sudo yum install iofogctl`}</CliBlock>
+</>
+)}
+
+## Install on Windows
+
+<CliDownloadWindowsSteps cliVersion={CLI_VERSION} />
+
+## Verify installation
+
+<CliBlock>{`{{CLI_NAME}} version`}</CliBlock>
+
+You should see version **v{CLI_VERSION}** (or a matching release tag).
+
+:::info[Next steps?]
+  <ul>
+    <li><CliDocsLink path="/getting-familiar">Getting familiar with {CLI_NAME}.</CliDocsLink></li>
+    <li><a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>CLI reference.</a></li>
+  </ul>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

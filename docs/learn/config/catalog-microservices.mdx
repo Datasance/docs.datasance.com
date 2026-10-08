@@ -1,0 +1,72 @@
+---
+title: Catalog microservices
+description: kind CatalogItem is a named multi-arch image set. Microservices point at it with images.catalogId.
+keywords: [catalog item, catalog microservice, multi-arch, image, registry]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Catalog microservices
+
+A **catalog item** is a reusable image set, one reference per architecture. Many microservices can share that row. The Edgelet node pulls the tag that matches its architecture.
+
+The short map is [Registries and catalog](/get-started/workloads/registries). Fields are on [Catalog item fields](/reference/yaml/catalog-item).
+
+## When to use it
+
+Use a catalog item when several microservices run the same images, or when you want the image tags in one place. Inline `images.amd64` and the other arch fields on the microservice are enough for a one-off service.
+
+The [registry](/learn/config/registries) row must exist first. `remote` (id 1) is enough for a public image. [Offline images](/learn/config/offline-images) write their own catalog row on registry id 2. That path is separate from this YAML.
+
+System catalog rows ship with the platform (router, NATS, debugger) and use low ids. Leave them in place. Custom items receive higher ids.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f catalog-item.yaml -n my-ecn`}</CliBlock>
+
+Deploy looks up `metadata.name`. A missing name creates the item. The same name updates it. `spec.id` is not the upsert key. The Controller assigns the id on create.
+
+<FlavorYaml title="catalog-item.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: CatalogItem
+metadata:
+  name: reader
+  namespace: my-ecn
+spec:
+  registry: remote
+  amd64: {{REGISTRY}}/reader:1.0.0
+```
+
+</FlavorYaml>
+
+Set at least one of `amd64`, `arm64`, `riscv64`, or `arm`. Re-deploy the same name to change tags or `spec.registry`.
+
+## How a microservice uses it
+
+Set `images.catalogId` to the id from `get catalog`. You can also refer to the row by its catalog name. Provide `catalogId` or the per-arch image strings. The image field table is on [Microservice fields](/reference/yaml/microservice).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get catalog -n my-ecn
+{{CLI_NAME}} delete catalogitem reader -n my-ecn`}</CliBlock>
+
+There is no `describe catalogitem`. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_get`}>get catalog</Link> lists ids and tags. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_catalogitem`}>delete catalogitem</Link> takes `metadata.name`, resolves it to an id, and deletes. Delete fails for system items and for rows that microservices still reference. There is no `attach`.
+
+## Console
+
+**Config → Catalog Microservices** lists rows next to registries. See [Catalog and templates](/get-started/edgeops-console/catalog-and-templates).
+
+## Related
+
+- [Registries](/learn/config/registries)
+- [Offline images](/learn/config/offline-images)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

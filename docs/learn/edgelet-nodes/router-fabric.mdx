@@ -1,0 +1,141 @@
+---
+title: Router fabric
+description: Router roles on an Edgelet node. Edge, interior, and none modes, TLS, listeners, upstream connectors, and Service bridges.
+keywords: [router, routerMode, upstreamRouters, edgelet node, amqp, service bridge, v3.9]
+slug: /learn/edgelet-nodes/router-fabric
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Router fabric
+
+The router fabric is the AMQP mesh between **Edgelet nodes**. It is separate from a user `kind: Service`. A Service adds TCP connector and listener entries to the router `bridges` section. See [Services](/learn/network/services).
+
+Set the fabric on `Agent` or `LocalAgent` `spec.config`, or on `AgentConfig` `spec`. Field tables are on [AgentConfig fields](/reference/yaml/agent-config). How reconcile creates the microservice is on [Networking](/learn/edgelet-nodes/networking).
+
+## What you declare
+
+A node needs a name, an architecture, and a host, unless `routerMode` is `none`. The default `routerMode` is `edge`.
+
+| `routerMode` | Role | Ports the Controller publishes |
+| ------------ | ---- | ------------------------------ |
+| `edge` | Workload node. Connects inward. Does not accept other routers. | AMQPS `messagingPort` (default 5671) |
+| `interior` | Fabric node. Accepts edge routers and other interior routers. | AMQPS 5671, edge 45671, inter-router 55671 (defaults) |
+| `none` | No router process on this node | None |
+
+`host` is required unless the role is `none`.
+
+Creating `interior` yourself requires `edgeRouterPort` and `interRouterPort` on create. On a remote control plane, the first node in an empty cluster is promoted to the system Edgelet node after validation and receives interior defaults even when the role was omitted. That promotion is the control plane `systemAgent` path. See [Remote networking](/learn/control-plane/remote#networking).
+
+`upstreamRouters` is an Edgelet node name, a UUID, or `default-router`. An edge router cannot be an upstream. If you omit the list, the Controller attaches this node to `default-router` plus every router on a system Edgelet node.
+
+`routerMode: none` rejects `kind: Service` backends of type `microservice` or `agent`, because there is no local router.
+
+<FlavorYaml title="interior-node.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: AgentConfig
+metadata:
+  name: fabric-1
+  namespace: my-ecn
+spec:
+  host: 203.0.113.1
+  arch: amd64
+  routerConfig:
+    routerMode: interior
+    messagingPort: 5671
+    edgeRouterPort: 45671
+    interRouterPort: 55671
+  natsConfig:
+    natsMode: server
+    natsServerPort: 4222
+    natsClusterPort: 6222
+    natsLeafPort: 7422
+    jsStorageSize: 10g
+    jsMemoryStoreSize: 1g
+```
+
+</FlavorYaml>
+
+`edgeRouterPort` and `interRouterPort` are required when you set `routerMode: interior` on create. A typical workload node stays on `edge` and omits those ports. See [Networking](/learn/edgelet-nodes/networking).
+
+## What the Controller builds
+
+For `edge` or `interior`, platform reconcile does the following without further YAML:
+
+1. Creates fabric CAs if needed, and issues this node's router certificates.
+2. Creates system application `system-<agentName>`. See [Applications](/get-started/workloads/applications).
+3. Creates catalog microservice `router` on that node.
+4. Writes router config: listeners, TLS profiles, and connectors to upstreams.
+5. Publishes listener ports on the microservice.
+6. Mounts certificate secrets read-only on the router container.
+7. Assigns a service account and `NET_RAW`.
+
+The process reads `/tmp/skrouterd.json`. `SKUPPER_SITE_ID` is the node UUID. Certificates live under `/etc/skupper-router-certs`.
+
+Interior routers use host networking so edge and inter-router ports bind on the host. Edge routers do not.
+
+## TLS
+
+Two self-signed CAs, valid for 60 months, are created on first use. They are not [catalog CertificateAuthority](/learn/config/certificates) resources.
+
+| CA | Signs | Used for |
+| -- | ----- | -------- |
+| `router-site-ca` | `router-site-server-<agentName>` | Edge and inter-router links between routers |
+| `default-router-local-ca` | `router-local-server-<agentName>`, `router-local-agent-<agentName>` | AMQPS on this node, and local clients with client certificates |
+
+Site certificate SANs include the node `host`, or `localhost`. Local certificates add `localhost`, `127.0.0.1`, `router.default.svc.bridge.local`, Docker internal hosts, and on the default router `router.<namespace>.svc.cluster.local`.
+
+Secrets mount at `/etc/skupper-router-certs/<profileName>/`. SASL `EXTERNAL` means the certificate is the identity. There is no router password.
+
+A host change, or a move across `none`, reissues certificates and flags volume mounts.
+
+`routerMode: none` still creates `default-router-local-ca` and `router-local-agent-<agentName>`.
+
+## Listeners
+
+Every edge and interior router:
+
+| Listener | Port | TLS | Clients |
+| -------- | ---- | --- | ------- |
+| `<uuid>-amqp` | 5672 | No. Not published on the host. | Router-local only |
+| `<uuid>-amqps` | `messagingPort` (5671) | mTLS, SASL EXTERNAL, `router-local-server-<agent>` | Workloads on this node |
+
+Interior adds:
+
+| Listener | Port | Role |
+| -------- | ---- | ---- |
+| `<uuid>-edge` | `edgeRouterPort` (45671) | Accepts edge routers |
+| `<uuid>-inter-router` | `interRouterPort` (55671) | Accepts interior routers |
+
+Both use `router-site-server-<agentName>` and require peer certificates.
+
+## Upstream connectors
+
+One connector per upstream:
+
+| This router | Connector role | Dials upstream port |
+| ----------- | -------------- | ------------------- |
+| edge | `edge` | Upstream `edgeRouterPort` |
+| interior | `inter-router` | Upstream `interRouterPort` |
+
+The connector host is the upstream node's `host`. The connector name is the upstream UUID or `default-router`.
+
+Changing `upstreamRouters` rewrites connectors and flags the node. An interior router with downstream links cannot switch to `edge` until those links are removed.
+
+## Running config
+
+The Controller writes the router microservice config JSON: metadata, site config, listeners, connectors, SSL profiles, and `bridges`.
+
+| Section | Purpose |
+| ------- | ------- |
+| `bridges` | TCP bridges from the Service catalog. Regenerated when Services or tags change. |
+| `metadata.mode` | `edge` or `interior` |
+
+Change the role, ports, host, or upstream list, or deploy a Service. The Controller regenerates config and signals the node.
+
+On a Kubernetes control plane, hub storage may use a ConfigMap for `skrouterd.json`. Edgelet nodes store config in the router system microservice spec. See [Services](/learn/network/services).
+
+<EditPageAdmonition />

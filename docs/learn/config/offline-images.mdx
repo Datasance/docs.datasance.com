@@ -1,0 +1,82 @@
+---
+title: Offline images
+description: kind OfflineImage pulls images on the operator machine, copies them to remote Edgelet nodes, and upserts a catalog item on registry id 2.
+keywords: [offline image, airgap, catalog, local registry, remote edgelet node]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Offline images
+
+An **offline image** pulls container images on the operator machine, copies them to remote Edgelet nodes, and creates or updates a [catalog item](/learn/config/catalog-microservices) on registry id 2 (`local`).
+
+Fields are on [OfflineImage fields](/reference/yaml/offline-image). Air-gapped install context is on [Airgap deployment](/get-started/deploy/airgap-deployment).
+
+This kind is not a long-lived Controller object. Re-running deploy repeats the pull, the transfer, and the catalog upsert.
+
+## When to use it
+
+Use it to preload images before a microservice references the catalog name, including air-gapped nodes. Targets are remote Edgelet nodes only. `kind: LocalAgent` is an error. SSH is required on each node. The Controller must be reachable so the catalog row can be written.
+
+The operator machine needs a path to the registry for the first pull, unless the local cache is already filled. Set `spec.auth` when the pull needs credentials. Username and password are both required when that block is present.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f offline.yaml -n my-ecn --transfer-pool 4`}</CliBlock>
+
+The run validates the name, at least one architecture image, and at least one remote node. It pulls or reuses the cache under `~/.iofog/v3`, transfers to the nodes, then upserts the catalog item with registry id 2.
+
+| Flag | Effect |
+| ---- | ------ |
+| `--no-cache` | Skip the downloaded image cache for this run. |
+| `--transfer-pool N` | Maximum concurrent node transfers. Default 2. |
+
+If a catalog item with `spec.name` already exists, deploy asks before it overwrites the images.
+
+<FlavorYaml title="offline.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: OfflineImage
+metadata:
+  name: reader
+  namespace: my-ecn
+spec:
+  name: reader
+  amd64: {{REGISTRY}}/reader:1.0.0
+  arm64: {{REGISTRY}}/reader:1.0.0
+  agent:
+    - edge-01
+```
+
+</FlavorYaml>
+
+`metadata.name` and `spec.name` should match. `spec.name` is lowercase alphanumeric. Each node receives the image that matches its `arch`. A missing arch field for that node fails the run.
+
+## How a microservice uses it
+
+`get catalog` shows the new row. Its registry id is 2. Set `images.catalogId` to that id, or refer to the catalog name. Inline images on the same node can use registry alias `local`. See [Microservice fields](/reference/yaml/microservice) and [Catalog microservices](/learn/config/catalog-microservices).
+
+## CLI
+
+There is no `get offline-image`, `describe`, `attach`, or `detach` for this kind. Confirm the catalog row:
+
+<CliBlock>{`{{CLI_NAME}} get catalog -n my-ecn`}</CliBlock>
+
+Re-running `deploy -f` repeats the transfer.
+
+## Console
+
+Offline images are a CLI flow. The console chapter has no OfflineImage screen. After deploy, the catalog row is under **Config → Catalog Microservices**. See [Catalog and templates](/get-started/edgeops-console/catalog-and-templates).
+
+## Related
+
+- [Catalog microservices](/learn/config/catalog-microservices)
+- [Registries](/learn/config/registries)
+- [Airgap deployment](/get-started/deploy/airgap-deployment)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

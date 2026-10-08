@@ -1,0 +1,302 @@
+---
+title: Agent fields
+description: Field reference for kind Agent. SSH and host fields, package, scripts, and spec.config for router, NATS, limits, and EdgeGuard.
+keywords: [agent, yaml, fields, ssh, edgelet node, router, nats, v3.9]
+slug: /reference/yaml/agent
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Agent fields
+
+Reference for `kind: Agent`. Deploy flow is on [Remote node](/learn/edgelet-nodes/remote). The same configuration block under `spec.config` is documented at `spec.*` on [AgentConfig fields](/reference/yaml/agent-config).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Agent # required, string
+metadata:
+  name: edge-01 # required, string. Lowercase alphanumeric. Cannot be default-router
+  namespace: my-ecn # no, string. Must match -n when both are set
+  tags: [] # no, list of string
+spec:
+  host: 10.0.0.5 # required, string. SSH target
+  ssh:
+    user: edge # required, string
+    keyFile: ~/.ssh/id_rsa # required, string
+    port: 22 # no, int, default 22
+  controllerEndpoint: https://controller.example.com:51121 # no, string
+  airgap: false # no, bool
+  package: # no, object
+    version: "1.1.0" # no, string
+    container:
+      image: {{REGISTRY}}/edgelet:1.1.0 # no, string. Used when deploymentType is container
+      registry: registry.example.com # no, string
+      username: pull-user # no, string. Set with registry and password
+      password: pull-token # no, string
+    wasm:
+      edgelet-wasmtime: # no, object. The key is the handler name
+        url: https://example.com/shim.tar.gz # no, string. Keep url or path
+        path: /opt/shims/edgelet-wasmtime.tar.gz # no, string. Keep url or path
+        sha256: "<sha256>" # no, string
+  scripts: # no, object. dir is required when this block is set
+    dir: /opt/bootstrap # required when scripts is set, string
+    deps:
+      entrypoint: deps.sh # no, string
+      args: [] # no, list of string
+    install:
+      entrypoint: install.sh # no, string
+      args: [] # no, list of string
+    uninstall:
+      entrypoint: uninstall.sh # no, string
+      args: [] # no, list of string
+  config:
+    description: Edge node # no, string
+    location: plant-a # no, string
+    latitude: 0.0 # no, float
+    longitude: 0.0 # no, float
+    arch: amd64 # recommended, string. amd64, arm64, arm, or riscv64
+    host: 10.0.0.5 # no, string
+    deploymentType: native # no, string, default native
+    containerEngine: edgelet # no, string, default edgelet
+    containerEngineUrl: unix:///run/edgelet/containerd.sock # no, string
+    networkInterface: eth0 # no, string
+    diskLimit: 10 # no, int64. GiB
+    diskDirectory: /var/lib/edgelet # no, string
+    memoryLimit: 1024 # no, int64. MiB
+    cpuLimit: 100 # no, int64. 100 is one core
+    logLimit: 100 # no, int64
+    logDirectory: /var/log/edgelet # no, string
+    logFileCount: 5 # no, int64
+    statusFrequency: 10 # no, float
+    changeFrequency: 10 # no, float
+    watchdogEnabled: true # no, bool
+    logLevel: info # no, string
+    pruningFrequency: 60 # no, float
+    availableDiskThreshold: 80 # no, float. Percent
+    timeZone: UTC # no, string
+    gpsMode: off # no, string
+    gpsScanFrequency: 0 # no, float
+    gpsDevice: /dev/ttyUSB0 # no, string
+    edgeGuardFrequency: 0 # no, float. Seconds. 0 disables
+    upstreamRouters: # no, list of string
+      - default-router
+    routerConfig:
+      routerMode: edge # no, string, default edge
+      messagingPort: 5671 # no, int, default 5671
+      edgeRouterPort: 45671 # no, int. Interior mode only
+      interRouterPort: 55671 # no, int. Interior mode only
+    upstreamNatsServers: # no, list of string
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf # no, string, default leaf
+      natsServerPort: 4222 # no, int, default 4222
+      natsLeafPort: 7422 # no, int, default 7422
+      natsClusterPort: 6222 # no, int. Server mode only
+      natsMqttPort: 8883 # no, int, default 8883
+      natsHttpPort: 8222 # no, int, default 8222
+      jsStorageSize: 10G # no, string, default 10G
+      jsMemoryStoreSize: 1G # no, string, default 1G
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+uuid: "<uuid>" # describe only, string
+created: "<timestamp>" # describe only, string
+```
+
+
+The Controller identity is `metadata.name`. <CliName /> passes that name to validation and to AgentConfig. `metadata.namespace`, when set, must match `-n`.
+
+`metadata.name` is lowercase alphanumeric. It cannot be `default-router`.
+
+## CLI and host fields
+
+These fields are not the AgentConfig API body by themselves.
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `host` | string | Yes | SSH target host or IP |
+| `ssh.user` | string | Yes | SSH user |
+| `ssh.keyFile` | string | Yes | Private key path. `~` is expanded. |
+| `ssh.port` | int | No | Default 22 |
+| `controllerEndpoint` | string | No | Provision URL. Default is the namespace control plane. |
+| `airgap` | bool | No | Stage binaries and images from the operator cache |
+| `uuid` | string | No | Read-only after deploy |
+| `created` | string | No | Read-only CLI timestamp after deploy |
+
+`spec.host` is the SSH target. `spec.config.host` is the host registered on the Controller. They may differ.
+
+<CliName /> rejects a non-system Agent on the same hostname as the Controller public URL. See [Remote node](/learn/edgelet-nodes/remote).
+
+## `spec.package`
+
+Optional Edgelet binary, container image, and WASM shims for bootstrap.
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `version` | string | Edgelet version passed to the native install layer. Use `1.1.0` on this train. |
+| `container.image` | string | Image when `deploymentType` is `container` |
+| `container.registry` | string | Registry hostname for a private pull |
+| `container.username` | string | With registry and password |
+| `container.password` | string | |
+| `wasm.<handler>` | object | WASM shim pack for a handler (`spin`, `edgelet-wasm`, and similar) |
+| `wasm.<handler>.url` | string | HTTP(S) tarball. <CliName /> extracts it locally. |
+| `wasm.<handler>.path` | string | Local path for a fully offline operator |
+| `wasm.<handler>.sha256` | string | Optional integrity check |
+
+WASM install runs only on Linux, `deploymentType: native`, and `containerEngine` `edgelet` or `docker`. See [WASM scope](/learn/edgelet-nodes/bootstrap#wasm-runtime-scope).
+
+When `spec.package.container.image` is set, <CliName /> may set `deploymentType: container` if config does not already set it.
+
+## `spec.scripts`
+
+Optional override of embedded bootstrap layers. `dir` is required when the block is present. It is a directory on the operator machine.
+
+| Field | Description |
+| ----- | ----------- |
+| `dir` | Directory <CliName /> reads, then stages onto the host |
+| `deps.entrypoint` / `deps.args` | Custom dependency layer |
+| `install.entrypoint` / `install.args` | Custom Edgelet install |
+| `uninstall.entrypoint` / `uninstall.args` | Custom uninstall |
+
+Merge rules and the layer order are on [Bootstrap](/learn/edgelet-nodes/bootstrap).
+
+## `spec.config`
+
+Controller AgentConfig plus the values Edgelet materializes on the host. There is no `config.name` on `kind: Agent`. Identity is `metadata.name`.
+
+Standalone `kind: AgentConfig` uses the same fields at `spec.*`.
+
+### Identity and geo
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `config.description` | string | No | Free text |
+| `config.location` | string | No | Location label |
+| `config.latitude` | float | No | Geo latitude |
+| `config.longitude` | float | No | Geo longitude |
+| `config.arch` | string | Recommended | `amd64`, `arm64`, `arm`, `riscv64`. Synced to Controller `archId` at deploy. |
+
+### Runtime
+
+| Field | Type | Default (edge) | Description |
+| ----- | ---- | -------------- | ----------- |
+| `config.host` | string | Often the same as `spec.host` | Controller host. Required for some router modes. |
+| `config.deploymentType` | string | `native` | `native` or `container` |
+| `config.containerEngine` | string | `edgelet` | `edgelet`, `docker`, or `podman` |
+| `config.containerEngineUrl` | string | Engine default | For example `unix:///run/edgelet/containerd.sock` |
+| `config.networkInterface` | string | | Interface to bind |
+
+`config.isSystem` is not settable in this YAML. System nodes use control plane `systemAgent`.
+
+### Resource limits and logging
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `config.diskLimit` | int64 | Disk quota (GiB) |
+| `config.diskDirectory` | string | Data directory on the host |
+| `config.memoryLimit` | int64 | Memory limit (MiB) |
+| `config.cpuLimit` | int64 | CPU limit. 100 is one core. |
+| `config.logLimit` | int64 | Log size limit |
+| `config.logDirectory` | string | Log directory |
+| `config.logFileCount` | int64 | Rotated log file count |
+| `config.statusFrequency` | float | Status report interval |
+| `config.changeFrequency` | float | Change detection interval |
+| `config.watchdogEnabled` | bool | Watchdog |
+| `config.logLevel` | string | For example `INFO` or `info` |
+| `config.pruningFrequency` | float | Prune interval. See [Image pruning](/get-started/edgelet-nodes/image-pruning). |
+| `config.availableDiskThreshold` | float | Disk pressure threshold (%) |
+| `config.timeZone` | string | Host timezone |
+
+### GPS and EdgeGuard
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `config.gpsMode` | string | For example `auto` or `off` |
+| `config.gpsScanFrequency` | float | GPS scan interval |
+| `config.gpsDevice` | string | Device path or selector |
+| `config.edgeGuardFrequency` | float | EdgeGuard interval in seconds. `0` disables. See [EdgeGuard](/get-started/edgelet-nodes/edgeguard). |
+
+HAL and Bluetooth agent fields from older releases are retired in v3.9.
+
+### Router
+
+Fabric behavior is on [Router fabric](/learn/edgelet-nodes/router-fabric).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `config.upstreamRouters` | []string | Upstream router node names. Resolved to UUIDs at deploy. |
+
+| Field | Type | Default (edge) | Description |
+| ----- | ---- | -------------- | ----------- |
+| `config.routerConfig.routerMode` | string | `edge` | `edge`, `interior`, or `none` |
+| `config.routerConfig.messagingPort` | int | `5671` | Messaging AMQP port |
+| `config.routerConfig.edgeRouterPort` | int | | Interior mode only |
+| `config.routerConfig.interRouterPort` | int | | Interior mode only |
+
+Edge nodes: Do not set `edgeRouterPort` or `interRouterPort` when mode is `edge`. Interior ports are for an interior role, including system nodes on Controller hosts.
+
+### NATS
+
+Fabric behavior is on [NATS fabric](/learn/edgelet-nodes/nats-fabric).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `config.upstreamNatsServers` | []string | NATS server node names. Resolved to UUIDs at deploy. |
+
+| Field | Type | Default (edge) | Description |
+| ----- | ---- | -------------- | ----------- |
+| `config.natsConfig.natsMode` | string | `leaf` | `leaf`, `server`, or `none` |
+| `config.natsConfig.natsServerPort` | int | `4222` | Client port |
+| `config.natsConfig.natsLeafPort` | int | `7422` | Leaf port |
+| `config.natsConfig.natsClusterPort` | int | | Server mode only |
+| `config.natsConfig.natsMqttPort` | int | `8883` | MQTT |
+| `config.natsConfig.natsHttpPort` | int | `8222` | Monitoring HTTP |
+| `config.natsConfig.jsStorageSize` | string | `10G` | JetStream storage |
+| `config.natsConfig.jsMemoryStoreSize` | string | `1G` | JetStream memory |
+
+Do not set `natsClusterPort` unless `natsMode` is `server`.
+
+## Deploy-time processing
+
+| Step | Behavior |
+| ---- | -------- |
+| Prepare | Edge defaults: router `edge`, NATS `leaf`, standard ports when omitted |
+| Process | Resolve upstream names to UUIDs. Apply interior router host rules. |
+| Validate | Router and NATS mode matrix before create or update |
+| Bootstrap | Host `config.yaml` is written from this config where that step applies |
+
+`config.archId` is derived from `config.arch`. Do not set the two inconsistently.
+
+Daemon status, usage, platform phase, and runtime status come from `describe agent` and `describe agent-config`. They are not deploy YAML fields. That includes `modelStatus`, `activeModels`, `knowledgeStatus`, and `activeKnowledge`.
+
+## `spec.airgap`
+
+When `airgap` is true:
+
+- Native install stages the Edgelet binary from `~/.iofog/v3/airgap-binaries/` and related caches, and passes airgap flags to install.
+- Images are loaded on the host with `edgelet image load` when that path applies.
+
+Set a coherent `spec.config.arch` and package metadata.
+
+## Deploy order
+
+| Step | What runs |
+| ---- | --------- |
+| 1 | AgentConfig create or update, then wait for platform ready |
+| 2 | Ensure AgentConfig and resolve deployment type |
+| 3 | Optional airgap and WASM staging |
+| 4 | Script merge and bootstrap |
+| 5 | AgentConfig update when `spec.config` is set |
+| 6 | Provision and namespace persist |
+
+<EditPageAdmonition />

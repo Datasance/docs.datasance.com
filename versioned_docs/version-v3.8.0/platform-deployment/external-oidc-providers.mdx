@@ -1,0 +1,172 @@
+---
+title: External OIDC Providers
+description: Map IdP groups and roles to Controller RBAC and configure Keycloak, Entra ID, Okta, or Auth0 for external OIDC on platform train v3.8.0.
+slug: /platform-deployment/external-oidc-providers
+keywords: [external oidc, rbac, keycloak, entra id, okta, auth0, groups, roles, v3.8]
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+
+# External OIDC providers
+
+**Audience:** IdP and platform administrators  
+**Controller mode:** `AUTH_MODE=external`
+
+Register the OIDC **client** first using [External OIDC Authentication](/platform-deployment/external-oidc) (confidential client, PKCE S256, redirect URI, scopes, access-token `aud`).
+
+## Default groups and roles
+
+Controller ships four **human** system roles. Names are matched **case-insensitively** (compared in lowercase).
+
+| IdP group or role name | Controller system role | Typical use |
+| ---------------------- | ---------------------- | ----------- |
+| `admin` | **admin** | Full cluster administration |
+| `sre` | **sre** | Day-2 operations; read-only on some security objects |
+| `developer` | **developer** | CRUD on workloads; read-only on infra |
+| `viewer` | **viewer** | `get` / `list` only |
+
+Create these names as **groups**, **client roles**, or **application roles** on the IdP, then assign users.
+
+Do **not** assign these system roles to human IdP users:
+
+| Name | Purpose |
+| ---- | ------- |
+| `agent-admin` | Edgelet service accounts |
+| `microservice` | Limited self-service for running workloads |
+
+### Direct mapping (no RoleBinding)
+
+If the **access** token contains `admin`, `sre`, `developer`, or `viewer`, Controller grants that system role immediately.
+
+Custom IdP names (`Platform Admins`, Entra group object IDs, Keycloak paths like `/admin`) do **not** match unless you map them to the four names above or use a RoleBinding.
+
+### How Controller reads the access token
+
+Group subjects (all lowercased), in order:
+
+1. `resource_access[{OIDC_CLIENT_ID}].roles` (Keycloak client roles; recommended on Keycloak)
+2. Top-level `roles` array (Entra app roles; many Okta/Auth0 mappings)
+3. Top-level `groups` array (`groups` scope / group mapper)
+
+Namespaced claims such as `https://example.com/groups` are **not** read. Map them to `groups` or `roles` on the **access** token.
+
+ID-token-only claims are ignored for API authorization.
+
+User subject (first match): `preferred_username` → `username` → `email` → `sub`.
+
+### RoleBinding when names differ
+
+<FlavorYaml title="RoleBinding (custom group name)">{`---
+apiVersion: {{API_VERSION}}
+kind: RoleBinding
+metadata:
+  name: platform-admins-admin
+subjects:
+  - kind: Group
+    name: platform-admins
+roleRef:
+  kind: Role
+  name: admin
+`}</FlavorYaml>
+
+User binding when groups cannot be put in the token: bind a **User** subject that matches the JWT user claim (`email` vs `preferred_username` depends on the IdP).
+
+## Switching from embedded to external
+
+1. Export users and groups: `POST /api/v3/auth/migration/export` (no password hashes). See [Embedded OIDC](/platform-deployment/embedded-oidc).
+2. Create matching users and groups (`admin`, `sre`, `developer`, `viewer`) on the IdP.
+3. Switch env to `AUTH_MODE=external` with issuer and client credentials.
+4. **External → embedded is not supported.**
+
+Assign at least one operator to `admin` before cutover.
+
+## Provider recipes
+
+Every recipe assumes scopes:
+
+```text
+openid profile email groups offline_access
+```
+
+Access token **`aud` must equal `OIDC_CLIENT_ID`**.
+
+### Keycloak
+
+**Issuer:** `https://auth.example.com/realms/{realm}`
+
+| Setting | Value |
+| ------- | ----- |
+| Client authentication | On (confidential) |
+| Standard flow | On |
+| Direct access grants | On if CLI login is required |
+| PKCE Method | S256 |
+| Valid redirect URIs | `{CONTROLLER_PUBLIC_URL}/api/v3/user/oauth/callback` |
+| Web origins | `{CONSOLE_URL}` |
+
+**RBAC:** Client roles on this client named `admin`, `sre`, `developer`, `viewer` (Option A), **or** realm scope `groups` with Group Membership mapper and **full group path = OFF**.
+
+### Microsoft Entra ID (Azure AD)
+
+**Issuer (v2):** `https://login.microsoftonline.com/{tenant-id}/v2.0`
+
+Use a **Web** confidential app registration (not SPA). Redirect URI on the **Web** platform.
+
+**Audience:** Expose an API on the same app so access tokens are JWTs with `"aud": "<application-id>"`, not Microsoft Graph. Add a scope whose short name is **`groups`** if you use group claims.
+
+**RBAC (recommended):** Define **App roles** with values `admin`, `sre`, `developer`, `viewer`. Entra puts them in the access token `roles` array. Directory group GUIDs in `groups` often need RoleBindings instead.
+
+**ROPC:** Microsoft is deprecating password grant; treat CLI password login as optional.
+
+### Okta
+
+**Issuer:** `https://{okta-domain}/oauth2/{authorizationServerId}`
+
+Application type **Web**, authorization code + refresh; password grant only if CLI requires it.
+
+**Audience:** authorization server **Audience** must be the **client ID** (not `api://default`).
+
+Add custom scope **`groups`** on that authorization server. Map group names onto the **access** token as `groups` or `roles`.
+
+### Auth0
+
+1. **Regular Web Application** (confidential).
+2. Create an **API** whose identifier is exactly **`OIDC_CLIENT_ID`**.
+3. Add permission/scope named `groups`; enable RBAC; add roles `admin`, `sre`, `developer`, `viewer`.
+4. Use a Login Action to copy roles onto the **access** token as `roles` or `groups`.
+
+Without an API audience, Auth0 may return an **opaque** access token and Controller returns **401**.
+
+### Generic OpenID Connect
+
+Any provider works if it offers confidential client + code flow + PKCE S256, JWT access tokens with correct `aud`, and one of the three group claim shapes above.
+
+## Verification (RBAC)
+
+After [client-setup verification](/platform-deployment/external-oidc#verification):
+
+1. Decode the access token and confirm `roles`, `groups`, or `resource_access` contains a system role name.
+2. Sign in as `viewer`: list succeeds; mutating routes return **403**.
+3. Sign in as `admin`: admin routes succeed per [Roles](/security/roles).
+
+## Troubleshooting (groups and roles)
+
+| Symptom | Likely cause |
+| ------- | ------------ |
+| 403 after successful login | Claims on ID token only; Keycloak **full group path** on (`/admin` ≠ `admin`); Entra group **GUIDs** |
+| Login works, no groups in token | Mapper not on **access** token; client roles not assigned |
+| `aud` is Graph or `api://default` | See Entra and Okta audience notes above |
+| User RoleBinding never matches | Binding uses email but JWT User subject is `preferred_username` |
+
+## Related documentation
+
+| Document | Topic |
+| -------- | ----- |
+| [External OIDC Authentication](/platform-deployment/external-oidc) | Client contract and env vars |
+| [Embedded OIDC Authentication](/platform-deployment/embedded-oidc) | Default mode and migration export |
+| [Roles](/security/roles) | System and custom roles |
+| [Role Bindings](/security/role-bindings) | Group and User subjects |
+| [Controller configuration](/reference-controller/configuration) | Auth env vars |
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,0 +1,90 @@
+---
+title: Account export
+description: Deploy the production-monitoring NATS export for alerts, the journal, and fleet telemetry.
+keywords: [tutorial, acme smart plant, nats account rule, export, telemetry]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Account export
+
+## Goal
+
+Deploy `NatsAccountRule` `production-monitoring-export`. It exports three subject trees from the plant account. The production monitoring Application binds this rule by name.
+
+The file is `deploy/steps/02-nats-account-export.yaml`.
+
+## YAML
+
+<FlavorYaml title="production-monitoring-export">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: production-monitoring-export
+spec:
+  description: Production site account - export live alerts (service) and event journal (JetStream stream)
+  maxConnections: -1
+  maxLeafNodeConnections: -1
+  maxData: -1
+  maxExports: -1
+  maxImports: -1
+  maxMsgPayload: -1
+  maxSubscriptions: -1
+  exportsAllowWildcards: true
+  memStorage: -1
+  diskStorage: -1
+  streams: -1
+  consumer: -1
+  maxAckPending: -1
+  memMaxStreamBytes: -1
+  diskMaxStreamBytes: -1
+  exports:
+    - name: live-alerts
+      subject: notify.alerts.>
+      type: stream
+      description: Cross-account live anomaly notifications
+    - name: event-journal
+      subject: journal.events.>
+      type: stream
+      description: JetStream journal replay path - stream JOURNAL_PRODUCTION
+    - name: fleet-telemetry
+      subject: telemetry.machine.>
+      type: stream
+      description: Read-only fleet telemetry fan-in for ops dashboard sparklines
+```
+
+</FlavorYaml>
+
+| Export | Subject | What it feeds |
+| --- | --- | --- |
+| `live-alerts` | `notify.alerts.>` | Live alert panel |
+| `event-journal` | `journal.events.>` | Journal that survives a page refresh |
+| `fleet-telemetry` | `telemetry.machine.>` | Fleet charts for **M001** through **M004** |
+
+Export alone does not deliver messages to **ops-b**. The import rule does that after you copy the plant account id.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/02-nats-account-export.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} get nats-account-rules`}</CliBlock>
+
+`production-monitoring-export` exists and lists three exports.
+
+## Common mistakes
+
+Deploying production monitoring before this rule. The Application names `production-monitoring-export`.
+
+Leaving out `fleet-telemetry`. Alerts can work while the fleet panel stays empty.
+
+## Next
+
+[Production monitoring](/tutorials/acme-smart-plant/production-monitoring)
+
+<EditPageAdmonition />

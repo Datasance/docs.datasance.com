@@ -1,0 +1,51 @@
+---
+title: Applications and microservices
+description: An application is the named group, including NATS account policy. A microservice is one container on one Edgelet node.
+keywords: [application, microservice, nats, edgelet node, system application, logs, exec]
+slug: /get-started/workloads/applications
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Applications and microservices
+
+An **application** is a named group on the control plane. Microservices that belong together share that name. NATS account policy lives on the application, so every service in the group uses the same account rules.
+
+A **microservice** is one container on one Edgelet node. In YAML that node is `kind: Agent`. The CLI name is `application/microservice`, for example `line-monitor/reader`.
+
+<FlavorYaml title="reader">{`---
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  agent:
+    name: edge-1
+`}</FlavorYaml>
+
+`spec.agent.name` is the Edgelet node that runs this container. Deploy the application before this microservice, or put both documents in the same file and let <CliName /> `deploy -f` create them together.
+
+You can list the microservices inside the application document, or add a microservice later with its own document. Either way the application is the group, and the microservice is the container.
+
+NATS account rules stay on the application. When a single service needs its own subject permissions, the NATS user rule goes on that microservice. The control plane provisions the credentials.
+
+## System applications
+
+<ProductName /> creates a system application for each Edgelet node, named `system-<agentName>`. That application holds the platform containers for that node: router, NATS, and debug. Operators inspect those containers. They do not deploy them as user applications.
+
+You can also browse user and system workloads in [EdgeOps Console](/get-started/edgeops-console/workloads).
+
+## Day-2 actions
+
+Logs, exec, move, and rename are the day-2 actions on a running microservice. Logs and exec inspect the container, move places it on another Edgelet node, and rename changes the `application/microservice` name. The procedures are in [Microservices](/learn/workloads/microservices) and [Logs and exec](/learn/workloads/debugging).
+
+## Go deeper
+
+- [Applications](/learn/workloads/applications)
+- [Microservices](/learn/workloads/microservices)
+- [Logs and exec](/learn/workloads/debugging)
+
+<EditPageAdmonition />

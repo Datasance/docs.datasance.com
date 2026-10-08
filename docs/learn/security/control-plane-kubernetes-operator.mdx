@@ -1,0 +1,333 @@
+---
+title: Securing Kubernetes cluster (operator)
+description: How the operator uses Kubernetes Secrets for Controller pod TLS, Ingress, Router CAs, and NATS CAs.
+keywords: [tls, operator, ingress, cert-manager, router, nats, v3.9]
+slug: /learn/security/control-plane-kubernetes-operator
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Securing Kubernetes cluster (operator)
+
+This page is what the operator does with Secrets: Controller pod TLS, Ingress, Router, NATS, cert-manager, and CA import. The fields you put in `KubernetesControlPlane` are on [Kubernetes (CLI YAML)](/learn/security/control-plane-kubernetes-cli). Custom resource fields and URL derivation stay on the [ControlPlane CRD](/learn/control-plane/kubernetes-crd).
+
+The operator does not generate a certificate for the Controller API. You supply that Secret, or cert-manager does, for Ingress. The operator does generate Router and NATS material when the named Secrets are missing.
+
+## Database TLS
+
+`database.ssl` and `database.ca` (base64 PEM) configure the Controller connection to an external database. The operator copies `ca` through unchanged into Secret `controller-db-credentials`. It does not decode the PEM at reconcile time. The Controller decodes `DB_SSL_CA` when it connects.
+
+That string is a different object from:
+
+- Controller HTTPS (`controller.https` and Ingress TLS)
+- Router Secrets (`router-site-ca` and the related names)
+- NATS Secrets (`nats-site-ca` and the related names)
+
+Field detail: [Database TLS and ca](/learn/control-plane/kubernetes-crd#database-tls-and-ca).
+
+## Who terminates TLS
+
+| Layer | Who terminates TLS | Who creates the certificate |
+| ----- | ------------------ | --------------------------- |
+| Controller behind a load balancer | Controller pod | You. Secret `controller.secretName` |
+| Controller behind Ingress | Usually the ingress controller | You, or cert-manager |
+| Router | Router pod | Operator, or you if the Secrets already exist |
+| NATS | NATS pod | Operator, or you if the Secrets already exist |
+
+## Controller HTTPS
+
+### Pod Secret
+
+When `spec.controller.https` is true, the operator mounts Secret `spec.controller.secretName` at `/etc/iofog/controller-cert/` and sets:
+
+| Variable | Value |
+| -------- | ----- |
+| `SERVER_DEV_MODE` | `false` |
+| `TLS_PATH_CERT` | `/etc/iofog/controller-cert/tls.crt` |
+| `TLS_PATH_KEY` | `/etc/iofog/controller-cert/tls.key` |
+| `TLS_PATH_INTERMEDIATE_CERT` | `/etc/iofog/controller-cert/ca.crt` |
+
+Use a `kubernetes.io/tls` Secret:
+
+| Key | Content |
+| --- | ------- |
+| `tls.crt` | Server certificate, and the chain if you include it |
+| `tls.key` | Private key |
+| `ca.crt` | Intermediate or root. Optional. Set it when clients need that path |
+
+`kubectl create secret tls` writes `tls.crt` and `tls.key`. Add `ca.crt` yourself when the pod should present an intermediate.
+
+The readiness probe uses `curl -sfk` against `https://127.0.0.1:51121/api/v3/status` when HTTPS is enabled.
+
+### Pattern A: LoadBalancer and pod TLS {#pattern-a-loadbalancer--pod-tls}
+
+Use this when the load balancer forwards TCP and the Controller pod terminates TLS.
+
+```yaml
+spec:
+  services:
+    controller:
+      type: LoadBalancer
+  controller:
+    https: true
+    secretName: controller-api-tls
+    publicUrl: https://203.0.113.10:51121
+```
+
+Create the Secret in the ControlPlane namespace before or after the custom resource exists:
+
+```bash
+kubectl create secret tls controller-api-tls \
+  --cert=fullchain.pem \
+  --key=privkey.pem \
+  -n <namespace>
+```
+
+The certificate SANs must include the hostname or IP that clients use.
+
+If `publicUrl` is empty, the operator waits for the load balancer address. It then sets `CONTROLLER_PUBLIC_URL` to `https://<lb>:51121` and `CONSOLE_URL` to `https://<lb>`. The console Service is port 80, forwarded to the pod `consolePort`. Full rules: [URL resolution](/learn/control-plane/kubernetes-crd#url-resolution-publicurl-and-consoleurl).
+
+### Pattern B: ClusterIP and Ingress
+
+Use this when an ingress controller terminates TLS and routes to the Controller Service.
+
+Requirements:
+
+- `spec.services.controller.type: ClusterIP`
+- `spec.ingresses.controller.host` is set
+
+The operator creates Ingress `controller`:
+
+| Path | Backend |
+| ---- | ------- |
+| `/` | Service port `console` (port 80 to the pod console) |
+| `/api/v3` | Service port `controller-api` (51121) |
+
+In Ingress mode, an empty `publicUrl` becomes `https://<host>` when `ingresses.controller.secretName` is set, and `http://<host>` otherwise. An unset `trustProxy` becomes true. See [URL resolution](/learn/control-plane/kubernetes-crd#url-resolution-publicurl-and-consoleurl).
+
+For a ClusterIP controller Service, reconcile expects `status.loadBalancer.ingress` on that Ingress. That depends on the ingress controller publishing an external address.
+
+#### B1: Ingress terminates TLS, Controller speaks HTTP {#b1--ingress-terminates-tls-controller-speaks-http}
+
+- `controller.https: false`
+- The Ingress Secret holds the public certificate
+- The ingress controller forwards HTTP to the pod
+- `controller.secretName` is unused
+
+```yaml
+spec:
+  services:
+    controller:
+      type: ClusterIP
+  ingresses:
+    controller:
+      host: controller.example.com
+      ingressClassName: nginx
+      secretName: controller-tls
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  controller:
+    publicUrl: https://controller.example.com
+    trustProxy: true
+    https: false
+```
+
+No backend-protocol annotation is required. The default backend is HTTP.
+
+#### B2: Ingress terminates TLS and Controller also uses HTTPS (re-encrypt) {#b2--ingress-terminates-tls-and-controller-also-uses-https-re-encrypt}
+
+- `controller.https: true`
+- `controller.secretName` must be a certificate the Ingress trusts. The usual choice is the same name as the Ingress Secret
+- The Ingress must speak HTTPS to the backend
+
+```yaml
+spec:
+  ingresses:
+    controller:
+      secretName: controller-tls
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  controller:
+    https: true
+    secretName: controller-tls
+```
+
+Clients still open `https://controller.example.com` on the Ingress. The path is client, TLS, Ingress, TLS, Controller pod.
+
+#### cert-manager
+
+This Certificate is a cert-manager object. It is not a fleet manifest.
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: controller-tls
+  namespace: <namespace>
+spec:
+  secretName: controller-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - controller.example.com
+```
+
+Set that `secretName` on `spec.ingresses.controller.secretName`.
+
+### Pattern comparison
+
+| Aspect | Load balancer and pod TLS | Ingress B1 | Ingress and pod TLS (B2) |
+| ------ | ------------------------- | ---------- | ------------------------ |
+| `controller.https` | `true` | `false` | `true` |
+| Public certificate | Pod Secret | Ingress Secret | Both |
+| `trustProxy` | Usually false | True when unset | True |
+| Operator waits on | Load balancer Service | Ingress `status.loadBalancer` | Ingress load balancer status |
+
+## Router TLS secrets {#router-tls-secrets}
+
+The Router pod mounts:
+
+| Mount path | Secret |
+| ---------- | ------ |
+| `/etc/skupper-router-certs/router-site-server` | `router-site-server` |
+| `/etc/skupper-router-certs/router-local-server` | `router-local-server` |
+
+Site server certificates are signed by `router-site-ca`. Local server certificates are signed by `default-router-local-ca`.
+
+Before it generates anything, the operator reads these Secrets in the ControlPlane namespace:
+
+| Secret | Role |
+| ------ | ---- |
+| `router-site-ca` | Site CA. Self-signed when the operator creates it |
+| `default-router-local-ca` | Local CA. Self-signed when the operator creates it |
+| `router-site-server` | Site server certificate, key, and `ca.crt` |
+| `router-local-server` | Local server certificate, key, and `ca.crt` |
+
+If all four Secrets exist, the operator mounts the two server Secrets and does not regenerate CAs or server certificates.
+
+If some Secrets are missing, the operator creates the missing CAs (self-signed, 5 years) and the missing server certificates. Server SANs include `router.<namespace>.svc.cluster.local` and the external address (load balancer hostname or IP, or `ingresses.router.address`). Common names are `iofog-router` (site) and `iofog-router-local` (local). An existing Secret is left as it is.
+
+### Bring your own Router CA
+
+1. Create `router-site-ca` and `default-router-local-ca` as `kubernetes.io/tls` Secrets. The operator signs with `tls.crt` and `tls.key`, so the certificate must be a CA.
+2. Optionally create `router-site-server` and `router-local-server` with the SANs you need. Otherwise the operator creates the missing server certificates.
+3. Create them before the first successful Router reconcile, or leave the gaps for that reconcile to fill.
+
+Later reconciles do not replace a Secret that already exists. To rotate, delete the Secret and let the operator create it again. Plan a Router restart.
+
+Check PEM before you bring your own CA. Invalid PEM in an existing CA Secret makes reconcile fail.
+
+## NATS TLS secrets {#nats-tls-secrets}
+
+The operator checks each Secret on its own. A missing Secret is created. An existing Secret is left unchanged.
+
+| Secret | Role |
+| ------ | ---- |
+| `nats-site-ca` | Site CA |
+| `default-nats-local-ca` | Local CA, used to sign MQTT |
+| `nats-site-server` | NATS client, cluster, and leaf TLS |
+| `nats-mqtt-server` | MQTT TLS, signed by the local CA |
+
+Generated CAs are self-signed, valid for 5 years, type `kubernetes.io/tls`. Server certificates are signed by the site or local CA. SANs include per-pod DNS names (`nats-0.nats-headless` and the rest), cluster Service names, the headless wildcard, and the external address when it is known.
+
+The operator stores the NATS replica count on the server Secrets. When `spec.replicas.nats` changes, it deletes `nats-site-server` and `nats-mqtt-server` if that count is stale, then creates them again with updated SANs. CA Secrets are not deleted.
+
+| Exposure | Address used for SANs and hub registration |
+| -------- | ------------------------------------------ |
+| `services.nats.type: LoadBalancer` | Load balancer hostname or IP of Service `nats` |
+| Otherwise | `ingresses.nats.address` |
+
+Port defaults: [ingresses.nats](/learn/control-plane/kubernetes-crd#ingressesnats).
+
+### Bring your own NATS CA
+
+1. Create `nats-site-ca` and `default-nats-local-ca` before reconcile, or let the operator fill what is missing.
+2. Optionally create the server Secrets.
+3. Use `kubernetes.io/tls` with `tls.crt` and `tls.key`. Leaf certificates also need `ca.crt` for the signing CA.
+
+Invalid PEM in an existing CA Secret makes reconcile fail. Check the PEM first.
+
+## Generated certificates
+
+Operator-generated certificates use these parameters:
+
+| Parameter | Behavior |
+| --------- | -------- |
+| Expiration | 5 years |
+| Key | RSA 2048 |
+| CA | Self-signed when there is no parent |
+| Leaf | Signed by the parent CA in `tls.crt` and `tls.key` |
+| Secret keys | `tls.crt`, `tls.key`, and `ca.crt` (leaves copy the CA certificate) |
+
+## Importing CAs into the Controller
+
+After the Controller API is up and the operator is logged in, it registers CAs with the Controller:
+
+| Secret | Imported when |
+| ------ | ------------- |
+| `router-site-ca` | Always |
+| `default-router-local-ca` | Always |
+| `nats-site-ca` | NATS is enabled |
+| `default-nats-local-ca` | NATS is enabled |
+
+The API body is:
+
+```json
+{
+  "name": "<secret-name>",
+  "type": "k8s-secret",
+  "secretName": "<secret-name>"
+}
+```
+
+The Controller reads that Secret in the ControlPlane namespace. If the CA catalog entry is missing, the operator creates it. An existing CA is not created again.
+
+Edgelet nodes use this catalog when they connect to Router and NATS.
+
+## Edgelet nodes
+
+Edgelet nodes and <CliName /> use:
+
+- The Controller at `CONTROLLER_PUBLIC_URL` (HTTPS when you enable it)
+- Router messaging port 5671 (TLS)
+- NATS client port 4222 and MQTT port 8883 when a hub is in use
+
+For Controller HTTPS, clients trust the public certificate (a public CA, or your corporate CA). For Router and NATS, clients trust the CAs imported into the Controller. If you replace the generated CAs, pre-create the Secrets, confirm the CAs in the Controller CA API, and update Edgelet nodes for your release.
+
+## Checks
+
+- Choose pattern A or pattern B. Set `publicUrl` and `consoleUrl` to the URLs browsers and the CLI use.
+- For Ingress, set `trustProxy: true` when a reverse proxy sits in front.
+- For an external database with a private CA, set `database.ssl: true` and `database.ca` as base64 PEM. That is separate from Ingress and Router Secrets.
+- Decide whether Router and NATS use generated CAs or CAs you create.
+- Put the external address in the certificate SANs. That is the load balancer DNS name or the ingress hostname edges dial.
+- To rotate, delete the stale Secrets and reconcile again. Restart the Router or NATS pods.
+- Restrict RBAC on the control plane namespace. The Secrets hold database credentials, auth material, and private keys.
+- Keep `database.password` and the bootstrap password out of Git.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| ------- | ------------ |
+| Controller stays deploying in Ingress mode | Ingress has no `status.loadBalancer.ingress` |
+| Router has no address | The Router Service is not a LoadBalancer and `ingresses.router.address` is empty |
+| HTTPS works inside the cluster and fails outside | SAN or `publicUrl` does not match the name clients use |
+| OIDC redirect uses the wrong scheme | `publicUrl` scheme does not match the entrypoint. Set `trustProxy` |
+| NATS hub is not registered | NATS is enabled, the Service is not a LoadBalancer, and `ingresses.nats.address` is empty |
+| CA import fails | Controller is not ready, login failed, or the Secret is missing or in another namespace |
+| Router TLS fails after a hostname change | Delete `router-site-server` and `router-local-server`, then reconcile |
+| Reconcile fails on a CA you created | Invalid PEM in that Secret |
+
+## Secret names
+
+| Component | Secret names |
+| --------- | ------------ |
+| Controller pod TLS | `spec.controller.secretName` (you choose the name) |
+| Ingress TLS | `spec.ingresses.controller.secretName` |
+| Router | `router-site-ca`, `default-router-local-ca`, `router-site-server`, `router-local-server` |
+| NATS | `nats-site-ca`, `default-nats-local-ca`, `nats-site-server`, `nats-mqtt-server` |
+
+<EditPageAdmonition />

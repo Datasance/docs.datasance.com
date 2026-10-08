@@ -1,0 +1,314 @@
+---
+title: LocalControlPlane fields
+description: Field reference for LocalControlPlane deploy YAML. CLI-only fields, system Edgelet node, and Edgelet translation on v3.9.0.
+keywords: [localcontrolplane, yaml, fields, edgelet, v3.9]
+slug: /reference/yaml/local-control-plane
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# LocalControlPlane fields
+
+Reference for `kind: LocalControlPlane`. Deploy flow is on [Local](/learn/control-plane/local).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: LocalControlPlane # required, string
+metadata:
+  name: local-cp # required, string
+  namespace: my-ecn # no, string
+spec:
+  endpoint: https://127.0.0.1:51121 # no, string. Must match controller.publicUrl when both are set
+  ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. Base64 PEM
+  iofogUser: # required, object
+    email: admin@example.com # required, string
+    password: "ChangeMe!12345" # no, string
+  routerSiteCA: # no, object
+    tlsCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # string
+    tlsKey: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string
+  routerLocalCA:
+    tlsCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # string
+    tlsKey: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string
+  natsSiteCA:
+    tlsCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # string
+    tlsKey: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string
+  natsLocalCA:
+    tlsCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # string
+    tlsKey: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string
+  airgap: false # no, bool
+  systemAgent: # required, object
+    config:
+      arch: amd64 # required, string. amd64, arm64, arm, riscv64, or auto where supported
+      host: 127.0.0.1 # no, string
+      deploymentType: native # no, string
+      containerEngine: edgelet # no, string, default edgelet
+      routerConfig:
+        routerMode: interior # no, string
+        messagingPort: 5671 # no, int
+        edgeRouterPort: 45671 # no, int
+        interRouterPort: 55671 # no, int
+      natsConfig:
+        natsMode: server # no, string
+        natsServerPort: 4222 # no, int
+        natsLeafPort: 7422 # no, int
+        natsClusterPort: 6222 # no, int
+        natsMqttPort: 8883 # no, int
+        natsHttpPort: 8222 # no, int
+    package: {} # no, object
+    scripts: {} # no, object
+  controller:
+    publicUrl: https://127.0.0.1:51121 # recommended, string
+    trustProxy: false # no, bool
+    consoleUrl: https://127.0.0.1:8008 # no, string
+    consolePort: 8008 # no, int, default 8008
+    logLevel: info # no, string
+    package:
+      image: {{REGISTRY}}/controller:3.9.0 # no, string
+      registry: registry.example.com # no, string
+      username: pull-user # no, string
+      password: pull-token # no, string
+      email: ops@example.com # no, string
+  auth: # required, object. Keep the fields for one mode
+    mode: embedded # required, embedded or external
+    insecureAllowHttp: false # no, bool
+    insecureAllowBootstrapLog: false # no, bool
+    bootstrap:
+      username: bootstrap-user # required if embedded, string
+      password: "ChangeMe!12345" # required if embedded, string
+    issuerUrl: https://idp.example.com # required if external, string. Remove when mode is embedded
+    client:
+      id: cli # required if external, string
+      secret: client-secret # required if external, string
+    rateLimit:
+      enabled: false # no, bool
+      maxRequestsPerWindow: 100 # no, int
+      windowMs: 60000 # no, int
+    sessionStore:
+      type: memory # no, string
+      ttlMs: 3600000 # no, int
+      secret: session-secret # no, string
+    tokenTtl:
+      accessTokenTtlSeconds: 3600 # no, int
+      refreshTokenTtlSeconds: 86400 # no, int
+    oidcTtl:
+      interactionTtlSeconds: 600 # no, int
+      grantTtlSeconds: 600 # no, int
+      sessionTtlSeconds: 3600 # no, int
+      idTokenTtlSeconds: 3600 # no, int
+  database: # no, object. Omit provider for SQLite
+    provider: postgres # no, string. postgres or mysql
+    host: db.example.com # required when provider is set, string
+    port: 5432 # required when provider is set, int
+    user: pot # required when provider is set, string
+    password: db-password # required when provider is set, string
+    databaseName: pot # required when provider is set, string
+    ssl: false # no, bool
+    ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. Base64 PEM
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+  nats:
+    enabled: true # no, bool
+  events:
+    auditEnabled: false # no, bool
+    retentionDays: 30 # no, int
+    cleanupInterval: 3600 # no, int. Seconds
+    captureIpAddress: false # no, bool
+  vault: # no, object. Keep the provider block that matches provider
+    enabled: false # no, bool
+    provider: hashicorp # no, string
+    basePath: secret/data/ecn # no, string. Literal on Edgelet
+    hashicorp:
+      address: https://vault.example.com # string
+      token: vault-token # string
+      mount: secret # string
+    aws:
+      region: us-east-1 # string
+      accessKeyId: <access-key-id> # string
+      accessKey: <secret-access-key> # string
+    azure:
+      url: https://example.vault.azure.net # string
+      tenantId: <tenant-id> # string
+      clientId: <client-id> # string
+      clientSecret: <client-secret> # string
+    google:
+      projectId: <project-id> # string
+      credentials: "<service-account-json>" # string
+  tls: # no, object. cert and key are set together
+    ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # string
+    cert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # string
+    key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string
+```
+
+</FlavorYaml>
+
+`metadata.namespace`, when set, must match `-n`.
+
+## CLI-only fields
+
+These are not copied into the Edgelet manifest.
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `endpoint` | string | No | Stored CLI endpoint. Must match `controller.publicUrl` when both are set. |
+| `ca` | base64 PEM | No | CLI trust for the Controller API |
+| `iofogUser` | object | Yes (`email`) | CLI user. Embedded auth bootstrap runs after deploy. |
+| `routerSiteCA` | site certificate | No | Validated. Not uploaded on local deploy today. |
+| `routerLocalCA` | site certificate | No | Same |
+| `natsSiteCA` | site certificate | No | Same |
+| `natsLocalCA` | site certificate | No | Same |
+| `airgap` | bool | No | Offline image and binary staging |
+
+`iofogUser.password`, when set, follows the same complexity rules as bootstrap passwords. See [Securing a local control plane](/learn/security/control-plane-local).
+
+## `spec.systemAgent` (required)
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `config.arch` | Yes | Host architecture for Edgelet and system microservice images. `amd64`, `arm64`, `arm`, `riscv64`, or `auto` where supported. |
+| `config.*` | No | Other Edgelet node settings (router and NATS environment, `deploymentType`, and similar) |
+| `package` | No | Edgelet package and WASM shims for the install |
+| `scripts` | No | Custom install script layers |
+
+Invalid `arch` values are rejected. WASM and Podman combinations follow Edgelet node validation.
+
+## `spec.controller`
+
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| `publicUrl` | string | Recommended. `CONTROLLER_PUBLIC_URL` on Edgelet. |
+| `trustProxy` | bool | |
+| `consoleUrl` | string | Console URL. Edgelet does not copy this from `publicUrl` on its own. |
+| `consolePort` | int | Default 8008 |
+| `logLevel` | string | |
+| `package.image` | string | Controller image when you are not using the CLI default (`controller:3.9.0`). See [Default image pins](/learn/control-plane#default-image-pins-v390). |
+| `package.registry` | string | Registry hostname for a private pull |
+| `package.username` | string | Required with registry and password |
+| `package.password` | string | |
+| `package.email` | string | Optional |
+
+When any of registry, username, or password is set, all three are required.
+
+Translated to Edgelet `spec.controller.image` and an optional registry id.
+
+## `spec.auth` (required)
+
+| Field | Type | Required | Notes |
+| ----- | ---- | -------- | ----- |
+| `mode` | `embedded` or `external` | Yes | |
+| `insecureAllowHttp` | bool | No | Trials. `AUTH_INSECURE_ALLOW_HTTP` on the Controller. |
+| `insecureAllowBootstrapLog` | bool | No | Trials |
+| `bootstrap.username` | string | Yes if embedded | |
+| `bootstrap.password` | string | Yes if embedded | Required in YAML at deploy. At least 12 characters, one uppercase letter, one special character. |
+| `issuerUrl` | string | Yes if external | |
+| `client.id` | string | Yes if external | |
+| `client.secret` | string | Yes if external | |
+| `rateLimit.*` | object | No | |
+| `sessionStore.*` | object | No | |
+| `tokenTtl.*` | object | No | |
+| `oidcTtl.*` | object | No | |
+
+Translated to Edgelet `spec.auth`, then to Controller container environment. See [Edgelet control plane](/learn/edgelet/control-plane).
+
+| Mode | CLI after deploy |
+| ---- | ---------------- |
+| `embedded` | Bootstrap login. Creates `iofogUser` if it is missing. |
+| `external` | Skips embedded user bootstrap. The Controller uses your identity provider. |
+
+Keycloak-shaped `auth.url` and realm fields are retired.
+
+| Block | Fields |
+| ----- | ------ |
+| `rateLimit` | `enabled`, `maxRequestsPerWindow`, `windowMs` |
+| `sessionStore` | `type`, `ttlMs`, `secret` |
+| `tokenTtl` | `accessTokenTtlSeconds`, `refreshTokenTtlSeconds` |
+| `oidcTtl` | `interactionTtlSeconds`, `grantTtlSeconds`, `sessionTtlSeconds`, `idTokenTtlSeconds` |
+
+## `spec.database`
+
+Optional external database. When `provider` is `postgres` or `mysql`, user, host, port, password, and databaseName are required.
+
+| Field | Notes |
+| ----- | ----- |
+| `ssl` | Database TLS |
+| `ca` | Base64 PEM. Becomes `DB_SSL_CA`. |
+
+Omit `provider` for the SQLite default on a single local Controller.
+
+## `spec.systemMicroservices`
+
+Per-architecture images for the Router and NATS system microservices. Keys are `amd64`, `arm64`, `arm`, and `riscv64`.
+
+<FlavorYaml title="systemMicroservices">
+
+```yaml
+systemMicroservices:
+  router:
+    amd64: {{REGISTRY}}/router:3.9.0
+    arm64: {{REGISTRY}}/router:3.9.0
+    arm: {{REGISTRY}}/router:3.9.0
+    riscv64: {{REGISTRY}}/router:3.9.0
+  nats:
+    amd64: {{REGISTRY}}/nats:2.15.0
+    arm64: {{REGISTRY}}/nats:2.15.0
+    arm: {{REGISTRY}}/nats:2.15.0
+    riscv64: {{REGISTRY}}/nats:2.15.0
+```
+
+</FlavorYaml>
+
+Maps to Edgelet `spec.systemMicroservices` and Controller environment `ROUTER_IMAGE_*` / `NATS_IMAGE_*`.
+
+## `spec.nats`
+
+| Field | Notes |
+| ----- | ----- |
+| `enabled` | Deploy the NATS system microservice when true |
+
+Local YAML has no JetStream PVC fields. JetStream behavior lives on the system microservice image and its config. Kubernetes storage fields are on [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane).
+
+## `spec.events`
+
+`auditEnabled`, `retentionDays`, `cleanupInterval`, `captureIpAddress`.
+
+## `spec.vault` {#specvault}
+
+Optional Controller vault integration. Translated to Edgelet `spec.vault`. `basePath` is stored literally. Edgelet does not expand `$namespace`. Put the real path in the file.
+
+| Field | Description |
+| ----- | ----------- |
+| `enabled` | Enable vault integration |
+| `provider` | `hashicorp`, `openbao`, `vault`, `aws`, `aws-secrets-manager`, `azure`, `azure-key-vault`, `google`, or `google-secret-manager` |
+| `basePath` | Base path inside the vault. Literal on Edgelet. |
+| `hashicorp.address`, `hashicorp.token`, `hashicorp.mount` | HashiCorp, OpenBao, or Vault |
+| `aws.region`, `aws.accessKeyId`, `aws.accessKey` | AWS Secrets Manager |
+| `azure.url`, `azure.tenantId`, `azure.clientId`, `azure.clientSecret` | Azure Key Vault |
+| `google.projectId`, `google.credentials` | Google Secret Manager |
+
+On Kubernetes, `$namespace` in `basePath` is expanded. See [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane#specvault).
+
+## `spec.tls`
+
+Optional Controller listener TLS. See [Securing a local control plane](/learn/security/control-plane-local). Translated only to Edgelet `spec.tls.base64`.
+
+## Deploy flow
+
+<CliName /> installs Edgelet, deploys the translated `ControlPlane`, waits for the Controller API, creates the embedded user when that mode is on, then installs and provisions the system Edgelet node.
+
+The user `apiVersion` is the flavor group. The manifest Edgelet stores is `apiVersion: edgelet.iofog.org/v1`, `kind: ControlPlane`.
+
+Worked YAML is on [Local](/learn/control-plane/local).
+
+<EditPageAdmonition />

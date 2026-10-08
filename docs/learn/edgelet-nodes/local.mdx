@@ -1,0 +1,119 @@
+---
+title: Local node
+description: Deploy kind LocalAgent so the CLI installs Edgelet on the machine where the CLI is running and registers an extra local Edgelet node.
+keywords: [localagent, local edgelet node, desktop, container, deploy, v3.9]
+slug: /learn/edgelet-nodes/local
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Local node
+
+Use `kind: LocalAgent` to install Edgelet on the same machine that runs <CliName /> and register it with the Controller.
+
+This is an extra local **Edgelet node**. The control plane system node is a different object. On a local control plane that system node is [`spec.systemAgent`](/learn/control-plane/local). A `LocalAgent` is for development, CI, and desktop testing next to a local or remote control plane.
+
+A [control plane](/learn/control-plane) must already be in the namespace.
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f local-agent.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+The pipeline matches a [remote node](/learn/edgelet-nodes/remote), with these differences:
+
+- No SSH. The host OS is the OS of the <CliName /> process.
+- `metadata.name` defaults to `local` when you omit it.
+- Port **54321** must be free. It conflicts with the default local system node layout.
+
+AgentConfig still runs first, including a synthesized record from `spec.config`. Then <CliName /> bootstraps Edgelet and provisions. See [Deploy phases](/learn/edgelet-nodes#two-deploy-phases).
+
+## Prerequisites
+
+- A control plane in the namespace.
+- For a native Linux install, sudo may be required for bootstrap layers.
+- For container Edgelet on macOS or Windows, Docker (or another supported engine) must already be installed. <CliName /> does not install the engine.
+
+## Host identity
+
+| Field | Precedence for the Controller host |
+| ----- | ---------------------------------- |
+| `spec.config.host` | Preferred when set |
+| `spec.host` | Fallback |
+| _(default)_ | `localhost` |
+
+When `spec.config.deploymentType` is `container` on macOS or Windows, bootstrap skips writing host `config.yaml` and uses the desktop wait and configure path. See [Desktop container](/learn/edgelet-nodes/bootstrap#desktop-container).
+
+## Examples
+
+Native local node. Set `arch` to the machine you are on.
+
+<FlavorYaml title="local-agent.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: LocalAgent
+metadata:
+  name: local-edge
+spec:
+  package:
+    version: "1.1.0"
+  config:
+    description: Local Edgelet on the CLI machine
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+    upstreamRouters:
+      - default-router
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+    upstreamNatsServers:
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+```
+
+</FlavorYaml>
+
+Desktop container. The engine must already be running.
+
+<FlavorYaml title="desktop-container.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: LocalAgent
+metadata:
+  name: desktop-edge
+spec:
+  package:
+    container:
+      image: {{REGISTRY}}/edgelet:1.1.0
+  config:
+    arch: amd64
+    deploymentType: container
+    containerEngine: docker
+    upstreamRouters:
+      - default-router
+    routerConfig:
+      routerMode: edge
+    upstreamNatsServers:
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf
+```
+
+</FlavorYaml>
+
+## Fields
+
+[LocalAgent fields](/reference/yaml/local-agent)
+
+<EditPageAdmonition />

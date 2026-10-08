@@ -1,0 +1,36 @@
+---
+title: Platform components
+description: Operator, Router, NATS Server, and the Go module on platform train v3.9.0. Where each one runs.
+keywords: [platform components, operator, router, nats, go sdk, v3.9]
+slug: /learn/platform-components
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import { REGISTRY } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Platform components
+
+These pages describe the images and the Go module that ship with <ProductName /> on train **v3.9.0**. Each page says which process starts, which files it reads, and which tag this train publishes.
+
+They are not a second control plane guide. Deployment is on [Control plane](/learn/control-plane) and [Platform deployment](/get-started/deploy/introduction). The in-place upgrade from v3.8.0 is on [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9).
+
+## Components
+
+| Component | Pin | Where it runs |
+| --------- | --- | ------------- |
+| [Operator](/learn/platform-components/operator) | <code>{REGISTRY}/operator:3.9.0</code> | Kubernetes. Reconciles a `ControlPlane` custom resource. |
+| [Router](/learn/platform-components/router) | <code>{REGISTRY}/router:3.9.0</code>, embedded Skupper Router **3.5.3** | Kubernetes, and as a system microservice on an Edgelet node. |
+| [NATS Server](/learn/platform-components/nats-server) | <code>{REGISTRY}/nats:2.15.0</code>, upstream `nats-server` **2.15.0**, entrypoint `iofog-nats` | Kubernetes hub, and as a system microservice on an Edgelet node. |
+| [Go SDK](/learn/platform-components/sdk) | `github.com/eclipse-iofog/iofog-go-sdk/v3`, Go **1.26.6** or newer | A library. <CliName /> and the operator call it. |
+
+## Where they run
+
+On Kubernetes, the operator reconciles a `ControlPlane` custom resource.
+
+On a remote control plane and on a local control plane, <CliName /> deploys the Controller through Edgelet. The Controller starts `router` and `nats` as system microservices.
+
+Application workloads are not operator objects. Create them with <CliName />, the REST API, EdgeOps Console, or the [Go SDK](/learn/platform-components/sdk) after the control plane is up.
+
+<EditPageAdmonition />

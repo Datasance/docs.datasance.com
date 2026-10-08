@@ -1,0 +1,72 @@
+---
+title: Diagnostic service
+description: Create a Router Service for diagnostic-service so the dashboard on ops-b can call it.
+keywords: [tutorial, acme smart plant, service, router, diagnostic-service]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Diagnostic service
+
+## Goal
+
+Create `kind: Service` for **diagnostic-service**. The microservice is already deployed in production monitoring. It listens on external port **8081** and does not use NATS.
+
+The dashboard on **ops-b** calls this bridge. The next page copies `bridgePort` into `DIAGNOSTIC_URL`.
+
+The file is `deploy/steps/05-service-diagnostic.yaml`.
+
+## YAML
+
+<FlavorYaml title="diagnostic-service">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: diagnostic-service
+  tags:
+    - pot-edge-patterns
+spec:
+  type: microservice
+  resource: production-monitoring/diagnostic-service
+  targetPort: 8081
+  defaultBridge: default-router
+```
+
+</FlavorYaml>
+
+| Field | Value |
+| --- | --- |
+| `resource` | `production-monitoring/diagnostic-service` |
+| `targetPort` | `8081` (Edgelet external port, not container port 8080) |
+| `defaultBridge` | `default-router` |
+| `tags` | `pot-edge-patterns` |
+
+Tag **ops-b** with `service.iofog.org/tag: pot-edge-patterns` so that node opens the listener. See [Distribution tags](/learn/network/distribution).
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/05-service-diagnostic.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} describe service diagnostic-service`}</CliBlock>
+
+The output includes `bridgePort`. Copy it on the next page. `resource` is `production-monitoring/diagnostic-service`.
+
+## Common mistakes
+
+The Service is created before diagnostic-service is deployed.
+
+`targetPort` is 8080. Use **8081**.
+
+**ops-b** has no `pot-edge-patterns` tag, so the dashboard call times out.
+
+## Next
+
+[Diagnostic bridge port](/tutorials/acme-smart-plant/diagnostic-bridge-port)
+
+<EditPageAdmonition />

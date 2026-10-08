@@ -11,8 +11,8 @@ const POTCTL_REPO = path.join(__dirname, '../../potctl');
 const DOCS_ROOT = path.join(__dirname, '..');
 
 const SOURCES = [
-  { src: 'docs/potctl_md', dest: 'docs/potctl/md' },
-  { src: 'docs/iofogctl_md', dest: 'docs/iofogctl/md' },
+  { src: 'docs/potctl_md', dest: 'docs/reference/cli/potctl/md' },
+  { src: 'docs/iofogctl_md', dest: 'docs/reference/cli/iofogctl/md' },
 ];
 
 function syncDir(srcDir, destDir) {

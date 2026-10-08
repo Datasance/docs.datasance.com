@@ -1,0 +1,78 @@
+---
+title: VolumeMount fields
+description: Field reference for kind VolumeMount. One configMapName or one secretName.
+keywords: [volume mount, yaml, fields, configMapName, secretName]
+slug: /reference/yaml/volume-mount
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# VolumeMount fields
+
+Reference for `kind: VolumeMount`. Deploy, attach, and the Volume split are on [Volume mounts](/learn/config/volume-mounts).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: VolumeMount # required, string
+metadata:
+  name: app-config # required, string
+  namespace: my-ecn # no, string
+spec:
+  configMapName: app-settings # one of, string. Keep configMapName or secretName
+  secretName: postgres-creds # one of, string. Keep configMapName or secretName
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+uuid: "<uuid>" # describe only
+version: "<version>" # describe only
+```
+
+
+Describe can add read-only `uuid` and `version`.
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `configMapName` | One of | ConfigMap `metadata.name` in the same namespace. |
+| `secretName` | One of | Secret `metadata.name` in the same namespace. |
+
+Set exactly one. The CLI does not reject both. The Controller should reject an invalid combination.
+
+## Deploy
+
+| State | Action |
+| ----- | ------ |
+| Absent | Create. |
+| Present | Update the backing name. |
+
+## Linking
+
+On microservice create or update, an entry with `type: volumeMount` and `hostDestination` equal to this `metadata.name` links the mount to `spec.agent`. That link does not need a separate `attach volume-mount` for that node.
+
+| Command | Syntax |
+| ------- | ------ |
+| Attach | `attach volume-mount NAME AGENT [AGENT…]` |
+| Detach | `detach volume-mount NAME AGENT [AGENT…]` |
+
+Use attach to pre-provision a node, or to link a node that has no microservice pointing at the mount.
+
+## Microservice mapping
+
+| Field | Value |
+| ----- | ----- |
+| `type` | `volumeMount` |
+| `hostDestination` | VolumeMount `metadata.name` |
+| `containerDestination` | Path inside the container |
+| `accessMode` | `ro` or `rw` |
+
+<EditPageAdmonition />

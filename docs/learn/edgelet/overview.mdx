@@ -1,0 +1,74 @@
+---
+title: "Edgelet"
+description: "Edgelet v1.1.0 is the engine you can run on a Linux machine by itself, then attach to a control plane. Same binary as an Edgelet node. Platform train v3.9.0."
+keywords: ["edgelet", "install.sh", "edgelet cli", "standalone", "v1.1.0", "v3.9"]
+slug: /learn/edgelet
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Edgelet
+
+Edgelet is the engine that runs workloads on a machine. It is the same binary you later attach to a <ProductName /> cluster.
+
+You can install it on a Linux host and use it before any control plane exists. Standalone install uses `install.sh` and the `edgelet` CLI on the host. Joining a cluster uses <CliName /> and `kind: Agent`. An **Edgelet node** is that cluster member. Those pages start at [Edgelet nodes](/learn/edgelet-nodes). This section is the engine itself.
+
+## Why this binary exists
+
+Distributed edge sites are small, far away, and often offline. Edgelet is the piece that still runs there.
+
+It has three jobs, and they are the same program:
+
+| Job | What you see |
+| --- | --- |
+| Node agent | An **Edgelet node** after it joins a <ProductName /> cluster (`kind: Agent`) |
+| Application runtime | Microservice lifecycle, images, models, knowledge, volumes, and logs on that machine |
+| Container engine | `containerEngine: edgelet` on Linux. The `edgelet` CLI drives it with no Controller |
+
+On Linux the OTA artifact is `/usr/local/bin/edgelet`, about **30 MB**. That file is the CLI. The engine, `crun`, and the CNI plugins are packed inside it and extracted on first start. A production Linux host does not install Docker or Podman.
+
+Release binaries for Linux are **amd64**, **arm64**, **arm** (32-bit, including armv7), and **riscv64**. macOS and Windows run the same CLI and daemon against Docker or Podman. They do not embed the engine.
+
+Registries are local objects. Built-in rows are Docker Hub, a from-cache image store, and Hugging Face. You add private OCI registries and private Hub hosts the same way. **Model** and **Knowledge** artifacts pull through those rows, then mount into workloads. Fleet catalogs do this from the Controller. A standalone engine does it with `edgelet deploy`.
+
+Wasm is a catalog runtime on the embedded engine, not a separate install. Handler names such as `edgelet-wasmtime` are built in. The shim binaries are staged when `package.wasm` is set. See [Container engines](/learn/edgelet/container-engines#runtimeclass-edgelet-engine-only).
+
+| | Standalone engine | Cluster member |
+| --- | --- | --- |
+| Install | `install.sh` on the host | <CliName /> deploy |
+| Day-2 CLI | `edgelet` | <CliName /> |
+| YAML | `apiVersion: edgelet.iofog.org/v1` | `kind: Agent` |
+
+Pair **Edgelet v1.1.0** with platform train **v3.9.0**.
+
+On Linux the install is two layers. `/usr/local/bin/edgelet` is the thin binary: the CLI and the OTA entry. The daemon extracts a fat runtime under `/var/lib/edgelet/data/current/bin/edgelet` when `containerEngine` is `edgelet`. macOS and Windows ship one binary and use Docker or Podman. See [Architecture](/learn/edgelet/architecture).
+
+## Two ways work arrives
+
+| Source | How it arrives | Typical use |
+| --- | --- | --- |
+| Local deploy | `edgelet deploy -f manifest.yaml` | Lab manifests, registries, RuntimeClass, an optional local control plane |
+| Controller sync | The field agent polls the Controller and the process manager reconciles | A provisioned engine in a fleet |
+
+Local manifests stay on `apiVersion: edgelet.iofog.org/v1`. That group is not the fleet `apiVersion`. Fleet YAML is on [Edgelet nodes](/learn/edgelet-nodes).
+
+The `edgelet` CLI talks to Edgelet API on the host (`https://127.0.0.1:54321/v1/...`). It is not a Controller client. <CliName /> is the Controller client.
+
+## Where to go next
+
+| You want to | Start here |
+| --- | --- |
+| Install the binary | [Installation](/learn/edgelet/installation) |
+| Pick an engine and a service unit | [Deployment](/learn/edgelet/deployment) and [Init systems](/learn/edgelet/init-systems) |
+| Change `config.yaml` | [Configuration](/learn/edgelet/configuration) |
+| Apply a local manifest | [Manifests](/learn/edgelet/manifests) |
+| Pull a model or knowledge artifact on disk | [Models](/learn/edgelet/models) and [Knowledge](/learn/edgelet/knowledge) |
+| Host a Controller container on this engine | [Local control plane](/learn/edgelet/control-plane) |
+| Call the on-host API | [Edgelet API](/learn/edgelet/api) |
+| Read daemon internals | [Modules](/learn/edgelet/modules/overview) |
+
+Fleet upgrade, prune, attach, and debug from <CliName /> stay in [Edgelet node management](/get-started/edgelet-nodes/introduction).
+
+<EditPageAdmonition />

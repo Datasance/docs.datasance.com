@@ -1,0 +1,95 @@
+---
+title: Account import
+description: Deploy the operations-center import rule using the production-monitoring account id.
+keywords: [tutorial, acme smart plant, nats account rule, import, operations-center]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Account import
+
+## Goal
+
+Deploy `operations-center-import`. It pulls live alerts, the journal, and fleet telemetry into the operations account. You already copied the production-monitoring account id.
+
+The file is `deploy/steps/04-nats-account-import.yaml`.
+
+## YAML
+
+Replace `<production-monitoring-account-id>` before you deploy.
+
+<FlavorYaml title="operations-center-import">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: operations-center-import
+spec:
+  description: Operations center account - import alerts, journal, and fleet telemetry from production site
+  maxConnections: -1
+  maxLeafNodeConnections: -1
+  maxData: -1
+  maxExports: -1
+  maxImports: -1
+  maxMsgPayload: -1
+  maxSubscriptions: -1
+  exportsAllowWildcards: true
+  memStorage: -1
+  diskStorage: -1
+  streams: -1
+  consumer: -1
+  maxAckPending: -1
+  memMaxStreamBytes: -1
+  diskMaxStreamBytes: -1
+  imports:
+    - name: live-alerts
+      subject: notify.alerts.>
+      type: stream
+      account: <production-monitoring-account-id>
+      local_subject: notify.alerts.>
+    - name: event-journal
+      subject: journal.events.>
+      type: stream
+      account: <production-monitoring-account-id>
+      local_subject: journal.events.>
+    - name: fleet-telemetry
+      subject: telemetry.machine.>
+      type: stream
+      account: <production-monitoring-account-id>
+      local_subject: telemetry.machine.>
+```
+
+</FlavorYaml>
+
+Import names match the export names: `live-alerts`, `event-journal`, and `fleet-telemetry`.
+
+**ops-viewer** already allows subscribe on these subjects. The import delivers them into the operations account so alert-dashboard can consume them on **ops-b**.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/04-nats-account-import.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} get nats-account-rules`}</CliBlock>
+
+`operations-center-import` lists three imports, and each `account` value is the id you copied.
+
+Fleet charts also need `TELEMETRY_SUBJECT` on the dashboard. That env is set on the operations center page.
+
+## Common mistakes
+
+A wrong account id. Cross-account delivery stays empty.
+
+Import `name` values that do not match the export names.
+
+`fleet-telemetry` missing. Alerts work and the fleet panel stays empty.
+
+## Next
+
+[Diagnostic service](/tutorials/acme-smart-plant/diagnostic-service)
+
+<EditPageAdmonition />

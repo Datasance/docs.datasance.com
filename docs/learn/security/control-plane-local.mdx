@@ -1,0 +1,109 @@
+---
+title: Securing local control plane
+description: LocalControlPlane CLI trust and listener TLS. Messaging CA blocks are validated and are not uploaded.
+keywords: [tls, local control plane, spec.tls, spec.ca, edgelet, v3.9]
+slug: /learn/security/control-plane-local
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Securing a local control plane
+
+`LocalControlPlane` runs the Controller on the same machine as <CliName />, through Edgelet. This page covers CLI trust and listener TLS. Field tables are [LocalControlPlane fields](/reference/yaml/local-control-plane).
+
+## What local deploy applies
+
+| Mechanism | Purpose | On local deploy |
+| --------- | ------- | --------------- |
+| `spec.ca` | CLI trust for Controller API HTTPS | Stored in the namespace trust directory |
+| `spec.tls` | Controller listener certificate | Written to Edgelet `spec.tls.base64` |
+| `routerSiteCA`, `routerLocalCA`, `natsSiteCA`, `natsLocalCA` | Bring-your-own messaging CAs | Validated. Not uploaded |
+| Edgelet `spec.tls.path` | Host directory for certificate files | Not set. <CliName /> uses the base64 block only |
+
+Production bring-your-own messaging CAs use a [remote control plane](/learn/security/control-plane-remote), or a manual Controller API import, until local deploy gains that upload.
+
+## CLI trust: `spec.ca`
+
+Same store as Kubernetes and remote. `spec.ca` is a base64 PEM on one line. After deploy it is `ca.pem` under `~/.iofog/v3/trust/<namespace>/`. <CliName /> uses it when it calls the Controller API over HTTPS.
+
+```bash
+base64 -i controller-ca.pem | tr -d '\n'
+```
+
+`connect --ca` overrides trust for that connect only.
+
+## Listener TLS: `spec.tls`
+
+| Field | Required | Notes |
+| ----- | -------- | ----- |
+| `ca` | No | Intermediate or root |
+| `cert` | Yes, with `key` | Server certificate, base64 PEM |
+| `key` | Yes, with `cert` | Private key, base64 PEM |
+
+If you set `cert` or `key`, set both.
+
+<CliName /> maps this block to Edgelet `spec.tls.base64`. It does not set `spec.tls.path`. Listener fields on the Edgelet manifest: [spec.tls](/learn/edgelet/control-plane#spec-tls).
+
+Set `spec.controller.publicUrl`, and `spec.controller.consoleUrl` when the console hostname differs, to `https://` URLs that match the certificate SANs.
+
+<FlavorYaml title="local-listener-tls.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: LocalControlPlane
+metadata:
+  name: local
+spec:
+  ca: <base64-pem>
+  tls:
+    cert: <base64-pem>
+    key: <base64-pem>
+    ca: <base64-pem>
+  controller:
+    publicUrl: https://127.0.0.1:51121
+```
+
+</FlavorYaml>
+
+## Messaging CA blocks
+
+Each block has `tlsCert` and `tlsKey`, both base64 PEM.
+
+| YAML block | Secret name on a remote deploy |
+| ---------- | ------------------------------ |
+| `routerSiteCA` | `router-site-ca` |
+| `routerLocalCA` | `default-router-local-ca` |
+| `natsSiteCA` | `nats-site-ca` |
+| `natsLocalCA` | `default-nats-local-ca` |
+
+On a remote deploy, <CliName /> uploads these blocks once. See [Securing a remote control plane](/learn/security/control-plane-remote). On a local deploy the blocks are validated and not uploaded. You can keep them in a file you will deploy remotely later. They do not create Controller secrets or CA catalog entries on the local Controller.
+
+Edgelet rejects legacy inline site and local CA fields in its own manifest. Import messaging CAs with the Controller API after deploy, or use a remote control plane.
+
+## Database TLS
+
+When `spec.database.provider` is set, `ssl` and `ca` (base64 PEM) are the Controller connection to that database. They are separate from `spec.tls` and from the messaging CA blocks. See [LocalControlPlane fields](/reference/yaml/local-control-plane).
+
+## Provision
+
+After the system Edgelet node is provisioned, a `caCert` in the provision key response is applied with `edgelet config cert`. The node then trusts the messaging CAs published in the Controller catalog for Router port 5671 and NATS ports 4222 and 8883.
+
+## Checks
+
+- Set `spec.ca` when the Controller API uses a private CA.
+- Set `spec.tls` when you want to test an HTTPS listener.
+- Do not expect `routerSiteCA` and the other three blocks to upload on local deploy.
+- Keep bootstrap and database passwords out of Git.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| ------- | ------------ |
+| CLI TLS error to the API | `spec.ca` is missing or wrong |
+| The API accepts HTTPS and messaging fails | Messaging CAs are not in the Controller catalog |
+| Validation error on `tls` | `cert` and `key` are not both set, or the base64 is invalid |
+| `routerSiteCA` is in the file and nothing changes | Expected on local deploy. The block is validated and not uploaded |
+
+<EditPageAdmonition />

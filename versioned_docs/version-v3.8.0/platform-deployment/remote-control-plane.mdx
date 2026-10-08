@@ -1,0 +1,113 @@
+---
+title: Remote Control Plane
+description: Deploy a remote SSH control plane on platform train v3.8.0 with embedded OIDC.
+keywords: [remote control plane, ssh deploy, controller, embedded oidc, v3.8]
+slug: /platform-deployment/remote-control-plane
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+:::tip[Want to deploy on Kubernetes instead?]
+
+Remote and Kubernetes are the two control plane deployment models. This guide deploys a **remote** control plane on a single Linux host over SSH. For Kubernetes, start at [Kubernetes - Prepare a cluster](/platform-deployment/kubernetes-prepare-cluster).
+
+:::
+
+# Remote host - deploy control plane
+
+Every edge compute network starts with a control plane that manages cluster resources.
+
+In this guide, the control plane runs a single Controller instance on a remote host.
+
+:::info[YAML resources for <CliName />]
+
+Procedures below use YAML that **<CliName />** applies. Field reference: [Control plane YAML reference](/yaml-references/reference-control-plane).
+
+:::
+
+:::info[Authentication]
+
+Set `auth.mode: embedded` in your control plane YAML. See [Embedded OIDC](/platform-deployment/embedded-oidc) for bootstrap credentials and console URLs.
+
+:::
+
+:::tip[Production TLS]
+
+For production, enable **Controller HTTPS** on remote controllers (`controllers[].https` or `spec.tls`). Configure **Router** and **NATS** site and local CAs when you use custom trust anchors. See [Securing the cluster](/security/introduction) (TLS sections).
+
+:::
+
+## Deploy a control plane on a remote host
+
+Create `controlplane.yaml`:
+
+<FlavorYaml title="controlplane.yaml">{`---
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: albatros
+spec:
+  iofogUser:
+    name: Foo
+    surname: Bar
+    email: user@domain.com
+    password: iht234g9afhe
+  controller:
+    publicUrl: http://<controller-ip>:51121
+    consoleUrl: http://<controller-ip>
+    package:
+      image: {{REGISTRY}}/controller:v3.8.0
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: LocalTest12!
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.8.0
+      arm64: {{REGISTRY}}/router:3.8.0
+      riscv64: {{REGISTRY}}/router:3.8.0
+      arm: {{REGISTRY}}/router:3.8.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.14.3
+      arm64: {{REGISTRY}}/nats:2.14.3
+      riscv64: {{REGISTRY}}/nats:2.14.3
+      arm: {{REGISTRY}}/nats:2.14.3
+  events:
+    auditEnabled: true
+    retentionDays: 14
+    captureIpAddress: true
+  nats:
+    enabled: true
+  controllers:
+  - name: alpaca-1
+    host: <controller-ip-for-ssh>
+    ssh:
+      user: bar
+      keyFile: ~/.ssh/id_rsa
+`}</FlavorYaml>
+
+Edit `host`, `ssh.user`, and `ssh.keyFile` for your remote host. Set `systemMicroservices` architecture keys to match the host CPU.
+
+Deploy:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
+
+## Verify the deployment
+
+<CliBlock>{`{{CLI_NAME}} get controllers`}</CliBlock>
+
+<CliBlock>{`{{CLI_NAME}} describe controller alpaca-1`}</CliBlock>
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+:::tip[Next step]
+
+With the control plane running, go to [Set up Edgelet nodes](/platform-deployment/setup-your-agents) to provision **Edgelet v1.0.0** on your edge hosts.
+
+:::
+
+<EditPageAdmonition />

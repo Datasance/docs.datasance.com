@@ -4,11 +4,15 @@ description: Fine-grained RBAC Roles in Datasance PoT. Define permissions using 
 keywords: [roles, rbac, access control, datasance pot, permissions, apiGroups, resources, verbs]
 ---
 
+:::tip[YAML field reference]
+See [Roles](/learn/access-control/roles) in Learn for canonical YAML.
+:::
+
 # Roles
 
 Roles in Datasance PoT define **fine-grained permissions** for the Controller REST API. Each Role has a name and a list of **rules** that specify what actions (verbs) are allowed on which resources and API groups. Roles are used together with [Role Bindings](role-bindings) to grant permissions to users or groups.
 
-For the YAML spec and a short example, see [Role YAML Specification](../yaml-references/reference-roles).
+For the YAML spec and a short example, see [Roles in Learn](/learn/access-control/roles).
 
 ## Role structure
 

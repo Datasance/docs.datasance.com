@@ -1,0 +1,109 @@
+---
+title: Operations center
+description: Deploy alert-dashboard on ops-b with DIAGNOSTIC_URL set from the diagnostic bridge port.
+keywords: [tutorial, acme smart plant, alert-dashboard, operations-center, ops-b]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Operations center
+
+## Goal
+
+Deploy Application `operations-center` on **ops-b**. You can change `agent.name`.
+
+alert-dashboard consumes the imported subjects and calls diagnostic-service through the Router. The import rule and the diagnostic `bridgePort` are already in place.
+
+The file is `deploy/steps/06-application-operations-center.yaml`.
+
+## YAML
+
+<FlavorYaml title="operations-center">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: operations-center
+spec:
+  natsConfig:
+    natsAccess: true
+    natsRule: operations-center-import
+  microservices:
+    - name: alert-dashboard
+      agent:
+        name: ops-b # override for your ECN agent name
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/alert-dashboard:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/alert-dashboard:1.2.0
+        riscv64: ghcr.io/datasance/pot-edge-patterns/alert-dashboard:1.2.0
+        arm: ghcr.io/datasance/pot-edge-patterns/alert-dashboard:1.2.0
+      natsConfig:
+        natsAccess: true
+        natsRule: ops-viewer
+      container:
+        ports:
+          - internal: 8080
+            protocol: tcp
+            external: 8082
+        env:
+          - key: DIAGNOSTIC_URL
+            value: http://router.default.svc.bridge.local:<replace-me!>
+          - key: SNAPSHOT_URL
+            value: http://router.default.svc.bridge.local:<replace-me!>
+          - key: NATS_NOTIFY_SUBJECT
+            value: notify.alerts.>
+          - key: TELEMETRY_SUBJECT
+            value: telemetry.machine.>
+          - key: JOURNAL_STREAM
+            value: JOURNAL_PRODUCTION
+```
+
+</FlavorYaml>
+
+Image `ghcr.io/datasance/pot-edge-patterns/alert-dashboard:1.2.0`. User rule `ops-viewer`. External port **8082** maps to container port 8080.
+
+| Variable | Value |
+| --- | --- |
+| `DIAGNOSTIC_URL` | `http://router.default.svc.bridge.local:<diagnostic-bridge-port>` |
+| `NATS_NOTIFY_SUBJECT` | `notify.alerts.>` |
+| `TELEMETRY_SUBJECT` | `telemetry.machine.>` |
+| `JOURNAL_STREAM` | `JOURNAL_PRODUCTION` |
+
+Replace `<diagnostic-bridge-port>` with the port you copied. The file also has `SNAPSHOT_URL`. Leave that placeholder until the optional [Fab gallery link](/tutorials/acme-smart-plant/fab-gallery-link) page. The plant floor does not need it.
+
+| Data | How it arrives |
+| --- | --- |
+| Live alerts | Imported `notify.alerts.>` |
+| Journal | Imported `journal.events.>` and stream `JOURNAL_PRODUCTION` |
+| Fleet charts | Imported `telemetry.machine.>` |
+| Diagnose | HTTP `DIAGNOSTIC_URL` through the Router |
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/06-application-operations-center.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} describe microservice alert-dashboard`}</CliBlock>
+
+`natsRule` is `ops-viewer`. `DIAGNOSTIC_URL` contains the real bridge port.
+
+## Common mistakes
+
+`DIAGNOSTIC_URL` still has the placeholder. Diagnose fails until you redeploy with the copied port.
+
+The import rule is missing, so the dashboard subjects stay empty.
+
+`TELEMETRY_SUBJECT` is `telemetry.temperature`. Use `telemetry.machine.>`.
+
+**ops-b** is not provisioned.
+
+## Next
+
+[Alert dashboard service](/tutorials/acme-smart-plant/alert-dashboard-service)
+
+<EditPageAdmonition />

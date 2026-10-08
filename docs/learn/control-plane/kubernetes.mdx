@@ -1,0 +1,468 @@
+---
+title: Kubernetes
+description: Deploy a KubernetesControlPlane with the CLI. How the operator ControlPlane custom resource, networking, and day-2 upgrades work on v3.9.0.
+keywords: [kubernetes control plane, kubernetescontrolplane, operator, deploy, v3.9]
+slug: /learn/control-plane/kubernetes
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorOnly from '@site/src/components/flavor/FlavorOnly';
+import ProductName from '@site/src/components/flavor/ProductName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Kubernetes
+
+Use `kind: KubernetesControlPlane` when the Controller, Router, and NATS should run in a Kubernetes cluster. <CliName /> installs the operator in the target namespace, applies one `ControlPlane` custom resource, waits until that object is ready, and registers the CLI user against the Controller API.
+
+Pick this kind when you already run Kubernetes and want the operator to own replicas, Services, Ingress, and JetStream storage. For SSH hosts, use [Remote](/learn/control-plane/remote). For a single machine trial, use [Local](/learn/control-plane/local).
+
+Install walkthroughs:
+
+- [Kubernetes with <CliName />](/get-started/deploy/kubernetes-cli)
+- [Helm](/get-started/deploy/kubernetes-helm)
+
+More than one Controller replica needs an external database. Auth setup is in [Embedded OIDC](/get-started/deploy/embedded-oidc) and [External OIDC](/get-started/deploy/external-oidc).
+
+## Two layers
+
+The file you write and the object the operator watches are different kinds.
+
+| Layer | Kind | Role |
+| ----- | ---- | ---- |
+| CLI file | `KubernetesControlPlane` | What you pass to `deploy -f` |
+| Cluster object | `ControlPlane` | What the operator reconciles |
+
+<CliName /> translates most of `spec` into the cluster object. Kubeconfig, the CLI trust CA, the CLI user, and the operator image stay on the CLI file. They never appear on the custom resource.
+
+<FlavorOnly distribution="datasance">
+
+The custom resource name is fixed: **`pot`**.
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+The custom resource name is fixed: **`iofog`**.
+
+</FlavorOnly>
+
+Field-by-field user YAML is on [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane). The object the operator reconciles is the [ControlPlane CRD](/learn/control-plane/kubernetes-crd). Workload behavior for the images is on [Operator](/learn/platform-components/operator), [Router](/learn/platform-components/router), and [NATS Server](/learn/platform-components/nats-server).
+
+## What `deploy -f` does
+
+The verb is `deploy`. Point it at the file and at the same namespace the operator will use.
+
+<CliBlock>{`{{CLI_NAME}} deploy -f kubernetes-controlplane.yaml -n iofog`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+Prerequisites:
+
+- `spec.config` is a kubeconfig the CLI can use.
+- The <CliName /> namespace (`-n`) is the Kubernetes namespace where the operator and the custom resource live.
+- If `metadata.namespace` and `-n` are both set, they match.
+
+Sequence:
+
+1. Parse the file and validate it. Rules cover auth, database versus Controller replicas, Ingress when a Service is ClusterIP, NATS replicas, and vault. See [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane).
+2. Install the operator Deployment, ServiceAccount, Role, and RoleBinding in that namespace through the Kubernetes API. The default CLI path does not use Helm. Helm is a separate install: [Kubernetes with Helm](/get-started/deploy/kubernetes-helm).
+3. Apply or update the `ControlPlane` custom resource under the fixed name for this flavor.
+4. Wait until the custom resource reports **ready**. The operator reconciles Router, NATS when it is enabled, and Controller.
+5. Resolve the Controller API address from a LoadBalancer, from the Ingress named `controller`, or from `spec.controller.publicUrl`.
+6. If `spec.ca` is set, store it in `~/.iofog/v3/trust/<namespace>/`.
+7. Wait until the Controller API accepts connections.
+8. If `auth.mode` is `embedded`, make sure `iofogUser` exists. The CLI logs in with the bootstrap user and creates that user when it is missing.
+9. Save the control plane and the discovered controller pods in namespace config.
+
+| YAML field | On the operator custom resource? |
+| ---------- | -------------------------------- |
+| `spec.config` | No. Local kubeconfig path. |
+| `spec.ca` | No. CLI trust for the HTTPS API. |
+| `spec.iofogUser` | No. CLI login identity. |
+| `spec.images.operator` | No. See [spec.images](/reference/yaml/kubernetes-control-plane#specimages). |
+| `spec.auth`, `database`, `controller`, `events`, `services`, `ingresses`, `replicas`, `images` (`pullSecret`, controller, router, nats), `nats`, `vault` | Yes. Translated. |
+
+After deploy, stored config may include `controllerPods` (discovered pod names). That block is output. Leave it out of the file you keep in git.
+
+## Examples
+
+Minimal file for a single Controller replica and LoadBalancer Services. Replace the bootstrap password before you deploy.
+
+<FlavorYaml title="kubernetes-controlplane.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: minimal-k8s-cp
+  namespace: iofog
+spec:
+  config: ~/.kube/config
+  iofogUser:
+    name: Admin
+    surname: User
+    email: admin@example.com
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "ChangeMe12!"
+  replicas:
+    controller: 1
+    nats: 2
+  controller:
+    publicUrl: https://controller.example.com
+    logLevel: info
+    https: true
+    secretName: controller-tls
+  images:
+    operator: {{REGISTRY}}/operator:3.9.0
+    controller: {{REGISTRY}}/controller:3.9.0
+    router: {{REGISTRY}}/router:3.9.0
+    nats: {{REGISTRY}}/nats:2.15.0
+  services:
+    controller:
+      type: LoadBalancer
+    router:
+      type: LoadBalancer
+  nats:
+    enabled: true
+    jetStream:
+      storageSize: 10Gi
+```
+
+</FlavorYaml>
+
+Realistic file for Ingress TLS in front of a Controller that speaks HTTP inside the cluster (pattern B1). ClusterIP on the controller Service requires `ingresses.controller.host` and `ingresses.controller.secretName`. Two Controller replicas require the database block.
+
+<FlavorYaml title="ingress-controlplane.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: ingress-k8s-cp
+  namespace: iofog
+spec:
+  config: ~/.kube/config
+  iofogUser:
+    email: admin@example.com
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "ChangeMe12!"
+  database:
+    provider: postgres
+    host: postgres.iofog.svc.cluster.local
+    port: 5432
+    user: controller
+    password: secret
+    databaseName: controller
+  replicas:
+    controller: 2
+    nats: 2
+  controller:
+    publicUrl: https://controller.example.com
+    trustProxy: true
+    https: false
+    consoleUrl: https://controller.example.com
+    logLevel: info
+  images:
+    operator: {{REGISTRY}}/operator:3.9.0
+    controller: {{REGISTRY}}/controller:3.9.0
+    router: {{REGISTRY}}/router:3.9.0
+    nats: {{REGISTRY}}/nats:2.15.0
+  services:
+    controller:
+      type: ClusterIP
+    router:
+      type: ClusterIP
+    nats:
+      type: ClusterIP
+    natsServer:
+      type: ClusterIP
+  ingresses:
+    controller:
+      host: controller.example.com
+      ingressClassName: nginx
+      secretName: controller-tls
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+    router:
+      address: router.example.com
+      messagePort: 5671
+      interiorPort: 55671
+      edgePort: 45671
+    nats:
+      address: nats.example.com
+      serverPort: 4222
+      clusterPort: 6222
+      leafPort: 7422
+      mqttPort: 8883
+      httpPort: 8222
+  nats:
+    enabled: true
+    jetStream:
+      storageSize: 10Gi
+      memoryStoreSize: 1Gi
+```
+
+</FlavorYaml>
+
+Pattern B2 (shared Ingress secret and pod TLS) is in [controller-ingress.yaml](/examples/controlplane/kubernetes/controller-ingress.yaml). TLS details: [Kubernetes CLI YAML](/learn/security/control-plane-kubernetes-cli) and [Kubernetes operator](/learn/security/control-plane-kubernetes-operator).
+
+## Networking
+
+On this kind the operator creates the default router and the NATS hub. They are Kubernetes workloads, not Edgelet system microservices. After the Controller API is up, the operator registers those workloads so later Edgelet nodes dial the stored host and ports.
+
+Creating an Edgelet node with `isSystem: true` is rejected. No Edgelet node is the hub. Per-node router and NATS processes, after the hub exists, are fleet networking. See [Edgelet nodes](/learn/edgelet-nodes).
+
+Omitting `spec.nats` means NATS is enabled. `spec.nats.enabled: false` skips NATS reconcile. Fields that feed these workloads are `services.router`, `ingresses.router`, `replicas.nats`, and `nats.jetStream`.
+
+While status is `deploying` or `updating`, three reconcilers run together:
+
+| Reconciler | Workload | Registers with the Controller? |
+| ---------- | -------- | ------------------------------ |
+| Router | Deployment `router`, Service `router`, ConfigMap `iofog-router`, TLS Secrets | No |
+| NATS | StatefulSet `nats`, Services, ConfigMaps, bootstrap Secrets, TLS Secrets | No. It reads NATS bootstrap. |
+| Controller | Controller Deployment | Yes. Default router, NATS hub, and CA import. |
+
+Router and NATS pods can exist before registration finishes. Edgelet nodes use the addresses stored after registration succeeds.
+
+### Router
+
+| Kind | Name | Notes |
+| ---- | ---- | ----- |
+| Deployment | `router` | One replica. A second `router-2` is not created. |
+| Service | `router` | Type from `spec.services.router.type`. Default LoadBalancer. |
+| ConfigMap | `iofog-router` | Key `skrouterd.json` |
+| ServiceAccount, Role, RoleBinding | `router` | |
+
+| Service port | Port | Role |
+| ------------ | ---- | ---- |
+| `router-message` | 5671 | AMQPS |
+| `router-interior` | 55671 | Inter-router |
+| `router-edge` | 45671 | Edge listeners |
+
+HTTP health and metrics listen on container port 9090. That port is not on Service `router`.
+
+The router is interior, site id `default-router`, platform `kubernetes`. Config env is `QDROUTERD_CONF=/tmp/skrouterd.json` and `SSL_PROFILE_PATH=/etc/skupper-router-certs`.
+
+Address used for certificate SANs and registration:
+
+| Condition | Address |
+| --------- | ------- |
+| Service type LoadBalancer | LoadBalancer hostname or IP. Reconcile waits for it. |
+| Any other Service type | `spec.ingresses.router.address` |
+
+If the Service is not a LoadBalancer and that address is empty, reconcile fails.
+
+The operator looks up these Secrets in the control plane namespace. Missing ones are generated (RSA 2048, five years). If all four already exist, they are reused.
+
+| Secret | Role |
+| ------ | ---- |
+| `router-site-ca` | Site CA |
+| `default-router-local-ca` | Local CA |
+| `router-site-server` | Site server certificate, signed by `router-site-ca` |
+| `router-local-server` | Local server certificate, signed by `default-router-local-ca` |
+
+SANs include `router.<namespace>.svc.cluster.local` and the external address. Hub certificate names have no Edgelet node suffix. Certificates the Controller later issues for an Edgelet node are `router-site-server-{agentName}` and `router-local-server-{agentName}`, signed by the same CAs after import.
+
+Create the CA Secrets before the first reconcile when you bring your own CA. Existing Secrets are kept. Rotation is in [Kubernetes operator TLS](/learn/security/control-plane-kubernetes-operator).
+
+The Deployment mounts the server Secrets at `/etc/skupper-router-certs/router-site-server` and `.../router-local-server`, plus ConfigMap `iofog-router` at `/tmp/skrouterd.json`.
+
+Listeners in the template: edge 45671, inter-router 55671, AMQPS 5671 (local server profile), and in-pod AMQP 5672 (no TLS, not on the Service). TLS listeners use SASL EXTERNAL and `authenticatePeer: true`.
+
+If `iofog-router` already exists, the operator merges. Template entities (`router`, `site`, named `sslProfile` and `listener`) are replaced. Other entries stay. That merge keeps `tcpListener` and `tcpConnector` entries the Controller adds for [Services](/learn/network/services).
+
+After login, the operator calls `PUT /api/v3/router`. The Controller stores one default-router record (`isDefault: true`, interior). It does not create a router microservice for that record.
+
+| API field | Source |
+| --------- | ------ |
+| `host` | LoadBalancer address of Service `router`, or `ingresses.router.address` |
+| Messaging, inter-router, and edge ports | LoadBalancer path: 5671, 55671, 45671. Ingress path: `ingresses.router.messagePort`, `interiorPort`, `edgePort` |
+
+Edgelet nodes learn the router endpoint from the Controller.
+
+### NATS
+
+| Kind | Name | Notes |
+| ---- | ---- | ----- |
+| StatefulSet | `nats` | `serviceName: nats-headless`. Replicas are `spec.replicas.nats`, minimum 2. |
+| Service | `nats-headless` | `ClusterIP: None`. Pod DNS `nats-0.nats-headless`, and so on. |
+| Service | `nats` | Cluster, leaf, and MQTT. Type from `spec.services.nats`. |
+| Service | `nats-server` | Client 4222 and monitor 8222. |
+| ConfigMap | `iofog-nats-config` | Key `server.conf` |
+| ConfigMap | `iofog-nats-jwt-bundle` | Account JWT files |
+| PVC template | `js-data` | JetStream file store. Default 10Gi. |
+
+| Port | Exposed on |
+| ---- | ---------- |
+| Client 4222, monitor 8222 | Headless Service and `nats-server` (not Service `nats`) |
+| Cluster 6222, leaf 7422, MQTT 8883 | Headless Service and Service `nats` |
+
+In-cluster listeners stay on these ports. `spec.ingresses.nats.*Port` is used when the hub is registered and for leaf advertise. It does not retarget the Kubernetes Service.
+
+NATS reconcile calls the Controller in-cluster at `controller.<namespace>.svc.cluster.local:51121`, then `GET /api/v3/nats/bootstrap`. The Controller creates the operator JWT, the system account, and hub user `admin-hub`. The operator stores:
+
+| Secret | Contents |
+| ------ | -------- |
+| `nats-operator-seed` | key `seed` |
+| `nats-creds-sys-admin-hub` | key `admin-hub.creds` |
+
+If the Controller is not ready yet, NATS reconcile waits and tries again. That is expected while the three reconcilers run together.
+
+JetStream key Secret `nats-jetstream-key-<controlplane-name>`, key `jsk`: 32 random bytes, created once, injected as `JETSTREAM_KEY`. The store is ChaChaPoly. The domain is the control plane namespace. Memory and file caps come from `spec.nats.jetStream` (defaults 1G and 10G).
+
+| Secret | Role |
+| ------ | ---- |
+| `nats-site-ca` | Site CA |
+| `default-nats-local-ca` | Local CA |
+| `nats-site-server` | Cluster and leaf TLS |
+| `nats-mqtt-server` | MQTT TLS |
+
+SANs include headless pod names, `*.nats-headless.<namespace>.svc.cluster.local`, `nats.<namespace>.svc`, `nats-server.<namespace>.svc`, and the external address when it is known.
+
+Server Secrets are annotated with the replica count. Changing `spec.replicas.nats` deletes and recreates the server certificates so the SANs match. CA Secrets are kept.
+
+Edgelet node certificates use different names: `nats-server-{agent}` and `nats-mqtt-server-{agent}`, signed by these CAs after import.
+
+Mounts: site and MQTT certificates under `/etc/nats/certs/`, `server.conf` at `/etc/nats/config`, the JWT bundle at `/tmp/nats/jwt`, hub credentials, and PVC `/home/runner/data`.
+
+`server.conf` is rewritten on every NATS reconcile so replica routes stay current. Cluster routes are `nats://nats-<i>.nats-headless:6222` for each replica, plus any non-ordinal routes already in the ConfigMap (routes the Controller added for Edgelet NATS servers). Operator ordinals are replaced. Routes that contain `nats-headless` stay when the Controller patches Edgelet servers in.
+
+The resolver directory is `/home/runner/nats/jwt`, interval 2 minutes. ConfigMap `iofog-nats-jwt-bundle` starts as the system-account JWT. The operator creates it when it is missing and does not replace an existing ConfigMap. The Controller fills application account keys afterward. See [NATS JWT authentication](/security/nats-jwt-authentication) and [NATS Server](/learn/platform-components/nats-server).
+
+After the default router is registered, the operator calls `PUT /api/v3/nats/hub`. The Controller stores one hub record (`isHub: true`, no Edgelet node uuid).
+
+| Condition | Host |
+| --------- | ---- |
+| `services.nats.type` is LoadBalancer | LoadBalancer address of Service `nats` (reconcile waits) |
+| Otherwise | `spec.ingresses.nats.address` |
+
+If the host is still empty, the hub is not registered. Default ports sent to the API: server 4222, cluster 6222, leaf 7422, MQTT 8883, monitor 8222.
+
+### CA import and later patches
+
+After hub registration, the operator imports CA Secrets so the Controller can sign Edgelet node certificates with the same authorities. Each call creates a CA with `type: k8s-secret` and `secretName` equal to the Secret name, only when that CA is not already present.
+
+| Secret imported | When |
+| --------------- | ---- |
+| `router-site-ca`, `default-router-local-ca` | Always |
+| `nats-site-ca`, `default-nats-local-ca` | NATS enabled |
+
+The operator owns the hub processes and the listener, TLS, and replica-route sections. The Controller patches three ConfigMaps afterward:
+
+| ConfigMap | What the Controller changes |
+| --------- | --------------------------- |
+| `iofog-router` / `skrouterd.json` | Hub `tcpListener` and `tcpConnector` entries for [Services](/learn/network/services). The operator merge keeps names that are not in its template. |
+| `iofog-nats-config` / `server.conf` | Appends Edgelet-server cluster routes and keeps `nats-headless` routes. Removing an Edgelet NATS server rolls the StatefulSet. |
+| `iofog-nats-jwt-bundle` | Full resolver bundle when application accounts change. It survives the next operator reconcile because the operator does not replace an existing ConfigMap. |
+
+A leaf dials the hub host stored by `PUT /api/v3/nats/hub`. An edge router dials the host stored by `PUT /api/v3/router`.
+
+## How the operator runs
+
+<CliName /> installs the operator, then applies one `ControlPlane` custom resource. The operator watches that object and creates the control plane workloads in its namespace: Controller Deployment, Router Deployment, and (unless disabled) NATS StatefulSet, plus Services, Secrets, ConfigMaps, RBAC, an optional Ingress, and an optional SQLite PVC.
+
+It does not deploy applications, Edgelet nodes, or microservices. Create those with <CliName /> against the Controller API after the control plane is ready.
+
+The operator process starts a controller-runtime manager. It watches `ControlPlane` objects. `WATCH_NAMESPACE` empty means cluster scope. A value limits the cache to that namespace. Leader election is off unless `--enable-leader-election` is set (id `iofog.operator`).
+
+It does not watch Deployments, Secrets, or Services as secondary resources. A reconcile runs when a ControlPlane is created, updated, or deleted, or when the reconciler requeues itself (LoadBalancer not ready, Controller API not up yet, NATS hub registration retry).
+
+Owned objects are garbage-collected when the ControlPlane is deleted. There is no extra finalizer.
+
+While status says ready, the operator returns immediately and does not recreate workloads. The next spec change bumps `metadata.generation`. The following reconcile treats the object as updating and runs the full path again. Editing a Secret directly, without changing the ControlPlane, does not schedule a reconcile. Change the custom resource, or deploy the YAML again, when the operator must run.
+
+`status.conditions` keeps one condition True. The type is `deploying`, `updating`, or `ready`.
+
+`deploying` and `updating` run `reconcileRouter`, `reconcileNats` (immediate return when NATS is disabled), and `reconcileIofogController` in parallel. If any routine returns an error, the operator requeues with that error. If any routine asks to wait, the operator waits the longest requested delay and reconciles again. When all three continue, the condition becomes ready.
+
+A ControlPlane can stay in `deploying` while a cloud LoadBalancer has no address yet. <CliName /> `deploy` waits until the custom resource reports ready.
+
+Controller objects in the control plane namespace:
+
+| Kind | Name | When |
+| ---- | ---- | ---- |
+| ServiceAccount, Role, RoleBinding | `controller` | Always |
+| Secret | `controller-db-credentials` | Always |
+| Secret | `controller-auth-credentials` | Always |
+| Secret | `controller-vault-credentials` | When `spec.vault` is set |
+| Service | `controller` | Always |
+| Ingress | `controller` | When `spec.services.controller.type` is ClusterIP |
+| PVC | `controller-sqlite` | When `spec.database.host` is empty |
+| Deployment | `controller` | Always |
+
+Labels include `app.kubernetes.io/name: iofog`, `app.kubernetes.io/instance: <metadata.name>`, `app.kubernetes.io/component: controller`, and `app.kubernetes.io/managed-by: iofog-operator`.
+
+The Controller Role lets the pod manage ConfigMaps and Services, read Secrets, and patch the StatefulSet named `nats`. That is how the Controller process, not the operator, can adjust NATS after bootstrap.
+
+Pod security context is UID, GID, and fsGroup 10000. Replicas default to 1. More than one replica needs an external database. SQLite uses a recreate strategy and a single PVC.
+
+| Port name | Service port | Pod port |
+| --------- | ------------ | -------- |
+| `controller-api` | 51121 | 51121 |
+| `console` | 80 | `spec.controller.consolePort`, default 8008 |
+
+Service type defaults to LoadBalancer when `spec.services.controller.type` is empty.
+
+When `controller.publicUrl` is empty:
+
+| Exposure | Derived public URL |
+| -------- | ------------------ |
+| ClusterIP and `ingresses.controller.host` set | `https://<host>` if controller HTTPS or the Ingress TLS secret is set. Otherwise `http://<host>`. |
+| LoadBalancer and the Service already has an address | `http` or `https` `://<lb>:51121` |
+| LoadBalancer, no address yet | Requeue 10 seconds. The Deployment is not created on that pass. |
+
+If you set `controller.publicUrl`, the operator uses it and does not wait for a LoadBalancer address. Full URL rules are on the [ControlPlane CRD](/learn/control-plane/kubernetes-crd#url-resolution-publicurl-and-consoleurl).
+
+On first install, the Router creates its Service and waits for an address, then writes TLS Secrets and the Deployment. The Controller creates its Deployment and requeues. In parallel, NATS calls `GET /api/v3/nats/bootstrap` and requeues until that API responds. Later passes log in, register the router, register the NATS hub, and import CAs. NATS writes `server.conf` and the StatefulSet once bootstrap succeeds. When none of the three asks to requeue, status becomes ready.
+
+A spec change (you deploy the file again) increases `metadata.generation`. Effective state becomes updating. Router, NATS, and Controller reconcile again. The Controller Deployment is updated. Database, auth, and vault Secrets are overwritten from the spec. Router TLS Secrets are not regenerated when they already exist. NATS `server.conf` is rewritten. Status returns to ready with the new `observedGeneration`.
+
+## Day-2
+
+The console does not install this control plane. After deploy, open [Overview](/get-started/edgeops-console/overview). **Cluster controllers** shows **Active**, **Standby**, or **Stale**. That block does not open a detail panel.
+
+### Connect
+
+Use connect when the cluster is already up and this workstation needs namespace state. Match `-n` to the Kubernetes namespace.
+
+<CliBlock>{`{{CLI_NAME}} connect -f kubernetes-controlplane.yaml -n iofog
+{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_connect`}>connect</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controlplane`}>describe controlplane</Link>
+
+### Describe
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane -n iofog`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe`}>describe</Link>
+
+### Upgrade
+
+Move image tags with the platform train, then deploy the same kind again. The full order, including fleet Edgelet nodes, is [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train). Pins are in [Default image pins](/learn/control-plane#default-image-pins-v390).
+
+On this kind, set `spec.images` (`operator`, `controller`, `router`, `nats`) and deploy:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f kubernetes-controlplane.yaml -n iofog`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+If you installed with Helm, upgrade the chart on the **3.9.0** train, then apply the updated file. See [Helm](/get-started/deploy/kubernetes-helm).
+
+Fleet Edgelet nodes use <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_upgrade`}>upgrade</Link>. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
+
+## Fields
+
+[KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane)
+
+<EditPageAdmonition />

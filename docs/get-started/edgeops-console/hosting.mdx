@@ -1,0 +1,99 @@
+---
+title: Reach the console
+description: How the Controller embeds EdgeOps Console, including the public URL, listen port, and the controller-config.js file written at startup.
+keywords: [edgeops console, console url, console port, controller config, oidc]
+slug: /get-started/edgeops-console/hosting
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import GitHubRepoLink from '@site/src/components/flavor/GitHubRepoLink';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Reach the console
+
+The Controller embeds EdgeOps Console. You do not run a separate console container. At startup the Controller writes `controller-config.js` into the embedded static build. The console reads `window.controllerConfig` from that file. You do not edit `controller-config.js` by hand.
+
+This page is how you reach the console. The Config sidebar group is [Configuration](/get-started/edgeops-console/configuration).
+
+## Public URL and listen port
+
+You set the public URL and the listen port on the Controller.
+
+| Setting | YAML key | Environment variable | Default |
+| --- | --- | --- | --- |
+| Listen port | `console.port` | `CONSOLE_PORT` | `8008` |
+| Public URL | `console.url` | `CONSOLE_URL` | Derived from `CONTROLLER_PUBLIC_URL` if unset |
+
+```yaml
+console:
+  port: 8008
+  url: "https://console.example.com:8008"
+```
+
+Set `CONSOLE_URL` to the scheme, host, and port users type in the browser. OAuth redirect URIs depend on this value.
+
+After the control plane is up, open that URL. You can also run <code><CliName /> view</code> for the connected cluster.
+
+The Controller sets `consoleUrl` from `CONSOLE_URL`, then falls back to `CONTROLLER_PUBLIC_URL`, then `http://localhost:{CONSOLE_PORT}`.
+
+Full Controller settings: [Controller configuration](/reference/controller/controller-config).
+
+## Runtime controller-config.js
+
+At startup the Controller injects a script like this into the embedded console build:
+
+```javascript
+window.controllerConfig = {
+  apiPort: 51121,
+  publicUrl: "https://controller.example.com:51121",
+  consoleUrl: "https://console.example.com:8008",
+  auth: {
+    mode: "embedded",
+    loginUrl: "/api/v3/user/login",
+    refreshUrl: "/api/v3/user/refresh",
+    logoutUrl: "/api/v3/user/logout",
+    profileUrl: "/api/v3/user/profile",
+    changePasswordUrl: "/api/v3/user/change-password",
+    oauthAuthorizeUrl: "/api/v3/user/oauth/authorize",
+    oauthInteractionUrl: "/login/oauth",
+  },
+  controlPlane: "Remote",
+}
+```
+
+### Fields the console reads
+
+| Field | Purpose |
+| --- | --- |
+| `publicUrl` | Scheme, host, and port for Controller REST and WebSocket calls |
+| `consoleUrl` | Public console URL for OAuth redirects and same-origin checks |
+| `auth.mode` | `embedded` (default) or `external` |
+| `auth.*Url` | Login, refresh, logout, profile, password, and OAuth paths, relative to `publicUrl` |
+| `controlPlane` | Optional. `Remote`, `Kubernetes`, or `Local` for UI hints |
+
+The console does not read `viewerUrl`. Use `consoleUrl` and the `auth` block above.
+
+## Authentication
+
+Console OAuth uses a dedicated client on the Controller.
+
+| Environment variable | YAML key | Description |
+| --- | --- | --- |
+| `OIDC_CONSOLE_CLIENT_ID` | `auth.consoleClient` | SPA client ID for EdgeOps Console |
+| `AUTH_CONSOLE_CLIENT_ENABLED` | `auth.consoleClient.enabled` | Register and enable the console OAuth client |
+
+Embedded mode is the default. The issuer is `{CONTROLLER_PUBLIC_URL}/oidc`. Bootstrap the first admin with `OIDC_BOOTSTRAP_ADMIN_USERNAME` and `OIDC_BOOTSTRAP_ADMIN_PASSWORD`. Walkthrough: [Embedded OIDC](/get-started/deploy/embedded-oidc).
+
+External identity: set `AUTH_MODE=external` and `OIDC_ISSUER_URL`. Walkthrough: [External OIDC](/get-started/deploy/external-oidc).
+
+Sign-in screens are in [Identity and sign-in](/get-started/edgeops-console/identity).
+
+## TLS and reverse proxies
+
+The console and the API can both use TLS. Set `CONTROLLER_PUBLIC_URL` and `CONSOLE_URL` to the external HTTPS URLs. Behind a reverse proxy, enable `TRUST_PROXY` on the Controller so redirect URIs and CORS origins match what clients send.
+
+Listener certificates use the `TLS_*` variables. Details: [Controller configuration](/reference/controller/controller-config).
+
+Console source: <GitHubRepoLink repo="edgeops-console">edgeops-console</GitHubRepoLink>. Production images embed the static `build/` output via `EDGEOPS_CONSOLE_PATH` at Controller build time.
+
+<EditPageAdmonition />

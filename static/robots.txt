@@ -1,4 +1,4 @@
-# Datasance PoT docs — allow search and AI inference; block training use.
+# Datasance PoT docs - allow search and AI inference; block training use.
 # Managed robots.txt is disabled in Cloudflare. This file is authoritative.
 
 User-agent: *

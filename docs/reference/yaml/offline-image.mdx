@@ -1,0 +1,71 @@
+---
+title: OfflineImage fields
+description: Field reference for kind OfflineImage. Per-architecture images, remote node names, and pull auth.
+keywords: [offline image, yaml, fields, amd64, arm64, agent, auth]
+slug: /reference/yaml/offline-image
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# OfflineImage fields
+
+Reference for `kind: OfflineImage`. The transfer and catalog upsert are on [Offline images](/learn/config/offline-images).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: OfflineImage # required, string
+metadata:
+  name: reader # required, string
+  namespace: my-ecn # no, string
+spec:
+  name: reader # required, string. Lowercase alphanumeric
+  amd64: {{REGISTRY}}/reader:1.0.0 # one arch, string. At least one architecture image
+  arm64: {{REGISTRY}}/reader:1.0.0 # one arch, string
+  arm: {{REGISTRY}}/reader:1.0.0 # one arch, string
+  riscv64: {{REGISTRY}}/reader:1.0.0 # one arch, string
+  agent: # required, list of string. Remote Edgelet node names. The key is agent
+    - edge-01
+  auth: # no, object. If set, both username and password are required
+    username: pull-user # if auth is set, string
+    password: pull-token # if auth is set, string
+```
+
+</FlavorYaml>
+
+At least one of `amd64`, `arm64`, `arm`, or `riscv64` is required. Each node receives the image for its platform.
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `name` | Yes | Catalog item name. Lowercase alphanumeric. |
+| `amd64` | One arch | Image for `linux/amd64`. |
+| `arm64` | One arch | Image for `linux/arm64`. |
+| `arm` | One arch | Image for `linux/arm`. |
+| `riscv64` | One arch | Image for `linux/riscv64`. |
+| `agent` | Yes | Remote Edgelet node names. The list key is `agent`. |
+| `auth.username` | If `auth` is set | Registry username. |
+| `auth.password` | If `auth` is set | Registry password or token. |
+
+## Catalog row
+
+Lookup is by `spec.name`. A missing item is created with registry id 2 and a description that starts with `Offline image bundle`. An existing item asks for confirmation, then updates images. Built-in alias `local` is id 2.
+
+The node `arch` selects the image. An arm64 node without `arm64` fails with a message that names the missing field.
+
+## Validation
+
+| Condition | Error |
+| --------- | ----- |
+| Empty `name` | spec must include a name. |
+| No nodes | must include at least one agent. |
+| No arch image | must include at least one architecture image. |
+| Local node | only supports remote Agents. |
+| Partial `auth` | requires both username and password. |
+
+`--no-cache` forces a fresh pull. Artifacts otherwise stay in the namespace offline cache.
+
+<EditPageAdmonition />

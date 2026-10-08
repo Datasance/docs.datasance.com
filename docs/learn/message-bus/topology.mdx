@@ -1,0 +1,110 @@
+---
+title: Topology
+description: How an Edgelet node joins the NATS fabric. natsMode leaf, server, or none, ports, upstreams, and what the Controller provisions by default.
+keywords: [nats, natsMode, leaf, server, upstream, jetstream, tls]
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Topology
+
+This page is how an Edgelet node joins the message bus. You declare the node and its NATS role. The Controller creates the NATS system microservice, the certificates, and the upstream links.
+
+The system microservice (`system-<agentName>/nats`), leaf config, and upstream servers stay on [NATS fabric](/learn/edgelet-nodes/nats-fabric). The server binary and reload behavior are on [NATS Server](/learn/platform-components/nats-server). How a workload gets an account and a user JWT is on [NATS access](/learn/workloads/nats-access).
+
+NATS must be enabled on the control plane. See [Control plane](/learn/control-plane).
+
+TLS, operator JWT authentication, and encrypted JetStream are on by default. Operators do not run `nsc`, copy a server config, or place credentials on the node by hand.
+
+## `natsMode`
+
+The default is `leaf`. A leaf runs workloads and connects inward to the NATS servers. That is the usual Edgelet node.
+
+| Mode | What it is |
+| ---- | ---------- |
+| `leaf` | A local NATS process dials upstream servers over TLS. It listens for clients. It does not open the cluster or leafnode ports. |
+| `server` | A full server. It forms the cluster and accepts leaf connections. |
+| `none` | No NATS process on that node. |
+
+| Port | Use |
+| ---- | --- |
+| `4222` | Client. |
+| `8883` | MQTT. |
+| `8222` | Monitor. |
+| `6222` | Cluster. A server uses this port. |
+| `7422` | Leafnode. A server accepts leaf connections here. A leaf dials each upstream on this port. |
+
+Both `leaf` and `server` publish that full port set on the system microservice. A leaf does not open the cluster or leafnode listeners. See [NATS fabric](/learn/edgelet-nodes/nats-fabric).
+
+`host` is required unless both the router role and the NATS role are `none`.
+
+<FlavorYaml title="natsMode">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: plant-a
+spec:
+  config:
+    host: 203.0.113.10
+    natsConfig:
+      natsMode: leaf
+```
+
+</FlavorYaml>
+
+Node deploy is <CliName /> `deploy -f`. Field tables are on [Agent fields](/reference/yaml/agent) and [AgentConfig fields](/reference/yaml/agent-config).
+
+Create stores the spec and returns immediately. Provisioning runs in the background. The Edgelet node then pulls the system microservice.
+
+## Upstreams
+
+Omit `upstreamNatsServers` and the Controller attaches this node to the hub (`default-nats-hub`) plus every NATS server that runs on a system Edgelet node.
+
+A leaf cannot be an upstream. Name an upstream by Edgelet node uuid, Edgelet node name, or `default-nats-hub`.
+
+A system Edgelet node created before a hub exists starts with no upstreams. Later leaves attach to the hub.
+
+## System Edgelet node and the hub
+
+A system Edgelet node must be `natsMode: server`.
+
+On a control plane that is not Kubernetes, the first Edgelet node in an empty cluster is the system Edgelet node. The Controller sets `routerMode: interior` and `natsMode: server` on that create, including when the request asked for another role. That node becomes the hub when no hub exists yet.
+
+On Kubernetes the hub is the platform NATS, not an Edgelet node. No Edgelet node is marked hub. Nodes you add are leaves or extra servers. The Controller adds those servers to the hub cluster routes. Routes that belong to the `nats-headless` Service stay in place.
+
+See [Kubernetes](/learn/control-plane/kubernetes) and [Remote](/learn/control-plane/remote).
+
+## What is on by default
+
+| Path | Protection |
+| ---- | ---------- |
+| Client port `4222` | Operator mode. Clients authenticate with a user JWT. The generated config does not put TLS on this port. Workload credentials are issued for you. See [NATS access](/learn/workloads/nats-access). |
+| Cluster, on a server | TLS, verify, handshake first. |
+| Leafnode listener, on a server | TLS, verify, handshake first. |
+| Leaf remotes, on a leaf | TLS, verify, handshake first. Each URL uses the upstream host and port `7422`. |
+| MQTT `8883` | TLS, handshake first. |
+| JetStream disk | Encrypted with a key the Controller generates for that node. |
+
+There is no shared NATS password and no token in the server config. The operator JWT is written into the config. The operator seed stays on the Controller.
+
+## Changing the role
+
+Switching a leaf to a server removes the leaf connections and uses cluster routes. Switching a server to a leaf builds those upstream connections and stops using cluster routes.
+
+`natsMode: none` removes the NATS process on that node. Workloads on that node that still have `natsAccess` use the hub URL. See [NATS access](/learn/workloads/nats-access).
+
+| If you were doing this by hand | What the Controller does from `natsMode` |
+| ------------------------------ | ---------------------------------------- |
+| Install a CA and issue server, MQTT, and leaf certificates | Issues them when the node is created, and again when the host changes |
+| Write server or leaf config, cluster routes, and leaf remotes | Renders them from the role and the upstream list |
+| Create an operator, a system account, and a leaf user per site | Creates them with the node |
+| Copy account JWTs onto every server | Updates the resolver bundle |
+| Choose a JetStream key and turn on encryption | Generates a key per node and encrypts the store |
+
+Declare the Edgelet node and the role. `leaf` is already the default.
+
+<EditPageAdmonition />

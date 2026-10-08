@@ -1,0 +1,158 @@
+---
+title: Microservice templates
+description: kind MicroserviceTemplate is a reusable blueprint for one service. Instantiate it with spec.template on kind Microservice.
+keywords: [microservice template, yaml, variables, deploy, v3.9]
+slug: /learn/workloads/microservice-templates
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Microservice templates
+
+A **microservice template** is a reusable blueprint for one microservice. It stores variables and a microservice skeleton (images, container, config, catalog hooks). It is not a running container.
+
+Use it when many services share the same container shape and differ by Edgelet node, image tag, model name, or environment. For a whole app, use an [application template](/learn/workloads/application-templates).
+
+Instantiation is `spec.template` on `kind: Microservice`. There is no separate instantiate command. Include `template` in the microservice YAML and run `deploy -f`.
+
+The primer is [Templates](/get-started/workloads/templates). Fields are on [Microservice template fields](/reference/yaml/microservice-template). Console lists them under [Catalog and templates](/get-started/edgeops-console/catalog-and-templates).
+
+Variables use the same substitution as application templates. Quote placeholders. Re-deploy the microservice to pick up new values. Existing microservices are not updated when you edit the template.
+
+The stored template omits instance identity (`name`, `uuid`, and a nested `template`). `application` and `agent.name` may be templated strings.
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f ms-template.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> parses `spec` in non-strict mode and creates or updates the template on the Controller. Deploy the same `metadata.name` again to update.
+
+## Examples
+
+### Image and port
+
+<FlavorYaml title="nginx-edge.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: MicroserviceTemplate
+metadata:
+  name: nginx-edge
+spec:
+  description: nginx with a templated listen port
+  variables:
+    - key: port
+      description: Host port mapped to container port 80
+      defaultValue: "80"
+    - key: agent-name
+      description: Edgelet node name
+    - key: app-name
+      description: Parent application name
+  microservice:
+    application: "{{ app-name }}"
+    agent:
+      name: "{{ agent-name }}"
+    images:
+      registry: remote
+      amd64: nginx:alpine
+    container:
+      ports:
+        - internal: 80
+          external: "{{ port }}"
+          protocol: tcp
+```
+
+</FlavorYaml>
+
+Deploy an instance. Omit variables that match a `defaultValue`. `variables` may be a list of `{key, value}` or a map.
+
+<FlavorYaml title="web-zebra-1.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: web-zebra-1
+spec:
+  application: edge-gateway
+  agent:
+    name: zebra-1
+  template:
+    name: nginx-edge
+    variables:
+      - key: port
+        value: "8080"
+      - key: agent-name
+        value: zebra-1
+      - key: app-name
+        value: edge-gateway
+```
+
+</FlavorYaml>
+
+### Fleet model bind
+
+Attach the model to the Edgelet node before the microservice starts. See [AI Model Catalog](/learn/config/ai-model-catalog).
+
+<FlavorYaml title="inference-ms.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: MicroserviceTemplate
+metadata:
+  name: inference-ms
+  namespace: my-ecn
+spec:
+  description: Template for inference microservice with fleet model bind
+  variables:
+    - key: application
+      description: Application name
+      defaultValue: myapp
+    - key: agent-name
+      description: Edgelet node
+      defaultValue: edge-01
+    - key: model1
+      description: Fleet model metadata.name
+      defaultValue: smollm2-135m
+  microservice:
+    application: "{{application}}"
+    agent:
+      name: "{{agent-name}}"
+    images:
+      registry: remote
+      amd64: {{REGISTRY}}/inference:1.0.0
+    models:
+      bindPath: /models
+      permissions: ro
+      items:
+        - name: "{{model1}}"
+    container:
+      ports:
+        - internal: 8080
+          external: 8080
+          protocol: tcp
+```
+
+</FlavorYaml>
+
+A microservice that points at this template is in [Microservices](/learn/workloads/microservices).
+
+## Commands
+
+<CliBlock>{`{{CLI_NAME}} get microservice-templates -n my-ecn
+{{CLI_NAME}} describe microservice-template inference-ms -n my-ecn
+{{CLI_NAME}} delete microservice-template inference-ms -n my-ecn`}</CliBlock>
+
+## Related
+
+- [Microservice template fields](/reference/yaml/microservice-template)
+- [Microservices](/learn/workloads/microservices)
+- [Application templates](/learn/workloads/application-templates)
+- [Templates](/get-started/workloads/templates)
+
+<EditPageAdmonition />

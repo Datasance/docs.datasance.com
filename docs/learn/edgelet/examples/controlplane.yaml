@@ -1,0 +1,129 @@
+# =============================================================================
+# Edgelet ControlPlane manifest - annotated reference (edgelet.iofog.org/v1)
+#
+# {{REGISTRY}} is ghcr.io/datasance or ghcr.io/eclipse-iofog.
+# Apply:  edgelet deploy -f controlplane.yaml
+#         edgelet deploy -f controlplane.yaml --timeout=20m   # async; default 15m poll
+# Prose:  /learn/edgelet/manifests · /learn/edgelet/control-plane
+# DNS:    /learn/edgelet/dns (FQDNs from metadata.namespace + metadata.name)
+# Schema: internal/models/control_plane_manifest.go
+#
+# Rules:
+#   - At most one ControlPlane per Edgelet node.
+#   - metadata.labels are forbidden.
+#   - spec.auth is required (mode embedded | external).
+#   - spec.siteCA / spec.localCA are forbidden (import via Controller REST after deploy).
+#   - spec.tls.path and spec.tls.base64 are mutually exclusive.
+#   - Legacy keys (auth.url, ecnViewer*, spec.https, Keycloak fields) are rejected.
+# =============================================================================
+
+apiVersion: edgelet.iofog.org/v1 # required
+kind: ControlPlane                 # required
+# Identity: metadata.namespace + metadata.name → CONTROLLER_* env and bridge DNS.
+# Pot register API uses microservice name "controller" (fixed); see control-plane.md.
+
+metadata:
+  name: pot                        # required - DNS-1123 label (≤63 chars); CONTROLLER_NAME + DNS
+  namespace: default               # optional - defaults to "default" if omitted; drives DNS FQDNs
+  # labels: {}                     # FORBIDDEN - validation rejects metadata.labels
+
+spec:
+  controller:
+    image: {{REGISTRY}}/controller:3.9.0 # required - controller container image
+    registry: 1                    # optional - local registry row ID (pull + register registryId); omit → id 2 (from_cache)
+    port: 51121                    # optional - container API port; host 51121. Omit → mapping 51121, API_PORT env omitted
+    publicUrl: https://controller.example.com # recommended - CONTROLLER_PUBLIC_URL
+    trustProxy: true               # optional - honor X-Forwarded-* when TLS terminates at ingress
+
+  console:                         # optional - EdgeOps Console (embedded in Controller image)
+    port: 8008                     # optional - container console port; host 80. Omit → mapping 8008, CONSOLE_PORT env omitted
+    url: https://console.example.com # optional - CONSOLE_URL (only if set; Edgelet does not default from publicUrl)
+
+  auth:                            # required - OIDC configuration (embedded or external IdP)
+    mode: embedded                 # required - embedded | external
+    insecureAllowHttp: false       # dev only - AUTH_INSECURE_ALLOW_HTTP
+    insecureAllowBootstrapLog: false # dev only - AUTH_INSECURE_ALLOW_BOOTSTRAP_LOG
+    bootstrap:                     # required when mode=embedded
+      username: admin              # OIDC_BOOTSTRAP_ADMIN_USERNAME
+      password: "<replace-me>"     # OIDC_BOOTSTRAP_ADMIN_PASSWORD (≥12 chars, 1 upper, 1 special)
+    # issuerUrl: https://auth.example.com/realms/myrealm  # required when mode=external
+    # client:                      # required when mode=external; optional overrides in embedded
+    #   id: controller
+    #   secret: "<replace-me>"
+    # rateLimit:
+    #   enabled: true
+    #   maxRequestsPerWindow: 60
+    #   windowMs: 60000
+    # sessionStore:
+    #   type: memory                 # memory | database
+    #   ttlMs: 600000
+    #   secret: ""
+    # tokenTtl:
+    #   accessTokenTtlSeconds: 900
+    #   refreshTokenTtlSeconds: 3600
+    # oidcTtl:
+    #   interactionTtlSeconds:
+    #   grantTtlSeconds:
+    #   sessionTtlSeconds:
+    #   idTokenTtlSeconds:
+
+  # database:                      # optional - external database (multi-controller setups)
+  #   provider: postgres             # postgres or mysql
+  #   user: dbuser
+  #   host: db.example.com
+  #   port: 5432
+  #   password: "<replace-me>"
+  #   databaseName: controller
+  #   ssl: true
+  #   ca: "<base64-encoded-ca>"
+
+  events:                          # optional - controller audit event settings
+    auditEnabled: true
+    retentionDays: 14
+    cleanupInterval: 86400         # seconds between internal cleanup runs
+    captureIpAddress: true
+
+  systemMicroservices:             # optional - router/NATS images per CPU architecture
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:                          # required when spec.nats.enabled is true
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+
+  nats:                            # optional - deploy NATS system microservice (JetStream)
+    enabled: false                 # set true to deploy NATS using systemMicroservices.nats images
+
+  # logLevel: info                 # optional - controller log level
+
+  # tls:                             # optional - listener TLS (path OR base64, not both)
+  #   path: /etc/edgelet/controller-tls   # absolute host dir with tls.crt + tls.key (+ optional ca.crt)
+  #   base64:
+  #     ca: "<base64>"               # optional - TLS_BASE64_INTERMEDIATE_CERT
+  #     cert: "<base64>"             # required when base64 block is used
+  #     key: "<base64>"              # required when base64 block is used
+
+  # vault:                           # optional - inject VAULT_* env into controller
+  #   enabled: true
+  #   provider: hashicorp            # hashicorp, openbao, vault, aws, azure, google, ...
+  #   basePath: "pot/default/secrets"  # literal VAULT_BASE_PATH - use namespace value explicitly (no $namespace expansion)
+  #   hashicorp:                     # provide ONE provider block matching provider
+  #     address: "http://vault.example.com:8200"
+  #     token: "<replace-me>"
+  #     mount: "kv"
+  #   aws:
+  #     region: us-east-1
+  #     accessKeyId: ""
+  #     accessKey: ""
+  #   azure:
+  #     url: "https://your-vault.vault.azure.net"
+  #     tenantId: ""
+  #     clientId: ""
+  #     clientSecret: ""
+  #   google:
+  #     projectId: ""
+  #     credentials: ""              # service account JSON or path

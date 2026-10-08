@@ -1,0 +1,47 @@
+---
+title: Models and knowledge
+description: Fleet models and fleet knowledge are versioned registry artifacts. Attach them to an Edgelet node, then bind them on the microservice.
+keywords: [fleet model, fleet knowledge, ai model, ai knowledge, edgelet node, spec.models, spec.knowledge]
+slug: /get-started/workloads/models-and-knowledge
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Models and knowledge
+
+Fleet **model** and fleet **knowledge** are versioned artifacts stored in a registry. They are not containers. A microservice binds them when the service needs those files on the Edgelet node.
+
+A **model** is the weights the service runs. Inference and other Edge AI services load that artifact to produce results.
+
+**Knowledge** is the documents or dataset the service retrieves. A service uses it for search, retrieval, or a local document bundle. It is not the weights.
+
+Both objects follow the same path. Deploy the registry first, because the artifact record points at a registry id or at the `remote` or `local` alias. Then deploy the model or knowledge object with <CliName /> `deploy -f`. A model and a knowledge artifact may share a name. They are separate lists.
+
+Attach the artifact to the Edgelet node that will run the service. Attachment is how that node is allowed to hold a copy. Then bind it on the microservice. Models bind under `spec.models`. Knowledge binds under `spec.knowledge`. Use the artifact name, not a host path.
+
+<FlavorYaml title="reader">{`---
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  models:
+    items:
+      - name: defect-weights
+`}</FlavorYaml>
+
+Distribution is the platform's job. <ProductName /> pulls the artifact from the registry and places it on the attached Edgelet node. You do not copy the files onto the device yourself.
+
+Start the microservice after the artifact is on that Edgelet node. The catalog row says what the artifact is. `spec.models` or `spec.knowledge` says this container should use it.
+
+Linking a node does not start a container. The attach step records which Edgelet nodes should hold the artifact. The microservice document is what schedules the service.
+
+## Go deeper
+
+- [AI Model Catalog](/learn/config/ai-model-catalog)
+- [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog)
+
+<EditPageAdmonition />

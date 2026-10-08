@@ -1,0 +1,49 @@
+# Remote ControlPlane — single host (v3.9.x)
+# Deploy: potctl deploy -f single-controller.yaml -n prod
+
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: edge-prod
+spec:
+  endpoint: https://203.0.113.10:51121
+  iofogUser:
+    email: ops@example.com
+  controller:
+    publicUrl: https://203.0.113.10:51121
+    consoleUrl: https://203.0.113.10
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:3.9.0
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "RemoteTest12!"
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+  nats:
+    enabled: true
+  events:
+    auditEnabled: true
+    retentionDays: 14
+  controllers:
+    - name: ctrl-1
+      host: 203.0.113.10
+      ssh:
+        user: ubuntu
+        keyFile: ~/.ssh/prod.pem
+        port: 22
+      systemAgent:
+        config:
+          arch: amd64
+          host: 203.0.113.10

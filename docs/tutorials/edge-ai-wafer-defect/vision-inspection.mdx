@@ -1,0 +1,173 @@
+---
+title: Vision inspection
+description: Deploy the vision-inspection Application. spec.models names wafer-defect, and the Controller attaches and pulls it onto edge-c.
+keywords: [tutorial, edge ai, vision-inspection, object-detector, spec.models, wafer-defect]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Vision inspection
+
+## Goal
+
+Deploy Application `vision-inspection`. Frame-generator runs on **site-a**, object-detector on **edge-c**, and snapshot-service on **ops-b**. You can change `agent.name`.
+
+`spec.models` names `wafer-defect`. Deploying that microservice makes the Controller attach the model to that Edgelet node and pull it. You do not run `attach model`, and you do not pull the file by hand.
+
+Already in place: the model catalog row, the vision user rules, and the vision account rule.
+
+The file on disk is `deploy/steps/13b-application-vision-inspection.yaml` in [pot-edge-patterns](https://github.com/Datasance/pot-edge-patterns).
+
+## YAML
+
+<FlavorYaml title="vision-inspection">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: vision-inspection
+spec:
+  natsConfig:
+    natsAccess: true
+    natsRule: vision-inspection-local
+  microservices:
+    - name: frame-generator
+      agent:
+        name: site-a # override for your ECN agent name
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/frame-generator:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/frame-generator:1.2.0
+        riscv64: ghcr.io/datasance/pot-edge-patterns/frame-generator:1.2.0
+        arm: ghcr.io/datasance/pot-edge-patterns/frame-generator:1.2.0
+      natsConfig:
+        natsAccess: true
+        natsRule: frame-publisher
+      container:
+        env:
+          - key: PUBLISH_INTERVAL
+            value: "2s"
+          - key: FRAMES_MODE
+            value: wafer
+          - key: LINE_ID
+            value: fab-01
+          - key: FRAMES_DATASET_DIR
+            value: /assets/wafers
+      schedule: 10
+
+    - name: object-detector
+      agent:
+        name: edge-c # override for your ECN agent name; 1–2 node fallback: site-a
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/object-detector:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/object-detector:1.2.0
+      natsConfig:
+        natsAccess: true
+        natsRule: vision-detector
+      models:
+        bindPath: /models
+        permissions: ro
+        items:
+          - name: wafer-defect
+      container:
+        env:
+          - key: LINE_ID
+            value: fab-01
+          - key: MODEL_PATH
+            value: /models/wafer-defect/wafer-defect.onnx
+          - key: CLASSES_PATH
+            value: /config/wafer-classes.json
+      schedule: 20
+
+    - name: snapshot-service
+      agent:
+        name: ops-b # override for your ECN agent name; single-node fallback: site-a
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/snapshot-service:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/snapshot-service:1.2.0
+        riscv64: ghcr.io/datasance/pot-edge-patterns/snapshot-service:1.2.0
+        arm: ghcr.io/datasance/pot-edge-patterns/snapshot-service:1.2.0
+      natsConfig:
+        natsAccess: true
+        natsRule: snapshot-consumer
+      container:
+        ports:
+          - internal: 8080
+            protocol: tcp
+            external: 8083
+      schedule: 30
+```
+
+</FlavorYaml>
+
+### frame-generator
+
+Image `ghcr.io/datasance/pot-edge-patterns/frame-generator:1.2.0` on **site-a**. User rule `frame-publisher`.
+
+| Variable | Value |
+| --- | --- |
+| `PUBLISH_INTERVAL` | `2s` |
+| `FRAMES_MODE` | `wafer` |
+| `LINE_ID` | `fab-01` |
+| `FRAMES_DATASET_DIR` | `/assets/wafers` |
+
+### object-detector
+
+Image `ghcr.io/datasance/pot-edge-patterns/object-detector:1.2.0` on **edge-c**. amd64 and arm64 only. User rule `vision-detector`.
+
+```yaml
+models:
+  bindPath: /models
+  permissions: ro
+  items:
+    - name: wafer-defect
+container:
+  env:
+    - key: LINE_ID
+      value: fab-01
+    - key: MODEL_PATH
+      value: /models/wafer-defect/wafer-defect.onnx
+    - key: CLASSES_PATH
+      value: /config/wafer-classes.json
+```
+
+`items[].name` matches `metadata.name` on the catalog model. `MODEL_PATH` sits under `bindPath`. The Controller creates that path when it pulls the model.
+
+### snapshot-service
+
+Image `ghcr.io/datasance/pot-edge-patterns/snapshot-service:1.2.0` on **ops-b**. User rule `snapshot-consumer`. External port **8083** maps to container port 8080. The next page publishes that port through the Router.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/13b-application-vision-inspection.yaml`}</CliBlock>
+
+## What you should see {#verify}
+
+<CliBlock>{`{{CLI_NAME}} describe microservice object-detector`}</CliBlock>
+
+object-detector reaches Running. `MODEL_PATH` is `/models/wafer-defect/wafer-defect.onnx`. Logs show a defect class and confidence on `vision.inspections.fab-01` once frame-generator is publishing.
+
+<CliBlock>{`{{CLI_NAME}} describe model wafer-defect`}</CliBlock>
+
+**edge-c** is linked. The [Verify](/tutorials/edge-ai-wafer-defect/verify) page checks the gallery after the Service exists.
+
+## Common mistakes
+
+`MODEL_PATH` points at a host path or at `/models/wafer-defect.onnx`. Use `/models/wafer-defect/wafer-defect.onnx`.
+
+`LINE_ID` differs between frame-generator and object-detector, so the subjects do not meet.
+
+object-detector is scheduled on riscv64 or armv7. Those images are not in this manifest.
+
+The catalog row or the OCI registry id is missing, so the pull cannot start.
+
+## Next
+
+[Snapshot service](/tutorials/edge-ai-wafer-defect/snapshot-service)
+
+<EditPageAdmonition />

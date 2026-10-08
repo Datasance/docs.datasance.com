@@ -3,6 +3,7 @@
 
 # Production
 /build
+.build-iofog
 
 # Generated files
 .docusaurus
@@ -23,3 +24,5 @@ yarn-error.log*
 NOTES.md
 zz_materials
 .cursor
+
+versioned_sidebars/*.datasance.bak

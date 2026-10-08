@@ -1,0 +1,79 @@
+---
+title: Upgrading to v3.9.0
+description: In-place platform train upgrade from PoT v3.8.0 to v3.9.0. Control plane, Edgelet 1.1, CLI, and image pins on the same Controller database.
+keywords: [upgrade, v3.9, v3.8, edgelet, control plane, potctl, in-place]
+slug: /release-notes/upgrading-to-v3-9
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+
+import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
+
+# Upgrading to v3.9.0
+
+Platform train **v3.9.0** supports an **in-place upgrade** from **v3.8.0**. You keep the same Controller database, refresh control plane image tags, roll **Edgelet v1.1.0** on fleet nodes, and upgrade **{CLI_NAME}** on your workstation.
+
+:::info[Not supported: v3.7 or older → v3.9]
+
+There is no direct upgrade from **v3.7.x**, **v1.6.x**, or legacy Java Agent deployments to **v3.9.0**. Move to **v3.8.0** first with a greenfield Control Plane and Edgelet-only nodes. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8) and the [Documentation archive](/reference/documentation-archive).
+
+:::
+
+## Before you start
+
+1. Read [What's New](/release-notes/whats-new) for YAML and API changes that affect registries, microservices, and Edgelet node manifests.
+2. Export or commit your control plane YAML, `Agent` manifests, and application YAML.
+3. Plan a maintenance window. Upgrade control plane components first, then fleet Edgelet nodes.
+4. Air-gapped sites: stage wrapper images before you bump tags. See [Airgap deployment](/get-started/deploy/airgap-deployment) and [Offline images](/learn/config/offline-images).
+
+Default pins for **v3.9.0** are listed on [Control plane](/learn/control-plane#default-image-pins-v390).
+
+## Supported upgrade path
+
+| You are on | Action |
+| ---------- | ------ |
+| **v3.8.0** | Follow the steps below (same database). |
+| **v3.7.x or older** | Greenfield to **v3.8.0** first. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8). |
+| **New install** | Deploy **v3.9.0** directly. See [Getting started](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction). |
+
+## Recommended order
+
+Keep **Controller**, **Operator** (Kubernetes), **Router**, **NATS**, system **Edgelet** on Controller hosts, fleet **Edgelet** nodes, and **{CLI_NAME}** on the same train.
+
+1. **Upgrade {CLI_NAME}** on your workstation to **v3.9.0**.
+2. **Bump image tags and Edgelet pins** in control plane YAML (`Controller`, `Router`, `NATS`, `spec.systemAgent`, Console pin if overridden). Use the defaults on [Control plane](/learn/control-plane#default-image-pins-v390).
+3. **Re-apply control plane YAML** with deploy:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
+
+On Kubernetes, upgrade the operator release or Helm chart on the **3.9.0** train, then apply the updated `KubernetesControlPlane` manifest.
+
+4. **Upgrade fleet Edgelet nodes** to **1.1.0** after the control plane is healthy. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet). Controller hosts use the system node path in step 3.
+5. **Review workloads and config** in EdgeOps Console or with `describe`. Update registry rows to **`type: oci`** or **`type: hf`**, refresh microservice **`container`** blocks if you adopt new v3.9 fields, and deploy **Model** / **Knowledge** catalog rows before binding them in microservices.
+
+Detailed Console and CLI notes live in [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train).
+
+## Verify
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane
+{{CLI_NAME}} describe controller CONTROLLER_NAME
+{{CLI_NAME}} get agents`}</CliBlock>
+
+The console Overview shows control plane status.
+
+## Rollback
+
+If you must roll back, redeploy the previous control plane YAML tags and Edgelet pins, then downgrade fleet nodes with the same [upgrade agent](/learn/edgelet-nodes#upgrade-and-rollback-edgelet) flow targeting the prior Edgelet version. Test rollback in a lab ECN before you change production.
+
+## Related guides
+
+- [What's New in {PRODUCT_NAME}](/release-notes/whats-new)
+- [Edgelet nodes](/learn/edgelet-nodes)
+- [Registries](/learn/config/registries)
+- [Microservices](/learn/workloads/microservices)
+- [AI Model Catalog](/learn/config/ai-model-catalog)
+- [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog)
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

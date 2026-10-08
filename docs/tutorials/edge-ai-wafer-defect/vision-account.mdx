@@ -1,0 +1,76 @@
+---
+title: Vision account
+description: Deploy the in-account NatsAccountRule for vision-inspection. No export and no import.
+keywords: [tutorial, edge ai, nats account rule, vision-inspection]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Vision account
+
+## Goal
+
+Deploy one `NatsAccountRule` named `vision-inspection-local`. Frame-generator, object-detector, and snapshot-service share this account. Traffic stays in the account. There is no export, no import, and no account id to copy.
+
+The user rules can exist before this rule, or you can deploy them with it. The Application must come after both.
+
+The file is `deploy/steps/12-nats-account-vision.yaml`.
+
+## YAML
+
+<FlavorYaml title="vision-inspection-local">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: vision-inspection-local
+spec:
+  description: Vision inspection account - in-account pub/sub only
+  exportsAllowWildcards: true
+  maxConnections: -1
+  maxLeafNodeConnections: -1
+  maxData: -1
+  maxExports: -1
+  maxImports: -1
+  maxMsgPayload: -1
+  maxSubscriptions: -1
+  exportsAllowWildcards: true
+  memStorage: -1
+  diskStorage: -1
+  streams: -1
+  consumer: -1
+  maxAckPending: -1
+  memMaxStreamBytes: -1
+  diskMaxStreamBytes: -1
+```
+
+</FlavorYaml>
+
+The repo file sets account limits to unlimited for this example. It has no `exports` and no `imports`.
+
+`vision-inspection-local` is the account. `frame-publisher`, `vision-detector`, and `snapshot-consumer` are the user rules inside it.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/12-nats-account-vision.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} get nats-account-rules`}</CliBlock>
+
+`vision-inspection-local` is listed. Describe shows no export entries and no import entries.
+
+## Common mistakes
+
+Adding export or import blocks. This example keeps vision subjects in one account.
+
+Deploying the Application before this rule and the user rules both exist.
+
+## Next
+
+[Vision inspection](/tutorials/edge-ai-wafer-defect/vision-inspection)
+
+<EditPageAdmonition />

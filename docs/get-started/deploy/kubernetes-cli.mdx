@@ -1,0 +1,131 @@
+---
+title: Kubernetes - Deploy Control Plane
+description: Deploy KubernetesControlPlane with the CLI on platform train v3.9.0. Operator install, ControlPlane CR, and embedded OIDC.
+keywords: [kubernetes control plane, kubernetescontrolplane, operator, deploy, v3.9]
+slug: /get-started/deploy/kubernetes-cli
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+:::tip[Deploy on Linux hosts instead?]
+
+For bare metal or VMs over SSH, use [Remote control plane](/get-started/deploy/remote-control-plane). This guide uses **`kind: KubernetesControlPlane`** on a Kubernetes cluster.
+
+:::
+
+# Deploy Control Plane on a Kubernetes with <CliName />
+
+Use **`kind: KubernetesControlPlane`** to install the operator in a namespace, apply a **`ControlPlane`** custom resource, wait until the stack is ready, and register the CLI user against the Controller API.
+
+| Layer | `kind` | Purpose |
+| ----- | ------ | ------- |
+| CLI deploy YAML | `KubernetesControlPlane` | What you author for `deploy -f` |
+| Cluster custom resource | `ControlPlane` | What the operator reconciles |
+
+The CLI **translates** most of `spec` into the operator CR. Fields such as **`spec.config`**, **`spec.ca`**, and **`spec.iofogUser`** are **CLI-only**. See [Kubernetes deploy guide](/learn/control-plane/kubernetes) and [ControlPlane CRD](/learn/control-plane/kubernetes-crd).
+
+:::info[Field reference]
+
+Full **`KubernetesControlPlane`** fields: [Kubernetes schema](/reference/yaml/kubernetes-control-plane). Production TLS: [Kubernetes TLS (CLI)](/learn/security/control-plane-kubernetes-cli) and [Kubernetes TLS (operator)](/learn/security/control-plane-kubernetes-operator).
+
+:::
+
+## Deploy a control plane on Kubernetes
+
+:::info[Authentication]
+
+Set `auth.mode: embedded` in your control plane YAML. See [Embedded OIDC](/get-started/deploy/embedded-oidc).
+
+:::
+
+:::warning[NATS replicas]
+
+When NATS is enabled, use at least **2** NATS replicas to initialize the JetStream cluster.
+
+:::
+
+:::warning[External database for HA]
+
+You must configure an external database when **`replicas.controller` is greater than 1**. See [Database installation](/get-started/deploy/database).
+
+:::
+
+### Prerequisites
+
+- `kubectl` access via **`spec.config`** (kubeconfig path)
+- CLI namespace (`-n`) equals the **Kubernetes namespace** where the operator and CR live
+- If both **`metadata.namespace`** and **`-n`** are set, they **must match**
+
+Create `controlplane.yaml`:
+
+<FlavorYaml title="controlplane.yaml">{`---
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: minimal-k8s-cp
+  namespace: iofog
+spec:
+  config: ~/.kube/config
+  iofogUser:
+    name: Admin
+    surname: User
+    email: admin@example.com
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: ChangeMe12!
+  replicas:
+    controller: 1
+    nats: 2
+  controller:
+    publicUrl: https://controller.example.com
+    logLevel: info
+    https: true
+    secretName: controller-tls
+  images:
+    operator: {{REGISTRY}}/operator:3.9.0
+    controller: {{REGISTRY}}/controller:v3.9.0
+    router: {{REGISTRY}}/router:3.9.0
+    nats: {{REGISTRY}}/nats:2.15.0
+  services:
+    controller:
+      type: LoadBalancer
+    router:
+      type: LoadBalancer
+  nats:
+    enabled: true
+    jetStream:
+      storageSize: 10Gi
+`}</FlavorYaml>
+
+Set **`spec.config`** to your kubeconfig path. Use a dedicated namespace in production.
+
+Deploy:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml -n iofog`}</CliBlock>
+
+Check cluster objects:
+
+```bash
+kubectl get all -n iofog
+```
+
+## Verify the deployment
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+<CliBlock>{`{{CLI_NAME}} get controllers`}</CliBlock>
+
+For ingress patterns (B1/B2), vault, and service overrides, see [Kubernetes schema](/reference/yaml/kubernetes-control-plane) and [Operator TLS guide](/learn/security/control-plane-kubernetes-operator).
+
+:::tip[Next step]
+
+Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.0** on edge hosts.
+
+:::
+
+<EditPageAdmonition />

@@ -40,7 +40,7 @@ ioFog aims to make developing edge software just like developing for the cloud. 
 
 An Edge Compute Network (ECN) running ioFog is made up of one or more devices, referred to as **nodes**. Each node runs a daemon service called an **Agent**. Each node's Agent is a daemon that is responsible for one or more **microservices** running on that particular node. These microservices are deployed using Linux kernel containers (LXC). Most people use Docker, for its ease, stability, and vibrant community.
 
-Since your Edge Compute Network is likely distributed—composed of many different devices across networks, each with potentially differing microservices—a piece of software called the **Controller** is used for orchestration of the different Agents.
+Since your Edge Compute Network is likely distributed-composed of many different devices across networks, each with potentially differing microservices-a piece of software called the **Controller** is used for orchestration of the different Agents.
 
 Because the Controller daemon keeps track of all your Agents automatically, even across complicated network configurations, you can use it to maintain the entire fleet. Small Edge Compute Networks will only need a single Controller, which can be run on any device, including one that also happens to run the Agent too, as long as it has a stable hostname or static IP address and is reachable by all the Agents.
 

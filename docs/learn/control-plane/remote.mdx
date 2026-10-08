@@ -1,0 +1,274 @@
+---
+title: Remote
+description: Deploy a remote ControlPlane across SSH hosts with Edgelet. Global spec, per-host controllers, networking, and day-2 tasks.
+keywords: [remote control plane, controlplane, ssh, edgelet, v3.9]
+slug: /learn/control-plane/remote
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Remote
+
+Use `kind: ControlPlane` to deploy <ProductName /> across one or more SSH hosts with Edgelet. The kind name is `ControlPlane`. Global settings (auth, database, images, TLS policy) are declared once. Each host is an entry under `spec.controllers[]`.
+
+Use this kind for bare metal or VMs, including a multi-host layout where the first system Edgelet node is the default router and the NATS hub. Additional hosts run interior system Edgelet nodes. See [Multi-controller HA](/learn/control-plane/remote-ha). Add a later host with [Controller add-on](/learn/control-plane/controller-add-on).
+
+The install steps are in [Remote control plane](/get-started/deploy/remote-control-plane). Prepare SSH and sudo with [Prepare your remote hosts](/get-started/deploy/prepare-your-remote-hosts).
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f remote-controlplane.yaml -n prod`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+<CliName /> does the following.
+
+**On every host, in parallel**
+
+1. Check SSH (reachable host, key, user).
+2. Install Edgelet (native or container, from the system Edgelet node config).
+3. When `spec.airgap` or `controllers[].airgap` is set, stage images and the Edgelet binary. That host then needs `systemAgent.config.arch`.
+4. When `spec.controller.package` has a registry, username, and password, write a private registry manifest on Edgelet.
+5. Translate the global spec plus this `controllers[]` row into `apiVersion: edgelet.iofog.org/v1`, `kind: ControlPlane`.
+6. Run `edgelet deploy -f` on that host and poll until the Controller container is running.
+
+No Controller API login happens until every host finishes this phase, or one of them fails.
+
+**Once, after every host succeeds**
+
+1. Wait for the Controller API at `spec.endpoint` or `controller.publicUrl`.
+2. When `auth.mode` is `embedded`, log in with the bootstrap user and create `iofogUser` if it is missing.
+3. When a private Controller image was used, register that registry on the Controller.
+4. When any of `routerSiteCA`, `routerLocalCA`, `natsSiteCA`, or `natsLocalCA` is set, upload those CAs through the Controller API. See [Securing a remote control plane](/learn/security/control-plane-remote).
+5. Fill `consoleUrl` on the stored spec when it is still empty.
+
+**Then, one system Edgelet node at a time, in `controllers[]` order**
+
+Index 0 is the default router and the NATS hub (`upstreamRouters` and `upstreamNatsServers` empty). Later indexes attach to `default-router` and `default-nats-hub`. Details, database rules, and failure cases are on [Multi-controller HA](/learn/control-plane/remote-ha).
+
+| Scope | Fields |
+| ----- | ------ |
+| Global (once) | `endpoint`, `ca`, `iofogUser`, `controller`, `database`, `auth`, `routerSiteCA`, `routerLocalCA`, `natsSiteCA`, `natsLocalCA`, `systemMicroservices`, `nats`, `events`, `vault`, `tls`, `airgap` |
+| Each `controllers[]` row | `name`, `host`, `ssh`, `systemAgent` (required), optional `tls` override, optional `airgap` |
+
+Prerequisites:
+
+- Passwordless sudo on the remote hosts, for the Edgelet install scripts.
+- SSH key access: `ssh.user`, `ssh.keyFile`, optional `ssh.port` (default 22).
+- A `systemAgent` block on every controller. `{}` is allowed. <CliName /> fills defaults when config is omitted, except airgap, which requires `arch`.
+- `endpoint` or `controller.publicUrl`, so the CLI can wait for the API and configure Edgelet nodes.
+
+Per-host translation merges the global spec with that `controllers[]` entry. `controllers[].tls` overrides global `spec.tls` for that host only. The Edgelet manifest shape is documented in [Edgelet control plane](/learn/edgelet/control-plane).
+
+Adding a host later with `kind: Controller` needs a full remote control plane record in namespace config (including `auth` and `controller`). Get that from the initial `deploy -f`, or from `connect -f` with the same full file. A URL-only connect does not store enough for the add-on.
+
+## Examples
+
+Single host. One controller may use Edgelet SQLite. Leave `database` unset.
+
+<FlavorYaml title="remote-controlplane.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: edge-prod
+spec:
+  endpoint: https://203.0.113.10:51121
+  iofogUser:
+    email: ops@example.com
+  controller:
+    publicUrl: https://203.0.113.10:51121
+    consoleUrl: https://203.0.113.10
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:3.9.0
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "RemoteTest12!"
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+  nats:
+    enabled: true
+  events:
+    auditEnabled: true
+    retentionDays: 14
+  controllers:
+    - name: ctrl-1
+      host: 203.0.113.10
+      ssh:
+        user: ubuntu
+        keyFile: ~/.ssh/prod.pem
+        port: 22
+      systemAgent:
+        config:
+          arch: amd64
+          host: 203.0.113.10
+```
+
+</FlavorYaml>
+
+Two hosts need an external database. Index 0 is the default router and the NATS hub. Index 1 is an interior system Edgelet node.
+
+<FlavorYaml title="remote-ha.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: edge-ha
+spec:
+  endpoint: https://controller.example.com
+  iofogUser:
+    email: ops@example.com
+  controller:
+    publicUrl: https://controller.example.com
+    consoleUrl: https://console.example.com
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:3.9.0
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "RemoteTest12!"
+  database:
+    provider: postgres
+    host: postgres.internal.example.com
+    port: 5432
+    user: controller
+    password: secret
+    databaseName: controller
+    ssl: true
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+  nats:
+    enabled: true
+  controllers:
+    - name: ctrl-primary
+      host: 10.0.1.10
+      ssh:
+        user: ubuntu
+        keyFile: ~/.ssh/prod.pem
+      systemAgent:
+        config:
+          arch: amd64
+          host: 10.0.1.10
+    - name: ctrl-secondary
+      host: 10.0.1.11
+      ssh:
+        user: ubuntu
+        keyFile: ~/.ssh/prod.pem
+      systemAgent:
+        config:
+          arch: amd64
+          host: 10.0.1.11
+```
+
+</FlavorYaml>
+
+Ordering, airgap, and what happens when a host fails: [Multi-controller HA](/learn/control-plane/remote-ha). Bring-your-own CAs: [Securing a remote control plane](/learn/security/control-plane-remote).
+
+## Networking
+
+There is no operator and no Kubernetes ConfigMap named `iofog-router` or `iofog-nats-config` for the hub. The Controller runs on an Edgelet node. That node is the system Edgelet node, and it is the default router and the NATS hub.
+
+[Local](/learn/control-plane/local) uses the same path. Kubernetes hubs are a different path: [Kubernetes](/learn/control-plane/kubernetes).
+
+Edgelet registers the Controller on the system node with `POST /api/v3/agent/controller/register`. The call is accepted only when the Edgelet node is `isSystem`. The Controller stores a system microservice named `controller` in application `system-{agentName}`.
+
+On an empty remote cluster, creating the first Edgelet node promotes it to `isSystem`, `routerMode: interior`, and `natsMode: server`, including when the request asked for another role. <CliName /> does this through `spec.controllers[0].systemAgent` during deploy, after the Controller API is up.
+
+The Controller then provisions the `router` and `nats` system microservices on that same node:
+
+- The router is marked default when no default router exists yet (`default-router`).
+- The NATS server is marked hub when no hub exists yet (`default-nats-hub`).
+
+Later Edgelet nodes attach to them. A system Edgelet node stays `routerMode: interior` and `natsMode: server`. An interior router that still has downstream routers cannot switch to `edge`.
+
+The router container on this node uses host networking, so ports 45671 and 55671 bind on the host. The NATS container does not.
+
+Certificate names are per Edgelet node (`router-site-server-{agentName}`, `nats-server-{agent}`). They are not the unsuffixed hub names the operator uses on Kubernetes (`router-site-server`, `nats-site-server`).
+
+The Controller creates `router-site-ca`, `default-router-local-ca`, `nats-site-ca`, and `default-nats-local-ca` itself, self-signed, valid for 60 months, the first time that node is reconciled, unless you supplied those CAs on deploy. See [Securing a remote control plane](/learn/security/control-plane-remote). These are separate from the [Certificates](/learn/config/certificates) catalog.
+
+| Change | Where it is written | How the node picks it up |
+| ------ | ------------------- | ------------------------ |
+| Router listeners, connectors, TLS profiles | `config` on the `router` system microservice | Edgelet change list |
+| Service bridge on the default router | Same microservice config (`bridges.tcpListeners` / `tcpConnectors`) | Same change list. See [Services](/learn/network/services). |
+| NATS `server.conf` or `leaf.conf` | ConfigMap `nats-server-conf-{agent}`, key `server.conf`, mounted at `/etc/nats/config` | Volume mount on the `nats` system microservice |
+| Account JWT bundle on the hub | ConfigMap `iofog-nats-jwt-bundle`, mounted at `/tmp/nats/jwt` | Same volume-mount path |
+| Cluster membership | Every server's `server.conf` is rendered again. Growing from one server to many rebuilds the local NATS container. | Change list, and rebuild when the template changes |
+| Host or role change | Certificates reissued, Secrets remounted | Change list, `volumeMounts` |
+
+The Controller owns these objects. There is no operator rewrite to preserve. Image and port behavior for the containers is on [Router](/learn/platform-components/router) and [NATS Server](/learn/platform-components/nats-server).
+
+<CliBlock>{`{{CLI_NAME}} get system-microservices -n my-ecn
+{{CLI_NAME}} describe system-microservice system-<controller-agent>/router -n my-ecn
+{{CLI_NAME}} describe system-microservice system-<controller-agent>/nats -n my-ecn`}</CliBlock>
+
+## Day-2
+
+The console does not install this control plane. After deploy, open [Overview](/get-started/edgeops-console/overview). **Cluster controllers** shows **Active**, **Standby**, or **Stale**. That block does not open a detail panel.
+
+### Connect
+
+Connect stores the file in an empty namespace when you did not deploy from this workstation. For a later [Controller add-on](/learn/control-plane/controller-add-on), connect with the full YAML, including `auth` and `controller`.
+
+<CliBlock>{`{{CLI_NAME}} connect -f remote-controlplane.yaml -n prod
+{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_connect`}>connect</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controlplane`}>describe controlplane</Link>
+
+Fix SSH details with <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_configure`}>configure</Link> when remote exec or logs fail.
+
+### Describe
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane -n prod
+{{CLI_NAME}} describe controller ctrl-1 -n prod`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe`}>describe</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controller`}>describe controller</Link>
+
+### Upgrade
+
+Set `spec.controller.package.image`, `spec.systemMicroservices`, and the system Edgelet pin, then deploy the same file. The full order is [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train). Pins are in [Default image pins](/learn/control-plane#default-image-pins-v390).
+
+<CliBlock>{`{{CLI_NAME}} deploy -f remote-controlplane.yaml -n prod`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+Fleet Edgelet nodes use <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_upgrade`}>upgrade</Link>. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet). When Router or NATS on a Controller host looks stale, reconcile that system Edgelet node. See [Reconcile platform](/get-started/edgelet-nodes/reconcile).
+
+## Fields
+
+[Remote ControlPlane fields](/reference/yaml/remote-control-plane)
+
+<EditPageAdmonition />

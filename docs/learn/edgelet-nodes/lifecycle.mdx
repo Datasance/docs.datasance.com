@@ -1,0 +1,96 @@
+---
+title: Lifecycle
+description: Day-2 verbs for an Edgelet node. Delete, detach, attach, move, prune, upgrade, reconcile, configure, and where the procedures live.
+keywords: [edgelet node, lifecycle, delete, detach, attach, upgrade, reconcile, v3.9]
+slug: /learn/edgelet-nodes/lifecycle
+---
+
+import Link from '@docusaurus/Link';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Lifecycle
+
+These verbs change an **Edgelet node** after the first `deploy -f`. Field reference stays on [Remote node](/learn/edgelet-nodes/remote), [Local node](/learn/edgelet-nodes/local), and [AgentConfig](/learn/edgelet-nodes/agent-config). Where Get started already has the steps, this page points there.
+
+Start, stop, and rename are microservice verbs. They do not start or stop the Edgelet node. See [Applications](/get-started/workloads/applications) and [Microservices](/learn/workloads/microservices). `move agent` moves the node between namespaces. Microservice move is a workload action.
+
+## What each verb touches
+
+| Command | Controller API | Edgelet on the host | CLI namespace config |
+| ------- | -------------- | ------------------- | -------------------- |
+| `deploy -f` (`Agent` or `LocalAgent`) | Create or update through AgentConfig | Bootstrap and provision | Node record stored |
+| `deploy -f` (AgentConfig only) | Create or update the node | No | No host record unless paired with a node kind |
+| `delete agent` | Delete the node when reachable | Deprovision and uninstall with data removal | Remove the node and trim volumes |
+| `detach agent` | Delete the node | Deprovision only | Move to the detached store |
+| `attach agent` | Recreate and provision | Uses the stored SSH or local spec | Attach to the namespace |
+| `prune agent` | Prune API | Host cleanup for that node type | Unchanged |
+| `upgrade agent` | Schedule a node upgrade | Async on the node | Unchanged |
+| `reconcile agent` | Platform reconcile | Async | Unchanged |
+| `configure agent` | No | No | SSH cache only (remote) |
+| `move agent` | Detach, then attach | Same as detach and attach | Namespace change |
+
+The system Edgelet node on a Controller host is removed with control plane or controller delete, not with `delete agent` on a reserved system name. See [Remote](/learn/control-plane/remote) and [Local](/learn/control-plane/local).
+
+Logs and an interactive shell are in [Node logs and exec](/learn/operate/node-debugging). That page covers `logs agent`, `exec agent`, and enabling exec.
+
+## Delete, detach, attach, and move
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete`}>delete agent</Link> deprovisions Edgelet, deletes the Controller record, and uninstalls Edgelet with data removal. It also drops the node from volume records in the CLI config.
+
+## Attach, detach, and move {#attach-detach-and-move}
+
+Detach removes the node from the cluster and keeps Edgelet installed so you can attach it later. Attach pushes AgentConfig and provisions from the stored spec. Move is detach in the source namespace and attach in the destination. Delete, `--force`, and SSH-only updates are in the same guide: [Attach and detach](/get-started/edgelet-nodes/attach-detach).
+
+If SSH host, user, or key are missing, remote deprovision is skipped. Restore them with `configure agent`, then retry.
+
+## Upgrade and rollback Edgelet {#upgrade-and-rollback-edgelet}
+
+`upgrade agent` asks the Controller to upgrade that Edgelet node. It is asynchronous. Poll with `describe agent`. This is not the same as redeploying bootstrap with a new `package.version`. Rollback targets the previous Edgelet version. Steps, on-host OTA, and workload impact are in [Upgrade and rollback](/get-started/edgelet-nodes/upgrade-rollback).
+
+On this train, fleet nodes use Edgelet **v1.1.0** after the control plane is healthy. See [Control plane](/learn/control-plane#upgrade-the-platform-train).
+
+## Prune
+
+`prune agent` asks the Controller to reclaim images and disk on that node. It does not remove the node from the namespace. Scheduled thresholds use `pruningFrequency` and `availableDiskThreshold`. The commands are in [Image pruning](/get-started/edgelet-nodes/image-pruning).
+
+## Reconcile
+
+`reconcile agent` enqueues platform reconcile and waits until provisioning finishes. Use it when router or NATS state on the node has drifted. The cases and the command are in [Reconcile](/get-started/edgelet-nodes/reconcile).
+
+## EdgeGuard {#edgeguard}
+
+`edgeGuardFrequency` sets how often the node scans hardware. `0` disables the scan. What a signature change does is in [EdgeGuard](/get-started/edgelet-nodes/edgeguard). The field is on [AgentConfig fields](/reference/yaml/agent-config).
+
+## Configure SSH
+
+`configure agent` updates `ssh.user`, `ssh.keyFile`, and `ssh.port` in the CLI cache for a remote node. It does not change AgentConfig on the Controller. Runtime limits, router, and NATS settings go through `deploy -f` with AgentConfig or `spec.config`. LocalAgent has no SSH cache. The flags are in [Attach and detach](/get-started/edgelet-nodes/attach-detach).
+
+## Describe
+
+`describe agent` merges the stored spec with live status from the Controller. `describe agent-config` prints the Controller configuration, including nested `routerConfig` and `natsConfig`. Host metrics in that output are status. Do not set them in deploy YAML.
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe`}>describe</Link>
+
+## Config push
+
+Limits, log paths, router mode, and NATS mode are an AgentConfig deploy or a console edit. How the push reaches the host is in [Configuration updates](/get-started/edgelet-nodes/configuration-updates).
+
+## Volumes and offline images
+
+`kind: Volume` stages files onto listed Edgelet nodes through the CLI config. It is not a Controller API object. Distribution steps are in [Volume distribution](/get-started/edgelet-nodes/volume-distribution).
+
+`kind: OfflineImage` loads images onto remote nodes. See [Offline images](/learn/config/offline-images).
+
+`kind: VolumeMount` is a Controller object. Attach it after the node is enrolled. See [Volume mounts](/learn/config/volume-mounts).
+
+`delete agent` still trims Volume records in the CLI namespace config. A volume that listed only that node is removed. A shared volume loses that node name.
+
+## Related
+
+- [Edgelet nodes](/learn/edgelet-nodes)
+- [Bootstrap](/learn/edgelet-nodes/bootstrap)
+- [Networking](/learn/edgelet-nodes/networking)
+- [Nodes in the console](/get-started/edgeops-console/nodes)
+
+<EditPageAdmonition />

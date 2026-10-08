@@ -4,11 +4,15 @@ description: Authorization policy for a NATs user. Define limits and permissions
 keywords: [nats user rule, nats, messaging, datasance pot, natsAccess, natsRule]
 ---
 
+:::tip[YAML field reference]
+See [NATS user rules](/learn/message-bus/user-rules) in Learn for canonical YAML.
+:::
+
 # NATS User Rule
 
-A **NATS User Rule** is an authorization policy that applies to a **NATS user** (e.g. a microservice). It defines connection limits, allowed connection types, source restrictions, and which subjects the user can publish to or subscribe to. When a [Microservice](../yaml-references/reference-application) has NATS access enabled via `natsConfig.natsAccess: true` and `natsConfig.natsRule` set to this rule's name, the Controller uses this rule to generate the user's NATS credentials (e.g. JWT or creds file).
+A **NATS User Rule** is an authorization policy that applies to a **NATS user** (e.g. a microservice). It defines connection limits, allowed connection types, source restrictions, and which subjects the user can publish to or subscribe to. When a [Microservice](/learn/workloads/microservices) has NATS access enabled via `natsConfig.natsAccess: true` and `natsConfig.natsRule` set to this rule's name, the Controller uses this rule to generate the user's NATS credentials (e.g. JWT or creds file).
 
-For the YAML spec and a short example, see [NatsUserRule YAML Specification](../yaml-references/reference-nats-user-rule).
+For the YAML spec and a short example, see [NATS user rules in Learn](/learn/message-bus/user-rules).
 
 ## Relation to Applications and microservices
 

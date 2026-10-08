@@ -1,0 +1,68 @@
+---
+title: Message bus
+description: How an Edgelet node joins NATS, and how account and user rules become the JWTs the Controller signs.
+keywords: [nats, message bus, natsMode, NatsAccountRule, NatsUserRule, jwt]
+slug: /learn/message-bus
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Message bus
+
+The <ProductName /> message bus is NATS. This section is how an Edgelet node joins it, and the two policy kinds the Controller signs into JWTs.
+
+NATS must be enabled on the control plane before any of this works. See [Control plane](/learn/control-plane).
+
+Mounting credentials into a container stays on [NATS access](/learn/workloads/nats-access). The system microservice on the node (`system-<agentName>/nats`, leaf config, upstream servers) stays on [NATS fabric](/learn/edgelet-nodes/nats-fabric). The server binary and reload behavior stay on [NATS Server](/learn/platform-components/nats-server).
+
+Deploy rule documents with <CliName /> `deploy -f`. There is no `apply`.
+
+## Pieces
+
+| Piece | Role |
+| ----- | ---- |
+| [Topology](/learn/message-bus/topology) | `natsMode` on the Edgelet node: `leaf`, `server`, or `none`. The Controller creates the NATS system microservice, certificates, and upstream links. |
+| [Account rules](/learn/message-bus/account-rules) | `NatsAccountRule` is account policy. An application binds it with `spec.natsConfig.natsRule`. The Controller signs an account JWT. |
+| [User rules](/learn/message-bus/user-rules) | `NatsUserRule` is user policy. A microservice binds it with `spec.natsConfig.natsRule`. The Controller signs a user JWT. |
+| [NATS access](/learn/workloads/nats-access) | Workload access. Set `natsConfig.natsAccess: true` on the application, then on the microservice. Credentials, environment variables, and the resolver are on that page. |
+
+Field tables are on [Account rule fields](/reference/yaml/nats-account-rule) and [User rule fields](/reference/yaml/nats-user-rule).
+
+The static NATS server `authorization` block (`username`, `password`, `users`) is a different mechanism. The Controller does not emit that block from these kinds.
+
+## Console
+
+Live operators, accounts, and users are on [Message bus](/get-started/edgeops-console/message-bus).
+
+Editing the rule objects is on [Access control](/get-started/edgeops-console/access-control), under NATS Account Rules and NATS User Rules.
+
+## Inspect
+
+After workloads with NATS access are deployed:
+
+<CliBlock>{`{{CLI_NAME}} get nats-accounts
+{{CLI_NAME}} get nats-users
+{{CLI_NAME}} describe nats-account ACCOUNT
+{{CLI_NAME}} describe nats-user APP USER
+{{CLI_NAME}} nats operator describe`}</CliBlock>
+
+| What you see | Where to look |
+| ------------ | ------------- |
+| No account or user row | The application or microservice does not set `natsAccess`, or it is not deployed. See [NATS access](/learn/workloads/nats-access). |
+| Publish or subscribe denied | User rule allow and deny lists, and account imports and exports. |
+| A rule edit is not visible yet | Update returns immediately. Affected JWTs are reissued in the background. See [NATS lifecycle](/learn/workloads/nats-access-lifecycle). |
+
+## Related
+
+- [Topology](/learn/message-bus/topology)
+- [Account rules](/learn/message-bus/account-rules) and [User rules](/learn/message-bus/user-rules)
+- [NATS access](/learn/workloads/nats-access)
+- [NATS fabric](/learn/edgelet-nodes/nats-fabric)
+- [NATS Server](/learn/platform-components/nats-server)
+- [NATS JWT authentication](/security/nats-jwt-authentication)
+- Tutorial: [Account export](/tutorials/acme-smart-plant/account-export)
+
+<EditPageAdmonition />

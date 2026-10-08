@@ -1,0 +1,44 @@
+---
+title: Templates
+description: Application templates and microservice templates are parameterized blueprints. Instantiation points at the template. Templates are not running containers.
+keywords: [application template, microservice template, blueprint, instantiation]
+slug: /get-started/workloads/templates
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Templates
+
+A template is a parameterized blueprint. It stores the shape of a workload and the variables you fill in later. It is not a running container, and it does not schedule anything onto an Edgelet node.
+
+An **application template** is the blueprint for a whole app: the application group, its microservices, and the NATS account policy that belongs on that group. You use it when many sites should run the same app with different node names, ports, or other values.
+
+A **microservice template** is the blueprint for one service. You use it when one container shape is reused inside several applications.
+
+Instantiation is a separate step. The running object points at the template. An application sets `spec.template` to an application template. A microservice sets `spec.template` to a microservice template. The control plane expands the blueprint, fills in the variables, and creates the real application or microservice.
+
+<FlavorYaml title="from-template">{`---
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: line-monitor
+spec:
+  template:
+    name: line-monitor-template
+`}</FlavorYaml>
+
+Deploy the template before the application or microservice that names it. Use <CliName /> `deploy -f`.
+
+Each template lists variables, such as the Edgelet node name or a published port. You can store a default on the template and override it at instantiation. The same blueprint can then be deployed to many sites without copying the full application or microservice file.
+
+On <ProductName />, a template stays in the catalog until something instantiates it. If you only need one site and the YAML will not be reused, deploy the application or microservice directly. Templates pay off when the same layout is repeated.
+
+## Go deeper
+
+- [Application templates](/learn/workloads/application-templates)
+- [Microservice templates](/learn/workloads/microservice-templates)
+
+<EditPageAdmonition />

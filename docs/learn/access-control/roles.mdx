@@ -1,0 +1,129 @@
+---
+title: Roles
+description: A Role is a list of API rules in one Controller namespace. Deploy creates it or replaces the rules.
+keywords: [role, rbac, rules, verbs, resources, api groups]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Roles
+
+A Role is a list of rules in the Controller for one namespace. Each rule names an API group, resources, and verbs.
+
+`rules` sits at the document root. It is not a field of `spec`.
+
+Fields are on [Role fields](/reference/yaml/role). A Role does not grant access by itself. A [RoleBinding](/learn/access-control/role-bindings) grants it to a User, Group, or ServiceAccount. A workload identity is a [ServiceAccount](/learn/access-control/service-accounts).
+
+This is Controller RBAC. A Kubernetes Role from the operator install is a different object. See [Kubernetes](/learn/control-plane/kubernetes).
+
+The built-in `admin` role cannot be modified or deleted. The other system roles are on [Access control](/learn/access-control).
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f role.yaml -n my-ecn
+{{CLI_NAME}} get roles -n my-ecn
+{{CLI_NAME}} describe role app-worker -n my-ecn
+{{CLI_NAME}} delete role app-worker -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> creates the Role when the name is missing. The same name replaces the rules. There is no `apply`.
+
+Deploy the Role before a RoleBinding that names it.
+
+`metadata.name` is the role name used in `roleRef.name`. `metadata.namespace` is the <CliName /> namespace (`-n`).
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_role`}>describe role</Link> prints `rules` at the document root. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_role`}>delete role</Link> takes the name. `admin` cannot be deleted.
+
+## Example
+
+<FlavorYaml title="role.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Role
+metadata:
+  name: app-worker
+  namespace: my-ecn
+rules:
+  - apiGroups: [""]
+    resources:
+      - microservices
+    verbs:
+      - get
+      - list
+```
+
+</FlavorYaml>
+
+Name the resources and verbs that caller needs. `admin` already allows every resource and every verb.
+
+## Resources
+
+`admin` is every resource and every verb, so it is not a column here. `*` covers `get`, `list`, `create`, `update`, `patch`, and `delete`. `none` means the role does not include that resource.
+
+These roles authorize users and groups on `/api/v3/*`. A custom role uses the same resource names. Routes are the [Controller API](/api/v3.9.0/controller). The operator note is [RBAC](/reference/controller/rbac-reference).
+
+| Resource | SRE | Developer | Viewer | Notes |
+| -------- | --- | --------- | ------ | ----- |
+| `microservices` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | |
+| `systemMicroservices` | `*` | `get`, `list` | `get`, `list` | |
+| `fogs` | `*` | `get`, `list` | `get`, `list` | `POST …/reconcile` is `patch`. |
+| `applications` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | |
+| `systemApplications` | `*` | `get`, `list` | `get`, `list` | |
+| `applicationTemplates` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | |
+| `microserviceTemplates` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | |
+| `services` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | `POST …/reconcile` is `patch`. |
+| `router` | `*` | `get`, `list` | `get`, `list` | |
+| `networkTopology` | `*` | `get`, `list` | `get`, `list` | GET only under `/api/v3/network-topology/`. |
+| `cluster` | `*` | `get`, `list` | `get`, `list` | HA controllers. |
+| `natsOperator`, `natsBootstrap`, `natsHub` | `get`, `list` | `get`, `list` | `get`, `list` | Read-only. Account, user, and rule changes use the rows below. |
+| `natsAccounts`, `natsUsers`, `natsAccountRules`, `natsUserRules` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | MQTT bearer create and delete are on `natsUsers`. [Account rules](/learn/message-bus/account-rules), [User rules](/learn/message-bus/user-rules). |
+| `catalog`, `registries` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | |
+| `secrets`, `configMaps`, `volumeMounts`, `models`, `knowledge`, `runtimeClasses` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | Link on volume mounts, models, knowledge, and runtime classes is `patch`. |
+| `tunnels` | `*` | `get`, `list` | none | |
+| `certificates`, `capabilities` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | |
+| `execSessions`, `logs` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | none | |
+| `systemExecSessions`, `systemLogs` | `*` | `get`, `list` | none | |
+| `events` | `*` | none | none | |
+| `users` | `*` | `get`, `list` | `get`, `list` | Profile is `get`. Password change and MFA are `patch` and `delete`. Login, refresh, logout, and OAuth routes use an empty verb list. |
+| `authUsers`, `authGroups` | `*` | `get`, `list` | `get`, `list` | Embedded identity admin. |
+| `config` | `*` | `get`, `list` | `get`, `list` | |
+| `controller` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | `/live`, `/status`, and `/architectures/` are public. The role check is skipped. |
+| `roles`, `roleBindings` | `get`, `list` | `get`, `list` | `get`, `list` | Changes require `admin` or a custom role. |
+| `serviceAccounts` | `*` | `get`, `list`, `create`, `update`, `patch`, `delete` | `get`, `list` | Controller API for the object. Workload tokens use the Edgelet roles below. |
+| `authAdmin` | none | none | none | `admin` only. JWKS rotate and auth migration. |
+| `agent` | none | none | none | Fog token on `/api/v3/agent/*`. Not user RBAC. |
+
+## Edgelet service account roles
+
+`agent-admin` and `microservice` authorize the Edgelet local API on the node. They do not authorize `/api/v3/*`.
+
+A microservice sets `serviceAccount.roleRef` to a Role in API group `edgelet.iofog.org/v1`. The Controller returns those rules with the workload. The Edgelet node mints the token the container presents to the local API.
+
+| Role | API group | Resource | Verbs | What the workload can call |
+| ---- | --------- | -------- | ----- | -------------------------- |
+| `agent-admin` | `edgelet.iofog.org/v1` | `*` | `*` | Every local API |
+| `microservice` | `edgelet.iofog.org/v1` | `microservices/config/self` | `get` | This workload's own config |
+| `microservice` | `edgelet.iofog.org/v1` | `auth/whoami` | `get` | Identity of the calling workload |
+| `microservice` | `edgelet.iofog.org/v1` | `system/gps` | `get` | Node GPS |
+| `microservice` | `edgelet.iofog.org/v1` | `microservices/control/self` | `get` | This workload's own control endpoint |
+
+`microservice` is the default self-service role. `agent-admin` is the unrestricted local API role. A custom Role in `edgelet.iofog.org/v1` is delivered the same way when `serviceAccount.roleRef` names it.
+
+## Console
+
+Open **Access control**, then **Roles**. See [Access control](/get-started/edgeops-console/access-control).
+
+## Related
+
+- [Role fields](/reference/yaml/role)
+- [Role bindings](/learn/access-control/role-bindings)
+- [Service accounts](/learn/access-control/service-accounts)
+- [Access control](/learn/access-control)
+- [RBAC](/reference/controller/rbac-reference)
+
+<EditPageAdmonition />

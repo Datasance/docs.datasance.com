@@ -1,0 +1,106 @@
+---
+title: Account rules
+description: NatsAccountRule is account policy. An application binds it by name. The Controller signs an account JWT.
+keywords: [nats, NatsAccountRule, account rule, jwt, default-account]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Account rules
+
+A `NatsAccountRule` is account policy on the Controller. An application binds it with `spec.natsConfig.natsRule`. The Controller signs an account JWT from the rule (limits, default permissions, imports, and exports).
+
+A `NatsUserRule` is user policy on a microservice. See [User rules](/learn/message-bus/user-rules).
+
+The static NATS server `authorization` block (`username`, `password`, `users`) is a different mechanism. The Controller does not emit that block from these kinds.
+
+Fields are on [Account rule fields](/reference/yaml/nats-account-rule). After the application is bound, credentials and the resolver are on [NATS access](/learn/workloads/nats-access).
+
+NATS must be enabled on the control plane. See [Control plane](/learn/control-plane).
+
+## Reserved names
+
+Reserved names cannot be created, updated, or deleted (HTTP 400). Inspect them with `describe`. Do not deploy a document whose `metadata.name` is reserved.
+
+| Reserved name | Role |
+| ------------- | ---- |
+| `default-account` | Used when the application sets `natsAccess: true` and omits `natsRule` |
+| `default-system-account` | NATS system account on Edgelet nodes |
+| `controller-account` | Controller relay account |
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f nats-account-rule.yaml -n my-ecn
+{{CLI_NAME}} get nats-account-rules -n my-ecn
+{{CLI_NAME}} describe nats-account-rule orders-account -n my-ecn
+{{CLI_NAME}} delete nats-account-rule orders-account -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> creates the rule or updates it when the name already exists. There is no `apply`.
+
+`metadata.name` is the rule name (1 to 255 characters). `metadata` and `spec` are required. `apiVersion` is not validated for this kind. Still use your flavor `apiVersion`. `metadata.namespace` is the <CliName /> namespace (`-n`).
+
+Update returns immediately. Affected JWTs are reissued in the background. Delete rebinds applications to `default-account` and reissues in the background.
+
+Deploy the rule before the application that names it in `natsRule`.
+
+Strings that land in a JWT must be Latin-1. ASCII is safe. Any other character on a subject, tag, import, or export returns HTTP 400.
+
+`describe` supports `yaml`, `json`, and `wide`. Round-trip a working rule by describing it, editing, and deploying again.
+
+Live accounts, after workloads deploy, are `get nats-accounts` and `describe nats-account`. See [Message bus](/learn/message-bus).
+
+## Bind an application
+
+Set `spec.natsConfig.natsAccess: true` and `spec.natsConfig.natsRule` to the rule name. Omit `natsRule` and the Controller uses `default-account`.
+
+Per-microservice publish and subscribe lists belong on a [user rule](/learn/message-bus/user-rules). What the Controller mounts into the container is on [NATS access](/learn/workloads/nats-access).
+
+## Example
+
+<FlavorYaml title="nats-account-rule.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: orders-account
+  namespace: my-ecn
+spec:
+  description: Orders application account
+  infoUrl: https://example.com/orders
+  maxConnections: -1
+  maxLeafNodeConnections: -1
+  maxSubscriptions: -1
+  maxData: -1
+  maxMsgPayload: 1m
+  maxImports: -1
+  maxExports: -1
+  exportsAllowWildcards: true
+  disallowBearer: false
+  pubAllow:
+    - "orders.>"
+  pubDeny:
+    - "orders.secret"
+  subAllow:
+    - "orders.>"
+  subDeny: []
+  respMax: 1
+  respTtl: 5000000000
+```
+
+</FlavorYaml>
+
+## Console
+
+Edit the rule under **Access control**, on NATS Account Rules. See [Access control](/get-started/edgeops-console/access-control).
+
+Issued accounts are under **MessageBus**. See [Message bus](/get-started/edgeops-console/message-bus).
+
+HTTP create, update, and delete are on the [Controller API](/api/v3.9.0/controller).
+
+<EditPageAdmonition />

@@ -7,7 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const CLI_DIR = path.join(__dirname, '../docs/potctl/cli');
+const CLI_DIR = path.join(__dirname, '../docs/reference/cli/potctl');
 const files = fs.readdirSync(CLI_DIR).filter(f => f.endsWith('.mdx'));
 
 // Parse filename to get command path: potctl_create_namespace -> ['create', 'namespace']
@@ -26,7 +26,7 @@ function toLabel(parts) {
 // Build hierarchy: group by command prefix
 const byPrefix = {};
 for (const file of files) {
-  const docId = `potctl/cli/${file.replace(/\.mdx$/, '')}`;
+  const docId = `reference/cli/potctl/${file.replace(/\.mdx$/, '')}`;
   const parts = parseCommand(file);
   const prefix = parts[0];
   if (!byPrefix[prefix]) byPrefix[prefix] = [];

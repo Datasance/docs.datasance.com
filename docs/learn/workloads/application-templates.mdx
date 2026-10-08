@@ -1,0 +1,156 @@
+---
+title: Application templates
+description: kind ApplicationTemplate is a reusable blueprint. Variables and an application skeleton, instantiated by kind Application.
+keywords: [application template, yaml, variables, liquid, deploy, v3.9]
+slug: /learn/workloads/application-templates
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Application templates
+
+An **application template** is a reusable blueprint for applications. It stores a description, variables, and a nested application skeleton. It is a Controller object. Deploy it with `kind: ApplicationTemplate`. It is not a Kubernetes custom resource, and it is not a running container.
+
+Use a template when the same app shape (microservice layout, NATS policy, variable slots) is deployed many times with different values. For one service, use a [microservice template](/learn/workloads/microservice-templates). For a one-off layout, deploy [kind: Application](/learn/workloads/applications) directly.
+
+The short primer is [Templates](/get-started/workloads/templates). Field tables are on [Application template fields](/reference/yaml/application-template).
+
+In EdgeOps Console, templates are under [Catalog and templates](/get-started/edgeops-console/catalog-and-templates) (Config → App Templates). There is no Configure → Workloads menu.
+
+## Instantiate
+
+Deploy `kind: Application` with `spec.template.name` and `spec.template.variables`. The Controller merges the template `application` skeleton with those values. There is no separate instantiate command.
+
+Changing a template does not redeploy applications already created from it. Update those applications separately.
+
+Variables are substituted at deploy. Quote placeholders in YAML, for example `"{{agent-name}}"`. Unquoted `{{var}}` can break parsing.
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f app-template.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> parses `spec` in non-strict mode, looks up the template by name, then creates or updates it. Deploy the same `metadata.name` again to update.
+
+Identity is `metadata.name`. `spec.name` is an optional copy of that name.
+
+## Examples
+
+### One service slot
+
+`application-name` has no default. The [application that instantiates this template](/learn/workloads/applications) supplies it, along with any port or node overrides.
+
+<FlavorYaml title="minimal.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ApplicationTemplate
+metadata:
+  name: edge-app-template
+  namespace: my-ecn
+spec:
+  description: Sample application template with one microservice slot
+  variables:
+    - key: agent-name
+      description: Target Edgelet node
+      defaultValue: edge-01
+    - key: external-port
+      description: Host port for HTTP
+      defaultValue: 8080
+    - key: application-name
+      description: Application name supplied at instantiation
+  application:
+    name: "{{application-name}}"
+    microservices:
+      - name: web
+        agent:
+          name: "{{agent-name}}"
+        images:
+          registry: remote
+          amd64: {{REGISTRY}}/example/web:latest
+        container:
+          ports:
+            - internal: 80
+              external: "{{external-port}}"
+              protocol: tcp
+```
+
+</FlavorYaml>
+
+### Two services on one Edgelet node
+
+Both services share `agentName`. The viewer port comes from `externalPort`. NATS is enabled with the default account and user rules, which must already exist if you rely on those names. See [NATS access](/learn/workloads/nats-access).
+
+<FlavorYaml title="healthcare-wearable-template.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ApplicationTemplate
+metadata:
+  name: healthcare-wearable-template
+spec:
+  description: Heart-rate monitor and viewer on one Edgelet node
+  variables:
+    - key: agentName
+      description: Edgelet node name for both microservices
+      defaultValue: meerkat
+    - key: externalPort
+      description: External port for the viewer UI
+      defaultValue: "5000"
+  application:
+    natsConfig:
+      natsAccess: true
+      natsRule: default-account
+    microservices:
+      - name: heart-rate-monitor
+        agent:
+          name: "{{ agentName }}"
+        images:
+          registry: remote
+          amd64: edgeworx/healthcare-heart-rate:amd64-v1
+          arm64: edgeworx/healthcare-heart-rate:arm64-v1
+        natsConfig:
+          natsAccess: true
+          natsRule: default-user
+        container:
+          hostNetworkMode: false
+          isPrivileged: false
+          ports: []
+        config:
+          test_mode: true
+      - name: heart-rate-viewer
+        agent:
+          name: "{{ agentName }}"
+        images:
+          registry: remote
+          amd64: edgeworx/healthcare-heart-rate-ui:amd64
+          arm64: edgeworx/healthcare-heart-rate-ui:arm64
+        container:
+          ports:
+            - internal: 80
+              external: "{{ externalPort }}"
+              protocol: tcp
+```
+
+</FlavorYaml>
+
+Node tuning stays on the Edgelet node. Leave `agent.config` off the template microservice.
+
+## Commands
+
+<CliBlock>{`{{CLI_NAME}} get application-templates -n my-ecn
+{{CLI_NAME}} describe application-template edge-app-template -n my-ecn
+{{CLI_NAME}} delete application-template edge-app-template -n my-ecn`}</CliBlock>
+
+## Related
+
+- [Application template fields](/reference/yaml/application-template)
+- [Applications](/learn/workloads/applications)
+- [Microservice templates](/learn/workloads/microservice-templates)
+- [Templates](/get-started/workloads/templates)
+
+<EditPageAdmonition />

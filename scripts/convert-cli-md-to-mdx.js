@@ -13,9 +13,9 @@ if (!CLI || !['potctl', 'iofogctl'].includes(CLI)) {
   process.exit(1);
 }
 
-const MD_DIR = path.join(__dirname, `../docs/${CLI}/md`);
-const CLI_DIR = path.join(__dirname, `../docs/${CLI}/cli`);
-const LINK_PREFIX = `/${CLI}/cli`;
+const MD_DIR = path.join(__dirname, `../docs/reference/cli/${CLI}/md`);
+const CLI_DIR = path.join(__dirname, `../docs/reference/cli/${CLI}`);
+const LINK_PREFIX = `/reference/cli/${CLI}`;
 
 function linkTargetToPath(target) {
   const base = target.replace(/\.md$/, '');
@@ -23,8 +23,9 @@ function linkTargetToPath(target) {
 }
 
 function convertSeeAlso(content) {
+  // Do not use \\s* after '-' - it consumes the newline and merges the next SEE ALSO bullet.
   const linkRe = new RegExp(
-    `\\* \\[([^\\]]+)\\]\\((${CLI}[^)]*\\.md)\\)\\s*\\t?\\s*-\\s*([^\\n]*)`,
+    `\\* \\[([^\\]]+)\\]\\((${CLI}[^)]*\\.md)\\)\\s*\\t?\\s*- ?([^\\n]*)`,
     'g',
   );
   let result = content.replace(linkRe, (match, text, target, desc) => {
@@ -87,13 +88,14 @@ function fixMdxContent(content) {
     );
 }
 
-function convertToMdx(content) {
+function convertToMdx(content, fileBase) {
   const title = extractTitle(content);
   let body = fixMdxContent(content);
   body = convertSeeAlso(body);
 
   return `---
 title: ${title}
+slug: ${LINK_PREFIX}/${fileBase}
 ---
 
 ${body}`;
@@ -113,8 +115,9 @@ console.log(`Converting ${files.length} ${CLI} files...`);
 
 for (const file of files) {
   const content = fs.readFileSync(path.join(MD_DIR, file), 'utf8');
-  const mdxFilename = file.replace(/\.md$/, '.mdx');
-  fs.writeFileSync(path.join(CLI_DIR, mdxFilename), convertToMdx(content));
+  const fileBase = file.replace(/\.md$/, '');
+  const mdxFilename = `${fileBase}.mdx`;
+  fs.writeFileSync(path.join(CLI_DIR, mdxFilename), convertToMdx(content, fileBase));
   console.log(`  ${file} -> cli/${mdxFilename}`);
 }
 

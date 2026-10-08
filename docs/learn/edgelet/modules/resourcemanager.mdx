@@ -1,0 +1,20 @@
+---
+title: "Resource manager"
+description: "Host hardware and USB inventory posting to the controller has been removed. There is no Resource Manager module, no hal/hw / hal/usb client, and no..."
+keywords: ["edgelet", "module", "resourcemanager"]
+slug: /learn/edgelet/modules/resourcemanager
+---
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Resource manager
+
+Host hardware and USB inventory posting to the controller has been **removed**. There is no Resource Manager module, no `hal/hw` / `hal/usb` client, and no `deviceScanFrequency` config key.
+
+**Edge Guard is not this module.** Host fingerprint / deprovision attestation remains. See [EdgeGuard](/learn/edgelet/edgeguard) and [EdgeGuard](/learn/edgelet/modules/edgeguard).
+
+Host CPU / memory / disk sampling is **Resource Consumption**, not Resource Manager. See [Resource consumption](/learn/edgelet/modules/resourceconsumption).
+
+The StatusReporter module index slot that used to map to Resource Manager is unused (indexes are not reshuffled).
+
+<EditPageAdmonition />

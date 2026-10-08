@@ -1,0 +1,62 @@
+---
+title: RoleBinding fields
+description: Field reference for kind RoleBinding. roleRef and subjects sit at the document root.
+keywords: [role binding, yaml, fields, roleRef, subjects, user, group]
+slug: /reference/yaml/role-binding
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# RoleBinding fields
+
+Reference for `kind: RoleBinding`. Deploy and subjects are on [Role bindings](/learn/access-control/role-bindings).
+
+`roleRef` and `subjects` sit at the document root. They are not fields of `spec`. `describe rolebinding` prints this same shape.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: RoleBinding # required, string
+metadata:
+  name: alice-developer # required, string
+  namespace: my-ecn # no, string
+roleRef: # required, object. Document root. Not under spec
+  kind: Role # required, string
+  name: developer # required, string
+  apiGroup: "" # no, string
+subjects: # required, list. Document root. Not under spec
+  - kind: User # required, string. User, Group, or ServiceAccount
+    name: alice@example.com # required, string
+    apiGroup: "" # no, string
+```
+
+</FlavorYaml>
+
+`metadata.namespace` is the namespace you passed with `-n`.
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `metadata.name` | Yes | Binding name. Unique in the namespace. |
+| `roleRef` | Yes | The Role to grant. Root field. |
+| `roleRef.kind` | Yes | `Role`. |
+| `roleRef.name` | Yes | `metadata.name` of the Role. |
+| `roleRef.apiGroup` | No | API group of the Role reference. |
+| `subjects` | Yes | Who receives the Role. Root field. |
+| `subjects[].kind` | Yes | `User`, `Group`, or `ServiceAccount`. |
+| `subjects[].name` | Yes | Login name, identity provider role name, or ServiceAccount `metadata.name`. |
+| `subjects[].apiGroup` | No | API group of the subject. |
+
+A ServiceAccount is application-scoped, but the subject `name` is the account name only. `metadata.applicationName` is set on the [ServiceAccount](/reference/yaml/service-account).
+
+## Deploy
+
+| State | CLI |
+| ----- | --- |
+| Name missing | Create with `roleRef` and `subjects`. |
+| Name present | Update. The new `roleRef` and `subjects` replace the stored values. |
+
+<EditPageAdmonition />

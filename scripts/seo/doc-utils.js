@@ -6,7 +6,9 @@ const DOCS_DIR = path.join(__dirname, '..', '..', 'docs');
 const SITE_URL = 'https://docs.datasance.com';
 
 const FLAVOR =
-  (process.env.DOCUSAURUS_DISTRIBUTION === 'iofog' ? 'iofog' : 'datasance');
+  process.env.DOCUSAURUS_DISTRIBUTION === 'iofog' ? 'iofog' : 'datasance';
+
+const DOCS_BASE_PATH = FLAVOR === 'iofog' ? '/iofog' : '';
 const CLI_NAME = FLAVOR === 'datasance' ? 'potctl' : 'iofogctl';
 const PRODUCT_NAME = FLAVOR === 'datasance' ? 'Datasance PoT' : 'Eclipse ioFog';
 
@@ -43,9 +45,10 @@ function loadDocMeta(docId) {
 /** @param {string} slug */
 function slugToUrl(slug) {
   if (slug === '/') {
-    return `${SITE_URL}/`;
+    return DOCS_BASE_PATH ? `${SITE_URL}${DOCS_BASE_PATH}/` : `${SITE_URL}/`;
   }
-  return `${SITE_URL}${slug.startsWith('/') ? slug : `/${slug}`}`;
+  const pathPart = slug.startsWith('/') ? slug : `/${slug}`;
+  return `${SITE_URL}${DOCS_BASE_PATH}${pathPart}`;
 }
 
 /**
@@ -96,6 +99,7 @@ function loadDocContent(docId) {
 
 module.exports = {
   SITE_URL,
+  DOCS_BASE_PATH,
   CLI_NAME,
   PRODUCT_NAME,
   FLAVOR,

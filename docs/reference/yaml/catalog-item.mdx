@@ -1,0 +1,85 @@
+---
+title: Catalog item fields
+description: Field reference for kind CatalogItem. Registry alias, per-architecture images, and name.
+keywords: [catalog item, yaml, fields, amd64, arm64, registry]
+slug: /reference/yaml/catalog-item
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Catalog item fields
+
+Reference for `kind: CatalogItem`. Deploy and microservice binding are on [Catalog microservices](/learn/config/catalog-microservices).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: CatalogItem # required, string
+metadata:
+  name: reader # required, string. Lowercase alphanumeric
+  namespace: my-ecn # no, string
+spec:
+  registry: remote # no, int or alias, default 1. remote is 1, local is 2
+  amd64: {{REGISTRY}}/reader:1.0.0 # one arch, string. At least one architecture image
+  arm64: {{REGISTRY}}/reader:1.0.0 # one arch, string
+  riscv64: {{REGISTRY}}/reader:1.0.0 # one arch, string
+  arm: {{REGISTRY}}/reader:1.0.0 # one arch, string
+  description: Example catalog item # no, string
+  name: reader # no, string. Prefer metadata.name
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+spec:
+  id: 1 # describe only, int. Deploy does not upsert by this field
+```
+
+
+`metadata.name` is the catalog name. Use lowercase alphanumeric. The same string may also appear as `spec.name`. Prefer `metadata.name`.
+
+## Fields
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `registry` | int or alias | No | Registry id, `remote` (1), or `local` (2). Default 1 when omitted. |
+| `amd64` | string | One arch | Image for amd64. |
+| `arm64` | string | One arch | Image for arm64. |
+| `riscv64` | string | One arch | Image for riscv64. |
+| `arm` | string | One arch | Image for arm (32-bit). |
+| `description` | string | No | Human-readable text. |
+| `name` | string | No | Copy of the catalog name. Prefer `metadata.name`. |
+| `id` | int | No | Controller id. Deploy does not upsert by this field. |
+| `configExample` | string | No | Optional example config snippet. |
+
+Image strings are `path:tag` resolved through the registry id. The host lives on the [registry](/learn/config/registries) row.
+
+| YAML value | Id |
+| ---------- | -- |
+| `remote` | 1 |
+| `local` | 2 |
+| `3`, `4`, … | User-created registry ids |
+
+## Validation
+
+| Condition | Error |
+| --------- | ----- |
+| Missing name | Name must be specified. |
+| Invalid name | Lowercase alphanumeric. |
+| No arch image | At least one image must be specified. |
+
+## Create and update
+
+Omit `spec.id` on create. The Controller assigns it.
+
+Update by keeping `metadata.name` and deploying again. Changing `registry` or image tags affects microservices that use this item.
+
+`delete catalogitem` takes `metadata.name`, resolves it to an id, and deletes. System rows and rows still referenced by microservices return an error.
+
+<EditPageAdmonition />

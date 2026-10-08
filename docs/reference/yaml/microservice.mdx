@@ -1,0 +1,642 @@
+---
+title: Microservice fields
+description: Field reference for kind Microservice. Images, container, volumes, environment, NATS, models, knowledge, and template.
+keywords: [microservice, yaml, fields, container, volumes, env, nats, models, v3.9]
+slug: /reference/yaml/microservice
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Microservice fields
+
+Reference for `kind: Microservice`. Deploy, bridge DNS, and examples of a full service are on [Microservices](/learn/workloads/microservices).
+
+This kind is unmarshaled strictly. Unknown keys fail at deploy. `describe microservice application/name -o file.yaml` shows the fields your Controller stored. Strip `status` and `uuid` before you deploy that file again.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Microservice # required, string
+metadata:
+  name: api # required, string. Or application/microservice
+  namespace: my-ecn # no, string
+spec:
+  application: my-app # required, string, unless metadata.name contains /
+  name: api # no, string
+  agent: # required, object
+    name: edge-01 # required, string
+  schedule: 10 # no, int. 5 to 100. 0 to 5 is reserved for system microservices
+  config: {} # no, object
+  rebuild: false # no, bool
+  images: # object. Keep catalogId or the per-arch image strings
+    registry: remote # no, int or alias. remote is 1, local is 2, or a registry id
+    amd64: {{REGISTRY}}/example/api:1.0.0 # string. Keep this set or catalogId
+    arm64: {{REGISTRY}}/example/api:1.0.0 # string. Keep this set or catalogId
+    riscv64: {{REGISTRY}}/example/api:1.0.0 # string. Keep this set or catalogId
+    arm: {{REGISTRY}}/example/api:1.0.0 # string. Keep this set or catalogId
+    catalogId: 1 # int. Keep catalogId or the per-arch image strings
+  container:
+    isPrivileged: false # no, bool
+    runAsUser: "1000" # no, string
+    runAsGroup: "1000" # no, string
+    readOnlyRootFilesystem: false # no, bool
+    capAdd: [] # no, list of string
+    capDrop: [] # no, list of string
+    hostNetworkMode: false # no, bool
+    ports: # no, list
+      - internal: 8080 # int
+        external: 8081 # int
+        protocol: tcp # string
+    extraHosts: # no, list. Set name and address. The Controller fills value
+      - name: literalHost # string
+        address: 192.0.2.10 # string
+    platform: "" # no, string. For example wasi/wasm
+    runtime: "" # no, string. Runtime class handler name
+    cpus: 1 # no, float. Cores
+    memoryLimit: 256 # no, int. MiB
+    memoryReservation: 128 # no, int. MiB
+    memorySwap: -1 # no, int. MiB. -1 means unlimited swap
+    shmSize: 64 # no, int. MiB
+    cpuSetCpus: "0-1" # no, string
+    ulimits: # no, map. soft and hard. -1 means unlimited
+      core:
+        soft: -1 # int
+        hard: -1 # int
+      cpu:
+        soft: -1 # int
+        hard: -1 # int
+      data:
+        soft: -1 # int
+        hard: -1 # int
+      fsize:
+        soft: -1 # int
+        hard: -1 # int
+      locks:
+        soft: -1 # int
+        hard: -1 # int
+      memlock:
+        soft: -1 # int
+        hard: -1 # int
+      msgqueue:
+        soft: -1 # int
+        hard: -1 # int
+      nice:
+        soft: 0 # int
+        hard: 0 # int
+      nofile:
+        soft: 65536 # int
+        hard: 65536 # int
+      nproc:
+        soft: 4096 # int
+        hard: 4096 # int
+      rss:
+        soft: -1 # int
+        hard: -1 # int
+      rtprio:
+        soft: 0 # int
+        hard: 0 # int
+      rttime:
+        soft: -1 # int
+        hard: -1 # int
+      sigpending:
+        soft: -1 # int
+        hard: -1 # int
+      stack:
+        soft: -1 # int
+        hard: -1 # int
+    volumes: # no, list
+      - hostDestination: /var/lib/myapp/cache # required, string
+        containerDestination: /cache # required, string
+        accessMode: rw # required, string. ro or rw
+        type: bind # no, string. bind, volumeMount, or volume. Omit is treated as bind
+      - hostDestination: app-config # required, string. VolumeMount metadata.name
+        containerDestination: /etc/config # required, string
+        accessMode: ro # required, string
+        type: volumeMount # no, string
+      - hostDestination: model-weights # required, string. Volume name
+        containerDestination: /data # required, string
+        accessMode: rw # required, string
+        type: volume # no, string
+        scope: private # no, string. private or shared. Only when type is volume. Omitted means private
+    tmpfs: # no, list
+      - containerPath: /tmp # string
+        size: 64 # int. MiB
+        mode: "1777" # string
+    workingDir: /app # no, string
+    entrypoint: # no, list of string
+      - /app/start
+    commands: # no, list of string
+      - --debug
+    env: # no, list. Each item sets key and exactly one of value, valueFromSecret, or valueFromConfigMap
+      - key: LOG_LEVEL # required, string
+        value: debug # one of three, string
+      - key: DB_PASSWORD # required, string
+        valueFromSecret: postgres-creds/password # one of three, string
+      - key: FEATURE_FLAGS # required, string
+        valueFromConfigMap: app-settings/features # one of three, string
+    healthCheck: # no, object
+      test: # no, list of string
+        - CMD
+        - curl
+        - -f
+        - http://127.0.0.1:8080/health
+      interval: 10000 # no, int. Milliseconds
+      timeout: 3000 # no, int. Milliseconds
+      retries: 3 # no, int
+      startPeriod: 5000 # no, int. Milliseconds
+      startInterval: 1000 # no, int. Milliseconds
+    devices: # no, list
+      - hostPath: /dev/ttyUSB0 # string
+        containerPath: /dev/ttyUSB0 # string
+        permissions: rw # string
+    cdiDevices: # no, list of string
+      - vendor.com/device=gpu0
+    annotations: {} # no, object
+    sysctls: # no, map of string. Allowlisted names
+      kernel.shm_rmid_forced: "0"
+      net.ipv4.ip_local_port_range: "1024 65535"
+      net.ipv4.tcp_syncookies: "1"
+      net.ipv4.ping_group_range: "0 2147483647"
+      net.ipv4.ip_unprivileged_port_start: "1024"
+      net.ipv4.ip_local_reserved_ports: ""
+      net.ipv4.tcp_keepalive_time: "7200"
+      net.ipv4.tcp_fin_timeout: "60"
+      net.ipv4.tcp_keepalive_intvl: "75"
+      net.ipv4.tcp_keepalive_probes: "9"
+      net.ipv4.tcp_rmem: "4096 131072 6291456"
+      net.ipv4.tcp_wmem: "4096 16384 4194304"
+      net.ipv4.tcp_slow_start_after_idle: "1"
+      net.ipv4.tcp_notsent_lowat: "4294967295"
+    ipcMode: private # no, string
+    pidMode: private # no, string
+  natsConfig: # no, object
+    natsAccess: false # no, bool
+    natsRule: checkout-user # no, string. Omit when natsAccess is true to use default-user
+  natsEnabled: false # no, bool. Alias of natsConfig.natsAccess on microservice YAML only
+  models: # no, object
+    bindPath: /models # string
+    permissions: ro # string. ro or rw
+    items: # list
+      - name: defect-weights
+  knowledge: # no, object
+    bindPath: /knowledge # string
+    permissions: ro # string. ro or rw
+    items: # list
+      - name: product-docs
+  template: # no, object
+    name: my-ms-template # string
+    variables: # map or list of {key, value}
+      agent-name: edge-01
+  serviceAccount: # no, object
+    roleRef:
+      kind: Role # string
+      name: app-worker # string
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+spec:
+  uuid: "<uuid>" # describe only, string
+  container:
+    extraHosts:
+      - value: 192.0.2.10 # Controller writes the resolved IP. Do not set it on deploy
+status: # describe only
+  status: RUNNING
+  containerId: "<container-id>"
+  cpuUsage: 0
+  memoryUsage: 0
+  healthStatus: healthy
+  restartCount: 0
+execStatus: {} # describe only. Exec session state
+```
+
+
+`metadata.name` is the microservice name, or `application/microservice` when it contains `/`. If the name contains `/`, you can omit `spec.application`.
+
+## Core
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `application` | string | Yes, unless `metadata.name` contains `/` | Application name. |
+| `name` | string | No | Copy of the microservice name. |
+| `agent` | object | Yes | Placement. |
+| `agent.name` | string | Yes | Edgelet node name. The YAML kind for that node is `Agent`. |
+| `schedule` | int | No | Number between 5 - 100. Priority hint for reconciling microservices. Lower values reconcile first when the Edgelet applies start/update/delete for multiple  microservices in the same pass. 0 - 5 is reserved for system microservices. |
+| `config` | object | No | JSON config passed to the microservice. A microservice container can get these config parameter via Edgelet Local API via dynamic re-configuration API. [Chek go-sdk](/learn/platform-components/sdk/edge-microservice) and [Edgelet API](/learn/edgelet/api)  |
+| `rebuild` | bool | No | Ask for a container rebuild on this deploy. |
+| `uuid` | string | No | Describe only. Do not set it on create. |
+
+## Images
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `images` | object | Container images per architecture. |
+| `images.registry` | int or alias | `remote` (1), `local` (2), or a registry id. See [Registries](/learn/config/registries). |
+| `images.amd64` | string | Image for amd64. |
+| `images.arm64` | string | Image for arm64. |
+| `images.riscv64` | string | Image for riscv64. |
+| `images.arm` | string | Image for arm. |
+| `images.catalogId` | int | Use a [catalog item](/learn/config/catalog-microservices) instead of inline image strings. |
+
+Provide `catalogId` or the per-arch image strings. When `catalogId` is set, describe shows the catalog image set.
+
+## Container
+
+| Group | Fields | Purpose |
+| ----- | ------ | ------- |
+| Security | `isPrivileged`, `runAsUser`, `runAsGroup`, `readOnlyRootFilesystem`, `capAdd`, `capDrop` | Linux security. |
+| Network | `hostNetworkMode`, `ports`, `extraHosts` | Exposure and extra host entries. Bridge names are on [Bridge DNS](/learn/workloads/microservices#bridge-dns). |
+| Runtime | `platform`, `runtime` | For example `wasi/wasm` plus a [runtime class](/learn/config/runtime-classes) handler name. |
+| Resources | `cpus`, `memoryLimit`, `memoryReservation`, `memorySwap`, `shmSize`, `cpuSetCpus`, `ulimits` | CPU and memory. |
+| Storage | `volumes`, `tmpfs` | Mounts and tmpfs. |
+| Process | `workingDir`, `entrypoint`, `commands`, `env` | Process and environment. |
+| Health | `healthCheck` | Docker-style health check. |
+| Devices | `devices`, `cdiDevices`, `annotations`, `sysctls` | Hardware, CDI, and allowlisted sysctls. |
+
+### CPU and memory
+
+| Field | Unit | Meaning |
+| ----- | ---- | ------- |
+| `cpus` | cores (float) | `1` is one CPU. `1.5` is one and a half cores. `status.cpuUsage` on describe is a utilization reading, not this core count. |
+| `memoryLimit` | MiB | Hard memory cap. |
+| `memoryReservation` | MiB | Soft reservation. |
+| `memorySwap` | MiB | Memory plus swap limit. `-1` means unlimited swap. |
+| `shmSize` | MiB | Size of `/dev/shm`. |
+| `cpuSetCpus` | cpuset string | CPUs the container may use, such as `0-3` or `0,1`. |
+
+### Volume mappings {#volume-mappings}
+
+Each `container.volumes` entry maps host-side storage into the container.
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `hostDestination` | Yes | Absolute host path (`bind`), [VolumeMount](/learn/config/volume-mounts) name (`volumeMount`), or `kind: Volume` name (`volume`). |
+| `containerDestination` | Yes | Mount path inside the container. |
+| `accessMode` | Yes | `ro` or `rw`. |
+| `type` | No | Mapping kind. See the next table. |
+| `scope` | No | `private` or `shared`. Used only when `type` is `volume`. Omitted means `private`. |
+
+| `type` | Meaning |
+| ------ | ------- |
+| `bind` | Bind-mount a host path. `hostDestination` is the path on the Edgelet node, such as `/tmp/data`. No `scope`. |
+| `volumeMount` | Mount a VolumeMount. `hostDestination` is that object's `metadata.name`. On deploy, the Controller attaches that VolumeMount to `spec.agent`. |
+| `volume` | Mount a `kind: Volume` on the node. `hostDestination` is the volume name. `scope` applies. |
+| omit `type` | Treated as a host-path bind. Prefer `type: bind`. |
+
+Other mapping kinds, such as `serviceAccount`, can appear in API payloads. Deploy YAML usually uses `bind`, `volumeMount`, and `volume`.
+
+| `scope` | Behavior |
+| ------- | -------- |
+| `private` | Default. Volume data stays with this microservice. |
+| `shared` | Several microservices on the same Edgelet node can use the same volume name. |
+
+`scope` is ignored for `bind`, `volumeMount`, and omitted-type binds. It applies only when `type` is `volume`.
+
+Deploy the Volume or VolumeMount before the microservice that names it. For `type: volumeMount`, the Controller links the mount to `spec.agent` during microservice deploy. `attach volume-mount` is for a node that has no microservice pointing at that mount.
+
+<FlavorYaml title="volumes.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: dashboard
+  namespace: my-ecn
+spec:
+  application: ops
+  agent:
+    name: edge-01
+  images:
+    registry: remote
+    amd64: {{REGISTRY}}/dashboard:1.0.0
+  container:
+    volumes:
+      - hostDestination: /tmp/dashboard-scratch
+        containerDestination: /scratch
+        accessMode: rw
+        type: bind
+      - hostDestination: nats-creds-operations-center-alert-dashboard
+        containerDestination: /etc/nats/creds
+        accessMode: ro
+        type: volumeMount
+      - hostDestination: config
+        containerDestination: /app/config
+        accessMode: rw
+        type: volume
+      - hostDestination: nodered-config
+        containerDestination: /data
+        accessMode: rw
+        type: volume
+        scope: shared
+    ports:
+      - internal: 8080
+        external: 8080
+        protocol: tcp
+```
+
+</FlavorYaml>
+
+When `natsConfig.natsAccess` is true, the Controller adds the creds `volumeMount` itself. Do not author that mapping by hand. See [NATS runtime](/learn/workloads/nats-access-runtime).
+
+### Ulimits
+
+`container.ulimits` maps a limit name to `{soft, hard}`. `-1` means unlimited.
+
+Allowed keys: `core`, `cpu`, `data`, `fsize`, `locks`, `memlock`, `msgqueue`, `nice`, `nofile`, `nproc`, `rss`, `rtprio`, `rttime`, `sigpending`, `stack`.
+
+The Controller rejects unknown names.
+
+```yaml
+ulimits:
+  nofile:
+    soft: 65536
+    hard: 65536
+  nproc:
+    soft: 4096
+    hard: 4096
+```
+
+### Sysctls
+
+`container.sysctls` maps a sysctl name to a string value. Only this allowlist is accepted:
+
+| Key |
+| --- |
+| `kernel.shm_rmid_forced` |
+| `net.ipv4.ip_local_port_range` |
+| `net.ipv4.tcp_syncookies` |
+| `net.ipv4.ping_group_range` |
+| `net.ipv4.ip_unprivileged_port_start` |
+| `net.ipv4.ip_local_reserved_ports` |
+| `net.ipv4.tcp_keepalive_time` |
+| `net.ipv4.tcp_fin_timeout` |
+| `net.ipv4.tcp_keepalive_intvl` |
+| `net.ipv4.tcp_keepalive_probes` |
+| `net.ipv4.tcp_rmem` |
+| `net.ipv4.tcp_wmem` |
+| `net.ipv4.tcp_slow_start_after_idle` |
+| `net.ipv4.tcp_notsent_lowat` |
+
+A sysctl whose name starts with `net.` is rejected when `hostNetworkMode` is true. IPC-namespaced sysctls are rejected when `ipcMode` is `host`.
+
+### extraHosts
+
+`container.extraHosts` adds `/etc/hosts` entries inside the container, in the same way as Docker `--add-host`.
+
+| Field | Who sets it | Description |
+| ----- | ----------- | ----------- |
+| `name` | You | Hostname the container resolves. |
+| `address` | You | Literal IP or hostname, or a Controller template expression. |
+| `value` | Controller | Resolved IP written for the Edgelet node that runs the workload. |
+
+In deploy YAML, set `name` and `address`. The Controller fills `value`.
+
+- A literal `address` is copied to `value`.
+- A template `address` (`${...}`) is evaluated for this deployment. The template string stays in `address`. Edgelet uses `value` when it applies the host entry.
+
+| Pattern | Meaning |
+| ------- | ------- |
+| `${Agents.<agentName>}` | IP of the Edgelet node with that name. |
+| `${Apps.<applicationName>.<microserviceName>.local}` | IP of that microservice on the **same** Edgelet node as this instance. |
+
+<FlavorYaml title="extra-hosts.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: bar
+  namespace: my-ecn
+spec:
+  application: foo
+  agent:
+    name: edge-01
+  images:
+    registry: remote
+    amd64: {{REGISTRY}}/example/api:1.0.0
+  container:
+    extraHosts:
+      - name: literalHost
+        address: "192.168.0.120"
+      - name: agentHost
+        address: "${Agents.foo}"
+      - name: appHostLocal
+        address: "${Apps.foo.bar.local}"
+```
+
+</FlavorYaml>
+
+After deploy, describe may show both `address` and `value`. Set `address` only. Do not hand-author `value` for a template.
+
+Bridge DNS names are separate from these host entries. See [DNS](/learn/edgelet/dns).
+
+### Environment
+
+`container.env` is a list. Each item sets one `key`. The value comes from exactly one of three sources.
+
+| Field | Required | Meaning |
+| ----- | -------- | ------- |
+| `key` | Yes | Environment variable name. |
+| `value` | One of three | Literal string. |
+| `valueFromSecret` | One of three | `secret-name/dataKey`. |
+| `valueFromConfigMap` | One of three | `configmap-name/dataKey`. |
+
+The Secret or ConfigMap must already exist in the same namespace, and the data key must be in that object's `data` map. See [Secrets](/learn/config/secrets) and [Config maps](/learn/config/config-maps).
+
+| Situation | Result |
+| --------- | ------ |
+| No `value`, `valueFromSecret`, or `valueFromConfigMap` | Rejected (400). |
+| More than one of those fields set | Rejected (400). |
+| Malformed `name/dataKey` | Rejected (400). |
+| Unknown Secret or ConfigMap, or missing data key | 404 or 400. |
+
+Deploy the Secret and ConfigMap in the same file, before the microservice, or in an earlier deploy.
+
+<FlavorYaml title="env.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Secret
+metadata:
+  name: postgres-creds
+  namespace: my-ecn
+spec:
+  type: Opaque
+  data:
+    password: changeme
+---
+apiVersion: {{API_VERSION}}
+kind: ConfigMap
+metadata:
+  name: platform-config
+  namespace: my-ecn
+spec:
+  immutable: false
+  useVault: false
+  data:
+    features: '{"darkMode":true}'
+---
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: api
+  namespace: my-ecn
+spec:
+  application: my-app
+  agent:
+    name: edge-01
+  images:
+    registry: remote
+    amd64: {{REGISTRY}}/example/api:1.0.0
+  container:
+    env:
+      - key: LOG_LEVEL
+        value: debug
+      - key: DB_PASSWORD
+        valueFromSecret: postgres-creds/password
+      - key: FEATURE_FLAGS
+        valueFromConfigMap: platform-config/features
+```
+
+</FlavorYaml>
+
+### WASM runtime
+
+`container.platform` and `container.runtime` select a WASM handler. Attach the runtime class to the Edgelet node first.
+
+<FlavorYaml title="wasm.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: wasm2
+  namespace: my-ecn
+spec:
+  application: wasm
+  agent:
+    name: edge-01
+  images:
+    registry: remote
+    amd64: ghcr.io/containerd/runwasi/wasi-demo-app:latest
+    arm64: ghcr.io/containerd/runwasi/wasi-demo-app:latest
+  container:
+    hostNetworkMode: false
+    isPrivileged: false
+    platform: wasi/wasm
+    runtime: edgelet-wasmtime
+    ports:
+      - internal: 8080
+        external: 8081
+        protocol: tcp
+  natsConfig:
+    natsAccess: false
+  config: {}
+```
+
+</FlavorYaml>
+
+## NATS
+
+The application must already have `spec.natsConfig.natsAccess: true`. Runtime and lifecycle are on [NATS access](/learn/workloads/nats-access).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `natsConfig` | object | Per-microservice NATS settings. |
+| `natsConfig.natsAccess` | bool | Enable NATS. The Controller creates the user JWT, the creds secret, the mount at `/etc/nats/creds`, and `NATS_CREDS_PATH` and `NATS_SERVER_URL`. |
+| `natsConfig.natsRule` | string | [NATS user rule](/learn/message-bus/user-rules) `metadata.name`. Omit it when `natsAccess` is true and the Controller uses `default-user`. |
+| `natsEnabled` | bool | Alias of `natsConfig.natsAccess` on microservice YAML only. |
+
+Account policy stays on the application. Changing `natsRule` rotates the user key and overwrites the creds file at the same path.
+
+## Models and knowledge
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `models` | object | Bind [model](/learn/config/ai-model-catalog) artifacts. |
+| `models.bindPath` | string | Mount path in the container. |
+| `models.permissions` | string | `ro` or `rw`. |
+| `models.items` | list | `{name: <Model metadata.name>}`. |
+| `knowledge` | object | Bind [knowledge](/learn/config/ai-knowledge-catalog) artifacts. |
+| `knowledge.bindPath` | string | Mount path. |
+| `knowledge.permissions` | string | `ro` or `rw`. |
+| `knowledge.items` | list | `{name: <Knowledge metadata.name>}`. |
+
+Deploy the fleet objects and attach them to the Edgelet node before you expect Ready mounts. `--patch-model` and `--patch-knowledge` update only these blocks. See [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
+
+## Template
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `template.name` | string | [Microservice template](/learn/workloads/microservice-templates) name. |
+| `template.variables` | map or list | Instance variables. A map, or a list of `{key, value}`. |
+
+## Service account
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `serviceAccount.roleRef.kind` | string | `Role`. |
+| `serviceAccount.roleRef.name` | string | Role name in the same application. |
+
+`spec.application` must match the service account `metadata.applicationName`. See [Roles](/learn/access-control/roles), [Role bindings](/learn/access-control/role-bindings), and [Service accounts](/learn/access-control/service-accounts).
+
+## Status
+
+`describe microservice` adds `status` and `execStatus`. They are not deploy fields.
+
+| Block | Examples |
+| ----- | -------- |
+| `status` | `status`, `containerId`, `cpuUsage`, `memoryUsage`, `healthStatus`, `restartCount` |
+| `execStatus` | Exec session state |
+
+`cpuUsage` on status is a utilization reading. `container.cpus` is a core limit. See the CPU table above.
+
+## Container field index
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `hostNetworkMode` | bool | Use the host network stack. Bridge DNS names are not installed. |
+| `isPrivileged` | bool | Privileged container. |
+| `runAsUser` | string | UID. |
+| `runAsGroup` | string | GID. |
+| `readOnlyRootFilesystem` | bool | Read-only root filesystem. |
+| `ipcMode` | string | IPC mode. |
+| `pidMode` | string | PID namespace mode. |
+| `platform` | string | OCI platform, such as `wasi/wasm`. |
+| `runtime` | string | Runtime handler name from a runtime class. |
+| `capAdd` | list of string | Added capabilities. |
+| `capDrop` | list of string | Dropped capabilities. |
+| `annotations` | object | Annotation map. |
+| `sysctls` | map of string | Allowlisted sysctls. |
+| `ulimits` | map | `{soft, hard}` per allowed key. `-1` means unlimited. |
+| `cpuSetCpus` | string | cpuset CPUs. |
+| `cpus` | float | CPU limit in cores. |
+| `memoryLimit` | int | MiB. |
+| `memoryReservation` | int | MiB. |
+| `memorySwap` | int | MiB. `-1` means unlimited. |
+| `shmSize` | int | MiB for `/dev/shm`. |
+| `cdiDevices` | list of string | CDI device ids. |
+| `devices` | list | `{hostPath, containerPath, permissions}`. |
+| `volumes` | list | [Volume mappings](#volume-mappings). |
+| `tmpfs` | list | `{containerPath, size, mode}`. `size` is MiB. |
+| `extraHosts` | list | `name` and `address` from you. `value` is the resolved IP. |
+| `env` | list | `key` plus one of `value`, `valueFromSecret`, or `valueFromConfigMap`. |
+| `ports` | list | `{internal, external, protocol}`. |
+| `workingDir` | string | Working directory. |
+| `entrypoint` | list of string | Entrypoint override. |
+| `commands` | list of string | Command arguments. |
+| `healthCheck.test` | list of string | Health check command. |
+| `healthCheck.interval` | int | Interval in milliseconds. |
+| `healthCheck.timeout` | int | Timeout in milliseconds. |
+| `healthCheck.retries` | int | Retries. |
+| `healthCheck.startPeriod` | int | Start period in milliseconds. |
+| `healthCheck.startInterval` | int | Start interval in milliseconds. |
+
+<EditPageAdmonition />

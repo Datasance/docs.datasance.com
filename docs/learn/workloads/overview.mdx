@@ -1,0 +1,107 @@
+---
+title: Workloads
+description: How Application, Microservice, and template objects fit together on the Controller, and the order to deploy them.
+keywords: [workloads, application, microservice, template, deploy, nats, edgelet node, v3.9]
+slug: /learn/workloads
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Workloads
+
+Workloads are Controller objects. They are not Kubernetes custom resources. The short map is [Workload orchestration](/get-started/workloads). This section is the field-level guide.
+
+Deploy a file with <CliName />. The command is <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> `-f`. There is no `apply`.
+
+<CliBlock>{`{{CLI_NAME}} deploy -f workloads.yaml -n my-ecn`}</CliBlock>
+
+When one file holds several documents, the CLI sorts by kind. Write the file in an order a person can read. The CLI still uses its own kind order.
+
+## Kinds
+
+| Kind | Role |
+| ---- | ---- |
+| `ApplicationTemplate` | Parameterized blueprint for a whole app. Not a running container. See [Application templates](/learn/workloads/application-templates). |
+| `MicroserviceTemplate` | Parameterized blueprint for one service. See [Microservice templates](/learn/workloads/microservice-templates). |
+| `Application` | Named group. NATS account policy lives here. It may list inline microservices or point at a template. See [Applications](/learn/workloads/applications). |
+| `Microservice` | One container on one Edgelet node (`spec.agent.name`). See [Microservices](/learn/workloads/microservices). |
+
+In YAML the node is `kind: Agent`. In prose it is an **Edgelet node**.
+
+The CLI name is `application/microservice`.
+
+<CliBlock>{`{{CLI_NAME}} describe microservice myapp/api -n my-ecn
+{{CLI_NAME}} logs microservice myapp/api -n my-ecn`}</CliBlock>
+
+A standalone `kind: Microservice` may set `metadata.name` to the service name and `spec.application` to the group, or set `metadata.name` to `myapp/api`.
+
+## System applications
+
+<ProductName /> creates a system application for each Edgelet node, named `system-<agentName>`. That application holds the router, NATS, and debug microservices the platform creates. How those fabrics are declared is on [Networking](/learn/edgelet-nodes/networking).
+
+Operators inspect them with `get system-microservices` and `describe system-microservice`. They do not deploy them as user `kind: Application` documents.
+
+<CliBlock>{`{{CLI_NAME}} get system-microservices -n my-ecn
+{{CLI_NAME}} describe system-microservice system-edge01/debug -n my-ecn`}</CliBlock>
+
+## What a microservice consumes
+
+A [catalog item](/learn/config/catalog-microservices) supplies the image set. Fleet [models](/learn/config/ai-model-catalog) and [knowledge](/learn/config/ai-knowledge-catalog) bind through `spec.models` and `spec.knowledge`. Those pages stay the catalog reference. This section only shows how a workload names them.
+
+Two microservices on the same Edgelet node can reach each other by name on the bridge. The short name is `myapp.worker`, and the full name is `myapp.worker.svc.bridge.local`. See [Bridge DNS](/learn/workloads/microservices#bridge-dns) and [DNS](/learn/edgelet/dns).
+
+## Deploy order
+
+Create the objects a microservice names before that microservice:
+
+1. Registry, catalog item, model, and knowledge exist before the microservice that names them.
+2. A [NATS account rule](/learn/message-bus/account-rules) exists before an application with `natsConfig.natsAccess: true`.
+3. A [NATS user rule](/learn/message-bus/user-rules) exists before a microservice with `natsConfig.natsAccess: true`.
+4. The Edgelet node in `spec.agent.name` is already registered.
+5. Templates exist before the application or microservice that points at them.
+
+A workload-focused kind order:
+
+```text
+Secret → ConfigMap → Role → RoleBinding → ServiceAccount
+→ NatsAccountRule and NatsUserRule
+→ ApplicationTemplate → MicroserviceTemplate
+→ Registry → Model → Knowledge → RuntimeClass → CatalogItem
+→ Application → Microservice
+```
+
+## YAML parsing
+
+| Kind | Parsing | What that means |
+| ---- | ------- | --------------- |
+| `Microservice` | Strict | Unknown keys fail at deploy. |
+| `Application` | Non-strict | Check the result with `describe application`. |
+| `ApplicationTemplate` | Non-strict | Prefer documented fields. Extra keys may be ignored. |
+| `MicroserviceTemplate` | Non-strict | Same as an application template. |
+
+## EdgeOps Console
+
+Running applications and microservices are under [Workloads](/get-started/edgeops-console/workloads). Templates and catalog items are under [Catalog and templates](/get-started/edgeops-console/catalog-and-templates). There is no Configure → Workloads menu.
+
+The first deploy is still <CliName /> `deploy -f`. Console lists, edits, and runs start, stop, logs, and exec after the objects exist.
+
+## Primers
+
+- [Workload orchestration](/get-started/workloads)
+- [Applications and microservices](/get-started/workloads/applications)
+- [Templates](/get-started/workloads/templates)
+
+## Related
+
+- [Applications](/learn/workloads/applications) and [Application fields](/reference/yaml/application)
+- [Microservices](/learn/workloads/microservices) and [Microservice fields](/reference/yaml/microservice)
+- [NATS access](/learn/workloads/nats-access)
+- [Logs and exec](/learn/workloads/debugging)
+- [Node logs and exec](/learn/operate/node-debugging) for the node daemon, not the container
+
+<EditPageAdmonition />

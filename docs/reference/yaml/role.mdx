@@ -1,0 +1,67 @@
+---
+title: Role fields
+description: Field reference for kind Role. Rules sit at the document root, beside metadata.
+keywords: [role, yaml, fields, rules, apiGroups, verbs, resourceNames]
+slug: /reference/yaml/role
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Role fields
+
+Reference for `kind: Role`. Deploy and the resource list are on [Roles](/learn/access-control/roles).
+
+`rules` sits at the document root. It is not a field of `spec`. `describe role` prints this same shape.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Role # required, string
+metadata:
+  name: app-worker # required, string
+  namespace: my-ecn # no, string. Must match -n when both are set
+rules: # required, list. Document root. Not under spec
+  - apiGroups: # required, list of string
+      - ""
+    resources: # required, list of string
+      - microservices
+    verbs: # required, list of string. get, list, create, update, patch, delete
+      - get
+      - list
+    resourceNames: [] # no, list of string. Omit to allow every name
+```
+
+</FlavorYaml>
+
+`metadata.namespace` is the namespace you passed with `-n`. `metadata.name` is the name used in `roleRef.name`.
+
+The Controller enforces resource names and verbs. The CLI stores the list you send.
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `metadata.name` | Yes | Role name. Unique in the namespace. |
+| `rules` | Yes | List of rules at the document root. |
+
+### Rule
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `apiGroups` | Yes | API group strings. `""` is the core Controller group. |
+| `resources` | Yes | Resource types from the [Roles](/learn/access-control/roles) list, such as `microservices`. |
+| `verbs` | Yes | `get`, `list`, `create`, `update`, `patch`, `delete`. |
+| `resourceNames` | No | Limit the rule to these instance names. Omit it to allow every name of that resource. |
+
+## Deploy
+
+| State | CLI |
+| ----- | --- |
+| Name missing | Create with `name` and `rules`. |
+| Name present | Update. The new `rules` list replaces the stored list. |
+
+`admin` cannot be modified or deleted.
+
+<EditPageAdmonition />

@@ -1,0 +1,25 @@
+---
+title: Debugging Edgelet Nodes
+description: What logs agent and exec agent do on an Edgelet node. Flags, remote versus local behavior, and attach or detach are in Learn.
+keywords: [edgelet node, debugging, logs agent, exec agent, v3.9]
+slug: /get-started/edgelet-nodes/debugging
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Debugging
+
+<CliName /> `logs agent` streams Edgelet daemon logs for one node. It does not stream workload container logs. The subcommand is `logs` (plural).
+
+<CliName /> `exec agent` opens a shell on the node through a debug microservice. It can provision that microservice.
+
+<CliBlock>{`{{CLI_NAME}} logs agent edge-01 -n my-ecn
+{{CLI_NAME}} exec agent edge-01 -n my-ecn`}</CliBlock>
+
+Flags, remote versus local behavior, and `attach exec agent` or `detach exec agent` are on [Node logs and exec](/learn/operate/node-debugging).
+
+Container logs and shells are on [Logs and exec](/learn/workloads/debugging).
+
+<EditPageAdmonition />

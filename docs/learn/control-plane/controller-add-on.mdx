@@ -1,0 +1,148 @@
+---
+title: Controller add-on
+description: Add one controller host to an existing remote control plane with kind Controller. Stored global spec, system Edgelet node, and deploy order.
+keywords: [controller add-on, remote control plane, kind controller, v3.9]
+slug: /learn/control-plane/controller-add-on
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Controller add-on
+
+Use a standalone `kind: Controller` file to add one new host to an existing remote control plane. You do not redeploy the full `ControlPlane` YAML. <CliName /> reuses the stored global spec (auth, database, images, TLS policy, system microservices) from namespace config and runs the next-system-Edgelet-node path on the new host.
+
+The first deploy is [Remote](/learn/control-plane/remote). Database and ordering rules are [Multi-controller HA](/learn/control-plane/remote-ha).
+
+## Example
+
+<FlavorYaml title="controller-add-on.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Controller
+metadata:
+  name: ctrl-2
+spec:
+  host: 10.0.0.12
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+    port: 22
+  systemAgent:
+    config:
+      arch: arm64
+```
+
+</FlavorYaml>
+
+A second host on an existing production namespace:
+
+<FlavorYaml title="controller-west.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Controller
+metadata:
+  name: edge-west-2
+spec:
+  host: 203.0.113.20
+  ssh:
+    user: ec2-user
+    keyFile: ~/.ssh/prod.pem
+  systemAgent:
+    config:
+      arch: amd64
+      host: 203.0.113.20
+```
+
+</FlavorYaml>
+
+Optional `tls` overrides the stored global `spec.tls` for this host only (`cert` and `key`, base64 PEM). Optional `airgap` stages images for this host. `endpoint` is written by <CliName /> after deploy. See [Securing a remote control plane](/learn/security/control-plane-remote).
+
+A document labeled `RemoteController` is accepted as `Controller`.
+
+## What you need first
+
+The <CliName /> namespace must already contain a deploy-capable `ControlPlane` spec.
+
+| Requirement | Why |
+| ----------- | --- |
+| A prior `deploy -f` of the full `ControlPlane`, or `connect -f` with that full file | Stores `auth`, `controller`, database, and the rest of the global spec |
+| The stored spec includes `auth` and `controller` | A thin connect stub is rejected |
+| New `metadata.name` is not already in `controllers[]` | Names are unique |
+| New `host` is not already used | Hosts are unique |
+| An external database when this host makes the second controller | A SQLite-only control plane cannot grow |
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controller-add-on.yaml -n prod`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+## What the add-on runs
+
+On the new host only, the same pipeline as one row of the initial control plane:
+
+1. SSH, then install Edgelet (and airgap or a private registry when the stored spec says so).
+2. Translate the stored global spec plus this controller into an Edgelet `ControlPlane` manifest (`apiVersion: edgelet.iofog.org/v1`).
+3. `edgelet deploy -f` on the new host.
+4. Deploy the next system Edgelet node with `upstreamRouters: [default-router]` and `upstreamNatsServers: [default-nats-hub]`. If you omit those lists, the defaults are merged in.
+5. Append the controller to stored `spec.controllers[]` and save config.
+
+## What the add-on skips
+
+These ran during the initial `ControlPlane` deploy:
+
+| Step | On add-on |
+| ---- | --------- |
+| Wait for the Controller API | Skipped |
+| Create `iofogUser` for embedded auth | Skipped |
+| Register a private `controller.package` registry | Skipped |
+| Upload global messaging CAs | Skipped. The CAs must already exist from the initial deploy or from a manual import. |
+
+To rotate global messaging CAs, update them on the Controller API or redeploy the full `ControlPlane` with new CA blocks before you add hosts that depend on the new trust material.
+
+## Several documents in one file
+
+When one file contains both `ControlPlane` and `Controller`:
+
+- Control plane actions run first.
+- Controller add-on actions run after that block.
+- Validation rejects a duplicate name or host shared by `spec.controllers[]` and a standalone `Controller` in the same file.
+
+## Role of the new host
+
+Each added host runs its own Controller container on the same external database as the existing hosts. The new system Edgelet node is always a later node (index 1 or higher). It attaches to `default-router` and `default-nats-hub` on the first controller host from the original deploy order.
+
+Adding a controller does not reorder the first host. Put the primary router and NATS host at index 0 in the original `controllers[]` list. See [Multi-controller HA](/learn/control-plane/remote-ha).
+
+## Errors
+
+| Message | Cause |
+| ------- | ----- |
+| Does not support adding controllers | Namespace control plane is missing a full deploy or connect file |
+| External database is required | Second controller while the database provider is empty |
+| Name or host already exists | Duplicate in the stored control plane |
+| Collision in the same deploy file | `controllers[]` and `Controller` share a name or host |
+
+## Day-2
+
+The console does not install the new host. After deploy, [Overview](/get-started/edgeops-console/overview) lists it under **Cluster controllers** (Active, Standby, or Stale). That block does not open a detail panel.
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane -n prod
+{{CLI_NAME}} describe controller ctrl-2 -n prod`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controlplane`}>describe controlplane</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controller`}>describe controller</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_connect`}>connect</Link> with the full remote file when this workstation does not yet have that stored spec
+
+Platform image pins are [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train). Change them on the stored `ControlPlane`, deploy that file, then add hosts.
+
+## Fields
+
+Global and per-host fields: [Remote ControlPlane fields](/reference/yaml/remote-control-plane).
+
+<EditPageAdmonition />

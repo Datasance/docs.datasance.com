@@ -1,0 +1,69 @@
+---
+title: Application template fields
+description: Field reference for kind ApplicationTemplate. Description, variables, and the nested application skeleton.
+keywords: [application template, yaml, fields, variables, v3.9]
+slug: /reference/yaml/application-template
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Application template fields
+
+Reference for `kind: ApplicationTemplate`. How to deploy and instantiate a template is on [Application templates](/learn/workloads/application-templates).
+
+The CLI parses `spec` in non-strict mode. Prefer the fields below. Extra keys may be ignored.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: ApplicationTemplate # required, string
+metadata:
+  name: my-template # required, string. Lowercase alphanumeric
+  namespace: my-ecn # no, string. Must match -n when both are set
+spec:
+  name: my-template # no, string
+  description: Example template # no, string
+  variables: # no, list
+    - key: agent-name # string
+      description: Edgelet node name # string
+      defaultValue: edge-01 # any
+      value: edge-01 # any
+  application: # no, object. Nested application spec
+    microservices: []
+    natsConfig:
+      natsAccess: false
+```
+
+</FlavorYaml>
+
+`metadata.name` is required. Use lowercase alphanumeric characters. `metadata.namespace`, when set, must match `-n`.
+
+## Spec
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `name` | string | Optional copy of `metadata.name`. |
+| `description` | string | Operator-facing summary. |
+| `variables` | list | Template parameters. |
+| `variables[].key` | string | Variable name referenced in the nested YAML. |
+| `variables[].description` | string | Help text. |
+| `variables[].defaultValue` | any | JSON-compatible default (scalar or object) used when an application deploy omits that variable. |
+| `variables[].value` | any | Optional fixed value when the application does not override it. |
+| `application` | object | Nested application spec: microservices, `natsConfig`, and the other [application fields](/reference/yaml/application). |
+
+Quote placeholders in `application`, for example `"{{agent-name}}"`. The Controller substitutes them when `Application.spec.template` supplies `variables`.
+
+An application passes overrides as a list of `{key, value}` or as a map. See [Application fields](/reference/yaml/application).
+
+## Create and update
+
+| | Create | Update |
+| --- | ------ | ------ |
+| Trigger | The template name is not on the Controller. | The same `metadata.name` is deployed again. |
+| Action | Create from YAML. | Update from YAML. |
+
+Updating the template does not redeploy applications already created from it.
+
+<EditPageAdmonition />
