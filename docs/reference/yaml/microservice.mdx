@@ -23,6 +23,10 @@ metadata:
   name: api # required, string. Or application/microservice
   namespace: my-ecn # no, string
 spec:
+  template: # no, object
+    name: my-ms-template # string
+    variables: # map or list of {key, value}
+      agent-name: edge-01
   application: my-app # required, string, unless metadata.name contains /
   name: api # no, string
   agent: # required, object
@@ -37,6 +41,19 @@ spec:
     riscv64: {{REGISTRY}}/example/api:1.0.0 # string. Keep this set or catalogId
     arm: {{REGISTRY}}/example/api:1.0.0 # string. Keep this set or catalogId
     catalogId: 1 # int. Keep catalogId or the per-arch image strings
+  natsConfig: # no, object
+    natsAccess: false # no, bool
+    natsRule: checkout-user # no, string. Omit when natsAccess is true to use default-user
+  models: # no, object
+    bindPath: /models # string
+    permissions: ro # string. ro or rw
+    items: # list
+      - name: defect-weights
+  knowledge: # no, object
+    bindPath: /knowledge # string
+    permissions: ro # string. ro or rw
+    items: # list
+      - name: product-docs
   container:
     isPrivileged: false # no, bool
     runAsUser: "1000" # no, string
@@ -171,24 +188,6 @@ spec:
       net.ipv4.tcp_notsent_lowat: "4294967295"
     ipcMode: "" # no, string
     pidMode: "" # no, string
-  natsConfig: # no, object
-    natsAccess: false # no, bool
-    natsRule: checkout-user # no, string. Omit when natsAccess is true to use default-user
-  natsEnabled: false # no, bool. Alias of natsConfig.natsAccess on microservice YAML only
-  models: # no, object
-    bindPath: /models # string
-    permissions: ro # string. ro or rw
-    items: # list
-      - name: defect-weights
-  knowledge: # no, object
-    bindPath: /knowledge # string
-    permissions: ro # string. ro or rw
-    items: # list
-      - name: product-docs
-  template: # no, object
-    name: my-ms-template # string
-    variables: # map or list of {key, value}
-      agent-name: edge-01
   serviceAccount: # no, object
     roleRef:
       kind: Role # string
@@ -246,6 +245,41 @@ execStatus: {} # describe only. Exec session state
 | `images.catalogId` | int | Use a [catalog item](/learn/config/catalog-microservices) instead of inline image strings. |
 
 Provide `catalogId` or the per-arch image strings. When `catalogId` is set, describe shows the catalog image set.
+
+## NATS
+
+The application must already have `spec.natsConfig.natsAccess: true`. Runtime and lifecycle are on [NATS access](/learn/workloads/nats-access).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `natsConfig` | object | Per-microservice NATS settings. |
+| `natsConfig.natsAccess` | bool | Enable NATS. The Controller creates the user JWT, the creds secret, the mount at `/etc/nats/creds`, and `NATS_CREDS_PATH` and `NATS_SERVER_URL`. |
+| `natsConfig.natsRule` | string | [NATS user rule](/learn/message-bus/user-rules) `metadata.name`. Omit it when `natsAccess` is true and the Controller uses `default-user`. |
+| `natsEnabled` | bool | Alias of `natsConfig.natsAccess` on microservice YAML only. |
+
+Account policy stays on the application. Changing `natsRule` rotates the user key and overwrites the creds file at the same path.
+
+## Models and knowledge
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `models` | object | Bind [model](/learn/config/ai-model-catalog) artifacts. |
+| `models.bindPath` | string | Mount path in the container. |
+| `models.permissions` | string | `ro` or `rw`. |
+| `models.items` | list | `{name: <Model metadata.name>}`. |
+| `knowledge` | object | Bind [knowledge](/learn/config/ai-knowledge-catalog) artifacts. |
+| `knowledge.bindPath` | string | Mount path. |
+| `knowledge.permissions` | string | `ro` or `rw`. |
+| `knowledge.items` | list | `{name: <Knowledge metadata.name>}`. |
+
+Deploy the fleet objects and attach them to the Edgelet node before you expect Ready mounts. `--patch-model` and `--patch-knowledge` update only these blocks. See [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
+
+## Template
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `template.name` | string | [Microservice template](/learn/workloads/microservice-templates) name. |
+| `template.variables` | map or list | Instance variables. A map, or a list of `{key, value}`. |
 
 ## Container
 
@@ -542,41 +576,6 @@ spec:
 ```
 
 </FlavorYaml>
-
-## NATS
-
-The application must already have `spec.natsConfig.natsAccess: true`. Runtime and lifecycle are on [NATS access](/learn/workloads/nats-access).
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `natsConfig` | object | Per-microservice NATS settings. |
-| `natsConfig.natsAccess` | bool | Enable NATS. The Controller creates the user JWT, the creds secret, the mount at `/etc/nats/creds`, and `NATS_CREDS_PATH` and `NATS_SERVER_URL`. |
-| `natsConfig.natsRule` | string | [NATS user rule](/learn/message-bus/user-rules) `metadata.name`. Omit it when `natsAccess` is true and the Controller uses `default-user`. |
-| `natsEnabled` | bool | Alias of `natsConfig.natsAccess` on microservice YAML only. |
-
-Account policy stays on the application. Changing `natsRule` rotates the user key and overwrites the creds file at the same path.
-
-## Models and knowledge
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `models` | object | Bind [model](/learn/config/ai-model-catalog) artifacts. |
-| `models.bindPath` | string | Mount path in the container. |
-| `models.permissions` | string | `ro` or `rw`. |
-| `models.items` | list | `{name: <Model metadata.name>}`. |
-| `knowledge` | object | Bind [knowledge](/learn/config/ai-knowledge-catalog) artifacts. |
-| `knowledge.bindPath` | string | Mount path. |
-| `knowledge.permissions` | string | `ro` or `rw`. |
-| `knowledge.items` | list | `{name: <Knowledge metadata.name>}`. |
-
-Deploy the fleet objects and attach them to the Edgelet node before you expect Ready mounts. `--patch-model` and `--patch-knowledge` update only these blocks. See [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
-
-## Template
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `template.name` | string | [Microservice template](/learn/workloads/microservice-templates) name. |
-| `template.variables` | map or list | Instance variables. A map, or a list of `{key, value}`. |
 
 ## Service account
 
