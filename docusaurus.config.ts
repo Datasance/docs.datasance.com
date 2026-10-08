@@ -9,6 +9,7 @@ import {
   FOOTER_COPYRIGHT,
   FAVICON,
   GITHUB_ORG_URL,
+  SITE_KEYWORDS,
   LINKEDIN_URL,
   NAVBAR_LOGO,
   PRODUCT_NAME,
@@ -405,10 +406,7 @@ const config: Config = {
     image: SOCIAL_CARD_IMAGE,
     // SEO Metadata
     metadata: [
-      {name: 'keywords', content: 'edge computing, edgeops, distributed edge computing, datasance pot, pot, fog computing, kubernetes edge, iofog, iot platform, edge orchestration'},
-      {name: 'description', content: 'Datasance PoT is an Enterprise Open Source Fog and Distributed Edge Computing Platform. Learn how to deploy, manage, and scale your edge applications.'},
-      {name: 'og:title', content: 'Datasance PoT Documentation'},
-      {name: 'og:description', content: 'Comprehensive documentation for Datasance PoT - The Enterprise Edge Computing Platform.'},
+      {name: 'keywords', content: SITE_KEYWORDS},
       {name: 'og:type', content: 'website'},
     ],
     tableOfContents: {

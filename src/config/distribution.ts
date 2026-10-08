@@ -94,10 +94,16 @@ export function getSiteCustomFields() {
 }
 
 export const FAVICON =
-  FLAVOR === 'datasance' ? 'img/favicon.ico' : 'img/favicon.ico';
+  FLAVOR === 'datasance' ? 'img/favicon.ico' : 'img/iofog-favicon.png';
 
+/** Open Graph / Twitter card. PNG so link unfurlers can render it. */
 export const SOCIAL_CARD_IMAGE =
-  FLAVOR === 'datasance' ? 'img/datasance-logo.png' : 'img/iofog-logo.svg';
+  FLAVOR === 'datasance' ? 'img/datasance-logo.png' : 'img/iofog-social-card.png';
+
+export const SITE_KEYWORDS =
+  FLAVOR === 'datasance'
+    ? 'edge computing, edgeops, distributed edge computing, datasance pot, pot, fog computing, kubernetes edge, iofog, iot platform, edge orchestration'
+    : 'edge computing, eclipse iofog, iofog, fog computing, kubernetes edge, iot platform, edge orchestration, distributed edge computing';
 
 export const LINKEDIN_URL = 'https://www.linkedin.com/company/datasance';
 
