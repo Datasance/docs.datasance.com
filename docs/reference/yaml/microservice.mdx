@@ -169,8 +169,8 @@ spec:
       net.ipv4.tcp_wmem: "4096 16384 4194304"
       net.ipv4.tcp_slow_start_after_idle: "1"
       net.ipv4.tcp_notsent_lowat: "4294967295"
-    ipcMode: private # no, string
-    pidMode: private # no, string
+    ipcMode: "" # no, string
+    pidMode: "" # no, string
   natsConfig: # no, object
     natsAccess: false # no, bool
     natsRule: checkout-user # no, string. Omit when natsAccess is true to use default-user
