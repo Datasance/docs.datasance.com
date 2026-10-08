@@ -10,7 +10,7 @@ const yaml = require('js-yaml');
 
 const MAP_PATH = path.join(
   __dirname,
-  '../.cursor/pot-docs/docs/url-migration-map.yaml',
+  './url-migration-map.yaml',
 );
 
 /** @typedef {{ from: string, to: string }} RedirectEntry */

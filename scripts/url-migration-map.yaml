@@ -1,0 +1,99 @@
+# URL migration map — current (v3.9) docs only.
+# Redirect generation: Plan 13-2. ioFog: duplicate each legacy_path and canonical_path with /iofog prefix.
+#
+# phase:
+#   migrate — permanent redirect to canonical_path
+#   keep — no redirect (archive, version snapshot, stable routes)
+#   stub — temporary; canonical is placeholder until Plan 14
+
+redirects:
+  - legacy_path: /yaml-references/reference-control-plane
+    canonical_path: /reference
+    phase: migrate
+  - legacy_path: /yaml-references/reference-agent
+    canonical_path: /reference/yaml/agent
+    phase: migrate
+  - legacy_path: /yaml-references/reference-application
+    canonical_path: /reference/yaml/application
+    phase: migrate
+  - legacy_path: /yaml-references/reference-application-template
+    canonical_path: /reference/yaml/application-template
+    phase: migrate
+  - legacy_path: /yaml-references/reference-registry
+    canonical_path: /reference/yaml/registry
+    phase: migrate
+  - legacy_path: /yaml-references/reference-catalog
+    canonical_path: /reference/yaml/catalog-item
+    phase: migrate
+  - legacy_path: /yaml-references/reference-offlineimage
+    canonical_path: /reference/yaml/offline-image
+    phase: migrate
+  - legacy_path: /yaml-references/reference-secret
+    canonical_path: /reference/yaml/secret
+    phase: migrate
+  - legacy_path: /yaml-references/reference-certificate
+    canonical_path: /reference/yaml/certificate
+    phase: migrate
+  - legacy_path: /yaml-references/reference-configmap
+    canonical_path: /reference/yaml/config-map
+    phase: migrate
+  - legacy_path: /yaml-references/reference-volumemount
+    canonical_path: /reference/yaml/volume-mount
+    phase: migrate
+  - legacy_path: /yaml-references/reference-service
+    canonical_path: /reference/yaml/service
+    phase: migrate
+  - legacy_path: /yaml-references/reference-roles
+    canonical_path: /reference/yaml/role
+    phase: migrate
+  - legacy_path: /yaml-references/reference-role-binding
+    canonical_path: /reference/yaml/role-binding
+    phase: migrate
+  - legacy_path: /yaml-references/reference-nats-account-rule
+    canonical_path: /reference/yaml/nats-account-rule
+    phase: migrate
+  - legacy_path: /yaml-references/reference-nats-user-rule
+    canonical_path: /reference/yaml/nats-user-rule
+    phase: migrate
+  - legacy_path: /yaml-references/reference-kinds
+    canonical_path: /reference
+    phase: migrate
+  - legacy_path: /yaml-references/README
+    canonical_path: /reference
+    phase: migrate
+  - legacy_path: /security/introduction
+    canonical_path: /learn/security/securing-cluster
+    phase: migrate
+
+new_canonical_only:
+  - /learn/config/ai-model-catalog
+  - /learn/config/ai-knowledge-catalog
+  - /learn/workloads/microservice-templates
+  - /learn/config/runtime-classes
+  - /learn/workloads/microservices
+  - /learn/access-control/service-accounts
+  - /learn/control-plane
+  - /learn/edgelet-nodes
+  - /learn/workloads
+  - /learn/operate/config
+  - /learn/operate/network
+  - /learn/message-bus
+  - /learn/access-control
+  - /learn/operate/observe-troubleshoot
+  - /learn/security/securing-cluster
+
+stable_keep:
+  - /getting-started/*
+  - /tutorials/*
+  - /platform-deployment/*
+  - /edgelet/*
+  - /edgelet-management/*
+  - /edgeops-console/*
+  - /reference-controller/*
+  - /api/*
+  - /potctl/*
+  - /iofogctl/*
+  - /platform-components/*
+  - /security/*
+  - /v3.7.*
+  - /v3.8.0/*
