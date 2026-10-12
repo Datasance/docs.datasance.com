@@ -1,7 +1,7 @@
 ---
 title: "Edgelet"
-description: "Edgelet v1.1.0 is the engine you can run on a Linux machine by itself, then attach to a control plane. Same binary as an Edgelet node. Platform train v3.9.0."
-keywords: ["edgelet", "install.sh", "edgelet cli", "standalone", "v1.1.0", "v3.9"]
+description: "Edgelet v1.1.1 is the engine you can run on a Linux machine by itself, then attach to a control plane. Same binary as an Edgelet node. Platform train v3.9.1."
+keywords: ["edgelet", "install.sh", "edgelet cli", "standalone", "v1.1.1", "v3.9"]
 slug: /learn/edgelet
 ---
 
@@ -41,7 +41,7 @@ Wasm is a catalog runtime on the embedded engine, not a separate install. Handle
 | Day-2 CLI | `edgelet` | <CliName /> |
 | YAML | `apiVersion: edgelet.iofog.org/v1` | `kind: Agent` |
 
-Pair **Edgelet v1.1.0** with platform train **v3.9.0**.
+Pair **Edgelet v1.1.1** with platform train **v3.9.1**.
 
 On Linux the install is two layers. `/usr/local/bin/edgelet` is the thin binary: the CLI and the OTA entry. The daemon extracts a fat runtime under `/var/lib/edgelet/data/current/bin/edgelet` when `containerEngine` is `edgelet`. macOS and Windows ship one binary and use Docker or Podman. See [Architecture](/learn/edgelet/architecture).
 

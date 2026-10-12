@@ -1,0 +1,372 @@
+---
+title: Architecture
+description: v3.9 platform architecture. Controller, EdgeOps Console, Edgelet nodes, AI catalogs, Router, NATS, Operator, and deployment topologies.
+keywords: [architecture, edge computing, edgeops, microservices, edgelet, ecn, edgeops console, v3.9, ai model catalog]
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import ArchitectureDiagram from '@site/src/components/flavor/ArchitectureDiagram';
+import GitHubRepoLink from '@site/src/components/flavor/GitHubRepoLink';
+import CliDocsLink from '@site/src/components/flavor/CliDocsLink';
+import CliGitHubRepoLink from '@site/src/components/flavor/CliGitHubRepoLink';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Architecture
+
+:::info[Upgrade from v3.8.0]
+
+Platform train **v3.9.0** is an in-train upgrade on the same Controller database. Bump image tags, roll **Edgelet v1.1.0** on nodes, and upgrade **<CliName />** to **v3.9.0**. See [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9). Greenfield moves from **v3.7.x or older** still start at [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+:::
+
+The **<ProductName />** architecture has several building blocks. Together they form a logical cluster called an **Edge Compute Network (ECN)**.
+
+## Core principles
+
+**<ProductName />** gives you one control point to deploy, operate, and govern container workloads across large edge environments. It brings cloud-native operating principles to the edge. You focus on applications instead of infrastructure, security, and networking.
+
+The platform is designed around three principles:
+
+- **Distributed**, to preserve local autonomy and resilience
+- **Disaggregated**, to stay independent of hardware, operating systems, and environments
+- **Control-centric**, with unified operations and security as first-class concerns
+
+These principles let **<ProductName />** manage isolated edge sites as one coherent system without forcing central dependency.
+
+## Control plane and Edgelet nodes
+
+The **Control Plane** coordinates distributed edge environments from a central point. It is backend-agnostic. It runs on Kubernetes clusters, bare-metal hosts, or virtual machines.
+
+An **Edgelet node** is the worker of an ECN. The same Edgelet binary is the node agent, the application runtime, and the container engine. You can also run that binary on a Linux host by itself, with the `edgelet` CLI, before any control plane exists. Joining a cluster later uses <CliName /> and `kind: Agent`.
+
+Edgelet is built for small, mixed edge hardware.
+
+- On Linux the OTA download is the thin binary, less than **35 MB**. It is the CLI and the update artifact. The container engine is packed inside that file.
+- Linux builds ship for **amd64**, **arm64**, **arm** (32-bit, including armv7), and **riscv64**. The YAML key for 32-bit ARM is `arm`.
+- The default container engine is embedded. A host does not need Docker or Podman to run containerized workloads or AI applications. macOS and Windows use Docker or Podman.
+- The engine stores registries, container images, **Model** weights, and **Knowledge** bundles. Built-in rows cover Docker Hub, a local image cache, and Hugging Face. Private OCI and Hugging Face rows are the same kind of object.
+- Wasm workloads use a built-in RuntimeClass catalog, including the `edgelet-wasmtime` shim. A cluster install stages those shim binaries when `package.wasm` is set on the Agent. Wasm is a container on this engine, not a second runtime you install by hand.
+
+Day-2 operations use the [Controller](#controller), [EdgeOps Console](#edgeops-console), or **<CliName />**. You deploy and maintain microservices without SSH on every edge device.
+
+## Secure, scalable, hardware-agnostic
+
+Security and control are built in from the start. The platform scales from a few sites to large, geographically distributed clusters. Its hardware-agnostic design lets you choose and evolve edge hardware while keeping consistent operational control across the environment.
+
+Supported node architectures include **amd64**, **arm64**, **riscv64**, and **arm** (32-bit).
+
+## Controller
+
+The **Controller** (**v3.9.0**) is the heart of each ECN. It orchestrates Edgelet nodes, microservices, Router and NATS instances, RBAC, secrets, certificates, fleet **Model** and **Knowledge** catalogs, and more.
+
+The Controller can run on bare-metal, virtual hardware, or Kubernetes. Every Edgelet node must reach it over the network. That usually means a static IP address or DNS records.
+
+You can also place the Controller behind an HTTP ingress. The Controller is fully functional through its REST and WebSocket APIs.
+
+The Controller image embeds **EdgeOps Console** (**v1.1.0**) on port **8008**. Default installs use [embedded OIDC](/get-started/deploy/embedded-oidc) for authentication.
+
+On **v3.9.0**, the Controller catalog pulls AI **weights** and **knowledge** artifacts from **`type: oci`** and **`type: hf`** [registries](/learn/config/registries), tracks attach state per **Edgelet node**, and prepares mounts for microservices that bind **`spec.models`** and **`spec.knowledge`**. See [AI Model Catalog](/learn/config/ai-model-catalog) and [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog).
+
+<ArchitectureDiagram
+  train="3.9"
+  name="Controller"
+  alt="Controller architecture diagram with EdgeOps Console, API, Edgelet orchestration, and fleet catalogs"
+  caption={<>Controller and EdgeOps Console (platform train v3.9.0). Click the image to view full size.</>}
+/>
+
+:::tip[Want to know more about the Controller?]
+
+For configuration and the operator notes, see [Controller configuration](/reference/controller/controller-config). HTTP routes are the [Controller API](/api/v3.9.0/controller).
+
+To deploy a Control Plane with **<CliName />**, see [Platform deployment](/get-started/deploy/introduction).
+
+Source code: <GitHubRepoLink repo="Controller">Controller</GitHubRepoLink>.
+
+:::
+
+## EdgeOps Console
+
+**EdgeOps Console** is the web UI for **<ProductName />**. It is embedded in the Controller image. You manage Edgelet nodes, applications, microservices, routes, AI catalogs, and supporting resources from the browser.
+
+The Console talks to the same Controller REST and WebSocket endpoints as **<CliName />**. Authentication follows the same RBAC model. Default installs use embedded OIDC.
+
+Open the Console with <code><CliName /> view</code> or the URL you set with `CONSOLE_URL`.
+
+:::tip[Want to know more about EdgeOps Console?]
+
+See the [EdgeOps Console introduction](/get-started/edgeops-console) and [features](/get-started/edgeops-console/overview) pages.
+
+Source code: <GitHubRepoLink repo="edgeops-console">edgeops-console</GitHubRepoLink>.
+
+:::
+
+## Edgelet nodes
+
+An **Edgelet node** is the worker of an ECN. Each node runs the **Edgelet** runtime and hosts microservices, volumes, and local resources. Every Edgelet node reports to the Controller. The Controller must be reachable from edge nodes, but edge nodes do not need to be reachable from the Controller.
+
+Edgelet manages microservices as containers. It handles their lifecycle and local container images. Edgelet supports multiple CPU architectures and container engines.
+
+Day-2 operations use the [Controller](#controller), [EdgeOps Console](#edgeops-console), or **<CliName />**. You deploy and maintain microservices without SSH on every edge device.
+
+<ArchitectureDiagram
+  train="3.9"
+  name="Edgelet"
+  alt="Edgelet node architecture diagram with runtime, container engine, microservices, and Controller connection"
+  caption={<>Edgelet node runtime. Click the image to view full size.</>}
+/>
+
+:::tip[Want to know more about Edgelet?]
+
+For installation, configuration, EdgeletAPI, and CLI reference, see [Edgelet documentation](/learn/edgelet).
+
+To provision Edgelet nodes with **<CliName />**, see [Setup Edgelet nodes](/get-started/deploy/setup-edgelet-nodes).
+
+For YAML fields, see [Edgelet nodes in Learn](/learn/edgelet-nodes).
+
+Source code: <GitHubRepoLink repo="edgelet">edgelet</GitHubRepoLink>.
+
+:::
+
+## Microservices
+
+Microservices are the workloads that run on Edgelet nodes. Each microservice is a Linux or Wasm container. Many microservices can run on one Edgelet node. This is similar to Kubernetes pods, except **<ProductName />** gives you granular control over which nodes run which microservices.
+
+On **v3.9.0**, microservices can bind fleet **Model** and **Knowledge** catalog entries through **`spec.models`** and **`spec.knowledge`**, and use expanded **`container`** fields for production hardening. See [Microservices in Learn](/learn/workloads/microservices#specmodels-and-specknowledge).
+
+:::tip[Want to know more about microservices?]
+
+For application and microservice management, see [Applications introduction](/get-started/workloads).
+
+For a hands-on walkthrough, see the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant) or [Edge AI wafer defect](/tutorials/edge-ai-wafer-defect).
+
+:::
+
+## Router
+
+The **Router** enables microservices to communicate through TCP bridges created via Service YAML kinds. The platform ships a Router wrapper image (**v3.9.0**) that embeds **Skupper Router 3.5.1**. Router is deployed with TLS by default. The Controller tracks Router configuration and TLS certificate volume mounts.
+
+Each Controller and each Edgelet node has its own Router instance by default. The Controller hosts an **interior** Router. Each Edgelet node hosts an **edge** Router connected to the interior Router.
+
+You can change the topology. For example, you can share edge Routers between nodes or run interior Routers on Edgelet nodes instead of the Controller.
+
+<FlavorYaml title="Edge Router on an Edgelet node">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: foo
+spec:
+  ...
+  config:
+    ...
+    upstreamRouter:
+      - default-router
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+`}</FlavorYaml>
+
+<FlavorYaml title="Interior Router on an Edgelet node">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-2
+spec:
+  ...
+  config:
+    ...
+    upstreamRouter:
+      - default-router
+    routerConfig:
+      routerMode: interior
+      messagingPort: 5671
+      edgeRouterPort: 45671
+      interRouterPort: 55671
+`}</FlavorYaml>
+
+<FlavorYaml title="Edge Router with two upstream interior Routers">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: foo
+spec:
+  ...
+  config:
+    ...
+    upstreamRouter:
+      - default-router
+      - edge-2
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+`}</FlavorYaml>
+
+:::tip[Want to know more about Router?]
+
+See the [Router platform component](/learn/platform-components/router) page.
+
+Source code: <GitHubRepoLink repo="Router">Router</GitHubRepoLink>.
+
+:::
+
+## NATS
+
+**NATS** is the default messaging infrastructure for **<ProductName />**. It provides pub/sub, request/reply, key-value storage, and JetStream. The platform ships a NATS wrapper image that pins upstream **NATS Server 2.15.0**. When enabled, NATS instances deploy with TLS by default.
+
+The Controller tracks NATS configuration, TLS certificates, account JWTs, and creds. Applications and microservices get NATS access through **NATS Account Rules** (application level) and **NATS User Rules** (microservice level). The Controller provisions credentials so you do not manage JWTs and cred files manually.
+
+Each Controller and each Edgelet node has its own NATS instance by default. The Controller runs NATS in **server** mode and forms a NATS cluster with all server-mode instances. Each Edgelet node runs NATS in **leaf** mode by default. Leaf nodes connect to upstream server-mode instances.
+
+You can run NATS in **server** mode on an Edgelet node and add it to the NATS cluster.
+
+<FlavorYaml title="Leaf NATS on an Edgelet node">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: foo
+spec:
+  ...
+  config:
+    ...
+    upstreamNatsServer:
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+      natsLeafPort: 7422
+      natsMqttPort: 8883
+      natsHttpPort: 8222
+      jsStorageSize: 10g
+      jsMemoryStoreSize: 1g
+`}</FlavorYaml>
+
+<FlavorYaml title="Server NATS on an Edgelet node">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-2
+spec:
+  ...
+  config:
+    ...
+    natsConfig:
+      natsMode: server
+      natsServerPort: 4222
+      natsLeafPort: 7422
+      natsClusterPort: 6222
+      natsMqttPort: 8883
+      natsHttpPort: 8222
+      jsStorageSize: 10g
+      jsMemoryStoreSize: 1g
+`}</FlavorYaml>
+
+<FlavorYaml title="Leaf NATS with two upstream servers">{`---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: foo
+spec:
+  ...
+  config:
+    ...
+    upstreamNatsServer:
+      - default-nats-hub
+      - edge-2
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+      natsLeafPort: 7422
+      natsMqttPort: 8883
+      natsHttpPort: 8222
+      jsStorageSize: 10g
+      jsMemoryStoreSize: 1g
+`}</FlavorYaml>
+
+:::tip[Want to know more about NATS?]
+
+To enable and configure NATS on a Control Plane, see [Control plane in Learn](/learn/control-plane).
+
+For access control, see [NATS Account Rule](/security/nats-account-rule) and [NATS User Rule](/security/nats-user-rule).
+
+See also the [NATS Server platform component](/learn/platform-components/nats-server) page.
+
+:::
+
+## Remote Control Plane
+
+The diagram below shows a remote Control Plane deployment. Two Edgelet nodes each run one microservice. Each node has its own edge Router connected to the interior Router on the Controller.
+
+<ArchitectureDiagram
+  train="3.9"
+  name="Remote_ControlPlane"
+  alt="Edge Compute Network with remote Control Plane, Router layout, and microservice communication"
+  caption={
+    <>
+      Remote Control Plane with default Router layout and microservice communication between two Edgelet nodes.
+      Click the image to view full size.
+    </>
+  }
+/>
+
+Routers communicate over AMQP. Routers also create TCP bridges for the service mesh.
+
+Next, we show how the Control Plane looks when part of the ECN runs on Kubernetes.
+
+## Operator
+
+The **Operator** (ioFog Operator **v3.9.0**) manages Kubernetes Custom Resources for **<ProductName />**. It reconciles Control Plane and related CRDs.
+
+When you deploy **<ProductName />** on Kubernetes with **<CliName />** or Helm, the Operator is the first component installed in the namespace. When you create a Control Plane custom resource, the Operator deploys the ECN components in that namespace.
+
+:::tip[Want to know more about the Operator?]
+
+See the [Operator platform component](/learn/platform-components/operator) page.
+
+Source code: <GitHubRepoLink repo="iofog-operator">iofog-operator</GitHubRepoLink>.
+
+:::
+
+## Kubernetes Control Plane
+
+The diagram below shows an ECN with the Control Plane on Kubernetes. Edgelet nodes still run outside the cluster on edge hardware.
+
+**<ProductName />** does not schedule microservices on Kubernetes cluster nodes. Cluster nodes do not act as Edgelet nodes.
+
+<ArchitectureDiagram
+  train="3.9"
+  name="K8S_ControlPlane"
+  alt="Edge Compute Network with Control Plane on Kubernetes and Edgelet nodes at the edge"
+  caption={
+    <>Control Plane on Kubernetes with Edgelet nodes at the edge. Click the image to view full size.</>
+  }
+/>
+
+## <CliName />
+
+**<CliName />** is a multi-platform CLI for ECNs and Edgelet node deployments.
+
+**<CliName />** talks to the Controller over REST and WebSocket APIs. It provisions Edgelet nodes over SSH and manages Kubernetes clusters through `kubeconfig`, similar to how `kubectl` connects to a cluster.
+
+:::tip[Want to know more about the CLI?]
+
+Start with the <CliDocsLink path="/introduction"><CliName /> introduction</CliDocsLink>.
+
+After nodes are deployed, see [Edgelet node management](/get-started/edgelet-nodes/introduction).
+
+For YAML kinds and command reference, see [Cluster resources index](/reference).
+
+Source code: <CliGitHubRepoLink />.
+
+:::
+
+:::info[Where to go from here?]
+
+- Deploy locally: [Quick start with local deployment](/get-started/quick-start-local).
+- Production remote or Kubernetes deployment: [Platform deployment](/get-started/deploy/introduction).
+- Upgrade from v3.8: [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9).
+- Developer walkthrough: [Acme Smart Plant tutorial](/tutorials/acme-smart-plant).
+
+:::
+
+<EditPageAdmonition />

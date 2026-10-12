@@ -1,7 +1,7 @@
 ---
-title: Upgrading to v3.9.0
-description: In-place platform train upgrade from PoT v3.8.0 to v3.9.0. Control plane, Edgelet 1.1, CLI, and image pins on the same Controller database.
-keywords: [upgrade, v3.9, v3.8, edgelet, control plane, potctl, in-place]
+title: Upgrading to v3.9.1
+description: In-place upgrade to platform train v3.9.1 from v3.9.0 or v3.8.0. Same Controller database. Security patch pins for Controller, CLI, Edgelet, NATS, and Router.
+keywords: [upgrade, v3.9.1, v3.9.0, v3.8, edgelet, control plane, in-place]
 slug: /release-notes/upgrading-to-v3-9
 ---
 
@@ -9,49 +9,79 @@ import CliBlock from '@site/src/components/CliBlock';
 
 import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
 
-# Upgrading to v3.9.0
+# Upgrading to v3.9.1
 
-Platform train **v3.9.0** supports an **in-place upgrade** from **v3.8.0**. You keep the same Controller database, refresh control plane image tags, roll **Edgelet v1.1.0** on fleet nodes, and upgrade **{CLI_NAME}** on your workstation.
+Platform train **v3.9.1** supports an **in-place upgrade** from **v3.9.0** and from **v3.8.0**. You keep the same Controller database.
 
-:::info[Not supported: v3.7 or older → v3.9]
+From **v3.9.0** this patch is a tag bump. There is no schema or API change. From **v3.8.0** you use the same **v3.9.1** tags, and you also apply the v3.9 registry and catalog changes below.
 
-There is no direct upgrade from **v3.7.x**, **v1.6.x**, or legacy Java Agent deployments to **v3.9.0**. Move to **v3.8.0** first with a greenfield Control Plane and Edgelet-only nodes. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8) and the [Documentation archive](/reference/documentation-archive).
+:::info[Not supported: v3.7 or older → v3.9.1]
+
+There is no direct upgrade from **v3.7.x**, **v1.6.x**, or legacy Java Agent deployments to **v3.9.1**. Move to **v3.8.0** first with a greenfield Control Plane and Edgelet-only nodes. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8) and the [Documentation archive](/reference/documentation-archive).
 
 :::
 
 ## Before you start
 
-1. Read [What's New](/release-notes/whats-new) for YAML and API changes that affect registries, microservices, and Edgelet node manifests.
+1. Read [What's New](/release-notes/whats-new).
 2. Export or commit your control plane YAML, `Agent` manifests, and application YAML.
-3. Plan a maintenance window. Upgrade control plane components first, then fleet Edgelet nodes.
+3. Plan a maintenance window. Upgrade the control plane first, then fleet Edgelet nodes.
 4. Air-gapped sites: stage wrapper images before you bump tags. See [Airgap deployment](/get-started/deploy/airgap-deployment) and [Offline images](/learn/config/offline-images).
 
-Default pins for **v3.9.0** are listed on [Control plane](/learn/control-plane#default-image-pins-v390).
+Default pins are on [Control plane](/learn/control-plane#default-image-pins-v390).
+
+| Component | v3.9.1 pin |
+| --------- | ---------- |
+| {CLI_NAME} | v3.9.1 |
+| Controller | image `3.9.1` |
+| Operator (Kubernetes) | image `3.9.1` (Helm chart `3.9.1`) |
+| Router | image `3.9.1` |
+| NATS | image `2.15.1` |
+| Edgelet | v1.1.1 (image `1.1.1`) |
+| EdgeOps Console | v1.1.1, embedded in the Controller image |
+
+Container image tags omit the `v` prefix. The CLI binary and the Edgelet binary keep the `v`.
 
 ## Supported upgrade path
 
 | You are on | Action |
 | ---------- | ------ |
-| **v3.8.0** | Follow the steps below (same database). |
+| **v3.9.0** | Tag bump below. Skip the v3.8 workload review. |
+| **v3.8.0** | Same tag bump, then the [v3.8 review](#if-you-are-on-v380). |
 | **v3.7.x or older** | Greenfield to **v3.8.0** first. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8). |
-| **New install** | Deploy **v3.9.0** directly. See [Getting started](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction). |
+| **New install** | Deploy **v3.9.1** directly. See [Getting started](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction). |
 
 ## Recommended order
 
-Keep **Controller**, **Operator** (Kubernetes), **Router**, **NATS**, system **Edgelet** on Controller hosts, fleet **Edgelet** nodes, and **{CLI_NAME}** on the same train.
+Keep **Controller**, **Operator** (Kubernetes), **Router**, **NATS**, system **Edgelet** on Controller hosts, fleet **Edgelet** nodes, and **{CLI_NAME}** on **v3.9.1**.
 
-1. **Upgrade {CLI_NAME}** on your workstation to **v3.9.0**.
-2. **Bump image tags and Edgelet pins** in control plane YAML (`Controller`, `Router`, `NATS`, `spec.systemAgent`, Console pin if overridden). Use the defaults on [Control plane](/learn/control-plane#default-image-pins-v390).
-3. **Re-apply control plane YAML** with deploy:
+1. **Upgrade {CLI_NAME}** on your workstation to **v3.9.1**.
+2. **Bump image tags and the Edgelet pin** in control plane YAML (`Controller`, `Router`, `NATS`, `spec.systemAgent`). Use the table above.
+3. **Re-apply control plane YAML**:
 
 <CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
 
-On Kubernetes, upgrade the operator release or Helm chart on the **3.9.0** train, then apply the updated `KubernetesControlPlane` manifest.
+On Kubernetes, upgrade the operator or Helm chart to **3.9.1**, then apply the updated `KubernetesControlPlane` manifest.
 
-4. **Upgrade fleet Edgelet nodes** to **1.1.0** after the control plane is healthy. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet). Controller hosts use the system node path in step 3.
-5. **Review workloads and config** in EdgeOps Console or with `describe`. Update registry rows to **`type: oci`** or **`type: hf`**, refresh microservice **`container`** blocks if you adopt new v3.9 fields, and deploy **Model** / **Knowledge** catalog rows before binding them in microservices.
+4. **Upgrade fleet Edgelet nodes** to **v1.1.1** after the control plane is healthy. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
 
-Detailed Console and CLI notes live in [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train).
+```bash
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.1
+```
+
+That host upgrade stays on the CLI flavor's Edgelet repository. Controller hosts pick up the system Edgelet pin in step 3.
+
+5. If you started on **v3.8.0**, do the review in the next section. If you started on **v3.9.0**, skip it.
+
+## If you are on v3.8.0
+
+v3.9 removed registry fields **`requiresCert`**, **`certificate`**, and **`isSecure`**. Use **`type`** (`oci` or `hf`), optional **`ca`**, and **`insecure`**.
+
+Agent YAML no longer has **`deviceScanFrequency`**, **`bluetoothEnabled`**, or **`abstractedHardwareEnabled`**. Use **`edgeGuardFrequency`** when you need attestation.
+
+Deploy **Model** and **Knowledge** catalog rows before you bind them in microservices. New **`spec.container`** fields are optional.
+
+Details: [What's New](/release-notes/whats-new), [Registries](/learn/config/registries), [Microservices](/learn/workloads/microservices).
 
 ## Verify
 
@@ -59,18 +89,18 @@ Detailed Console and CLI notes live in [Upgrade the platform train](/learn/contr
 {{CLI_NAME}} describe controller CONTROLLER_NAME
 {{CLI_NAME}} get agents`}</CliBlock>
 
-The console Overview shows control plane status.
+The console Overview shows control plane status. The API tab loads **Scalar** for the Controller API.
 
 ## Rollback
 
-If you must roll back, redeploy the previous control plane YAML tags and Edgelet pins, then downgrade fleet nodes with the same [upgrade agent](/learn/edgelet-nodes#upgrade-and-rollback-edgelet) flow targeting the prior Edgelet version. Test rollback in a lab ECN before you change production.
+Redeploy the previous control plane tags and Edgelet pin, then downgrade fleet nodes with [upgrade agent](/learn/edgelet-nodes#upgrade-and-rollback-edgelet) aimed at the prior Edgelet version. From **v3.9.1** that prior pin is **v1.1.0** if you came from **v3.9.0**, or **v1.0.0** if you came from **v3.8.0**. Test rollback in a lab ECN before you change production.
 
 ## Related guides
 
 - [What's New in {PRODUCT_NAME}](/release-notes/whats-new)
+- [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train)
 - [Edgelet nodes](/learn/edgelet-nodes)
 - [Registries](/learn/config/registries)
-- [Microservices](/learn/workloads/microservices)
 - [AI Model Catalog](/learn/config/ai-model-catalog)
 - [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog)
 

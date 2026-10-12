@@ -11,6 +11,29 @@ const FLAVOR =
 const DOCS_BASE_PATH = FLAVOR === 'iofog' ? '/iofog' : '';
 const CLI_NAME = FLAVOR === 'datasance' ? 'potctl' : 'iofogctl';
 const PRODUCT_NAME = FLAVOR === 'datasance' ? 'Datasance PoT' : 'Eclipse ioFog';
+const REGISTRY = `ghcr.io/${FLAVOR === 'datasance' ? 'datasance' : 'eclipse-iofog'}`;
+const API_VERSION = FLAVOR === 'datasance' ? 'datasance.com/v3' : 'iofog.org/v3';
+/** Keep in step with src/config/distribution.ts. Current docs only; snapshots stay literal. */
+const PLATFORM_TRAIN = '3.9.1';
+const EDGELET_VERSION = '1.1.1';
+const GITHUB_ORG_URL =
+  FLAVOR === 'datasance'
+    ? 'https://github.com/Datasance'
+    : 'https://github.com/eclipse-iofog';
+const HELM_REPO_URL =
+  FLAVOR === 'datasance'
+    ? 'https://datasance.github.io/iofog-operator'
+    : 'https://eclipse-iofog.github.io/iofog-operator';
+const OPERATOR_CHART_README_URL = `${GITHUB_ORG_URL}/iofog-operator/blob/develop/charts/iofog-operator/README.md`;
+const OPERATOR_CHART_VALUES_SCHEMA_URL = OPERATOR_CHART_README_URL.replace(
+  '/README.md',
+  '/values.schema.json',
+);
+const CONTROLPLANE_CRD_RESOURCE =
+  FLAVOR === 'datasance' ? 'controlplanes.datasance.com' : 'controlplanes.iofog.org';
+const CLI_REPO_EDGELET_ASSETS_URL = `${GITHUB_ORG_URL}/${CLI_NAME}/tree/develop/assets/edgelet`;
+/** Download page export. Matches the current platform train. */
+const CLI_VERSION = PLATFORM_TRAIN;
 
 /** @param {string} docId */
 function docFilePath(docId) {
@@ -74,10 +97,25 @@ function mdxToPlainMarkdown(raw) {
       .replace(/^import .+$/gm, '')
       .replace(/^export .+$/gm, '')
       .replace(/<\/?[A-Z][A-Za-z0-9]*[^>]*>/g, '')
+      .replace(/\{\{CLI_NAME\}\}/g, CLI_NAME)
       .replace(/\{CLI_NAME\}/g, CLI_NAME)
       .replace(/\{PRODUCT_NAME\}/g, PRODUCT_NAME)
-      .replace(/\{REGISTRY\}/g, `ghcr.io/${FLAVOR === 'datasance' ? 'datasance' : 'eclipse-iofog'}`)
-      .replace(/\{API_VERSION\}/g, FLAVOR === 'datasance' ? 'datasance.com/v3' : 'iofog.org/v3')
+      .replace(/\{\{REGISTRY\}\}/g, REGISTRY)
+      .replace(/\{REGISTRY\}/g, REGISTRY)
+      .replace(/\{\{API_VERSION\}\}/g, API_VERSION)
+      .replace(/\{API_VERSION\}/g, API_VERSION)
+      .replace(/\{\{PLATFORM_TRAIN\}\}/g, PLATFORM_TRAIN)
+      .replace(/\{PLATFORM_TRAIN\}/g, PLATFORM_TRAIN)
+      .replace(/\{\{EDGELET_VERSION\}\}/g, EDGELET_VERSION)
+      .replace(/\{EDGELET_VERSION\}/g, EDGELET_VERSION)
+      .replace(/\{OPERATOR_CHART_VERSION\}/g, PLATFORM_TRAIN)
+      .replace(/\{HELM_REPO_URL\}/g, HELM_REPO_URL)
+      .replace(/\{OPERATOR_CHART_README_URL\}/g, OPERATOR_CHART_README_URL)
+      .replace(/\{OPERATOR_CHART_VALUES_SCHEMA_URL\}/g, OPERATOR_CHART_VALUES_SCHEMA_URL)
+      .replace(/\{CONTROLPLANE_CRD_RESOURCE\}/g, CONTROLPLANE_CRD_RESOURCE)
+      .replace(/\{CLI_REPO_EDGELET_ASSETS_URL\}/g, CLI_REPO_EDGELET_ASSETS_URL)
+      .replace(/\{GITHUB_ORG_URL\}/g, GITHUB_ORG_URL)
+      .replace(/\{CLI_VERSION\}/g, CLI_VERSION)
       .replace(/\n{3,}/g, '\n\n')
       .trim()
   );

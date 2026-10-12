@@ -1,0 +1,166 @@
+---
+title: Production monitoring
+description: Deploy sensor-simulator, smart-anomaly-detector, and diagnostic-service on site-a.
+keywords: [tutorial, acme smart plant, production-monitoring, sensor-simulator, site-a]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Production monitoring
+
+## Goal
+
+Deploy Application `production-monitoring` on **site-a**. You can change `agent.name`.
+
+Three microservices start: sensor-simulator, smart-anomaly-detector, and diagnostic-service. User rules and the export rule are already in place.
+
+The file is `deploy/steps/03-application-production-monitoring.yaml`.
+
+## YAML
+
+<FlavorYaml title="production-monitoring">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: production-monitoring
+spec:
+  natsConfig:
+    natsAccess: true
+    natsRule: production-monitoring-export
+  microservices:
+    - name: sensor-simulator
+      agent:
+        name: site-a # override for your ECN agent name
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/sensor-simulator:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/sensor-simulator:1.2.0
+        riscv64: ghcr.io/datasance/pot-edge-patterns/sensor-simulator:1.2.0
+        arm: ghcr.io/datasance/pot-edge-patterns/sensor-simulator:1.2.0
+      natsConfig:
+        natsAccess: true
+        natsRule: sensor-publisher
+      container:
+        env:
+          - key: TELEMETRY_MODE
+            value: replay
+          - key: SITE_ID
+            value: plant-01
+          - key: REPLAY_CSV_PATH
+            value: /assets/manufacturing/replay.csv
+          - key: REPLAY_SEGMENTS_PATH
+            value: /assets/manufacturing/segments.json
+          - key: REPLAY_SPEED
+            value: "1"
+          - key: REPLAY_LOOP
+            value: "true"
+      schedule: 10
+
+    - name: smart-anomaly-detector
+      agent:
+        name: site-a # override for your ECN agent name
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/smart-anomaly-detector:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/smart-anomaly-detector:1.2.0
+        riscv64: ghcr.io/datasance/pot-edge-patterns/smart-anomaly-detector:1.2.0
+        arm: ghcr.io/datasance/pot-edge-patterns/smart-anomaly-detector:1.2.0
+      natsConfig:
+        natsAccess: true
+        natsRule: anomaly-processor
+      container:
+        env:
+          - key: SUBSCRIBE_SUBJECT
+            value: telemetry.machine.>
+          - key: TEMP_THRESHOLD
+            value: "90"
+          - key: VIBRATION_THRESHOLD
+            value: "10"
+          - key: ERROR_RATE_THRESHOLD
+            value: "15"
+          - key: JOURNAL_STREAM
+            value: JOURNAL_PRODUCTION
+          - key: DEBOUNCE_SEC
+            value: "30"
+      schedule: 20
+
+    - name: diagnostic-service
+      agent:
+        name: site-a # override for your ECN agent name
+      images:
+        registry: 1
+        amd64: ghcr.io/datasance/pot-edge-patterns/diagnostic-service:1.2.0
+        arm64: ghcr.io/datasance/pot-edge-patterns/diagnostic-service:1.2.0
+        riscv64: ghcr.io/datasance/pot-edge-patterns/diagnostic-service:1.2.0
+        arm: ghcr.io/datasance/pot-edge-patterns/diagnostic-service:1.2.0
+      natsConfig:
+        natsAccess: false
+      container:
+        ports:
+          - internal: 8080
+            protocol: tcp
+            external: 8081
+      schedule: 30
+
+```
+
+</FlavorYaml>
+
+This creates the **production-monitoring** NATS account tied to the export rule.
+
+### sensor-simulator
+
+Image `ghcr.io/datasance/pot-edge-patterns/sensor-simulator:1.2.0`. User rule `sensor-publisher`.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `TELEMETRY_MODE` | `replay` | Replay the manufacturing CSV |
+| `SITE_ID` | `plant-01` | Site label in the JSON |
+| `REPLAY_LOOP` | `true` | Repeat after the last row |
+
+You can set `REPLAY_SEGMENT` to `fault-high-vibration-m002`, `fault-overheating-m003`, or `fault-quality-m004`.
+
+### smart-anomaly-detector
+
+Image `ghcr.io/datasance/pot-edge-patterns/smart-anomaly-detector:1.2.0`. User rule `anomaly-processor`.
+
+It subscribes to `telemetry.machine.>`, publishes `notify.alerts.>` and `journal.events.>`, and writes stream `JOURNAL_PRODUCTION`.
+
+### diagnostic-service
+
+Image `ghcr.io/datasance/pot-edge-patterns/diagnostic-service:1.2.0`. `natsAccess` is false. Container port 8080 is published as external port **8081**. The dashboard reaches it later through a Router Service.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/03-application-production-monitoring.yaml`}</CliBlock>
+
+## What you should see {#verify}
+
+<CliBlock>{`{{CLI_NAME}} get microservices
+{{CLI_NAME}} describe microservice sensor-simulator`}</CliBlock>
+
+Logs show `machineId` **M001** through **M004** on `telemetry.machine.`.
+
+<CliBlock>{`{{CLI_NAME}} describe microservice smart-anomaly-detector`}</CliBlock>
+
+`natsAccess` is true and `natsRule` is `anomaly-processor`.
+
+The Controller has created the plant NATS account. Copy its id on the next page before you deploy the import rule.
+
+## Common mistakes
+
+An image tag other than `:1.2.0`.
+
+`agent.name` is `site-a`, but that Edgelet node is not provisioned.
+
+The export rule is missing, so the Application cannot bind `production-monitoring-export`.
+
+## Next
+
+[Account public key](/tutorials/acme-smart-plant/account-public-key)
+
+<EditPageAdmonition />

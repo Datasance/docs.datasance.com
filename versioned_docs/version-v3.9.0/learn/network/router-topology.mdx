@@ -1,0 +1,57 @@
+---
+title: Router topology
+description: How an Edgelet node joins the router fabric, and where default-router comes from on Kubernetes and remote control planes.
+keywords: [router, router mode, default router, interior, edge, upstream]
+---
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Router topology
+
+This page is how the fabric is declared: the router role, the upstream list, and where `default-router` comes from.
+
+Control plane install is separate. See [Kubernetes](/learn/control-plane/kubernetes) and [Remote](/learn/control-plane/remote).
+
+Listeners, certificates, upstream fields on the node spec, and the system microservice `system-<agentName>/router` are on [Router fabric](/learn/edgelet-nodes/router-fabric). A Service uses this fabric for TCP. See [TCP bridge](/learn/network/interconnection).
+
+Application messaging is a different fabric. See [NATS fabric](/learn/edgelet-nodes/nats-fabric).
+
+## `routerMode`
+
+| Role | What it is | Ports the Controller opens |
+| ---- | ---------- | -------------------------- |
+| `edge` | Workload node. Connects inward. Does not accept other routers. | AMQPS `5671` |
+| `interior` | Accepts other routers. | AMQPS `5671`, edge `45671`, inter-router `55671` |
+| `none` | No router process. | No router listeners |
+
+`host` is required unless the role is `none`.
+
+Setting `routerMode: interior` yourself also requires `edgeRouterPort` and `interRouterPort` on create. On a remote control plane, promotion of the first node happens after that check. A first node that omits the role still receives `45671` and `55671`.
+
+`routerMode: none` cannot host a `microservice` or `agent` Service. See [Services](/learn/network/services).
+
+## Upstreams
+
+Omit `upstreamRouters` and the Controller attaches the node to `default-router` and to routers on system Edgelet nodes.
+
+An edge router cannot be an upstream. Name an upstream by node uuid, node name, or `default-router`.
+
+## System Edgelet node
+
+A system Edgelet node is `interior`.
+
+On a remote control plane, the first Edgelet node in an empty cluster is promoted. The Controller sets `routerMode: interior` on that create, including when the request asked for another role. The NATS role on that node is on [NATS fabric](/learn/edgelet-nodes/nats-fabric).
+
+On Kubernetes, creating an Edgelet node with `isSystem: true` is rejected. The interior router is the platform router.
+
+## Hub
+
+### Kubernetes
+
+The operator creates the Router deployment and registers `default-router`. Later Edgelet nodes dial the host and ports stored on the Controller. See [Kubernetes](/learn/control-plane/kubernetes).
+
+### Remote
+
+Edgelet on the system Edgelet node runs the controller microservice. The Controller provisions `router` and `nats` on that node. The router is `default-router` when no default router exists yet. See [Remote](/learn/control-plane/remote) and [NATS fabric](/learn/edgelet-nodes/nats-fabric).
+
+<EditPageAdmonition />

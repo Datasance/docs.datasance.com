@@ -1,0 +1,87 @@
+---
+title: Config maps
+description: kind ConfigMap holds non-secret strings. Microservices read them with valueFromConfigMap or a volume mount.
+keywords: [config map, configmap, valueFromConfigMap, volume mount, yaml]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Config maps
+
+A **config map** holds non-secret configuration strings on the Controller. Keys live in a root `data` block, beside `metadata`, not under `spec`.
+
+The short map is [Config, secrets, and volumes](/get-started/workloads/config). Fields are on [ConfigMap fields](/reference/yaml/config-map).
+
+Passwords and private keys belong in a [Secret](/learn/config/secrets).
+
+## When to use it
+
+Use a config map for feature flags, log levels, and endpoints. Deploy it before any [volume mount](/learn/config/volume-mounts) or microservice that names it.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f configmap.yaml -n my-ecn`}</CliBlock>
+
+Deploy looks up `metadata.name`. A missing name creates the config map. The same name updates `data`. There is no `attach` on the config map itself. Nodes receive the files when a volume mount that names it is linked.
+
+<FlavorYaml title="configmap.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ConfigMap
+metadata:
+  name: app-settings
+  namespace: my-ecn
+data:
+  log_level: info
+  features: '{"darkMode":true}'
+```
+
+</FlavorYaml>
+
+## How a microservice uses it
+
+Set `valueFromConfigMap` to `configmap-name/key`.
+
+<FlavorYaml title="env.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  container:
+    env:
+      - key: LOG_LEVEL
+        valueFromConfigMap: app-settings/log_level
+```
+
+</FlavorYaml>
+
+To mount the keys as files, create a volume mount with `spec.configMapName` set to this name, then use `type: volumeMount` on the microservice. See [Volume mounts](/learn/config/volume-mounts) and [Microservice fields](/reference/yaml/microservice).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get configmaps -n my-ecn
+{{CLI_NAME}} describe configmap app-settings -n my-ecn
+{{CLI_NAME}} delete configmap app-settings -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_configmap`}>describe configmap</Link> can print long values as YAML literal blocks. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_configmap`}>delete configmap</Link> takes the name.
+
+## Console
+
+**Config → ConfigMaps** edits structured data or raw YAML. See [Configuration](/get-started/edgeops-console/configuration).
+
+## Related
+
+- [Secrets](/learn/config/secrets)
+- [Volume mounts](/learn/config/volume-mounts)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

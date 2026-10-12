@@ -184,9 +184,9 @@ Controller replicas greater than 1 require an external database (`database.host`
 | Field | Default | Notes |
 | ----- | ------- | ----- |
 | `pullSecret` | none | Pod `imagePullSecrets` |
-| `controller` | Operator build default | `controller:3.9.0` on this train when the CLI fills it |
+| `controller` | Operator build default | `controller:3.9.1` on this train when the CLI fills it |
 | `router` | Operator build default | Also `ROUTER_IMAGE_1` through `ROUTER_IMAGE_4` on the Controller |
-| `nats` | Operator build default on the NATS pod | Also `NATS_IMAGE_1` through `NATS_IMAGE_4` on the Controller when NATS is enabled. Image tag `2.15.0` on this train. |
+| `nats` | Operator build default on the NATS pod | Also `NATS_IMAGE_1` through `NATS_IMAGE_4` on the Controller when NATS is enabled. Image tag `2.15.1` on this train. |
 
 The CLI-only operator image is `spec.images.operator` on the user file. It is not a field on this custom resource. See [spec.images](/reference/yaml/kubernetes-control-plane#specimages).
 

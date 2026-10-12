@@ -1,0 +1,115 @@
+---
+title: Getting Familiar
+description: Learn core potctl or iofogctl commands, namespaces, and ECN introspection.
+keywords: [potctl, iofogctl, cli, namespaces, commands]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Getting Familiar With {CLI_NAME}
+
+Run <code>{CLI_NAME}</code> without arguments to list top-level commands. v3.9.0 extends `attach` and `detach` with **model**, **knowledge**, and **runtimeclass** targets for fleet catalog distribution. v3.8.0 added `reconcile` and auth-group helpers. The `legacy` and `rename` subcommands from v3.7 are removed.
+
+<CliBlock>{`{{CLI_NAME}} version`}</CliBlock>
+
+Top-level commands in v3.9.0:
+
+- `attach`, `completion`, `configure`, `connect`, `create`, `delete`, `deploy`, `describe`, `detach`, `disconnect`, `exec`, `get`, `logs`, `move`, `nats`, `prune`, `rebuild`, `reconcile`, `rollback`, `start`, `stop`, `upgrade`, `version`, `view`
+
+Full per-command docs live in the <a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>{CLI_NAME} CLI Reference</a>.
+
+Try `--help` on any command:
+
+<CliBlock>{`{{CLI_NAME}} deploy --help
+{{CLI_NAME}} create --help
+{{CLI_NAME}} connect --help
+{{CLI_NAME}} get --help
+{{CLI_NAME}} attach --help`}</CliBlock>
+
+## Working with Namespaces
+
+All actions are scoped to a single namespace. The default namespace (`default`) is used when you omit `-n`. On Kubernetes, a <code>{CLI_NAME}</code> namespace maps to a Kubernetes namespace when you deploy a Control Plane with Helm or <code>{CLI_NAME}</code>.
+
+<CliBlock>{`{{CLI_NAME}} create namespace zoo-1
+{{CLI_NAME}} get namespaces
+{{CLI_NAME}} delete namespace zoo-1`}</CliBlock>
+
+### Configuring your current namespace
+
+<CliBlock>{`{{CLI_NAME}} configure current-namespace NAMESPACE
+{{CLI_NAME}} configure current-namespace default`}</CliBlock>
+
+## View Edge Compute Network Details
+
+Once connected to a live ECN, list resources with `get`:
+
+<CliBlock>{`{{CLI_NAME}} get controllers
+{{CLI_NAME}} get agents
+{{CLI_NAME}} get applications
+{{CLI_NAME}} get microservices
+{{CLI_NAME}} get all`}</CliBlock>
+
+For detailed status, use `describe`:
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane
+{{CLI_NAME}} describe controller alpaca-1
+{{CLI_NAME}} describe agent kiwi-1
+{{CLI_NAME}} describe application health-care-app
+{{CLI_NAME}} describe microservice health-care-ui`}</CliBlock>
+
+## Check log output of components
+
+You need SSH access to remote resources for this feature.
+
+<CliBlock>{`{{CLI_NAME}} logs controller NAME
+{{CLI_NAME}} logs agent NAME
+{{CLI_NAME}} logs microservice NAME`}</CliBlock>
+
+## Move microservices to another Edgelet node
+
+<CliBlock>{`{{CLI_NAME}} move microservice NAME AGENT_NAME`}</CliBlock>
+
+## Prune images on an Edgelet node
+
+<CliBlock>{`{{CLI_NAME}} prune agent AGENT_NAME`}</CliBlock>
+
+See [Image and disk pruning](/get-started/edgelet-nodes/image-pruning) for scheduled `pruningFrequency` and on-device `edgelet system prune`.
+
+## Detach / Attach an Edgelet node
+
+Detaching an Edgelet node removes its Controller connection and stops microservices on that node. See [Attach and detach](/get-started/edgelet-nodes/attach-detach) for the full workflow.
+
+<CliBlock>{`{{CLI_NAME}} detach agent AGENT_NAME
+{{CLI_NAME}} attach agent AGENT_NAME
+{{CLI_NAME}} get all --detached`}</CliBlock>
+
+Move an Edgelet node between namespaces:
+
+<CliBlock>{`{{CLI_NAME}} move agent agent-1 namespace-2 -n namespace-1`}</CliBlock>
+
+## Attach catalog assets to Edgelet nodes
+
+Deploy **Model**, **Knowledge**, and **RuntimeClass** resources with `deploy`, then attach them to one or more Edgelet nodes. Use matching `detach` and `delete` commands to remove distribution or cluster objects.
+
+<CliBlock>{`{{CLI_NAME}} get models
+{{CLI_NAME}} describe model wafer-defect
+{{CLI_NAME}} attach model wafer-defect edge-c-1 edge-c-2
+{{CLI_NAME}} get knowledge
+{{CLI_NAME}} attach knowledge my-kb edge-c-1
+{{CLI_NAME}} attach runtimeclass gpu-runtime edge-c-1`}</CliBlock>
+
+See [AI model catalog](/learn/config/ai-model-catalog), [AI knowledge catalog](/learn/config/ai-knowledge-catalog), and [Runtime classes](/learn/config/runtime-classes).
+
+:::info[Next steps?]
+  <ul>
+    <li><a href="/get-started/edgelet-nodes/introduction">Edgelet node management</a> - configuration, pruning, upgrade, reconcile.</li>
+    <li><a href="/get-started/cli/resource-management">Resource management with {CLI_NAME}.</a></li>
+    <li><a href={`/${CLI_NAME === 'potctl' ? 'potctl' : 'iofogctl'}/cli/${CLI_NAME}`}>CLI reference.</a></li>
+    <li><a href="/reference">Cluster resources index.</a></li>
+  </ul>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

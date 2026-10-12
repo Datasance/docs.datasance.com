@@ -1,0 +1,86 @@
+---
+title: Model fields
+description: Field reference for kind Model. Repo, registry, revision, files, and format.
+keywords: [model, yaml, fields, registry, repo, revision, gguf]
+slug: /reference/yaml/model
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Model fields
+
+Reference for `kind: Model`. Attach and microservice binding are on [AI Model Catalog](/learn/config/ai-model-catalog).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Model # required, string
+metadata:
+  name: defect-weights # required, string. Lowercase alphanumeric
+  namespace: my-ecn # no, string
+spec:
+  repo: org/defect-weights # required, string
+  registry: remote # one of, string. remote is 1, local is 2, or a numeric id as a string. Keep one of registry or registryId, or set both to the same id
+  registryId: 1 # one of, int
+  revision: "1.0.0" # no, string. Tag, digest, or sha256
+  files: # no, list of string
+    - weights.gguf
+  format: gguf # no, string
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+spec:
+  uuid: "<uuid>" # describe only, string
+status:
+  linkedAgents: [] # describe only
+```
+
+
+`metadata.name` is required. Use a lowercase alphanumeric name.
+
+## Fields
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `repo` | string | Yes | Artifact path. Meaning depends on `format` and the registry type. |
+| `registry` | string | One of | `remote` (id 1), `local` (id 2), or a numeric id as a string. |
+| `registryId` | int | One of | Numeric Controller registry id. |
+| `revision` | string | No | Tag, digest, or `sha256:…`. |
+| `files` | string list | No | Subpaths inside the repo. |
+| `format` | string | No | Format hint, such as `gguf`. The Controller validates it. |
+| `uuid` | string | Describe only | Omit on create and update. |
+
+When both `registry` and `registryId` are set, they must be the same id.
+
+| Input | Id |
+| ----- | -- |
+| `registry: remote` | 1 |
+| `registry: local` | 2 |
+| `registry: "5"` | 5 |
+| `registryId: 5` | 5 |
+
+## Validation
+
+| Condition | Error |
+| --------- | ----- |
+| Missing `metadata.name` | Name must be specified. |
+| Invalid name | Lowercase alphanumeric. |
+| Missing `repo` | repo must be specified. |
+| Missing registry | spec.registry or spec.registryId must be specified. |
+| Conflicting registry fields | The two fields must refer to the same registry. |
+
+## Describe
+
+`describe model NAME` returns `spec` (`uuid`, `repo`, `revision`, `registryId`, `files`, `format`) and `status.linkedAgents`.
+
+`attach model NAME AGENT…` and `detach model NAME AGENT…` resolve Edgelet node names to fog UUIDs. A 409 or 400 body is printed as returned.
+
+<EditPageAdmonition />

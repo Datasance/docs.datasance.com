@@ -1,0 +1,124 @@
+---
+title: Remote node
+description: Deploy kind Agent so the CLI installs Edgelet on a remote host over SSH and registers the Edgelet node with the Controller.
+keywords: [agent, remote edgelet node, ssh, deploy, airgap, v3.9]
+slug: /learn/edgelet-nodes/remote
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Remote node
+
+Use `kind: Agent` to install Edgelet on a remote host over SSH and register that **Edgelet node** with the Controller.
+
+Use this kind for a production host you can reach with SSH. Use [Local node](/learn/edgelet-nodes/local) when Edgelet should run on the machine where <CliName /> is running. Use [AgentConfig](/learn/edgelet-nodes/agent-config) when you only need to create or update the Controller record. The system Edgelet node on a Controller host belongs in control plane YAML, not in this kind. See [Edgelet nodes](/learn/edgelet-nodes).
+
+A [control plane](/learn/control-plane) must already be in the namespace. Host preparation is in [Setup Edgelet nodes](/get-started/deploy/setup-edgelet-nodes).
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f remote-agent.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+1. The namespace must already contain a control plane with a reachable Controller API.
+2. AgentConfig is applied first. That document is either explicit or synthesized from `spec.config`. See [Deploy phases](/learn/edgelet-nodes#two-deploy-phases).
+3. <CliName /> resolves `package`, airgap, and WASM scope, merges optional `spec.scripts`, and runs [bootstrap](/learn/edgelet-nodes/bootstrap) on the host.
+4. When `spec.config` is set, AgentConfig may be updated again after bootstrap.
+5. <CliName /> provisions the node: `edgelet config` with the Controller URL, then `edgelet provision`.
+6. The node spec (SSH, UUID, timestamps) is stored under `~/.iofog/v3` for the namespace.
+
+## Prerequisites
+
+- Passwordless sudo on the remote host for bootstrap.
+- `spec.host`, `spec.ssh.user`, and `spec.ssh.keyFile`. Port defaults to 22.
+- `spec.config.arch` when you use airgap, WASM, or an architecture-specific package. Set it on every production node.
+- `metadata.name` is lowercase alphanumeric. `default-router` is reserved.
+
+<CliName /> rejects a non-system `Agent` on the same hostname as the Controller public URL, except the reserved local name used for a vanilla local layout. Do not place fleet workloads on the Controller host by deploying this kind there. Use the control plane `systemAgent` block.
+
+## Controller endpoint
+
+| Source | Used for |
+| ------ | -------- |
+| `spec.controllerEndpoint` | Provision URL when set |
+| Control plane in the namespace | Default endpoint from the stored control plane |
+
+## Examples
+
+Minimal SSH install. Router and NATS roles default to `edge` and `leaf` when you omit them.
+
+<FlavorYaml title="remote-agent.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-node-1
+spec:
+  host: 10.0.0.50
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+  package:
+    version: "1.1.0"
+  config:
+    arch: amd64
+    host: 10.0.0.50
+```
+
+</FlavorYaml>
+
+Air-gapped host with explicit fabric roles and resource limits. Stage binaries and images before deploy. See [Offline images](/learn/config/offline-images) and [Airgap deployment](/get-started/deploy/airgap-deployment).
+
+<FlavorYaml title="remote-agent-airgap.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-airgap-1
+spec:
+  host: 10.0.0.51
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+  airgap: true
+  package:
+    version: "1.1.0"
+  config:
+    description: Air-gapped plant node
+    arch: amd64
+    host: 10.0.0.51
+    deploymentType: native
+    containerEngine: edgelet
+    memoryLimit: 4096
+    cpuLimit: 80
+    upstreamRouters:
+      - default-router
+    routerConfig:
+      routerMode: edge
+      messagingPort: 5671
+    upstreamNatsServers:
+      - default-nats-hub
+    natsConfig:
+      natsMode: leaf
+      natsServerPort: 4222
+```
+
+</FlavorYaml>
+
+`upstreamRouters` and `upstreamNatsServers` are Edgelet node names. The named nodes must already exist on the Controller. Omit the lists to accept the default hub attachments. See [Networking](/learn/edgelet-nodes/networking).
+
+Custom install layers use `spec.scripts`. See [Bootstrap](/learn/edgelet-nodes/bootstrap).
+
+## Fields
+
+[Agent fields](/reference/yaml/agent)
+
+<EditPageAdmonition />

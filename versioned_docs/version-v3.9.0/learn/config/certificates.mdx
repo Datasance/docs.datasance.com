@@ -1,0 +1,78 @@
+---
+title: Certificates
+description: kind Certificate is a leaf TLS certificate in the namespace PKI catalog, signed by a CA or self-signed on the leaf.
+keywords: [certificate, tls, leaf, pki, ca, yaml]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Certificates
+
+A **certificate** is a leaf TLS certificate in the namespace PKI catalog. An existing [certificate authority](/learn/config/certificate-authorities) signs it, or the leaf sets `ca.type: self-signed`.
+
+Fields are on [Certificate fields](/reference/yaml/certificate).
+
+Router and NATS site CAs on control plane deploy are a different path. See [Securing the cluster](/learn/security/securing-cluster).
+
+## When to use it
+
+Deploy a CA first when the leaf should chain to a named authority. `get certificates` shows CA rows. Use `ca.type: self-signed` on the leaf when the Controller should issue that one certificate without a named CA.
+
+There is no update. If the name exists, deploy fails. Delete the certificate and deploy again to rotate it.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f cert.yaml -n my-ecn`}</CliBlock>
+
+Deploy sends subject, SAN hosts, expiration, and the issuing `ca` block. A new name creates the leaf.
+
+<FlavorYaml title="cert.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Certificate
+metadata:
+  name: api-tls
+  namespace: my-ecn
+spec:
+  subject: "CN=api.example.com,O=Example"
+  hosts: "api.example.com,api.internal"
+  expiration: 365
+  ca:
+    type: direct
+    secretName: ecn-root-ca
+```
+
+</FlavorYaml>
+
+`ca.secretName` is the certificate authority `metadata.name`.
+
+## How a workload uses it
+
+A microservice does not name `kind: Certificate`. Describe prints the leaf cert and private key. When a container needs those files on disk, store them in a [Secret](/learn/config/secrets) and publish that secret with a [volume mount](/learn/config/volume-mounts). Env and volume shapes are on [Microservice fields](/reference/yaml/microservice).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get certificates -n my-ecn
+{{CLI_NAME}} describe certificate api-tls -n my-ecn
+{{CLI_NAME}} delete certificate api-tls -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_certificate`}>describe certificate</Link> includes the private key in `data`. Keep that file private. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_certificate`}>delete certificate</Link> removes a leaf directly. The same command prompts when the name is a CA. There is no `attach`.
+
+## Console
+
+**Config → Certificates** lists CAs and issued certificates. See [Configuration](/get-started/edgeops-console/configuration).
+
+## Related
+
+- [Certificate authorities](/learn/config/certificate-authorities)
+- [Secrets](/learn/config/secrets)
+- [Securing the cluster](/learn/security/securing-cluster)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

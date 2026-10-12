@@ -1,0 +1,532 @@
+---
+title: Bootstrap
+description: How the CLI installs Edgelet. Platform matrix, default pipeline, script merge, environment variables, and custom script layers.
+keywords: [edgelet bootstrap, install scripts, airgap, wasm, deployment type, v3.9]
+slug: /learn/edgelet-nodes/bootstrap
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Bootstrap
+
+<CliName /> installs Edgelet with embedded shell layers. The layers are staged under a transient directory and run in a fixed order. Go-side configuration and provisioning follow the scripts. <CliName /> does not call an upstream monolith `install.sh` as the whole install.
+
+Both site flavors use the same layers. `apiVersion`, image registry, and banner strings follow the flavor. Align tags with control plane **v3.9.0** and Edgelet **v1.1.0**. See [Edgelet nodes](/learn/edgelet-nodes).
+
+This page covers remote `Agent`, `LocalAgent`, and the system Edgelet node prepared during control plane deploy. Scripts on a node live at `spec.scripts`. Control plane hosts use `controllers[].systemAgent.scripts` or `spec.systemAgent.scripts`.
+
+## Platform and deployment matrix {#platform-and-deployment-matrix}
+
+### Host OS
+
+| Context | How the OS is determined |
+| ------- | ------------------------ |
+| Remote `Agent` or control plane system node | SSH `uname -s`, normalized to `linux`, `darwin`, or `windows` on first bootstrap |
+| `LocalAgent` or local control plane | OS of the machine running <CliName /> |
+
+Remote deploy assumes SSH. Windows hosts use Windows path conventions inside scripts. Scripts are still staged to `/tmp/edgelet-scripts` over SSH.
+
+### Deployment combinations
+
+| Host OS | Deploy kind | `deploymentType` | Typical use | Bootstrap runner |
+| ------- | ----------- | ---------------- | ----------- | ---------------- |
+| linux | Remote `Agent`, control plane system node | `native` | Production Edgelet nodes | SSH and `sudo env` |
+| linux | Remote `Agent`, control plane system node | `container` | Docker or Podman on the host | SSH and `sudo env` |
+| linux, darwin, windows | `LocalAgent`, local control plane | `native` | Local Edgelet binary | Local `sh -c` (sudo on native Linux) |
+| darwin, windows | `LocalAgent`, local control plane | `container` | Desktop development with Docker | Local shell, no sudo |
+
+Defaults when omitted: `deploymentType: native`, `containerEngine: edgelet`.
+
+### Paths
+
+| OS | Edgelet binary | Config directory | Config file | Script share dir after `bundled.sh` |
+| -- | -------------- | ---------------- | ----------- | ------------------------------------ |
+| linux | `/usr/local/bin/edgelet` | `/etc/edgelet` | `/etc/edgelet/config.yaml` | `/usr/share/edgelet` |
+| darwin | `/usr/local/bin/edgelet` | `/etc/edgelet` | `/etc/edgelet/config.yaml` | `/usr/local/share/edgelet` |
+| windows | `%ProgramFiles%\Edgelet\edgelet.exe` | `%ProgramData%\Edgelet\config` | `…\config\config.yaml` | `%ProgramData%\Edgelet\scripts` |
+
+Staging directory on every platform: `/tmp/edgelet-scripts`.
+
+WASM shim staging, when enabled: `/tmp/edgelet-scripts/wasm/`.
+
+## When installation runs
+
+Installation splits into **bootstrap** (scripts plus config materialization) and **provision** (`edgelet config` and `edgelet provision`).
+
+```text
+Parse YAML
+  -> defaults for local or remote Edgelet
+  -> optional script merge
+  -> airgap and WASM prep when enabled
+  -> Bootstrap: stage scripts, pre-install, write config, post-install, bundled, WASM RuntimeClass
+  -> AgentConfig when spec.config is set
+  -> edgelet config / edgelet provision
+```
+
+| Deploy target | Bootstrap | Provision | Where `scripts` lives |
+| ------------- | --------- | --------- | --------------------- |
+| Remote `Agent` | During `deploy -f` | Same deploy, after bootstrap | `spec.scripts` |
+| `LocalAgent` | During local deploy | Same deploy, after bootstrap | `spec.scripts` |
+| Remote control plane, each controller host | While that host is prepared | Later, when the system node is registered | `controllers[].systemAgent.scripts` |
+| Local control plane | While the local host is prepared | Later, when the local system node is registered | `systemAgent.scripts` |
+
+Edgelet on a control plane host is bootstrapped when that host is prepared. The system-node step that follows only pushes AgentConfig and runs provision. It does not bootstrap again.
+
+`isSystem: true` changes system-node defaults (router role, port checks, quieter progress). It does not change script merge or execution.
+
+## Default bootstrap pipeline {#default-bootstrap-pipeline}
+
+When `scripts` is omitted, or an entrypoint is left empty, <CliName /> embeds and runs the full bundle.
+
+| # | Step | Script or CLI | Purpose | Skip notes |
+| - | ---- | ------------- | ------- | ---------- |
+| 0 | Stage scripts | CLI | Write the bundle to `/tmp/edgelet-scripts` | Remote: copy and `install -m 755`. Local: write files. |
+| 0b | Prepare WASM | CLI | Resolve and extract shim binaries, set env | Skipped unless [WASM scope](#wasm-runtime-scope) allows |
+| 1 | Prerequisites | `check_prereqs.sh` | Remote: passwordless sudo probe | Local exits 0 immediately (`LOCAL_INSTALL=1`) |
+| 2 | Detect init | `detect_init.sh` | OS, architecture, init system | Always runs |
+| 3 | Dependencies | `install_deps.sh` | Install or check Docker or Podman | No-op when `containerEngine` is `edgelet`. On darwin and windows, engine configure is skipped. |
+| 3b | Configure engine | `configure_container_engine.sh` | Engine socket, groups, service | Only when the deps layer runs (not the `edgelet` engine) |
+| 4 | Install Edgelet | `install.sh` or `install_container.sh` | Binary install or container prep | Native uses `install.sh` with `--skip-config` and `--skip-start`. Container uses `install_container.sh`. |
+| 5 | WASM runtimes | `install_wasm_runtimes.sh` | Install pre-staged shims to `/usr/local/bin` | Omitted unless WASM scope allows. Also a no-op on non-Linux or container deploy. |
+| | Write config | CLI | Write `config.yaml` and a sample CA if missing | Skipped on [desktop container local](#desktop-container) |
+| 6 | Init units | `install_init_units.sh` | systemd, OpenRC, or procd units | Linux-focused. Desktop paths differ. |
+| 7 | Start | `start_edgelet.sh` | Enable and start the daemon or container unit | Desktop native darwin starts a background daemon. Windows native is platform-specific. |
+| 8 | Configure container | `configure_container_edgelet.sh` | Apply config inside the running container | Desktop container only. Exits 0 otherwise. |
+| 9 | Wait ready | `wait_edgelet_ready.sh` | Poll until the Edgelet API is ready | Desktop container uses an alternate wait. |
+| | RuntimeClass | CLI | Apply WASM RuntimeClass manifests | Only when WASM handlers are configured |
+| 10 | Bundled publish | `bundled.sh` | Copy scripts to the OS share directory | Skipped on desktop container local |
+| | Provision | CLI | `edgelet config`, optional cert, `edgelet provision` | After bootstrap in the deploy flow |
+
+### WASM runtime scope {#wasm-runtime-scope}
+
+WASM install runs only when all of the following hold:
+
+| Requirement | Value |
+| ----------- | ----- |
+| Host OS | `linux` only |
+| `deploymentType` | `native` (not `container`) |
+| `containerEngine` | `edgelet` or `docker` (not `podman`) |
+| `package.wasm` | At least one handler configured |
+
+If `package.wasm` is set and scope fails, <CliName /> prints a skip message and continues.
+
+WASM artifacts are extracted on the CLI machine. They are not unpacked with `tar` on the remote host. Remote deploy copies raw shim binaries into the WASM staging directory.
+
+### Default install arguments
+
+Native `install.sh` receives:
+
+- `--version=<edgelet version>`
+- `--container-engine=<engine>`
+- `--skip-config` and `--skip-start` (config and start are separate layers)
+- Optional `--arch=`, `--airgap`, and `--bin-path=` for airgap
+
+Container `install_container.sh` receives:
+
+- `--image=<container image>`
+- `--engine=docker` or `--engine=podman`
+- `--tz=<timezone>`
+
+## Desktop container {#desktop-container}
+
+A local **container** install on darwin or windows sets desktop container behavior (`LOCAL_INSTALL=1`, `EDGELET_INSTALL_MODE=container`, desktop host OS).
+
+| Behavior | Production Linux | Desktop container local |
+| -------- | ---------------- | ----------------------- |
+| Sudo | Required on remote. Local native Linux uses sudo. | No sudo |
+| Host `config.yaml` write | Yes | Skipped |
+| `bundled.sh` | Publishes to the share directory | No-op. Scripts stay in the stage directory. |
+| `configure_container_edgelet.sh` | Exits 0 | Runs the bootstrap config command inside the container |
+| `wait_edgelet_ready.sh` | Service or API poll | Desktop container wait |
+| Extra env | Standard bootstrap env | Stage directory on `PATH` |
+
+Install Docker (or Podman where it is supported) before deploy. <CliName /> does not install container engines unless your custom scripts do.
+
+## Embedded scripts
+
+### Top-level scripts
+
+| Script | Role |
+| ------ | ---- |
+| `check_prereqs.sh` | Passwordless sudo on remote hosts. Skipped locally. |
+| `detect_init.sh` | OS, architecture, and init system. Sourced by most other layers. |
+| `install_deps.sh` | Docker or Podman when the engine is not `edgelet` |
+| `configure_container_engine.sh` | Docker or Podman socket access. Skipped on darwin and windows. |
+| `install.sh` | Edgelet binary, directories, and receipt. Airgap, upgrade, and rollback flags. |
+| `install_container.sh` | Containerized Edgelet. Desktop and Linux branches. |
+| `install_wasm_runtimes.sh` | Staged WASM shims. Gated by `EDGELET_WASM_INSTALL=1`. |
+| `install_init_units.sh` | Init units for native and container deployments |
+| `start_edgelet.sh` | Start or restart the daemon or container unit |
+| `configure_container_edgelet.sh` | Desktop container: apply bootstrap config inside the container |
+| `wait_edgelet_ready.sh` | Wait for the Edgelet API |
+| `bundled.sh` | Publish the script bundle to the OS share directory |
+| `uninstall.sh` | Remove binary, units, and optional data (`--remove-data`) |
+
+### Library scripts
+
+| Library | Provides |
+| ------- | -------- |
+| `lib/common.sh` | Errors, info, sudo wrapper, desktop container detection |
+| `lib/paths.sh` | OS-specific share, config, binary, and runtime paths |
+| `lib/receipt.sh` | Install receipt for upgrade and rollback |
+| `lib/binary.sh` | Binary download, checksum, airgap copy |
+| `lib/service.sh` | Init helpers to start, stop, and restart Edgelet |
+| `lib/container_engine.sh` | Engine detection and defaults |
+| `lib/container_cli.sh` | Docker and Podman wrappers |
+| `lib/container_mounts.sh` | Bind mounts for container deploy |
+
+Default `install.sh` is always invoked with `--skip-config` and `--skip-start`. The CLI writes config. `start_edgelet.sh` owns the start layer.
+
+## Bootstrap environment variables
+
+<CliName /> prefixes every script command with these variables.
+
+| Variable | Meaning |
+| -------- | ------- |
+| `EDGELET_INSTALL_MODE` | `native` or `container` |
+| `CONTAINER_ENGINE` | `edgelet`, `docker`, or `podman` |
+| `DEPLOYMENT_TYPE` | Same as spec (`native` by default) |
+| `EDGELET_VERSION` | Binary or tag version from the package |
+| `EDGELET_CONTAINER_IMAGE` | Container image when `deploymentType` is `container` |
+| `EDGELET_TZ` | Timezone. Default `UTC`. |
+| `EDGELET_GITHUB_REPO` | Release base for binary download |
+| `EDGELET_CONTAINER_ENGINE_URL` | Socket URL for Docker or Podman |
+| `LOCAL_INSTALL=1` | Local bootstrap. Skips the remote sudo check. |
+| `EDGELET_SCRIPT_STAGE_DIR` | Stage directory (desktop container) |
+| `PATH` | Stage `bin` prepended on desktop container |
+| `EDGELET_BOOTSTRAP_CONFIG_CMD` | Quoted `edgelet config` command (desktop container) |
+| `EDGELET_WASM_INSTALL=1` | Set when WASM shims are staged |
+| `EDGELET_WASM_MANIFEST` | JSON manifest of staged WASM binaries |
+| `EDGELET_WASM_RESTART_ENGINE=1` | Hint to restart the engine after shim install |
+
+Remote commands use `sudo env VAR=… /tmp/edgelet-scripts/….sh` so sudo does not strip variables. Local native Linux may wrap with `sudo env`.
+
+## Scripts block {#yaml-reference-scripts-block}
+
+<FlavorYaml title="scripts">
+
+```yaml
+scripts:
+  dir: /path/to/scripts
+  deps:
+    entrypoint: install_deps.sh
+    args:
+      - docker
+      - native
+  install:
+    entrypoint: install.sh
+    args:
+      - "--version=1.1.0"
+      - "--skip-config"
+      - "--skip-start"
+  uninstall:
+    entrypoint: uninstall.sh
+    args:
+      - "--remove-data"
+```
+
+</FlavorYaml>
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `dir` | Yes, if the block is present | Directory on the operator machine. <CliName /> reads files locally, then stages them. |
+| `*.entrypoint` | No | Filename relative to the staged script root. Empty means the embedded default for that layer. |
+| `*.args` | No | Arguments appended to the entrypoint |
+
+Only `deps`, `install`, and `uninstall` are overridable. `detect_init`, `install_init_units`, `start_edgelet`, `configure_container_edgelet`, `wait_edgelet_ready`, and `bundled` always use the embedded script names. YAML cannot point those layers at a different entrypoint name.
+
+| Resource | YAML path |
+| -------- | --------- |
+| Remote `Agent` | `spec.scripts` |
+| `LocalAgent` | `spec.scripts` |
+| Remote control plane system node | `controllers[].systemAgent.scripts` |
+| Local control plane system node | `systemAgent.scripts` |
+
+<FlavorYaml title="remote-agent-scripts.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-node-1
+spec:
+  host: 10.0.0.5
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+  package:
+    version: "1.1.0"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+  scripts:
+    dir: ./my-edgelet-scripts
+    install:
+      entrypoint: install.sh
+      args:
+        - "--version=1.1.0"
+        - "--skip-config"
+        - "--skip-start"
+```
+
+</FlavorYaml>
+
+## Script merge {#script-merge}
+
+Remote and local deploys use the same merge rules.
+
+1. Read every non-directory file from `scripts.dir` into the stage list.
+2. Always append embedded `check_prereqs.sh`. A same-named file from `dir` is overwritten when staged.
+3. For each overridable layer, an empty `entrypoint` embeds the default scripts. A set `entrypoint` uses your script for that layer.
+4. Fill missing post-install entrypoints from defaults (names and destination paths).
+5. Bind destination paths under `/tmp/edgelet-scripts`.
+6. If `scripts.install.entrypoint` is set, the install is custom.
+
+| Layer | YAML key | Empty `entrypoint` | Set `entrypoint` |
+| ----- | -------- | ------------------ | ---------------- |
+| Prerequisites | _(none)_ | Embedded `check_prereqs.sh` is always appended | Same. Always embedded. |
+| Detect init | _(none)_ | Embedded file in the default bundle | The command still runs the embedded name. The file must exist in `dir` if the install bundle is not embedded. |
+| Deps | `scripts.deps` | Embed `install_deps.sh` and `configure_container_engine.sh` | Your script only. Embedded deps are not added. |
+| Install | `scripts.install` | Embed the install bundle and all `lib/*.sh` | Custom install. The install bundle and libs are not embedded. |
+| WASM | _(none)_ | Included in the default install bundle | If install is custom, the file must be in `dir`. |
+| Post-install (init, start, configure, wait, bundled) | _(none)_ | Embedded in the default bundle | Commands still run. Files must be in `dir` when install was custom. |
+| Uninstall | `scripts.uninstall` | Embed `uninstall.sh` | Your script. Embedded uninstall is not added. |
+
+When `scripts.install.entrypoint` is set:
+
+| Behavior | Default install | Custom install |
+| -------- | --------------- | -------------- |
+| <CliName /> applies `package.version` to install args | Yes | No. Pass the version in `scripts.install.args`. |
+| <CliName /> applies `package.container.image` to install args | Yes | No. Pass image flags in args. |
+| Airgap binary path wiring | Yes | Yes |
+| Embedded `install.sh`, `install_container.sh`, and `lib/*` staged | Yes | No |
+| Post-install layers executed | Yes | Yes, unless your install script fails the deploy |
+
+If only `scripts.deps.entrypoint` is set, your deps script runs, and the embedded install bundle and post-install scripts still run.
+
+If `scripts.install.entrypoint` is set and the post-install scripts are not in `dir`, bootstrap fails when those commands run. Copy the required scripts into `dir`, or do not set a custom install entrypoint.
+
+### Staging and execution
+
+| Concept | What it is |
+| ------- | ---------- |
+| Staging | Files written to `/tmp/edgelet-scripts` on the target host |
+| Execution | Ordered shell commands with the bootstrap environment prefix |
+
+Pre-install order:
+
+```text
+check_prereqs -> detect_init -> deps -> install -> install_wasm_runtimes when WASM scope allows
+```
+
+Post-install order:
+
+```text
+install_init_units -> start_edgelet -> configure_container_edgelet -> wait_edgelet_ready -> bundled
+```
+
+WASM RuntimeClass deploy runs after those four shell layers (`install_init_units` through `wait_edgelet_ready`) and immediately before `bundled.sh`. The order is the same on remote and local hosts.
+
+## Remote and local execution
+
+| Aspect | Remote | Local |
+| ------ | ------ | ----- |
+| Stage directory | `/tmp/edgelet-scripts` over SSH | Same path on the local filesystem |
+| How files land | Copy to `/tmp`, then `install -m 755` | Local write |
+| Shell | SSH runs the command string | `sh -c` |
+| Sudo | Always on bootstrap commands | Native Linux: sudo. Desktop container: none. |
+| Prerequisites | Passwordless sudo | Skipped (`LOCAL_INSTALL=1`) |
+| Config write | SSH install when the file is missing | CLI writes `config.yaml` |
+| OS detection | `uname -s` over SSH | OS of the <CliName /> process |
+
+## Steps scripts cannot replace
+
+Custom install scripts must cooperate with these steps. Use `--skip-config` so the CLI can write config.
+
+| Step | When | Description |
+| ---- | ---- | ----------- |
+| Airgap binary transfer | `airgap: true`, native | Copy the Edgelet binary. Sets `--bin-path` on install. |
+| Airgap image transfer | `airgap: true` | `edgelet image load` on the host |
+| WASM extract | `package.wasm` | Extract on the CLI machine. Remote copy of raw shims. |
+| Write `config.yaml` | After pre-install, before post-install | Host config and a sample CA when absent |
+| WASM RuntimeClass | After the post-install shell layers, before `bundled.sh` | Apply RuntimeClass manifests through Edgelet |
+| AgentConfig | Deploy with `spec.config` | Controller API record |
+| `edgelet config` | Provision | Sets the Controller URL. Installs the Controller CA when one is returned. |
+| `edgelet provision` | Provision | Registers the Edgelet node |
+| `edgelet deploy -f` | Control plane hosts | Deploys translated Registry and ControlPlane manifests |
+| Private registry | Control plane with a private controller image | Registry login plus a Controller registry record |
+
+## Uninstall and delete
+
+Uninstall re-stages scripts with the same merge rules, then runs the uninstall entrypoint.
+
+| Trigger | Data removal |
+| ------- | ------------ |
+| Delete an Edgelet node, or tear down a control plane host | `uninstall.sh` with `--remove-data` |
+| Detach an Edgelet node | Uninstall does not run. Binaries and data can remain. |
+
+Custom uninstall: set `scripts.uninstall.entrypoint` and optional `args`. When the entrypoint is set, embedded `uninstall.sh` is not added. Your script in `dir` must implement teardown. `uninstall.sh` handles Linux, darwin, and Windows paths.
+
+See [Attach and detach](/get-started/edgelet-nodes/attach-detach) for delete versus detach.
+
+## Examples
+
+### Defaults only
+
+Omit `scripts`. The full embedded bundle runs. Set `config.arch`, `deploymentType`, `containerEngine`, and `package.version` or `package.container.image`.
+
+### Directory without entrypoint overrides
+
+<FlavorYaml title="vendor-scripts">
+
+```yaml
+scripts:
+  dir: ./vendor/edgelet-scripts
+```
+
+</FlavorYaml>
+
+Files from `dir` are staged first. Embedded defaults for deps, install, uninstall, and post-install are appended. Use this to vendor scripts while keeping default entrypoints.
+
+### Custom deps only
+
+<FlavorYaml title="custom-deps">
+
+```yaml
+scripts:
+  dir: ./scripts
+  deps:
+    entrypoint: install_deps.sh
+    args: ["docker", "native"]
+```
+
+</FlavorYaml>
+
+Place `install_deps.sh` in `dir`. The embedded install bundle and post-install scripts still run.
+
+### Custom install
+
+<FlavorYaml title="custom-install">
+
+```yaml
+scripts:
+  dir: ./scripts
+  install:
+    entrypoint: my_install.sh
+    args:
+      - "--version=1.1.0"
+      - "--airgap"
+      - "--bin-path=/opt/airgap/edgelet-linux-amd64"
+```
+
+</FlavorYaml>
+
+`dir` must include at least `detect_init.sh`, `install_init_units.sh`, `start_edgelet.sh`, `configure_container_edgelet.sh`, `wait_edgelet_ready.sh`, `bundled.sh`, and any `lib/*.sh` that `my_install.sh` sources. Pass version and image flags yourself.
+
+### All three layers
+
+<FlavorYaml title="all-layers">
+
+```yaml
+scripts:
+  dir: /tmp/my-scripts
+  deps:
+    entrypoint: install_deps.sh
+  install:
+    entrypoint: install.sh
+    args: ["1.1.0"]
+  uninstall:
+    entrypoint: uninstall.sh
+```
+
+</FlavorYaml>
+
+Only `check_prereqs.sh` is appended from the embed. `dir` must contain every other script the sequence invokes.
+
+### System node on a remote control plane
+
+<FlavorYaml title="system-agent-scripts">
+
+```yaml
+controllers:
+  - name: cp-host-1
+    host: 10.0.0.10
+    ssh:
+      user: ubuntu
+      keyFile: ~/.ssh/id_rsa
+    systemAgent:
+      config:
+        arch: amd64
+        deploymentType: native
+        containerEngine: edgelet
+      scripts:
+        dir: ./cp-scripts
+```
+
+</FlavorYaml>
+
+Bootstrap runs during control plane host deploy. Provision runs when the system node is registered. The full control plane kind is on [Remote](/learn/control-plane/remote).
+
+### Airgap with a custom install
+
+Set `airgap: true` on the node or control plane. <CliName /> transfers the binary before bootstrap. With a custom install, include the airgap flags in `scripts.install.args`:
+
+<FlavorYaml title="airgap-install-args">
+
+```yaml
+scripts:
+  install:
+    entrypoint: install.sh
+    args:
+      - "--airgap"
+      - "--bin-path=/tmp/edgelet-linux-amd64"
+      - "--version=1.1.0"
+      - "--skip-config"
+      - "--skip-start"
+```
+
+</FlavorYaml>
+
+### Local desktop container
+
+<FlavorYaml title="desktop-container.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: LocalAgent
+spec:
+  config:
+    deploymentType: container
+    containerEngine: docker
+  package:
+    container:
+      image: {{REGISTRY}}/edgelet:1.1.0
+```
+
+</FlavorYaml>
+
+Expect no sudo, no host `config.yaml`, no `bundled.sh` publish, and the desktop wait and configure paths. Docker must already be installed.
+
+### Windows local native
+
+Use `LocalAgent` on a Windows machine running <CliName />. Scripts use `%ProgramData%` and `%ProgramFiles%`. Staging still uses `/tmp/edgelet-scripts` in the shell environment. Confirm init and start paths match that shell.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Action |
+| ------- | ------------ | ------ |
+| Post-install script not found after a custom install | Embedded post-install scripts are not staged when install is custom | Add the missing scripts to `scripts.dir` |
+| Version or image ignored | Custom install entrypoint is set | Pass `--version=` or `--image=` in `scripts.install.args` |
+| `install_deps` exits immediately | `containerEngine: edgelet` | Expected no-op |
+| Remote deploy fails at prerequisites | Passwordless sudo is missing | Fix sudoers for the SSH user |
+| WASM step skipped | Scope gate (OS, deployment type, engine) | See [WASM runtime scope](#wasm-runtime-scope) |
+| WASM on macOS never runs | WASM is Linux native only | Use a Linux host for WASM shims |
+| `bundled.sh` does nothing locally | Desktop container deploy | Expected. Scripts remain in the stage directory. |
+| Configure container skipped | Not a desktop container deploy | Expected on Linux native and Linux container server deploy |
+| Duplicate script behavior | A file in `dir` is overwritten by the embed | `check_prereqs.sh` always wins. Later duplicates in the stage list overwrite earlier writes. |
+| System node provision fails but Edgelet is installed | Bootstrap succeeded earlier | Check the Controller endpoint, auth, and provision key separately |
+
+<EditPageAdmonition />

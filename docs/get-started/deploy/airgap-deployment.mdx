@@ -1,6 +1,6 @@
 ---
 title: Airgap Deployment
-description: Deploy the control plane and Edgelet nodes without outbound registry access. Native airgap, container airgap, and OfflineImage for microservices on platform train v3.9.0.
+description: Deploy the control plane and Edgelet nodes without outbound registry access. Native airgap, container airgap, and OfflineImage for microservices on platform train v3.9.1.
 keywords: [airgap, offline deployment, restricted network, control plane, edgelet, OfflineImage, edge deployment, multi-arch]
 slug: /get-started/deploy/airgap-deployment
 ---
@@ -60,7 +60,7 @@ spec:
     publicUrl: https://controller.example.com:51121
     consoleUrl: https://console.example.com:8008
     package:
-      image: {{REGISTRY}}/controller:v{{PLATFORM_TRAIN}}
+      image: {{REGISTRY}}/controller:{{PLATFORM_TRAIN}}
   auth:
     mode: embedded
     bootstrap:

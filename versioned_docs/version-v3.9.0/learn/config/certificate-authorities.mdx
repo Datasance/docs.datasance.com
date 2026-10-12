@@ -1,0 +1,81 @@
+---
+title: Certificate authorities
+description: kind CertificateAuthority is namespace PKI. It signs leaf certificates. Control plane router and NATS CAs are a different path.
+keywords: [certificate authority, pki, self-signed, ca, tls, namespace]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Certificate authorities
+
+A **certificate authority** registers a CA in the namespace PKI catalog. Leaf [certificates](/learn/config/certificates) are signed by that CA, or a leaf can set `ca.type: self-signed` on itself.
+
+Fields are on [CertificateAuthority fields](/reference/yaml/certificate-authority).
+
+Router and NATS site CAs created during control plane deploy are a different path. They use fixed names and upload into control plane trust material. See [Securing the cluster](/learn/security/securing-cluster).
+
+## When to use it
+
+| `spec.type` | Use it when |
+| ----------- | ----------- |
+| `self-signed` | The Controller should generate a new CA key pair. |
+| `direct` | CA material is already in a Controller [Secret](/learn/config/secrets) with `spec.type: tls`. |
+| `k8s-secret` | CA material is in a Kubernetes Secret on the control plane cluster. |
+
+For `direct`, deploy the Secret first. `metadata.name` on the CA must match that secret name. For `self-signed`, no secret is required.
+
+There is no update. If the name exists, deploy fails. Delete the CA and create it again.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f ca.yaml -n my-ecn`}</CliBlock>
+
+Deploy calls create. The API name comes from `metadata.name`.
+
+<FlavorYaml title="ca.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: CertificateAuthority
+metadata:
+  name: ecn-root-ca
+  namespace: my-ecn
+spec:
+  subject: "CN=ECN Root CA,O=Example"
+  type: self-signed
+  expiration: 3650
+```
+
+</FlavorYaml>
+
+Bring-your-own PEM: Secret (`type: tls`, base64 `data`), then CertificateAuthority (`type: direct`), then a leaf Certificate.
+
+## How a leaf uses it
+
+A microservice does not name the CA. A leaf `kind: Certificate` sets `ca.type: direct` and `ca.secretName` to this CA name. See [Certificates](/learn/config/certificates).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get certificates -n my-ecn
+{{CLI_NAME}} describe certificate ecn-root-ca -n my-ecn
+{{CLI_NAME}} delete certificate ecn-root-ca -n my-ecn`}</CliBlock>
+
+There is no separate certificate-authority subcommand. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_certificate`}>describe certificate</Link> prints the CA as `kind: CertificateAuthority`, including the private key. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_certificate`}>delete certificate</Link> detects a CA and prompts before delete. There is no `attach`.
+
+## Console
+
+**Config → Certificates** lists CAs and leaf certificates. See [Configuration](/get-started/edgeops-console/configuration).
+
+## Related
+
+- [Certificates](/learn/config/certificates)
+- [Secrets](/learn/config/secrets)
+- [Securing the cluster](/learn/security/securing-cluster)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

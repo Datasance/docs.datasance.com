@@ -1,0 +1,98 @@
+---
+title: Volumes
+description: kind Volume copies a directory from the operator machine onto named Edgelet nodes. Microservices mount it with type volume.
+keywords: [volume, directory, source, edgelet node, type volume, cli]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Volumes
+
+A **volume** stages a directory from the machine running <CliName /> onto Edgelet nodes named in `spec.agents`. The record lives in CLI namespace config (`~/.iofog/v3`), not in the Controller API.
+
+The short map is [Config, secrets, and volumes](/get-started/workloads/config). Fields are on [Volume fields](/reference/yaml/volume). Directory staging from the node side is also described in [Volume distribution](/get-started/edgelet-nodes/volume-distribution).
+
+A [volume mount](/learn/config/volume-mounts) publishes a Secret or ConfigMap. Attach applies to that object. A Volume lists its Edgelet nodes in its own spec.
+
+## When to use it
+
+Use a Volume when the files already exist as a directory on the operator machine and should be copied onto specific Edgelet nodes. Enroll those nodes first.
+
+For remote nodes, `spec.source` must be a directory on the operator machine, and SSH must be configured on the node. A loopback host on the remote path fails: volume deployment is not supported for local agents on that path.
+
+A local Edgelet node records the volume and uses the host filesystem directly. The CLI warns that the copy is unnecessary. If `source` and `destination` differ, it also warns about bind confusion.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f volume.yaml -n my-ecn`}</CliBlock>
+
+For each remote Edgelet node, deploy copies `spec.source` to `spec.destination` over SSH, then saves the volume in namespace config. There is no `attach`. Re-deploy updates that local record and copies again.
+
+<FlavorYaml title="volume.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Volume
+metadata:
+  name: model-weights
+  namespace: my-ecn
+spec:
+  name: model-weights
+  agents:
+    - edge-01
+  source: /data/models-src
+  destination: /var/lib/iofog/volumes/model-weights
+  permissions: "0755"
+```
+
+</FlavorYaml>
+
+`metadata.name` and `spec.name` should match. The CLI sets `spec.name` from metadata when you deploy from a file.
+
+## How a microservice uses it
+
+Set `type: volume` and `hostDestination` to the volume name. `scope` is `private` or `shared` and applies only to this type. The mapping table is on [Microservice fields](/reference/yaml/microservice).
+
+<FlavorYaml title="mount.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  container:
+    volumes:
+      - type: volume
+        hostDestination: model-weights
+        containerDestination: /models
+        accessMode: rw
+        scope: private
+```
+
+</FlavorYaml>
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get volumes -n my-ecn
+{{CLI_NAME}} describe volume model-weights -n my-ecn
+{{CLI_NAME}} delete volume model-weights -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_volume`}>describe volume</Link> reads namespace config. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_volume`}>delete volume</Link> removes staged data on the nodes (best effort per node) and drops the config entry. Deleting an Edgelet node removes that node from volume agent lists, or deletes a volume that only named that node.
+
+## Console
+
+Volumes are a CLI flow. The console chapter has no Volume screen.
+
+## Related
+
+- [Volume mounts](/learn/config/volume-mounts)
+- [Volume distribution](/get-started/edgelet-nodes/volume-distribution)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

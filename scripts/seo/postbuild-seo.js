@@ -130,8 +130,14 @@ function getLlmsSections() {
       entries: [
         {
           docId: '__url__',
+          title: 'v3.9.0 docs snapshot',
+          note: 'Previous patch on this train.',
+          url: sitePath('/v3.9.0/'),
+        },
+        {
+          docId: '__url__',
           title: 'v3.8.0 docs snapshot',
-          note: 'Previous supported train.',
+          note: 'Greenfield train. In-place upgrade to the current docs is supported.',
           url: sitePath('/v3.8.0/'),
         },
         {
@@ -220,11 +226,11 @@ function generateLlmsTxt() {
   const lines = [
     `# ${PRODUCT_NAME} Documentation`,
     '',
-    '> Official docs for platform train v3.9.0. In-place upgrade from v3.8.0. A move from v3.7 field deployments is greenfield.',
+    '> Official docs for platform train v3.9.1. In-place upgrade from v3.9.0 and v3.8.0. A move from v3.7 field deployments is greenfield.',
     '',
     'Deploy a Control Plane on Kubernetes or remote hosts, connect Edgelet nodes, and run containerized microservices.',
     '',
-    `v3.9.0 upgrades in place from v3.8.0. A move from v3.7 needs a new Controller database, Edgelet v1.1.0 on every node, and ${CLI_NAME} v3.9.0. Legacy Java iofog-agent and v3.7 field agents are not supported on this Controller.`,
+    `v3.9.1 upgrades in place from v3.9.0 and v3.8.0. A move from v3.7 needs a new Controller database, Edgelet v1.1.1 on every node, and ${CLI_NAME} v3.9.1. Legacy Java iofog-agent and v3.7 field agents are not supported on this Controller.`,
     '',
     'The web UI is EdgeOps Console, embedded in the Controller image. Authentication defaults to embedded OIDC.',
     '',
@@ -251,7 +257,7 @@ function generateLlmsFullTxt() {
   const blocks = [
     `# ${PRODUCT_NAME} Documentation (full corpus)`,
     '',
-    '> Full text of the current v3.9.0 guides. Generated at build time. CLI command pages and OpenAPI specs are linked from llms.txt.',
+    '> Full text of the current v3.9.1 guides. Generated at build time. CLI command pages and OpenAPI specs are linked from llms.txt.',
     '',
   ];
 

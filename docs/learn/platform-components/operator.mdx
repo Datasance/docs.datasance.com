@@ -1,6 +1,6 @@
 ---
 title: Operator
-description: Operator image 3.9.0 reconciles ControlPlane custom resources on Kubernetes 1.22+. Helm, manifest tarball, and OLM install.
+description: Operator image 3.9.1 reconciles ControlPlane custom resources on Kubernetes 1.22+. Helm, manifest tarball, and OLM install.
 keywords: [operator, kubernetes, controlplane, helm, olm, v3.9]
 slug: /learn/platform-components/operator
 ---
@@ -13,7 +13,7 @@ import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
 # Operator
 
-The operator image is <code>{REGISTRY}/operator:3.9.0</code>. On Kubernetes it reconciles `ControlPlane` custom resources. It needs Kubernetes **1.22+**. The only custom resource is `ControlPlane`.
+The operator image is <code>{REGISTRY}/operator:3.9.1</code>. On Kubernetes it reconciles `ControlPlane` custom resources. It needs Kubernetes **1.22+**. The only custom resource is `ControlPlane`.
 
 Application workloads are not operator objects. After the control plane is up, create them with <CliName />, the REST API, EdgeOps Console, or the [Go SDK](/learn/platform-components/sdk).
 
@@ -22,7 +22,7 @@ Application workloads are not operator objects. After the control plane is up, c
 ```yaml
 spec:
   images:
-    operator: {{REGISTRY}}/operator:3.9.0
+    operator: {{REGISTRY}}/operator:3.9.1
 ```
 
 </FlavorYaml>
@@ -47,7 +47,7 @@ Controller HTTPS, Ingress TLS, Router and NATS certificates, cert-manager, and C
 
 v3.8 removed the Application CRD, Keycloak fields, and ECN Viewer fields. The operator watches `ControlPlane` only.
 
-Platform train **v3.9.0** supports an in-place upgrade from **v3.8.0**. Follow [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9).
+Platform train **v3.9.1** supports an in-place upgrade from **v3.8.0**. Follow [Upgrading to v3.9.1](/release-notes/upgrading-to-v3-9).
 
 There is no direct upgrade from v3.7. Move to v3.8.0 first. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
 
@@ -60,7 +60,7 @@ helm repo update`}</CliBlock>
 
 <CliBlock title="Install the operator">{`helm install iofog-operator iofog-operator/iofog-operator \\
   --namespace iofog-system --create-namespace \\
-  --version 3.9.0`}</CliBlock>
+  --version 3.9.1`}</CliBlock>
 
 For a full control plane install, see [Kubernetes Helm deployment](/get-started/deploy/kubernetes-helm).
 
@@ -68,7 +68,7 @@ For a full control plane install, see [Kubernetes Helm deployment](/get-started/
 
 GitHub Releases attach `manifests-iofog-<version>.tar.gz` and `manifests-datasance-<version>.tar.gz`. Apply them in namespace `iofog-system`.
 
-<CliBlock>{`VERSION=3.9.0
+<CliBlock>{`VERSION=3.9.1
 FLAVOR=${FLAVOR === 'datasance' ? 'datasance' : 'iofog'}
 
 curl -fsSL -o manifests.tar.gz \\
@@ -83,7 +83,7 @@ Adapt and apply the sample ControlPlane from the tarball for your cluster.
 
 Package `iofog-operator`, channel `stable`, namespace `iofog-system`.
 
-<CliBlock>{`VERSION=3.9.0
+<CliBlock>{`VERSION=3.9.1
 
 operator-sdk run bundle "{{REGISTRY}}/operator-bundle:\${VERSION}" \\
   --namespace iofog-system --timeout 5m`}</CliBlock>

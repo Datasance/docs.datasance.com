@@ -1,0 +1,73 @@
+---
+title: Microservice template fields
+description: Field reference for kind MicroserviceTemplate. Variables and the nested microservice skeleton.
+keywords: [microservice template, yaml, fields, variables, v3.9]
+slug: /reference/yaml/microservice-template
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Microservice template fields
+
+Reference for `kind: MicroserviceTemplate`. Deploy and instantiation are on [Microservice templates](/learn/workloads/microservice-templates).
+
+The CLI parses `spec` in non-strict mode.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: MicroserviceTemplate # required, string
+metadata:
+  name: my-ms-template # required, string
+  namespace: my-ecn # no, string
+spec:
+  description: Example microservice template # no, string
+  variables: # no, list. Same shape as application template variables
+    - key: agent-name # required on each entry, string
+      description: Edgelet node name # no, string
+      defaultValue: edge-01 # no, any
+  microservice: # no, object. Same keys as Microservice. Stored template drops name, uuid, and a nested template
+    agent:
+      name: "{{agent-name}}"
+    images:
+      registry: remote
+      amd64: {{REGISTRY}}/example/api:1.0.0
+```
+
+</FlavorYaml>
+
+## Spec
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `description` | string | Summary for operators. |
+| `variables` | list | Same shape as [application template variables](/reference/yaml/application-template). |
+| `variables[].key` | string | Required on each entry. |
+| `variables[].description` | string | Optional help text. |
+| `variables[].defaultValue` | any | Default when the microservice YAML omits that override. |
+| `microservice` | object | Partial or full microservice spec. The Controller template engine fills placeholders. |
+
+`microservice` uses the same field names as [Microservice fields](/reference/yaml/microservice). Placeholders such as `"{{application}}"` and `"{{agent-name}}"` are allowed. The stored template drops `name`, `uuid`, and a nested `template`.
+
+## `spec.template` on a microservice
+
+When you deploy `kind: Microservice`:
+
+```yaml
+spec:
+  template:
+    name: my-ms-template
+    variables:
+      agent-name: edge-01
+      application: myapp
+```
+
+`variables` may be a map or a list of `{key, value}` pairs.
+
+## Create and update
+
+Deploy the same `metadata.name` again to update the template. Microservices already deployed from it are not updated automatically.
+
+<EditPageAdmonition />

@@ -1,6 +1,6 @@
 ---
 title: Remote ControlPlane fields
-description: Field reference for remote kind ControlPlane YAML. Global settings and the controllers list on platform train v3.9.0.
+description: Field reference for remote kind ControlPlane YAML. Global settings and the controllers list on platform train v3.9.1.
 keywords: [remote control plane, yaml, fields, ssh, v3.9]
 slug: /reference/yaml/remote-control-plane
 ---
@@ -35,7 +35,7 @@ spec:
     logLevel: info # no, string
     pidBaseDir: /home/runner # no, string
     package:
-      image: {{REGISTRY}}/controller:3.9.0 # no, string. Default controller:3.9.0 on the flavor registry
+      image: {{REGISTRY}}/controller:3.9.1 # no, string. Default controller:3.9.1 on the flavor registry
       registry: registry.example.com # no, string. Set with username and password
       username: pull-user # no, string
       password: pull-token # no, string
@@ -94,15 +94,15 @@ spec:
     key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string. Base64 PEM
   systemMicroservices: # no, object. Keys amd64, arm64, arm, riscv64
     router:
-      amd64: {{REGISTRY}}/router:3.9.0
-      arm64: {{REGISTRY}}/router:3.9.0
-      arm: {{REGISTRY}}/router:3.9.0
-      riscv64: {{REGISTRY}}/router:3.9.0
+      amd64: {{REGISTRY}}/router:3.9.1
+      arm64: {{REGISTRY}}/router:3.9.1
+      arm: {{REGISTRY}}/router:3.9.1
+      riscv64: {{REGISTRY}}/router:3.9.1
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.0
-      arm64: {{REGISTRY}}/nats:2.15.0
-      arm: {{REGISTRY}}/nats:2.15.0
-      riscv64: {{REGISTRY}}/nats:2.15.0
+      amd64: {{REGISTRY}}/nats:2.15.1
+      arm64: {{REGISTRY}}/nats:2.15.1
+      arm: {{REGISTRY}}/nats:2.15.1
+      riscv64: {{REGISTRY}}/nats:2.15.1
   nats:
     enabled: true # no, bool
   events:
@@ -209,7 +209,7 @@ The stored control plane must include this block before a [Controller add-on](/l
 | `consolePort` | Default 8008 |
 | `logLevel` | |
 | `pidBaseDir` | |
-| `package.image` | Controller image. Default for this train is `controller:3.9.0` on the flavor registry. See [Default image pins](/learn/control-plane#default-image-pins-v390). |
+| `package.image` | Controller image. Default for this train is `controller:3.9.1` on the flavor registry. See [Default image pins](/learn/control-plane#default-image-pins-v390). |
 | `package.registry` | Registry hostname for a private pull |
 | `package.username` | Required together with registry and password |
 | `package.password` | |
@@ -291,7 +291,7 @@ Default Controller listener TLS for every host, unless a controller row override
 
 ### `spec.systemMicroservices`
 
-Architecture to image map for `router` and `nats`. Keys: `amd64`, `arm64`, `arm`, `riscv64`. <CliName /> fills missing entries from the build-time router and NATS images (`router:3.9.0`, `nats:2.15.0`).
+Architecture to image map for `router` and `nats`. Keys: `amd64`, `arm64`, `arm`, `riscv64`. <CliName /> fills missing entries from the build-time router and NATS images (`router:3.9.1`, `nats:2.15.1`).
 
 ### `spec.nats`
 

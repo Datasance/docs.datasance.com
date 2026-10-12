@@ -1,0 +1,56 @@
+---
+title: Learn by example
+description: Two deployable examples. Edge AI wafer defect for inference and a gallery. Acme Smart Plant for factory telemetry and a Router diagnose call.
+keywords: [tutorials, learn by example, edge ai, wafer defect, acme smart plant, nats, router]
+slug: /tutorials
+---
+
+import Link from '@docusaurus/Link';
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Learn by example
+
+These pages are examples you can deploy on <ProductName />. Each example stands on its own.
+
+Two examples are here today. Later examples, including control plane deploys, Edgelet node deploys, and smaller microservices, will each get their own folder.
+
+These examples pull Datasance-published images on both sites. `apiVersion` still follows your site. Image names do not.
+
+| Artifact | Reference |
+| --- | --- |
+| Services | `ghcr.io/datasance/pot-edge-patterns/<service>:1.2.0` |
+| Model repo | `datasance/pot-edge-patterns/models/wafer-defect` |
+| Model tag | `1.2.0` |
+
+Services: sensor-simulator, smart-anomaly-detector, diagnostic-service, alert-dashboard, frame-generator, object-detector, snapshot-service.
+
+Default Edgelet node names are **site-a**, **ops-b**, and **edge-c**. You can change `agent.name`. Deploy with <CliName /> `deploy -f`.
+
+Manifests live in [pot-edge-patterns](https://github.com/Datasance/pot-edge-patterns) under `deploy/steps/`. Run deploy commands from that repo root.
+
+## Flow
+
+Read wafer first if you want inference and a gallery. Read the plant first if you want factory telemetry, a second NATS account, and a Router diagnose call. The last plant page is optional and needs both.
+
+| Page | Reader does | Already in place |
+| --- | --- | --- |
+| [Edge AI wafer defect](/tutorials/edge-ai-wafer-defect) | Inference and a gallery | An Edgelet node you will call **edge-c** |
+| [Acme Smart Plant](/tutorials/acme-smart-plant) | Factory telemetry, a second NATS account, and a Router diagnose call | Edgelet nodes **site-a** and **ops-b** |
+| [Fab gallery link](/tutorials/acme-smart-plant/fab-gallery-link) | Optional. Set `SNAPSHOT_URL` on alert-dashboard | Both examples deployed, and the snapshot service bridge port |
+
+Wafer does not require the plant. The plant does not require wafer.
+
+If you do not have a control plane yet, start with [Quick start](/get-started/quick-start-local) or [platform deployment](/get-started/deploy/introduction).
+
+<p>
+  <Link className="button button--primary button--lg margin-right--md" to="/tutorials/edge-ai-wafer-defect">
+    Edge AI wafer defect
+  </Link>
+  <Link className="button button--secondary button--lg" to="/tutorials/acme-smart-plant">
+    Acme Smart Plant
+  </Link>
+</p>
+
+<EditPageAdmonition />

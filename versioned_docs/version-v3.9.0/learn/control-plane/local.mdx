@@ -1,0 +1,199 @@
+---
+title: Local
+description: Deploy a LocalControlPlane on one machine with Edgelet. Translation to the Edgelet manifest, networking, and day-2 tasks.
+keywords: [local control plane, localcontrolplane, edgelet, quick start, v3.9]
+slug: /learn/control-plane/local
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Local
+
+Use `kind: LocalControlPlane` to run a single-node control plane on the same machine as <CliName />, through Edgelet. Use it for a local trial and for automated tests. Production fleets belong on [Kubernetes](/learn/control-plane/kubernetes) or [Remote](/learn/control-plane/remote).
+
+The install steps are in [Quick start (local)](/get-started/quick-start-local).
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f local-controlplane.yaml -n default`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+1. Install Edgelet on the local host.
+2. Optionally stage airgap images and binaries.
+3. When `spec.controller.package` includes registry credentials, write a private registry manifest on Edgelet.
+4. Translate your YAML to `apiVersion: edgelet.iofog.org/v1`, `kind: ControlPlane`, and run `edgelet deploy -f`.
+5. Wait for the Controller API, run embedded-auth user setup, and optionally register a Controller pull registry for a private image.
+6. Install the system Edgelet node with `isSystem: true`, then configure and provision it. That node becomes the default router and the NATS hub, the same way as on a remote control plane. See [Remote networking](/learn/control-plane/remote#networking).
+7. Save namespace config, and store `spec.ca` in the CLI trust store when you set it.
+
+Runtime behavior of the Edgelet manifest (ports, volumes, environment) is in [Edgelet control plane](/learn/edgelet/control-plane).
+
+| User YAML | Edgelet manifest |
+| --------- | ---------------- |
+| Flavor `apiVersion` (`{{API_VERSION}}`) | `apiVersion: edgelet.iofog.org/v1` |
+| `kind: LocalControlPlane` | `kind: ControlPlane` |
+| `metadata.name` and `-n` | `metadata.name` and `metadata.namespace` on the Edgelet object |
+
+Fields that are not copied to Edgelet include `spec.ca`, `spec.iofogUser`, and the `routerSiteCA` / `natsSiteCA` blocks. See [Securing a local control plane](/learn/security/control-plane-local).
+
+Prerequisites:
+
+- The local host can run Edgelet (native or a container engine, matching the Edgelet node config).
+- `spec.systemAgent.config.arch` is required. Values: `amd64`, `arm64`, `arm`, `riscv64`, `auto` where that value is supported.
+- Port 54321 is free when you use the default system Edgelet node layout.
+
+`routerSiteCA`, `routerLocalCA`, `natsSiteCA`, and `natsLocalCA` are validated in local YAML. <CliName /> does not upload them to the Controller API on local deploy today. A remote `ControlPlane` deploy does upload them when they are set. Until local deploy gains that step, import messaging CAs with the Controller API after deploy, or use a remote control plane when you bring your own CAs. Edgelet rejects inline site and local CA material in its own manifest.
+
+## Examples
+
+Minimal trial. `insecureAllowHttp` is for this path when the public URL is `http://`. Set `systemAgent.config.arch` to the machine you are on.
+
+<FlavorYaml title="local-controlplane.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: LocalControlPlane
+metadata:
+  name: local-cp
+spec:
+  endpoint: http://127.0.0.1:51121
+  iofogUser:
+    email: dev@example.com
+  controller:
+    publicUrl: http://127.0.0.1:51121
+    consoleUrl: http://127.0.0.1:80
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:3.9.0
+  auth:
+    mode: embedded
+    insecureAllowHttp: true
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+  nats:
+    enabled: true
+  systemAgent:
+    config:
+      arch: amd64
+  events:
+    auditEnabled: true
+    retentionDays: 14
+```
+
+</FlavorYaml>
+
+A file that also sets an external database and audit retention, for a longer-lived trial on one machine:
+
+<FlavorYaml title="local-with-database.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: LocalControlPlane
+metadata:
+  name: local-cp
+spec:
+  endpoint: https://127.0.0.1:51121
+  iofogUser:
+    email: dev@example.com
+  controller:
+    publicUrl: https://127.0.0.1:51121
+    consoleUrl: https://127.0.0.1
+    logLevel: info
+    package:
+      image: {{REGISTRY}}/controller:3.9.0
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      password: "LocalTest12!"
+  database:
+    provider: postgres
+    host: 127.0.0.1
+    port: 5432
+    user: controller
+    password: secret
+    databaseName: controller
+  systemMicroservices:
+    router:
+      amd64: {{REGISTRY}}/router:3.9.0
+      arm64: {{REGISTRY}}/router:3.9.0
+      arm: {{REGISTRY}}/router:3.9.0
+      riscv64: {{REGISTRY}}/router:3.9.0
+    nats:
+      amd64: {{REGISTRY}}/nats:2.15.0
+      arm64: {{REGISTRY}}/nats:2.15.0
+      arm: {{REGISTRY}}/nats:2.15.0
+      riscv64: {{REGISTRY}}/nats:2.15.0
+  nats:
+    enabled: true
+  systemAgent:
+    config:
+      arch: amd64
+  events:
+    auditEnabled: true
+    retentionDays: 14
+```
+
+</FlavorYaml>
+
+TLS for the local Controller listener is `spec.tls`. See [Securing a local control plane](/learn/security/control-plane-local).
+
+## Networking
+
+Local deploy uses the remote system-Edgelet-node path. Edgelet registers microservice `controller`. The Controller provisions microservice `router` (the `default-router`) and microservice `nats` (the `default-nats-hub`) on that same node.
+
+The router container uses host networking so 45671 and 55671 bind on the host. Certificate names include the Edgelet node name. The Controller creates the site and local CAs on first reconcile unless you imported them after deploy.
+
+How updates land (microservice config, `nats-server-conf-{agent}`, JWT bundle) is the same list as on [Remote networking](/learn/control-plane/remote#networking). Kubernetes Service objects and operator registration do not apply here.
+
+## Day-2
+
+The console does not install this control plane. After deploy, open [Overview](/get-started/edgeops-console/overview). **Cluster controllers** shows **Active**, **Standby**, or **Stale**. That block does not open a detail panel.
+
+### Connect
+
+<CliBlock>{`{{CLI_NAME}} connect -f local-controlplane.yaml -n default
+{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_connect`}>connect</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controlplane`}>describe controlplane</Link>
+
+### Describe
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe`}>describe</Link>
+
+### Upgrade
+
+Set `spec.controller.package.image`, `spec.systemMicroservices`, and the system Edgelet pin, then deploy the file again. The full order is [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train). Pins are in [Default image pins](/learn/control-plane#default-image-pins-v390).
+
+<CliBlock>{`{{CLI_NAME}} deploy -f local-controlplane.yaml`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_upgrade`}>upgrade</Link> is the fleet Edgelet verb. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
+
+## Fields
+
+[LocalControlPlane fields](/reference/yaml/local-control-plane)
+
+<EditPageAdmonition />

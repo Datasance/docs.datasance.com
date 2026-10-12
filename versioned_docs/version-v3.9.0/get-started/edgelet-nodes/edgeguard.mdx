@@ -1,0 +1,70 @@
+---
+title: EdgeGuard on Edgelet Nodes
+description: Enable hardware attestation with edgeGuardFrequency in AgentConfig. Operator response when EdgeGuard deprovisions a node after a signature change.
+keywords: [edgeguard, edgelet node, agentconfig, hardware attestation, deprovision, v3.9]
+slug: /get-started/edgelet-nodes/edgeguard
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# EdgeGuard
+
+EdgeGuard periodically fingerprints host hardware and compares it to a baseline. When the fingerprint changes, Edgelet reports a warning, **deprovisions** the node from the Controller, and clears the stored baseline. Use it on untrusted or physically accessible edge hardware when you need tamper detection.
+
+v3.9 replaces legacy HAL scan fields with **`edgeGuardFrequency`**. Do not use **`deviceScanFrequency`**, **`bluetoothEnabled`**, or **`abstractedHardwareEnabled`** in new YAML.
+
+## Enable from the orchestrator
+
+Set **`edgeGuardFrequency`** in **`AgentConfig`** (seconds between attestation runs). **`0`** disables EdgeGuard.
+
+<FlavorYaml>{`---
+apiVersion: {{API_VERSION}}
+kind: AgentConfig
+metadata:
+  name: zebra-1
+spec:
+  edgeGuardFrequency: 3600
+`}</FlavorYaml>
+
+Apply:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f agent-config.yaml`}</CliBlock>
+
+You can also set **`edgeGuardFrequency`** under **`spec.config`** on initial **`Agent`** deploy. After provision, the Controller can push the same key when you update AgentConfig.
+
+EdgeGuard runs only on **provisioned** nodes (valid agent credentials in Edgelet SQLite). If the node is unprovisioned, the runtime forces **`edgeGuardFrequency`** to **`0`**.
+
+## What operators see
+
+| Signal | Meaning |
+| ------ | ------- |
+| **`describe agent`** / Console node status | Warning such as **`HW signature changed`** when a mismatch occurred |
+| Controller record | Node deprovisioned; microservices on that node stop |
+| Local Edgelet | Baseline signature row removed after mismatch |
+
+EdgeGuard compares a stable **hash** claim, not the full JWT string, so periodic refreshes with unchanged hardware do not deprovision the node.
+
+## Response runbook
+
+1. **Investigate** physical or VM changes (NIC swap, disk change, USB devices that affect the fingerprint, VM identity drift).
+2. **If hardware change is expected** and the node should rejoin the ECN:
+   - Fix or replace hardware as needed.
+   - Run **`edgelet provision`** on the host with a valid provisioning key from the Controller, or redeploy **`Agent`** if the host was wiped.
+   - Confirm **`describe agent`** shows an empty warning and the node is provisioned again.
+3. **If you only need to change the interval** (and the node is still provisioned), deploy **`AgentConfig`** with a new **`edgeGuardFrequency`**. Setting **`0`** stops attestation and deletes the baseline on the device.
+4. **Lab and VMs:** use a reasonable interval in production (for example 3600 seconds). Very short intervals are for testing only.
+
+Break-glass on the device: see [Edgelet configuration](/learn/edgelet/configuration) and the Edgelet repo operator notes for EdgeGuard persistence and validation steps.
+
+## See also
+
+- [Edgelet nodes in Learn](/learn/edgelet-nodes#edgeguard) - YAML field and v3.9 removals
+- [Configuration updates](/get-started/edgelet-nodes/configuration-updates) - AgentConfig workflow
+- [Edgelet configuration reference](/learn/edgelet/configuration) - `edgeGuardFrequency` and Controller push
+- [Attach and detach](/get-started/edgelet-nodes/attach-detach) - move a node between ECNs after reprovision
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

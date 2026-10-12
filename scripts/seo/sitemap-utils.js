@@ -2,6 +2,7 @@
  * Shared sitemap helpers for docusaurus.config.ts and postbuild-seo.js.
  */
 
+/** Versioned trees (/v3.9.0, /v3.8.0, /v3.7.3, ...). The current train has no /v3 prefix. */
 const LEGACY_VERSION_PREFIX = /^\/v3\.\d+/;
 
 const SITEMAP_IGNORE_PATTERNS = ['/tags/**', '/search', '/markdown-page'];

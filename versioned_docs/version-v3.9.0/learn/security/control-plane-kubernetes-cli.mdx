@@ -1,0 +1,200 @@
+---
+title: Securing Kubernetes control plane (CLI YAML)
+description: TLS fields you set on KubernetesControlPlane, including spec.ca, controller HTTPS, Ingress, publicUrl, and consoleUrl.
+keywords: [tls, kubernetes control plane, spec.ca, ingress, publicUrl, v3.9]
+slug: /learn/security/control-plane-kubernetes-cli
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Securing Kubernetes control plane (CLI YAML)
+
+This page is the `KubernetesControlPlane` file: `spec.ca`, `controller.https`, Ingress, `publicUrl`, and `consoleUrl`. The operator creates the Secrets, Ingress, and CA catalog entries. That behavior is [Kubernetes (operator)](/learn/security/control-plane-kubernetes-operator).
+
+Field tables: [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane). The cluster object: [ControlPlane CRD](/learn/control-plane/kubernetes-crd).
+
+`KubernetesControlPlane` has no `routerSiteCA` or `natsSiteCA` fields. Router and NATS material stays in namespace Secrets.
+
+## What you configure
+
+| Concern | Where you set it | Who creates the certificate |
+| ------- | ---------------- | --------------------------- |
+| Controller HTTPS (load balancer and pod TLS) | `services.controller`, `controller.https`, `controller.secretName` | You. A TLS Secret in the control plane namespace |
+| Controller HTTPS (Ingress B1) | ClusterIP, Ingress TLS, `controller.https: false` | You, or cert-manager on the Ingress |
+| Controller HTTPS (Ingress B2) | ClusterIP, Ingress, `controller.https: true` | You. Often one Secret for the Ingress and the pod |
+| Router and NATS | Operator, in the control plane namespace | Operator, or you if you pre-create the Secrets |
+| CLI trust of the Controller API | `spec.ca` | You. Base64 PEM |
+| External database TLS | `database.ssl`, `database.ca` | You. Base64 PEM on the custom resource |
+
+## CLI trust: `spec.ca`
+
+`spec.ca` is a base64 PEM on one line. On deploy, <CliName /> stores it as `ca.pem` under `~/.iofog/v3/trust/<namespace>/`. Later commands in that namespace verify the Controller certificate against that CA.
+
+```bash
+base64 -i my-ca.pem | tr -d '\n'
+```
+
+`spec.ca` is the CA the CLI uses for the Controller API. It is a different object from Router and NATS Secrets, from `controller.secretName`, and from an Ingress TLS Secret.
+
+### `connect --ca`
+
+`connect --ca <file>` overrides trust for that connect only. `spec.ca` from deploy remains the stored trust for the namespace.
+
+If the Controller certificate is signed by a public CA, the CLI can use the system trust store. For a private CA, set `spec.ca` at deploy, or pass `connect --ca`.
+
+## Controller HTTPS
+
+The same fields are written onto the operator ControlPlane custom resource.
+
+| Pattern | `services.controller` | Ingress | `controller.https` | Public certificate | Traffic |
+| ------- | --------------------- | ------- | ------------------ | ------------------ | ------- |
+| A | LoadBalancer |  | `true` | Pod Secret `secretName` | Client, load balancer, TLS on the pod |
+| B1 | ClusterIP | Yes | `false` | `ingresses.controller.secretName` | Client, TLS on the Ingress, HTTP to the pod |
+| B2 | ClusterIP | Yes | `true` | Ingress Secret and pod mount, often the same name | Client, TLS on the Ingress, TLS to the pod |
+
+When the controller Service type is `ClusterIP`, <CliName /> requires `ingresses.controller.host` and `ingresses.controller.secretName`. The operator creates an Ingress named `controller`. Path `/` goes to the console. Path `/api/v3` goes to API port 51121.
+
+Full files: [ingress.yaml](/examples/controlplane/kubernetes/ingress.yaml) (B1), [controller-ingress.yaml](/examples/controlplane/kubernetes/controller-ingress.yaml) (B2).
+
+### Pattern A: load balancer and pod TLS
+
+<FlavorYaml title="pattern-a.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: controller-tls
+spec:
+  services:
+    controller:
+      type: LoadBalancer
+  controller:
+    https: true
+    secretName: controller-api-tls
+    publicUrl: https://203.0.113.10:51121
+```
+
+</FlavorYaml>
+
+Create the `kubernetes.io/tls` Secret `controller-api-tls` in the same namespace as the ControlPlane. See [Pattern A](/learn/security/control-plane-kubernetes-operator#pattern-a-loadbalancer--pod-tls).
+
+If you omit `publicUrl`, the operator waits for the load balancer address and derives the URLs. See [publicUrl and consoleUrl](#publicurl-and-consoleurl).
+
+### Pattern B1: Ingress terminates TLS, Controller speaks HTTP
+
+Use this when the ingress controller holds the public certificate.
+
+<FlavorYaml title="pattern-b1.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: controller-ingress
+spec:
+  services:
+    controller:
+      type: ClusterIP
+  ingresses:
+    controller:
+      host: controller.example.com
+      ingressClassName: nginx
+      secretName: controller-tls
+  controller:
+    publicUrl: https://controller.example.com
+    trustProxy: true
+    https: false
+```
+
+</FlavorYaml>
+
+Leave `controller.secretName` unset while `https` is false. See [B1](/learn/security/control-plane-kubernetes-operator#b1--ingress-terminates-tls-controller-speaks-http).
+
+### Pattern B2: Ingress and pod TLS (re-encrypt)
+
+Use this when the Ingress and the Controller pod both speak HTTPS. Point the Ingress and the pod at the same Secret:
+
+- `ingresses.controller.secretName: controller-tls`
+- `controller.https: true`
+- `controller.secretName: controller-tls`
+
+For nginx, the Ingress must use HTTPS to the backend.
+
+<FlavorYaml title="pattern-b2.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: controller-reencrypt
+spec:
+  services:
+    controller:
+      type: ClusterIP
+  ingresses:
+    controller:
+      host: controller.example.com
+      ingressClassName: nginx
+      secretName: controller-tls
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  controller:
+    publicUrl: https://controller.example.com
+    trustProxy: true
+    https: true
+    secretName: controller-tls
+```
+
+</FlavorYaml>
+
+Clients still use `https://controller.example.com`. The path is client, TLS, Ingress, TLS, Controller pod. The certificate in the shared Secret must match what the ingress controller trusts for the backend. See [B2](/learn/security/control-plane-kubernetes-operator#b2--ingress-terminates-tls-and-controller-also-uses-https-re-encrypt).
+
+### `spec.ca` for Ingress
+
+Set `spec.ca` to the CA that signs the certificate clients and the CLI actually see. That is usually the Ingress public chain or your corporate root, which can differ from an internal pod CA.
+
+### `publicUrl` and `consoleUrl` {#publicurl-and-consoleurl}
+
+These fields are `spec.controller.publicUrl` and `spec.controller.consoleUrl`. If you omit them, the operator derives them and sets `CONTROLLER_PUBLIC_URL` and `CONSOLE_URL` on the Controller pod.
+
+Set `publicUrl` when DNS, TLS termination, or port `:51121` must match what users and `spec.ca` expect. Set `consoleUrl` when the console hostname differs from the API. If `consoleUrl` is empty and `publicUrl` is set, the operator copies `publicUrl`.
+
+You can omit `publicUrl` and wait for the operator. <CliName /> still waits until the control plane is ready, then takes the API endpoint from the load balancer, from the Ingress named `controller`, or from the URL you set.
+
+Scheme and host rules: [URL resolution](/learn/control-plane/kubernetes-crd#url-resolution-publicurl-and-consoleurl). The same summary is on [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane).
+
+## Database TLS
+
+`database.ssl` and `database.ca` (base64 PEM) are the Controller connection to an external database. They are a different object from Ingress Secrets and from Router and NATS Secrets. Field detail: [Database TLS and ca](/learn/control-plane/kubernetes-crd#database-tls-and-ca).
+
+## Router and NATS
+
+Secret names and CA import are on the operator page: [Router TLS secrets](/learn/security/control-plane-kubernetes-operator#router-tls-secrets), [NATS TLS secrets](/learn/security/control-plane-kubernetes-operator#nats-tls-secrets).
+
+The Router needs a LoadBalancer, or `ingresses.router.address`. NATS needs a LoadBalancer, or `ingresses.nats.address`, when the client Service is not a LoadBalancer.
+
+## Checks
+
+- Pick pattern A, B1, or B2. Set `publicUrl` and `consoleUrl`, or let the operator derive them.
+- For Ingress, set `trustProxy: true`, or omit it. The operator defaults it to true in Ingress mode.
+- For B2, use the same Secret name on the Ingress and on `controller.secretName`. Set the Ingress backend protocol to HTTPS where the ingress controller requires it.
+- Set `spec.ca` when the Controller API uses a private CA.
+- Keep bootstrap passwords and `database.password` out of Git. Prefer a Kubernetes Secret for the bootstrap password in production.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| ------- | ------------ |
+| CLI cannot connect after deploy | `spec.ca` is missing or does not match the API certificate |
+| Deploy validation: Ingress required | `services.controller.type: ClusterIP` without `ingresses.controller.host` and `secretName` |
+| Deploy validation: Router ingress | `services.router.type: ClusterIP` without `ingresses.router` |
+| Controller stays not ready in Ingress mode | Ingress status has no external address |
+| 502 or TLS errors on B2 | Missing backend HTTPS, or the pod Secret name does not match the Ingress |
+| OIDC redirect uses the wrong scheme | `publicUrl` scheme does not match the entrypoint. Set `trustProxy` in Ingress mode |
+| NATS hub is not registered | NATS is enabled, the Service is not a LoadBalancer, and `ingresses.nats.address` is empty |
+
+<EditPageAdmonition />

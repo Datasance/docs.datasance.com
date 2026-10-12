@@ -1,6 +1,6 @@
 ---
 title: "NATS Server"
-description: "iofog-nats is the container entrypoint. It starts upstream nats-server v2.15.0 as a child process, watches the files the platform mounts into the container, and applies those chang"
+description: "iofog-nats is the container entrypoint. It starts upstream nats-server v2.15.1 as a child process, watches the files the platform mounts into the container, and applies those chang"
 keywords: ["nats", "iofog-nats", "nats-server", "leaf"]
 slug: /learn/platform-components/nats-server
 ---
@@ -10,7 +10,7 @@ import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
 # How the NATS wrapper works
 
-`iofog-nats` is the container entrypoint. It starts upstream `nats-server` v2.15.0 as a child process, watches the files the platform mounts into the container, and applies those changes with `SIGHUP`, a restart, or a JWT sync. The same binary runs on a Kubernetes control-plane hub and on an Edgelet node. There is no separate edge binary, and no product-specific or Kubernetes branch in the wrapper. The platforms differ only in who writes the files and how they appear in the container.
+`iofog-nats` is the container entrypoint. It starts upstream `nats-server` v2.15.1 as a child process, watches the files the platform mounts into the container, and applies those changes with `SIGHUP`, a restart, or a JWT sync. The same binary runs on a Kubernetes control-plane hub and on an Edgelet node. There is no separate edge binary, and no product-specific or Kubernetes branch in the wrapper. The platforms differ only in who writes the files and how they appear in the container.
 
 This page describes the wrapper in this repository (`cmd/iofog-nats` and `internal/*`). Controller and operator behavior is included only where it explains which files and environment variables the wrapper actually sees.
 

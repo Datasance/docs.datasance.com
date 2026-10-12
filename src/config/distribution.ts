@@ -30,13 +30,13 @@ export const CONTROLPLANE_CRD_RESOURCE =
   FLAVOR === 'datasance' ? 'controlplanes.datasance.com' : 'controlplanes.iofog.org';
 
 /** Helm chart version aligned with platform train v3.9.0 operator release. */
-export const OPERATOR_CHART_VERSION = '3.9.0';
+export const OPERATOR_CHART_VERSION = '3.9.1';
 
 /** Platform train version (Controller, Router, CLI). */
-export const PLATFORM_TRAIN = '3.9.0';
+export const PLATFORM_TRAIN = '3.9.1';
 
 /** Edgelet binary and container image tag for the current platform train. */
-export const EDGELET_VERSION = '1.1.0';
+export const EDGELET_VERSION = '1.1.1';
 
 export const CLI_NAME = FLAVOR === 'datasance' ? 'potctl' : 'iofogctl';
 

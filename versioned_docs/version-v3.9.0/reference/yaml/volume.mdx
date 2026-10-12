@@ -1,0 +1,70 @@
+---
+title: Volume fields
+description: Field reference for kind Volume. Agent names, operator source directory, destination, and permissions.
+keywords: [volume, yaml, fields, source, destination, agents, permissions]
+slug: /reference/yaml/volume
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Volume fields
+
+Reference for `kind: Volume`. Deploy and the volume-mount split are on [Volumes](/learn/config/volumes).
+
+The CLI stores every `spec` field in namespace config under `~/.iofog/v3`. Describe reads that file.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Volume # required, string
+metadata:
+  name: model-weights # required, string
+  namespace: my-ecn # no, string
+spec:
+  name: model-weights # required, string
+  agents: # required, list of string. Edgelet node names
+    - edge-01
+  source: /data/models-src # required, string. Directory on the machine running the CLI
+  destination: /var/lib/iofog/volumes/model-weights # required, string
+  permissions: "0755" # required, string
+```
+
+</FlavorYaml>
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `name` | Yes | Volume name. Microservice `hostDestination` when `type` is `volume`. |
+| `agents` | Yes | Edgelet node names in this namespace. The YAML kind of each node is `Agent`. |
+| `source` | Yes | Directory on the machine running the CLI. |
+| `destination` | Yes | Absolute directory on each target node. Created when missing. |
+| `permissions` | Yes | Unix mode string applied during the remote copy, such as `"0755"` or `"0777"`. |
+
+## Remote copy
+
+For each remote node:
+
+1. SSH uses the node `user`, `host`, `keyFile`, and `port`.
+2. Create `destination` and a temp folder under `/tmp`.
+3. Copy `source` to the temp folder.
+4. Move the contents into `destination`.
+
+Errors are reported per node.
+
+## Local node
+
+A `kind: LocalAgent` in `agents` records the volume and prints that the copy is unnecessary, because the host filesystem is used directly. If `source` and `destination` differ, the CLI warns about bind confusion.
+
+## Validation
+
+| Rule | Error |
+| ---- | ----- |
+| `source` is not a directory | Source must be a directory. |
+| Remote node on a loopback host | Not supported for local agents. |
+| Missing SSH | SSH validation error. |
+| Unknown node name | Namespace lookup error. |
+
+<EditPageAdmonition />

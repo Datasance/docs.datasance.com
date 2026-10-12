@@ -15,7 +15,7 @@ spec:
   controller:
     publicUrl: https://203.0.113.10:51121
     package:
-      image: {{REGISTRY}}/controller:3.9.0
+      image: {{REGISTRY}}/controller:3.9.1
   auth:
     mode: embedded
     bootstrap:
@@ -39,15 +39,15 @@ spec:
     tlsKey: <base64-pem>
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.0
-      arm64: {{REGISTRY}}/router:3.9.0
-      arm: {{REGISTRY}}/router:3.9.0
-      riscv64: {{REGISTRY}}/router:3.9.0
+      amd64: {{REGISTRY}}/router:3.9.1
+      arm64: {{REGISTRY}}/router:3.9.1
+      arm: {{REGISTRY}}/router:3.9.1
+      riscv64: {{REGISTRY}}/router:3.9.1
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.0
-      arm64: {{REGISTRY}}/nats:2.15.0
-      arm: {{REGISTRY}}/nats:2.15.0
-      riscv64: {{REGISTRY}}/nats:2.15.0
+      amd64: {{REGISTRY}}/nats:2.15.1
+      arm64: {{REGISTRY}}/nats:2.15.1
+      arm: {{REGISTRY}}/nats:2.15.1
+      riscv64: {{REGISTRY}}/nats:2.15.1
   nats:
     enabled: true
   controllers:

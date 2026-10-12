@@ -1,0 +1,156 @@
+---
+title: Control plane
+description: Choose a control plane kind, see who owns TLS, and run day-2 connect, describe, and upgrade for platform train v3.9.0.
+keywords: [control plane, kubernetes control plane, remote control plane, local control plane, embedded oidc, v3.9]
+slug: /learn/control-plane
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorOnly from '@site/src/components/flavor/FlavorOnly';
+import ProductName from '@site/src/components/flavor/ProductName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Control plane
+
+The <ProductName /> control plane is the Controller, the Router, optional NATS, and a system Edgelet node on each Controller host. You declare it in <CliName /> YAML. The `kind` is the only switch. `metadata.controlPlaneType` is retired.
+
+User YAML `apiVersion` follows the build flavor. Examples on these pages use `<FlavorYaml>` so the group and image registry match the site you are reading. The manifest Edgelet stores is always `apiVersion: edgelet.iofog.org/v1` and `kind: ControlPlane`. That apiVersion stays fixed.
+
+## Which kind
+
+| Kind | Use it when |
+| ---- | ----------- |
+| `KubernetesControlPlane` | Controller, Router, and NATS run on Kubernetes. <CliName /> installs the operator and applies a `ControlPlane` custom resource. |
+| `ControlPlane` | Controller hosts are remote machines. Edgelet runs on each host. |
+| `LocalControlPlane` | One machine, for a local trial. <CliName /> translates this file into an Edgelet `ControlPlane`. |
+| `Controller` | You are adding one controller host to a remote control plane that is already deployed. |
+
+<FlavorOnly distribution="datasance">
+
+On Kubernetes the operator custom resource name is fixed: **`pot`**.
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+On Kubernetes the operator custom resource name is fixed: **`iofog`**.
+
+</FlavorOnly>
+
+| Guide | Fields |
+| ----- | ------ |
+| [Kubernetes](/learn/control-plane/kubernetes) | [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane), [ControlPlane CRD](/learn/control-plane/kubernetes-crd) |
+| [Remote](/learn/control-plane/remote), [Multi-controller HA](/learn/control-plane/remote-ha), [Controller add-on](/learn/control-plane/controller-add-on) | [Remote ControlPlane fields](/reference/yaml/remote-control-plane) |
+| [Local](/learn/control-plane/local) | [LocalControlPlane fields](/reference/yaml/local-control-plane) |
+
+Install steps stay in Get started. Use these pages for the manifest and for what <CliName /> does with it.
+
+| Target | Install |
+| ------ | ------- |
+| Kubernetes with <CliName /> | [Kubernetes CLI](/get-started/deploy/kubernetes-cli) |
+| Kubernetes with Helm | [Helm](/get-started/deploy/kubernetes-helm) |
+| Remote hosts | [Remote control plane](/get-started/deploy/remote-control-plane) |
+| This machine | [Quick start (local)](/get-started/quick-start-local) |
+| Sign-in | [Embedded OIDC](/get-started/deploy/embedded-oidc), [External OIDC](/get-started/deploy/external-oidc) |
+
+Greenfield files use `auth.mode: embedded` or `auth.mode: external`. When NATS is on, bind [NATS account rules](/learn/message-bus/account-rules) and [NATS user rules](/learn/message-bus/user-rules). After the control plane is ready, add fleet nodes with `kind: Agent`. See [Edgelet nodes](/learn/edgelet-nodes).
+
+## Component pairing (v3.9.0) {#default-image-pins-v390}
+
+Keep the CLI, the operator, the Controller, and the Router on **v3.9.0**. Edgelet on Controller hosts is **v1.1.0**. The NATS image tag for this train is **2.15.0**.
+
+Container tags in the manifest omit the `v` prefix on Controller, operator, and Router images. The Edgelet image tag is `1.1.0`. The CLI binary tag keeps the `v`.
+
+| Component | Release | Image tag | Where to set it |
+| --------- | ------- | --------- | --------------- |
+| <CliName /> | v3.9.0 |  | Workstation binary |
+| Operator | v3.9.0 | `3.9.0` | `spec.images.operator` (Kubernetes) |
+| Controller | v3.9.0 | `3.9.0` | `spec.images.controller` or `spec.controller.package.image` |
+| Router | v3.9.0 | `3.9.0` | `spec.images.router` or `spec.systemMicroservices.router` |
+| NATS |  | `2.15.0` | `spec.images.nats` or `spec.systemMicroservices.nats` |
+| Edgelet (system node) | v1.1.0 | `1.1.0` | `spec.systemAgent` package image or version |
+
+Registry host comes from the build flavor (`{{REGISTRY}}` inside examples). Router and NATS on local and remote control planes take four architecture keys: `amd64`, `arm64`, `riscv64`, and `arm`.
+
+## Who owns TLS
+
+Start at [Securing the cluster](/learn/security/securing-cluster). Each deploy path has its own page.
+
+| Layer | [Kubernetes](/learn/security/control-plane-kubernetes-cli) | [Local](/learn/security/control-plane-local) | [Remote](/learn/security/control-plane-remote) |
+| ----- | --------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------- |
+| Controller HTTPS | The operator sets pod TLS and Ingress. See also [operator TLS](/learn/security/control-plane-kubernetes-operator). | <CliName /> writes `spec.tls` to Edgelet `spec.tls.base64`. | Same as local. A host may override with `controllers[].tls`. |
+| Router and NATS CAs | The operator creates or reuses namespace Secrets, then imports the CAs into the Controller API. | YAML blocks are validated. <CliName /> does not upload them on local deploy today. | <CliName /> uploads `routerSiteCA`, `routerLocalCA`, `natsSiteCA`, and `natsLocalCA` once per deploy. |
+| CLI trust of the Controller API | `spec.ca` goes into the namespace trust store. | Same. | Same. |
+| `connect --ca` | Connect-time override for API TLS. | Same. | Same. |
+
+## Vault settings {#specvault}
+
+`spec.vault` tells the Controller how to reach a secret store. The field tables live with each kind:
+
+- [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane#specvault)
+- [Remote ControlPlane fields](/reference/yaml/remote-control-plane#specvault)
+- [LocalControlPlane fields](/reference/yaml/local-control-plane#specvault)
+
+On Kubernetes the operator expands `$namespace` inside `basePath`. On Edgelet, `basePath` is stored as written. Supported providers: `hashicorp`, `openbao`, `vault`, `aws`, `aws-secrets-manager`, `azure`, `azure-key-vault`, `google`, `google-secret-manager`.
+
+## Day-2
+
+The console does not install a control plane. Deploy with <CliName />, then open [Overview](/get-started/edgeops-console/overview). **Cluster controllers** shows each controller as **Active**, **Standby**, or **Stale**. That block does not open a detail panel.
+
+The command that sends a file is `deploy`. Open the generated page for each verb. The blocks below show the usual form, not every flag.
+
+### Connect
+
+Use connect when the control plane is already running and this workstation only needs namespace state. Use an empty namespace. See [Connect and disconnect](/get-started/cli/connect-disconnect).
+
+<CliBlock>{`{{CLI_NAME}} connect -f controlplane.yaml
+{{CLI_NAME}} describe controlplane`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_connect`}>connect</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controlplane`}>describe controlplane</Link>
+
+A remote add-on host needs the full control plane file in that namespace, from an earlier `deploy -f` or from `connect -f` with the same file. A URL-only connect is not enough for `kind: Controller`.
+
+### Describe
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane
+{{CLI_NAME}} describe controller CONTROLLER_NAME`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe`}>describe</Link>
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_controller`}>describe controller</Link>
+
+### Upgrade the platform train {#upgrade-the-platform-train}
+
+**v3.8.0** to **v3.9.0** stays on the same Controller database. It is an in-train upgrade. Read [What's New](/release-notes/whats-new) and [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9) before you change tags.
+
+| Component | v3.9.0 pin |
+| --------- | ---------- |
+| <CliName /> | v3.9.0 |
+| Controller | image `3.9.0` |
+| Operator (Kubernetes) | image `3.9.0` |
+| Router | image `3.9.0` |
+| NATS | image `2.15.0` |
+| System Edgelet on Controller hosts | v1.1.0 (image `1.1.0`) |
+
+1. Upgrade <CliName /> on the workstation to **v3.9.0**.
+2. Set the image tags and Edgelet pin in the control plane file. Use the table in [Default image pins](#default-image-pins-v390).
+3. Run `deploy -f` on the updated file. On Kubernetes you can upgrade the operator with Helm on the same train, then deploy the updated `KubernetesControlPlane` file. See [Kubernetes](/learn/control-plane/kubernetes) and [Remote](/learn/control-plane/remote).
+4. Upgrade fleet Edgelet nodes to **v1.1.0** with <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_upgrade`}>upgrade</Link>. The node steps are in [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet). Controller hosts pick up the system Edgelet pin in step 3.
+5. Check [What's New](/release-notes/whats-new) for YAML changes that affect workloads and config.
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+Air-gapped sites stage images first. See [Airgap deployment](/get-started/deploy/airgap-deployment) and [Offline images](/learn/config/offline-images).
+
+To drop local CLI state and leave the running control plane in place:
+
+<CliBlock>{`{{CLI_NAME}} disconnect`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_disconnect`}>disconnect</Link>
+
+<EditPageAdmonition />

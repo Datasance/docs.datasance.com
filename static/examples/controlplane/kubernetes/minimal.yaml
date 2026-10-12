@@ -27,10 +27,10 @@ spec:
     https: true
     secretName: controller-tls
   images:
-    operator: {{REGISTRY}}/operator:3.9.0
-    controller: {{REGISTRY}}/controller:3.9.0
-    router: {{REGISTRY}}/router:3.9.0
-    nats: {{REGISTRY}}/nats:2.15.0
+    operator: {{REGISTRY}}/operator:3.9.1
+    controller: {{REGISTRY}}/controller:3.9.1
+    router: {{REGISTRY}}/router:3.9.1
+    nats: {{REGISTRY}}/nats:2.15.1
   services:
     controller:
       type: LoadBalancer

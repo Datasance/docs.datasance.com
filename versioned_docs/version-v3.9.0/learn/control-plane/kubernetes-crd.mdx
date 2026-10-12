@@ -1,0 +1,507 @@
+---
+title: ControlPlane CRD
+description: Operator ControlPlane custom resource. Spec fields, status, URL derivation, and the objects the operator creates on Kubernetes.
+keywords: [controlplane crd, operator, kubernetes, custom resource, v3.9]
+slug: /learn/control-plane/kubernetes-crd
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import FlavorOnly from '@site/src/components/flavor/FlavorOnly';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# ControlPlane CRD
+
+The `ControlPlane` custom resource is the object the operator reconciles. It is not the file you pass to <CliName />. That file is `kind: KubernetesControlPlane`. See [Kubernetes](/learn/control-plane/kubernetes) and [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane).
+
+The operator turns this object into a Controller Deployment, a Router Deployment, a NATS StatefulSet, Services, an optional Ingress, Secrets, ConfigMaps, PVCs, and RBAC. Image behavior is on [Operator](/learn/platform-components/operator), [Router](/learn/platform-components/router), and [NATS Server](/learn/platform-components/nats-server).
+
+## Resource overview
+
+| Property | Value |
+| -------- | ----- |
+| Kind | `ControlPlane` |
+| API version | Flavor group, the same `{{API_VERSION}}` as user YAML |
+| Scope | Namespaced |
+| Subresources | `status` |
+| Controller | Operator (`ControlPlaneReconciler`) |
+
+<FlavorOnly distribution="datasance">
+
+The custom resource name is **`pot`**.
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+The custom resource name is **`iofog`**.
+
+</FlavorOnly>
+
+`metadata.name` is the instance name. It is used in labels (`app.kubernetes.io/instance`) and in derived names such as the JetStream key secret `nats-jetstream-key-<name>`.
+
+## Status and lifecycle
+
+### Conditions
+
+`status.conditions` holds one active condition type. The others are set to `False` when the type changes.
+
+| Type | Meaning |
+| ---- | ------- |
+| `deploying` | Initial rollout, or recovery from an invalid state |
+| `updating` | `spec` changed. `observedGeneration` on the previous ready condition does not match the current generation. |
+| `ready` | Control plane components reconciled successfully |
+
+While the condition is `deploying` or `updating`, the operator runs Router, NATS (if enabled), and Controller reconcilers in parallel. When all three finish without a blocking error, the condition becomes `ready`. While the condition is `ready`, the operator does no further work until the next spec change moves the object back to `updating`.
+
+New objects typically start with `status.conditions[0].type: deploying` and `status: "True"`.
+
+### Reconcile flow (deploying / updating)
+
+Controller reconcile, after the Deployment exists:
+
+1. Resolve the bootstrap password (`auth.bootstrap` or `passwordSecretRef`).
+2. Wait for external access (LoadBalancer address or Ingress load balancer status).
+3. Log in to the Controller API (embedded bootstrap, or external OAuth2 client credentials).
+4. Register the default router (`PUT`, host and ports from the load balancer or `ingresses.router`).
+5. Register the default NATS hub when NATS is enabled and an address is known.
+6. Import Router and NATS CA Secrets into the Controller certificate store (`CreateCA`, type `k8s-secret`).
+
+Router reconcile needs an external address before TLS Secrets are generated:
+
+- `services.router.type: LoadBalancer`: wait for a hostname or IP on Service `router`.
+- Otherwise `ingresses.router.address` must be set.
+
+NATS reconcile is skipped when `spec.nats.enabled` is false. When NATS is enabled, the operator bootstraps JWT and credentials from the Controller API, ensures the JetStream key and TLS Secrets, then creates the StatefulSet.
+
+How the process watches and requeues is on [Kubernetes](/learn/control-plane/kubernetes#how-the-operator-runs).
+
+## `spec` reference
+
+### Top-level fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `auth` | Yes | Controller OIDC: `embedded` or `external` |
+| `database` | Yes | PostgreSQL, MySQL, or an empty host for embedded SQLite |
+| `ingresses` | No | External hostnames and ports for Ingress exposure |
+| `services` | No | Kubernetes Service types and annotations |
+| `replicas` | No | Controller and NATS replica counts |
+| `images` | No | Container images and pull Secret |
+| `controller` | No | Controller runtime URLs, HTTPS, logging |
+| `events` | No | Audit event settings |
+| `nats` | No | NATS hub toggle and JetStream storage |
+| `vault` | No | Optional secret store for the Controller |
+
+### `spec.auth`
+
+Controller authentication. Embedded OIDC or an external identity provider. There are no Keycloak fields.
+
+| Field | Type | Default / notes |
+| ----- | ---- | --------------- |
+| `mode` | `embedded` or `external` | Required |
+| `insecureAllowHttp` | bool | When set, env `AUTH_INSECURE_ALLOW_HTTP` |
+| `insecureAllowBootstrapLog` | bool | When set, env `AUTH_INSECURE_ALLOW_BOOTSTRAP_LOG` |
+| `bootstrap` | object | Embedded mode: admin bootstrap user and password |
+| `bootstrap.username` | string | Secret and `OIDC_BOOTSTRAP_ADMIN_USERNAME` |
+| `bootstrap.password` | string | Inline password, stored in an operator Secret |
+| `bootstrap.passwordSecretRef` | SecretKeySelector | Preferred in production. Resolved at reconcile. |
+| `issuerUrl` | string | External mode: OIDC issuer URL |
+| `client.id`, `client.secret` | string | OAuth2 client for the Controller API |
+| `rateLimit.*` | | Env `AUTH_RATE_LIMIT_*` when set |
+| `sessionStore.*` | | Env `AUTH_SESSION_STORE_*` and `AUTH_SESSION_SECRET` |
+| `tokenTtl.*` | | `AUTH_ACCESS_TOKEN_TTL_SECONDS`, `AUTH_REFRESH_TOKEN_TTL_SECONDS` |
+| `oidcTtl.*` | | `AUTH_OIDC_*_TTL_SECONDS` |
+
+The operator creates or updates Secret `controller-auth-credentials` with keys such as `auth-mode`, `auth-bootstrap-username`, `auth-bootstrap-password`, `auth-issuer-url`, `auth-client-id`, and `auth-client-secret`. Database and auth Secret changes can restart controller pods.
+
+| Mode | Operator API login |
+| ---- | ------------------ |
+| `embedded` | Bootstrap user login |
+| `external` | OAuth2 `client_credentials` with `client.id` and `client.secret` |
+
+### `spec.database`
+
+| Field | Type | Operator behavior |
+| ----- | ---- | ----------------- |
+| `provider` | string | Env `DB_PROVIDER` on the Controller |
+| `host` | string | Empty: embedded SQLite, PVC `controller-sqlite`, Deployment strategy Recreate |
+| `port` | int | Stored in `controller-db-credentials` |
+| `user` | string | Secret key `username`, env `DB_USERNAME` |
+| `password` | string | Secret key `password`, env `DB_PASSWORD` |
+| `databaseName` | string | Secret key `dbname`, env `DB_NAME` |
+| `ssl` | bool | Secret key `ssl`, env `DB_USE_SSL`. The string `false` if omitted. |
+| `ca` | string | See [Database TLS and `ca`](#database-tls-and-ca) |
+
+Secret `controller-db-credentials` is created once. A later reconcile does not overwrite an existing Secret unless the database reconcile path updates it.
+
+#### Database TLS and `ca` {#database-tls-and-ca}
+
+Use these fields when the Controller connects to PostgreSQL, MySQL, or another external database over TLS, and the server certificate is signed by a private CA or a CA that is not in the Controller image trust store.
+
+| Field | Purpose |
+| ----- | ------- |
+| `ssl` | Enable TLS for the database connection. Env `DB_USE_SSL` (`true` or `false`). |
+| `ca` | Trust anchor for the database server certificate. Env `DB_SSL_CA`. |
+
+`ca` is a base64-encoded PEM, one line, not a raw multiline PEM in the custom resource. Encode the CA file, then paste the result into `spec.database.ca`:
+
+```bash
+base64 -i db-ca.pem | tr -d '\n'
+```
+
+On Linux, `base64 -w0 < db-ca.pem` does the same thing.
+
+The operator does not decode or validate `ca`. It copies the string into Secret `controller-db-credentials` (key `ca`). The Controller pod reads it as `DB_SSL_CA`. If `ca` is omitted, the Secret key is empty and `DB_SSL_CA` is unset.
+
+Set `ssl: true` and `ca` when the database uses TLS and you must trust a private CA. `ssl: true` without `ca` works only when the Controller can validate the server certificate with public CAs already in the image. Leave both unset for a database connection that does not use TLS.
+
+```yaml
+database:
+  provider: postgres
+  host: postgres.internal.example.com
+  port: 5432
+  user: controller
+  password: changeme
+  databaseName: controller
+  ssl: true
+  ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0t
+```
+
+This is separate from Router, NATS, and Controller API TLS Secrets. See [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator).
+
+### `spec.replicas`
+
+| Field | Default | Operator behavior |
+| ----- | ------- | ----------------- |
+| `controller` | 1 if 0 or omitted | Controller Deployment `replicas` |
+| `nats` | 2 minimum | If the value is below 2, it is forced to 2. CRD validation: minimum 2 when set. |
+
+Controller replicas greater than 1 require an external database (`database.host` set). SQLite uses a single controller replica.
+
+### `spec.images`
+
+| Field | Default | Notes |
+| ----- | ------- | ----- |
+| `pullSecret` | none | Pod `imagePullSecrets` |
+| `controller` | Operator build default | `controller:3.9.0` on this train when the CLI fills it |
+| `router` | Operator build default | Also `ROUTER_IMAGE_1` through `ROUTER_IMAGE_4` on the Controller |
+| `nats` | Operator build default on the NATS pod | Also `NATS_IMAGE_1` through `NATS_IMAGE_4` on the Controller when NATS is enabled. Image tag `2.15.0` on this train. |
+
+The CLI-only operator image is `spec.images.operator` on the user file. It is not a field on this custom resource. See [spec.images](/reference/yaml/kubernetes-control-plane#specimages).
+
+### `spec.services`
+
+Each entry has `type`, `address`, `annotations`, and `externalTrafficPolicy`.
+
+| Component | Field | Default type | Notes |
+| --------- | ----- | ------------ | ----- |
+| Controller | `services.controller` | LoadBalancer | `address` becomes `loadBalancerIP` when set |
+| Router | `services.router` | LoadBalancer | Needs a load balancer or `ingresses.router.address` |
+| NATS | `services.nats` | LoadBalancer if omitted | Client-facing cluster, leaf, and MQTT ports |
+| NATS server | `services.natsServer` | LoadBalancer if omitted | Service `nats-server` (client and monitor only) |
+
+`externalTrafficPolicy` is applied only for `LoadBalancer` and `NodePort`. If omitted: LoadBalancer becomes Local, NodePort becomes Cluster, ClusterIP stays unset.
+
+When `services.controller.type` is `ClusterIP` and `ingresses.controller.host` is set, the operator creates Ingress `controller`.
+
+### `spec.ingresses`
+
+| Block | Purpose |
+| ----- | ------- |
+| `ingresses.controller` | Host, TLS Secret name, class, and annotations for Ingress `controller` |
+| `ingresses.router` | External router hostname and ports when the Router Service is not a LoadBalancer |
+| `ingresses.nats` | External NATS hostname and ports for hub registration and TLS SANs |
+
+#### `ingresses.controller`
+
+| Field | Operator use |
+| ----- | ------------ |
+| `host` | Ingress rule host. Used to derive `CONTROLLER_PUBLIC_URL` and `CONSOLE_URL` when those are unset. |
+| `secretName` | Ingress `spec.tls[].secretName` |
+| `ingressClassName` | Ingress class |
+| `annotations` | Ingress metadata annotations |
+
+#### `ingresses.router`
+
+| Field | Default if 0 or omitted in API registration |
+| ----- | ------------------------------------------- |
+| `address` | Required when the Router Service is not a LoadBalancer |
+| `messagePort` | 5671 |
+| `interiorPort` | 55671 |
+| `edgePort` | 45671 |
+
+#### `ingresses.nats` {#ingressesnats}
+
+Used when NATS is not exposed by a `services.nats` LoadBalancer. Ports default to 4222, 6222, 7422, 8883, and 8222. Hub registration uses the same address and ports.
+
+### `spec.controller`
+
+| Field | Default | Operator behavior |
+| ----- | ------- | ----------------- |
+| `publicUrl` | Derived if empty | See [URL resolution](#url-resolution-publicurl-and-consoleurl) |
+| `trustProxy` | Auto true in Ingress mode | Env `TRUST_PROXY` |
+| `consoleUrl` | Defaults to `publicUrl` when empty | Env `CONSOLE_URL` |
+| `consolePort` | 8008 | Container port. The Service maps port 80 to `consolePort`. |
+| `pidBaseDir` | `/home/runner` | Env `PID_BASE` |
+| `ecn` | empty | Env `ECN_NAME` |
+| `https` | false if unset | Enables the pod TLS mount and the HTTPS readiness probe |
+| `secretName` | | Required for pod TLS. Kubernetes TLS Secret mounted at `/etc/iofog/controller-cert/` |
+| `logLevel` | `info` | Env `LOG_LEVEL` |
+
+The Controller listens on 51121 (`controller-api`). The console Service exposes 80, forwarded to `consolePort`.
+
+### `spec.events`
+
+If no event field is set, the operator does not set `EVENT_*` environment variables.
+
+If any of `auditEnabled`, `captureIpAddress`, `retentionDays`, or `cleanupInterval` is set:
+
+| Field | Env var |
+| ----- | ------- |
+| `auditEnabled` | `EVENT_AUDIT_ENABLED` (set when the block is active) |
+| `retentionDays` | `EVENT_RETENTION_DAYS` when audit is enabled and the value is non-zero |
+| `cleanupInterval` | `EVENT_CLEANUP_INTERVAL` when audit is enabled and the value is non-zero |
+| `captureIpAddress` | `EVENT_CAPTURE_IP_ADDRESS` when the pointer is set |
+
+### `spec.nats`
+
+| Field | Default | Behavior |
+| ----- | ------- | -------- |
+| Block omitted | NATS enabled | |
+| `enabled` | true if omitted | `false` skips NATS resources and hub registration |
+| `jetStream.storageSize` | 10Gi PVC, 10G in `server.conf` | |
+| `jetStream.memoryStoreSize` | 1G in `server.conf` | |
+| `jetStream.storageClassName` | cluster default | Optional PVC `storageClassName` |
+
+Kubernetes names: StatefulSet `nats`, headless Service `nats-headless`, Services `nats` and `nats-server`, ConfigMaps `iofog-nats-config` and `iofog-nats-jwt-bundle`. See [NATS Server](/learn/platform-components/nats-server).
+
+### `spec.vault` {#specvault}
+
+Optional Controller secret store. The block is active when `vault` is set and `provider` or a provider block (`hashicorp`, `aws`, `azure`, `google`) is set.
+
+| Field | Env / Secret |
+| ----- | ------------ |
+| `enabled` | `VAULT_ENABLED`. Default true when the vault block is active and the pointer is empty. |
+| `provider` | `VAULT_PROVIDER` |
+| `basePath` | `VAULT_BASE_PATH`, with `$namespace` replaced by the ControlPlane namespace |
+| Provider blocks | Secret `controller-vault-credentials`. Env `VAULT_HASHICORP_*`, `VAULT_AWS_*`, and the matching provider prefix. |
+
+Provider strings: `hashicorp`, `openbao`, `vault`, `aws`, `aws-secrets-manager`, `azure`, `azure-key-vault`, `google`, `google-secret-manager`.
+
+User YAML for the same block is on [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane#specvault).
+
+## URL resolution (`publicUrl` and `consoleUrl`) {#url-resolution-publicurl-and-consoleurl}
+
+1. If `controller.publicUrl` is set and `consoleUrl` is empty, `consoleUrl` becomes `publicUrl`.
+2. Ingress mode (`ClusterIP` plus `ingresses.controller.host`): if `publicUrl` is empty, the operator sets `https://<host>` or `http://<host>` using the scheme rules below. If `trustProxy` is unset, the operator sets `trustProxy: true` on the Deployment environment.
+3. LoadBalancer mode (default Service type, empty `publicUrl`): the operator waits for a load balancer address, then sets `publicUrl` to `{scheme}://{lb}:51121` and `consoleUrl` to `{scheme}://{lb}`.
+
+| Condition | Scheme |
+| --------- | ------ |
+| `controller.https: true` | `https` |
+| Ingress mode and `ingresses.controller.secretName` set | `https`, including when the pod speaks HTTP |
+| Otherwise | `http` |
+
+## Kubernetes objects created
+
+Namespaced objects use these labels:
+
+- `app.kubernetes.io/name: iofog`
+- `app.kubernetes.io/instance: <ControlPlane.metadata.name>`
+- `app.kubernetes.io/component: controller`, `router`, or `nats`
+- `app.kubernetes.io/managed-by: iofog-operator`
+
+| Component | Kind | Name |
+| --------- | ---- | ---- |
+| Controller | Deployment | `controller` |
+| Controller | Service | `controller` |
+| Controller | Ingress | `controller` (ClusterIP plus ingress host only) |
+| Controller | PVC | `controller-sqlite` (empty database host only) |
+| Router | Deployment | `router` |
+| Router | Service | `router` |
+| Router | ConfigMap | Skupper router config |
+| NATS | StatefulSet | `nats` |
+| NATS | Service | `nats-headless`, `nats`, `nats-server` |
+| NATS | ConfigMap | `iofog-nats-config`, `iofog-nats-jwt-bundle` |
+| Each | ServiceAccount, Role, RoleBinding | per component |
+
+Secrets, Deployments, Services, and Ingress objects are owned by the ControlPlane so they are removed with it.
+
+A second router Deployment named `router-2` is not created from this custom resource.
+
+## Operator-managed Secrets (non-TLS)
+
+| Secret name | Created by | Update policy |
+| ----------- | ---------- | ------------- |
+| `controller-db-credentials` | Controller reconcile | Database reconcile may update it and restart pods |
+| `controller-auth-credentials` | Controller reconcile | Auth reconcile may update it and restart pods |
+| `controller-vault-credentials` | When `spec.vault` is set | Vault reconcile may update it and restart pods |
+| `nats-operator-seed`, `nats-system-account-seed`, `nats-creds-sys-admin-hub` | NATS bootstrap from the Controller API | Created or updated on NATS reconcile |
+| `nats-jetstream-key-<instance>` | NATS JetStream encryption | Ensured at NATS reconcile |
+
+TLS Secrets for Router, NATS, and the Controller are in [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator).
+
+## Custom resource field to Controller environment
+
+### Always (when the field applies)
+
+| Source | Environment variable |
+| ------ | -------------------- |
+| `database.provider` | `DB_PROVIDER` |
+| `database` Secret keys | `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_USE_SSL`, `DB_SSL_CA` from Secret `controller-db-credentials` |
+| `database.ssl` | `DB_USE_SSL` (`true` or `false`) |
+| `database.ca` | `DB_SSL_CA`. Base64 PEM, passed through unchanged. The Controller decodes it for database TLS. |
+| Fixed | `CONTROL_PLANE=Kubernetes` |
+| `metadata.name` | `CONTROLLER_NAME` |
+| namespace | `CONTROLLER_NAMESPACE` |
+| `images.router` | `ROUTER_IMAGE_1` through `ROUTER_IMAGE_4` |
+| NATS enabled | `NATS_ENABLED` |
+| `images.nats` | `NATS_IMAGE_1` through `NATS_IMAGE_4` |
+| `controller.ecn` | `ECN_NAME` |
+| `controller.pidBaseDir` | `PID_BASE` |
+| `controller.logLevel` | `LOG_LEVEL` |
+| Resolved URLs | `CONTROLLER_PUBLIC_URL`, `CONSOLE_URL`, `CONSOLE_PORT`, `TRUST_PROXY` |
+| `auth.*` | See the auth table |
+| `events.*` | `EVENT_*` when the events block is active |
+| `vault.*` | `VAULT_*` and provider-specific variables |
+| `controller.https: true` | `SERVER_DEV_MODE=false`, `TLS_PATH_CERT`, `TLS_PATH_KEY`, `TLS_PATH_INTERMEDIATE_CERT` |
+
+### Router fixed ports
+
+These ports are registered with the Controller. They are not custom resource fields.
+
+| Port | Value |
+| ---- | ----- |
+| Messaging (TLS) | 5671 |
+| HTTP (metrics) | 9090 |
+| Inter-router | 55671 |
+| Edge | 45671 |
+
+## Custom resource field to NATS configuration
+
+| Field | Effect |
+| ----- | ------ |
+| `replicas.nats` | StatefulSet replicas (minimum 2) |
+| `nats.jetStream.storageSize` | PVC size and `max_file_store` in `server.conf` |
+| `nats.jetStream.memoryStoreSize` | `max_memory_store` |
+| `nats.jetStream.storageClassName` | PVC `storageClassName` |
+| `services.nats`, `services.natsServer` | Service types and annotations |
+| `ingresses.nats`, or the NATS load balancer address | Hub registration and TLS certificate SANs |
+
+NATS container environment includes `NATS_TLS_DIR=/etc/nats/certs`. Certificates come from Secrets `nats-site-server` and `nats-mqtt-server`.
+
+## Validation and operational constraints
+
+1. Router exposure: a LoadBalancer, or `ingresses.router.address`.
+2. Controller Ingress: `services.controller.type: ClusterIP` and `ingresses.controller.host`.
+3. NATS hub address: for a client Service that is not a LoadBalancer, set `ingresses.nats.address`, or use a LoadBalancer and let the operator fill the address.
+4. SQLite: a single controller replica. The PVC is recreated on rollout.
+5. Generation changes: a spec change while status is ready moves the condition to `updating` until the parallel reconcile finishes.
+6. Secret reuse: an ordinary reconcile does not replace existing TLS or bootstrap Secrets. See [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator).
+
+## Minimal example
+
+<FlavorOnly distribution="datasance">
+
+<FlavorYaml title="ControlPlane pot">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: pot
+  namespace: iofog
+spec:
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      passwordSecretRef:
+        name: controller-bootstrap
+        key: password
+  database:
+    provider: postgres
+    host: postgres.iofog.svc
+    port: 5432
+    user: controller
+    password: changeme
+    databaseName: controller
+  controller:
+    publicUrl: https://controller.example.com
+  services:
+    controller:
+      type: ClusterIP
+    router:
+      type: LoadBalancer
+  ingresses:
+    controller:
+      host: controller.example.com
+      ingressClassName: nginx
+      secretName: controller-tls
+    router:
+      messagePort: 5671
+      interiorPort: 55671
+      edgePort: 45671
+  nats:
+    jetStream:
+      storageSize: 10Gi
+```
+
+</FlavorYaml>
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+<FlavorYaml title="ControlPlane iofog">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: iofog
+  namespace: iofog
+spec:
+  auth:
+    mode: embedded
+    bootstrap:
+      username: admin
+      passwordSecretRef:
+        name: controller-bootstrap
+        key: password
+  database:
+    provider: postgres
+    host: postgres.iofog.svc
+    port: 5432
+    user: controller
+    password: changeme
+    databaseName: controller
+  controller:
+    publicUrl: https://controller.example.com
+  services:
+    controller:
+      type: ClusterIP
+    router:
+      type: LoadBalancer
+  ingresses:
+    controller:
+      host: controller.example.com
+      ingressClassName: nginx
+      secretName: controller-tls
+    router:
+      messagePort: 5671
+      interiorPort: 55671
+      edgePort: 45671
+  nats:
+    jetStream:
+      storageSize: 10Gi
+```
+
+</FlavorYaml>
+
+</FlavorOnly>
+
+<CliName /> writes this object for you from a `KubernetesControlPlane` file. Helm can apply it directly. See [Kubernetes with Helm](/get-started/deploy/kubernetes-helm).
+
+<EditPageAdmonition />

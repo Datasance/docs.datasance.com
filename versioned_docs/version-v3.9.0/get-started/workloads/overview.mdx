@@ -1,0 +1,73 @@
+---
+title: Workload orchestration
+description: How templates, running workloads, Edgelet node placement, and the config objects they consume fit together, and which order to deploy them in.
+keywords: [workload orchestration, applications, microservices, templates, deploy, edgelet node]
+slug: /get-started/workloads
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Workload orchestration
+
+<ProductName /> stores the software you run as objects on the control plane, then places containers on Edgelet nodes. This section is a short map of those objects. Field tables stay in Learn.
+
+You deploy a file with <CliName /> `deploy -f`. There is no `apply` command.
+
+When one file holds several documents, the CLI sorts by kind, not by file order. Write the file in an order a person can read. The CLI still uses its own kind order.
+
+## Four layers
+
+**Templates** are blueprints. An application template describes a whole app. A microservice template describes one service. A template is not a running container. Instantiation points at the template from the application or the microservice.
+
+**Runtime workloads** are what you actually start. An application is the named group. NATS account policy lives on that group. A microservice is one container in the group. The CLI name is `application/microservice`.
+
+**Placement** puts that container on one Edgelet node. In YAML the node is `kind: Agent`.
+
+**Config objects** are what those workloads consume: registries, catalog items, models, knowledge, config maps, secrets, volume mounts, and volumes. The microservice names them. It does not paste their contents into the application file.
+
+<FlavorYaml title="line-monitor">{`---
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: line-monitor
+`}</FlavorYaml>
+
+`metadata.name` is the group. Microservices, templates, and config objects refer to that name.
+
+## Order that works
+
+Secrets and config maps come before volume mounts, and before env values that use `valueFromConfigMap` or `valueFromSecret`.
+
+A registry comes before a model, a knowledge artifact, and a catalog item.
+
+A catalog item comes before a microservice that names it.
+
+An application comes before its microservices, or in the same file with them.
+
+## Pages in this section
+
+- [Applications and microservices](/get-started/workloads/applications)
+- [Templates](/get-started/workloads/templates)
+- [Registries and catalog](/get-started/workloads/registries)
+- [Models and knowledge](/get-started/workloads/models-and-knowledge)
+- [Config, secrets, and volumes](/get-started/workloads/config)
+
+## Also on the cluster
+
+These objects do not have Get Started pages. Read them in Learn:
+
+- [Runtime classes](/learn/config/runtime-classes)
+- [Certificates](/learn/config/certificates)
+- [Offline images](/learn/config/offline-images)
+- [Services](/learn/network/services)
+
+## Go deeper
+
+- [Workloads](/learn/workloads)
+- [Applications](/learn/workloads/applications)
+- [Microservices](/learn/workloads/microservices)
+
+<EditPageAdmonition />

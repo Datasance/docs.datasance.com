@@ -29,7 +29,7 @@ metadata:
 
 spec:
   controller:
-    image: {{REGISTRY}}/controller:3.9.0 # required - controller container image
+    image: {{REGISTRY}}/controller:3.9.1 # required - controller container image
     registry: 1                    # optional - local registry row ID (pull + register registryId); omit → id 2 (from_cache)
     port: 51121                    # optional - container API port; host 51121. Omit → mapping 51121, API_PORT env omitted
     publicUrl: https://controller.example.com # recommended - CONTROLLER_PUBLIC_URL
@@ -85,15 +85,15 @@ spec:
 
   systemMicroservices:             # optional - router/NATS images per CPU architecture
     router:
-      amd64: {{REGISTRY}}/router:3.9.0
-      arm64: {{REGISTRY}}/router:3.9.0
-      arm: {{REGISTRY}}/router:3.9.0
-      riscv64: {{REGISTRY}}/router:3.9.0
+      amd64: {{REGISTRY}}/router:3.9.1
+      arm64: {{REGISTRY}}/router:3.9.1
+      arm: {{REGISTRY}}/router:3.9.1
+      riscv64: {{REGISTRY}}/router:3.9.1
     nats:                          # required when spec.nats.enabled is true
-      amd64: {{REGISTRY}}/nats:2.15.0
-      arm64: {{REGISTRY}}/nats:2.15.0
-      arm: {{REGISTRY}}/nats:2.15.0
-      riscv64: {{REGISTRY}}/nats:2.15.0
+      amd64: {{REGISTRY}}/nats:2.15.1
+      arm64: {{REGISTRY}}/nats:2.15.1
+      arm: {{REGISTRY}}/nats:2.15.1
+      riscv64: {{REGISTRY}}/nats:2.15.1
 
   nats:                            # optional - deploy NATS system microservice (JetStream)
     enabled: false                 # set true to deploy NATS using systemMicroservices.nats images

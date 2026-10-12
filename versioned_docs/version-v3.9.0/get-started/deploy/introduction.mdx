@@ -1,0 +1,82 @@
+---
+title: Platform Deployment Guide
+description: Deploy the control plane on remote hosts or Kubernetes and connect Edgelet nodes. Step-by-step ECN setup with embedded OIDC.
+keywords: [platform deployment, kubernetes edge, remote deployment, edge compute network, ecn setup, edgelet, embedded oidc, v3.9]
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import CliDocsLink from '@site/src/components/flavor/CliDocsLink';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+:::info[Authentication first]
+
+**<ProductName /> v3.9.0** uses [embedded OIDC](/get-started/deploy/embedded-oidc) by default. You do not need an external IdP for a new lab deploy. Set `auth.mode: embedded` and bootstrap credentials in your Control Plane YAML before you deploy.
+
+Upgrading from **v3.8.0**? See [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9). Greenfield from **v3.7.x or older** starts at [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+:::
+
+:::tip[New to {CLI_NAME}?]
+
+Download and install **<CliName />** from the <CliDocsLink path="/download">download page</CliDocsLink> before continuing.
+
+:::
+
+:::tip[Deployed a local ECN first?]
+
+Try the [Quick Start Guide](/get-started/quick-start-local) before this guide. It covers the same <CliName /> workflows on a single machine.
+
+:::
+
+# Introduction
+
+An **Edge Compute Network (ECN)** has two main parts: a **Control Plane** (Controller, Router, optional NATS) and **Edgelet nodes** at the edge.
+
+<CliName /> deploys and manages both from YAML manifests. This guide walks through a distributed ECN on remote hosts or a Kubernetes cluster.
+
+For architecture context, see [Architecture](/get-started/architecture).
+
+## Deployment path
+
+Follow these steps in order:
+
+1. **[Embedded OIDC](/get-started/deploy/embedded-oidc)** - Set `auth.mode: embedded` and bootstrap credentials in your Control Plane YAML. For a corporate IdP, see [External OIDC](/get-started/deploy/external-oidc).
+2. **[Prepare your network](/get-started/deploy/prepare-your-network)** - Open firewall ports for Controller, Router, NATS, and EdgeOps Console.
+3. **[Prepare remote hosts](/get-started/deploy/prepare-your-remote-hosts)** - SSH keys and passwordless sudo for <CliName />.
+4. **Deploy the Control Plane** - Choose [remote](/get-started/deploy/remote-control-plane) or [Kubernetes](/get-started/deploy/kubernetes-prepare-cluster) (<CliName /> or [Helm](/get-started/deploy/kubernetes-helm)).
+5. **[Setup Edgelet nodes](/get-started/deploy/setup-edgelet-nodes)** - Install Edgelet **v1.1.0** on edge hosts (platform train **v3.9.0**).
+
+## Deployment options
+
+### Remote Control Plane
+
+Deploy the Controller on one or more Linux hosts over SSH. Prepare the Controller host and each Edgelet node host. See [Remote Control Plane](/get-started/deploy/remote-control-plane).
+
+### Kubernetes Control Plane
+
+Deploy the Controller, Operator, Router, and NATS on a Kubernetes cluster. You only need remote hosts for Edgelet nodes. Start at [Kubernetes - Prepare A Cluster](/get-started/deploy/kubernetes-prepare-cluster).
+
+## TLS and trust by deploy path
+
+| Layer | Kubernetes | Local quick start | Remote SSH |
+| ----- | ---------- | ----------------- | ---------- |
+| Controller HTTPS | Operator pod TLS or Ingress | CLI `spec.tls` on Edgelet | `spec.tls` or `controllers[].tls` |
+| Router / NATS CAs | Operator Secrets | YAML validated; BYO upload on remote only today | CLI uploads global CA blocks after API is up |
+| CLI API trust | `spec.ca` in namespace trust store | Same | Same |
+
+Start at [Securing the cluster](/learn/security/securing-cluster), then open the guide for your path (Kubernetes, remote, or local).
+
+## Air-gapped networks
+
+For hosts that cannot reach the internet or container registries, see [Airgap Deployment](/get-started/deploy/airgap-deployment). That page covers Edgelet image bundles, multi-arch offline transfer, and [Offline images in Learn](/learn/config/offline-images) for microservice images.
+
+:::tip[Where to go from here?]
+
+Start with [Embedded OIDC Authentication](/get-started/deploy/embedded-oidc), then [Prepare your network](/get-started/deploy/prepare-your-network).
+
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,0 +1,97 @@
+---
+title: Operator
+description: Operator image 3.9.0 reconciles ControlPlane custom resources on Kubernetes 1.22+. Helm, manifest tarball, and OLM install.
+keywords: [operator, kubernetes, controlplane, helm, olm, v3.9]
+slug: /learn/platform-components/operator
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { FLAVOR, REGISTRY } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Operator
+
+The operator image is <code>{REGISTRY}/operator:3.9.0</code>. On Kubernetes it reconciles `ControlPlane` custom resources. It needs Kubernetes **1.22+**. The only custom resource is `ControlPlane`.
+
+Application workloads are not operator objects. After the control plane is up, create them with <CliName />, the REST API, EdgeOps Console, or the [Go SDK](/learn/platform-components/sdk).
+
+<FlavorYaml title="Operator image">
+
+```yaml
+spec:
+  images:
+    operator: {{REGISTRY}}/operator:3.9.0
+```
+
+</FlavorYaml>
+
+## Guides
+
+| Guide | What it covers |
+| ----- | -------------- |
+| [How the operator works](/learn/platform-components/operator/how-it-works) | Process, status, and the Controller reconcile path |
+| [ControlPlane CRD reference](/learn/platform-components/operator/controlplane-crd) | `spec`, `status`, objects the operator creates, and environment mapping |
+| [Router and NATS](/learn/platform-components/operator/router-and-nats) | Router Deployment, NATS StatefulSet, certificates, `skrouterd.json`, `server.conf`, and Controller registration |
+
+Controller HTTPS, Ingress TLS, Router and NATS certificates, cert-manager, and CA import are on [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator). [Securing the cluster](/learn/security/securing-cluster) says which deploy path owns each TLS layer.
+
+| Goal | Typical setup | See |
+| ---- | ------------- | --- |
+| Public Controller API over HTTPS on a cloud LoadBalancer | `services.controller.type: LoadBalancer`, `controller.https: true`, TLS Secret on the pod | [Pattern A](/learn/security/control-plane-kubernetes-operator#pattern-a-loadbalancer--pod-tls) |
+| HTTPS via an ingress controller | `services.controller.type: ClusterIP`, `ingresses.controller.host`, TLS Secret on the Ingress | [Pattern B](/learn/security/control-plane-kubernetes-operator#pattern-b-clusterip-and-ingress) |
+| Router and NATS TLS | Operator-generated or pre-created Secrets | [Router and NATS](/learn/platform-components/operator/router-and-nats) and [Router TLS](/learn/security/control-plane-kubernetes-operator#router-tls-secrets) |
+
+## Removed in v3.8
+
+v3.8 removed the Application CRD, Keycloak fields, and ECN Viewer fields. The operator watches `ControlPlane` only.
+
+Platform train **v3.9.0** supports an in-place upgrade from **v3.8.0**. Follow [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9).
+
+There is no direct upgrade from v3.7. Move to v3.8.0 first. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+## Helm
+
+Charts publish to each mirror's gh-pages index. The legacy standalone repo [Datasance/helm](https://github.com/Datasance/helm) is deprecated.
+
+<CliBlock title="Add the Helm repository">{`helm repo add iofog-operator ${FLAVOR === 'datasance' ? 'https://datasance.github.io/iofog-operator' : 'https://eclipse-iofog.github.io/iofog-operator'}
+helm repo update`}</CliBlock>
+
+<CliBlock title="Install the operator">{`helm install iofog-operator iofog-operator/iofog-operator \\
+  --namespace iofog-system --create-namespace \\
+  --version 3.9.0`}</CliBlock>
+
+For a full control plane install, see [Kubernetes Helm deployment](/get-started/deploy/kubernetes-helm).
+
+## Manifest tarball
+
+GitHub Releases attach `manifests-iofog-<version>.tar.gz` and `manifests-datasance-<version>.tar.gz`. Apply them in namespace `iofog-system`.
+
+<CliBlock>{`VERSION=3.9.0
+FLAVOR=${FLAVOR === 'datasance' ? 'datasance' : 'iofog'}
+
+curl -fsSL -o manifests.tar.gz \\
+  "https://github.com/eclipse-iofog/iofog-operator/releases/download/v\${VERSION}/manifests-\${FLAVOR}-\${VERSION}.tar.gz"
+tar xzf manifests.tar.gz
+kubectl apply -f "manifests-\${FLAVOR}-\${VERSION}/crds/"
+kubectl apply -f "manifests-\${FLAVOR}-\${VERSION}/operator/install.yaml"`}</CliBlock>
+
+Adapt and apply the sample ControlPlane from the tarball for your cluster.
+
+## OLM
+
+Package `iofog-operator`, channel `stable`, namespace `iofog-system`.
+
+<CliBlock>{`VERSION=3.9.0
+
+operator-sdk run bundle "{{REGISTRY}}/operator-bundle:\${VERSION}" \\
+  --namespace iofog-system --timeout 5m`}</CliBlock>
+
+## Reconcile, status, and TLS
+
+How the operator reconciles, how status is set, and which Router and NATS objects it creates are on [How the operator runs](/learn/control-plane/kubernetes#how-the-operator-runs) and the [ControlPlane CRD](/learn/control-plane/kubernetes-crd).
+
+TLS for the Controller, Router, and NATS on the cluster is on [Kubernetes (operator)](/learn/security/control-plane-kubernetes-operator).
+
+<EditPageAdmonition />

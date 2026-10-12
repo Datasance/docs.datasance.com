@@ -1,6 +1,6 @@
 ---
 title: KubernetesControlPlane fields
-description: Field reference for KubernetesControlPlane deploy YAML on platform train v3.9.0. CLI-only fields and values translated to the operator ControlPlane.
+description: Field reference for KubernetesControlPlane deploy YAML on platform train v3.9.1. CLI-only fields and values translated to the operator ControlPlane.
 keywords: [kubernetescontrolplane, yaml, fields, operator, v3.9]
 slug: /reference/yaml/kubernetes-control-plane
 ---
@@ -84,11 +84,11 @@ spec:
     cleanupInterval: 3600 # no, int. Seconds
     captureIpAddress: false # no, bool
   images:
-    operator: {{REGISTRY}}/operator:3.9.0 # no, string. CLI only. Default operator:3.9.0 on the flavor registry
+    operator: {{REGISTRY}}/operator:3.9.1 # no, string. CLI only. Default operator:3.9.1 on the flavor registry
     pullSecret: pull-secret # no, string
-    controller: {{REGISTRY}}/controller:3.9.0 # no, string
-    router: {{REGISTRY}}/router:3.9.0 # no, string
-    nats: {{REGISTRY}}/nats:2.15.0 # no, string. Default image tag 2.15.0 on this train
+    controller: {{REGISTRY}}/controller:3.9.1 # no, string
+    router: {{REGISTRY}}/router:3.9.1 # no, string
+    nats: {{REGISTRY}}/nats:2.15.1 # no, string. Default image tag 2.15.1 on this train
   services:
     controller:
       type: LoadBalancer # no, string. LoadBalancer, ClusterIP, or NodePort
@@ -321,11 +321,11 @@ Operator Deployment image (CLI install) and workload images on the ControlPlane 
 
 | Field | Scope | Required | Notes |
 | ----- | ----- | -------- | ----- |
-| `operator` | CLI only | No | Operator Deployment image. Not on the ControlPlane custom resource. Default for this train: `operator:3.9.0` on the flavor registry. |
+| `operator` | CLI only | No | Operator Deployment image. Not on the ControlPlane custom resource. Default for this train: `operator:3.9.1` on the flavor registry. |
 | `pullSecret` | Custom resource | No | `imagePullSecrets` on operator-managed pods |
 | `controller` | Custom resource | No | Default from the CLI build if empty |
 | `router` | Custom resource | No | |
-| `nats` | Custom resource | No | Default image tag `2.15.0` on this train |
+| `nats` | Custom resource | No | Default image tag `2.15.1` on this train |
 
 The CLI installs the operator using `operator`, then applies the custom resource with `pullSecret`, `controller`, `router`, and `nats`. Empty strings are filled from build-time defaults.
 
@@ -458,10 +458,10 @@ spec:
     controller: 1
     nats: 2
   images:
-    operator: {{REGISTRY}}/operator:3.9.0
-    controller: {{REGISTRY}}/controller:3.9.0
-    router: {{REGISTRY}}/router:3.9.0
-    nats: {{REGISTRY}}/nats:2.15.0
+    operator: {{REGISTRY}}/operator:3.9.1
+    controller: {{REGISTRY}}/controller:3.9.1
+    router: {{REGISTRY}}/router:3.9.1
+    nats: {{REGISTRY}}/nats:2.15.1
 ```
 
 </FlavorYaml>

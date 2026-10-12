@@ -1,0 +1,117 @@
+---
+title: Observe and troubleshoot
+description: Use EdgeOps Console Events, microservice logs and exec, potctl describe status, and Edgelet troubleshooting guides for day-2 ECN diagnostics.
+keywords: [operate, troubleshoot, events, logs, exec, lastError, edgeops console, potctl, v3.9]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Observe and troubleshoot
+
+Day-2 diagnostics combine **EdgeOps Console** visibility, **{CLI_NAME}** inspection commands, and on-host **Edgelet** tools. Use this page as a hub; deep daemon and cgroup topics stay in [Edgelet troubleshooting](/learn/edgelet/troubleshooting).
+
+Workload container logs and shells: [Logs and exec](/learn/workloads/debugging#logs-and-exec). Edgelet daemon logs and a shell on the node: [Node logs and exec](/learn/operate/node-debugging).
+
+## Prerequisites
+
+- Console sign-in or **{CLI_NAME}** connect with a subject that can **`get`** and **`list`** the resources you inspect.
+- For exec and logs, RBAC that allows microservice or agent session endpoints (same WebSocket API for Console and CLI).
+
+## EdgeOps Console
+
+### Dashboard and inventory
+
+Start on the **dashboard** for ECN-wide health, then drill into **Workloads**, **Nodes**, or **Network** when a symptom is scoped to one area. See [Operate overview](/learn/operate).
+
+### Events (audit trail)
+
+Open **Events** to filter Controller API audit records by type, endpoint, status, actor, and time range. Export or prune old events when retention grows large.
+
+Retention is configured on the control plane (`spec.events.retentionDays`). See [Control plane (Configure)](/learn/control-plane).
+
+See [Console features - Events and REST API explorer](/get-started/edgeops-console/events).
+
+### Logs and exec in the browser
+
+From **Workloads** or **Nodes**:
+
+- Stream **microservice** container logs over WebSocket (same transport as the CLI **`logs`** command)
+- Open **exec** sessions inside a microservice or on an Edgelet node
+
+Controller **v3.8.0+** uses a **multi-session** exec model (default **five** concurrent exec sessions per microservice). Details: [Exec sessions](/learn/edgelet/exec-sessions), [Applications and microservices](/get-started/workloads/applications).
+
+### REST API explorer
+
+The embedded OpenAPI explorer calls `/api/v3/...` with your Console auth context. Use it when a resource has no dedicated form editor yet. Reference: [Controller API](/api/v3.9.0/controller).
+
+## CLI inspection loop
+
+### Microservice runtime state
+
+<CliBlock>{`{{CLI_NAME}} get microservices
+{{CLI_NAME}} describe microservice APP_NAME/MSVC_NAME`}</CliBlock>
+
+On platform train **v3.9.0**, **`describe`** output includes read-only **`status`** such as **`podId`**, **`restartCount`**, **`lastError`**, and **`lastErrorAt`**. See [Microservices (Configure)](/learn/workloads/microservices).
+
+When **`lastError`** mentions models, knowledge, or volume mounts, walk the attach checklist on [Configuration](/learn/config#order-of-operations-checklist) and [Microservices - models, knowledge, and runtime classes](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
+
+### Logs and exec
+
+<CliBlock>{`{{CLI_NAME}} logs microservice APP_NAME/MSVC_NAME
+{{CLI_NAME}} logs microservice APP_NAME/MSVC_NAME --tail 200 --follow=false
+{{CLI_NAME}} exec microservice APP_NAME/MSVC_NAME`}</CliBlock>
+
+If logs are empty, confirm **`get microservices`** shows **RUNNING** and retry after **`rebuild microservice`**.
+
+### Edgelet nodes
+
+<CliBlock>{`{{CLI_NAME}} get agents
+{{CLI_NAME}} describe agent NODE_NAME`}</CliBlock>
+
+On the host, use **`edgelet system status`**, **`edgelet ms ls`**, and **`edgelet ms logs`**. See [Edgelet CLI](/reference/cli/edgelet) and [Edgelet logging](/learn/edgelet/logging). Daemon logs (`logs agent`) and a shell on the node (`exec agent`) are on [Node logs and exec](/learn/operate/node-debugging).
+
+### Control plane and system microservices
+
+<CliBlock>{`{{CLI_NAME}} describe controlplane
+{{CLI_NAME}} get controllers
+{{CLI_NAME}} describe controller CONTROLLER_NAME
+{{CLI_NAME}} get system-microservices`}</CliBlock>
+
+Prefer [Reconcile platform](/get-started/edgelet-nodes/reconcile) before restarting Controller-owned system microservices ad hoc.
+
+## Symptom → where to look
+
+| Symptom | First steps |
+| ------- | ----------- |
+| Microservice not **RUNNING** | **`describe microservice`** → **`lastError`**; node **`describe agent`**; image pull and [Registries](/learn/config/registries) |
+| NATS connect or ACL errors | [Message bus](/learn/message-bus); user rule subjects; redeploy after rule change |
+| `service.local` connection failures | [Network](/learn/network); bridge port from **`get services`**; node tags |
+| Console or CLI **403** | [Access control](/learn/access-control). Check the RoleBinding for your OIDC user or group. |
+| Edgelet CLI exit **10** (daemon unavailable) | [Edgelet troubleshooting - CLI connectivity](/learn/edgelet/troubleshooting#cli-connectivity-exit-10) |
+| Edgelet API **401** | [Edgelet troubleshooting - EdgeletAPI auth](/learn/edgelet/troubleshooting#edgeletapi-401--auth-failures) |
+| Cgroup or sandbox errors | [Edgelet troubleshooting - Cgroup delegation](/learn/edgelet/troubleshooting#cgroup-delegation-embedded-edgelet-engine) |
+| Exec timeout or session limit | [Exec sessions](/learn/edgelet/exec-sessions), [Troubleshooting - Microservice exec](/learn/edgelet/troubleshooting#microservice-exec) |
+
+## Platform maintenance signals
+
+| Task | Command or doc |
+| ---- | -------------- |
+| Retry service hub provisioning | [`reconcile service`](/reference/cli/potctl/potctl_reconcile_service) - [Network](/learn/network) |
+| Retry agent provisioning | [`reconcile agent`](/reference/cli/potctl/potctl_reconcile) - [Edgelet nodes](/learn/edgelet-nodes/lifecycle) |
+| Prune dangling images on a node | [`prune agent`](/reference/cli/potctl/potctl_prune_agent) - [Image pruning](/get-started/edgelet-nodes/image-pruning) |
+| Controller train upgrade issues | [Control plane](/learn/control-plane), [What's New](/release-notes/whats-new) |
+
+## Developing and debugging microservices
+
+Application authors often combine **`logs`**, **`exec`**, and local SDK debugging. See [Developing microservices - debugging](/developing-microservices/debugging) and [Applications and microservices](/get-started/workloads/applications).
+
+Tutorial with NATS and services observability: [Acme Smart Plant](/tutorials/acme-smart-plant).
+
+## Related
+
+- [Operate overview](/learn/operate) - Console and CLI together
+- [Workloads](/learn/workloads) - deploy, rebuild, move
+- [Edgelet troubleshooting](/learn/edgelet/troubleshooting) - daemon, engine, auth, exec
+- [EdgeOps Console features](/get-started/edgeops-console) - UI parity with the CLI
+- [{CLI_NAME} getting familiar](/get-started/cli/getting-familiar) - namespaces, `get`, `describe`

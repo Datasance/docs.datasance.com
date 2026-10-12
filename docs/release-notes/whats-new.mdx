@@ -1,10 +1,9 @@
 ---
 title: What's New
-description: PoT v3.9.0 release highlights. AI Model and Knowledge catalogs, OCI and Hugging Face registries, microservice container fields, NATS 2.15, Edgelet 1.1, and EdgeOps Console 1.1.
-keywords: [pot v3.9, release notes, whats new, ai model catalog, knowledge catalog, edgelet 1.1, nats 2.15, upgrade]
+description: Platform train v3.9.1 security patch. In-place upgrade from v3.9.0 or v3.8.0. NATS 2.15.1, Edgelet 1.1.1, and EdgeOps Console 1.1.1.
+keywords: [pot v3.9, release notes, whats new, v3.9.1, edgelet 1.1.1, nats 2.15.1, upgrade]
 ---
 
-import CliBlock from '@site/src/components/CliBlock';
 import ProductName from '@site/src/components/flavor/ProductName';
 import CliName from '@site/src/components/flavor/CliName';
 
@@ -12,43 +11,48 @@ import { CLI_NAME } from '@site/src/config/distribution';
 
 # What's New in <ProductName />
 
-:::info[Upgrade from v3.8.0]
+:::info[Upgrade from v3.9.0 or v3.8.0]
 
-**v3.9.0** is an in-train upgrade on the same Controller database. Bump control plane image tags, roll **Edgelet v1.1.0** on nodes, and upgrade **<CliName />** to **v3.9.0**.
+**v3.9.1** stays on the same Controller database. There is no schema or API change in this patch.
 
-See [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9). **v3.7.x and older** still require a greenfield move to **v3.8.0** first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+From **v3.9.0**, bump image tags and roll **Edgelet v1.1.1**. From **v3.8.0**, use the same tags and move straight to **v3.9.1**. You also pick up the v3.9 catalogs and registry fields.
+
+See [Upgrading to v3.9.1](/release-notes/upgrading-to-v3-9). **v3.7.x and older** still move to **v3.8.0** first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
 
 :::
 
-Platform train **v3.9.0** ships **Controller v3.9.0**, **{CLI_NAME} v3.9.0**, **Edgelet v1.1.0**, **EdgeOps Console v1.1.0**, **ioFog Operator v3.9.0**, and updated **Router** and **NATS** wrapper images. Pair every component on the same train.
+**v3.9.1** is a security patch on the v3.9 train. Pair **Controller v3.9.1**, **{CLI_NAME} v3.9.1**, **Edgelet v1.1.1**, **EdgeOps Console v1.1.1**, **Operator v3.9.1**, **Router v3.9.1**, and **NATS 2.15.1**.
 
-- [Platform train v3.9.0](#platform-train-v390) pins Controller, Edgelet, Console, and messaging wrappers for in-place upgrades from v3.8.
-- [**AI Model Catalog**](#ai-model-and-knowledge-catalogs) stores fleet LLM weights from Hugging Face Hub or OCI artifacts. Attach to Edgelet nodes and bind in **`spec.models`**.
-- [**AI Knowledge Catalog**](#ai-model-and-knowledge-catalogs) stores RAG datasets and document bundles. Bind in **`spec.knowledge`** on microservices.
-- [**Registries (`oci` / `hf`)**](#registries-oci-and-hugging-face) replace legacy TLS cert flags with **`type`**, **`ca`**, and **`insecure`**.
-- [**Microservice `container` fields**](#microservice-container-fields) add limits, security context, devices, tmpfs, entrypoint, and volume scope options for production workloads.
-- [**Edgelet v1.1.0**](#edgelet-v110) is required on every node. Agent YAML drops HAL scan fields; use **`edgeGuardFrequency`** for attestation when needed.
-- [**EdgeOps Console v1.1.0**](#edgeops-console-v110) adds editors for AI catalogs, models attach state, and v3.9 cluster config flows.
-- [**NATS Server 2.15.0**](#nats-and-router-pins) wrapper upgrade with the same volume-mount contract as v3.8.
-- [**Router wrapper v3.9.0**](#nats-and-router-pins) embeds **Skupper Router 3.5.3**.
-- [**Upgrade and migration paths**](#upgrade-and-migration-paths) summarize who can move in place vs greenfield.
+- [**Platform train v3.9.1**](#platform-train-v391) lists the pins.
+- [**Security rebuild**](#security-patch) rebuilds the train on Go 1.26.9. Config keys stay the same.
+- [**NATS 2.15.1**](#nats-and-router-pins) embeds upstream NATS Server 2.15.1. Volume mounts and `NATS_*` settings are unchanged.
+- [**Edgelet v1.1.1**](#edgelet-v111) is the node binary and image. No Edgelet API change.
+- [**EdgeOps Console v1.1.1**](#edgeops-console-v111) loads **Scalar** on the API tab.
+- [**v3.9 features**](#ai-model-and-knowledge-catalogs) (Model and Knowledge catalogs, registry `type`, container fields) still apply when you come from v3.8.0.
+- [**Upgrade and migration paths**](#upgrade-and-migration-paths) summarize who can move in place.
 - [**v3.8 foundation**](#v38-foundation) (Edgelet-only nodes, embedded OIDC, WebSocket exec) remains documented in the [v3.8.0 snapshot](/v3.8.0/).
 
-## Platform train v3.9.0
+## Platform train v3.9.1
 
-| Component | v3.9.0 default |
+| Component | v3.9.1 default |
 | --------- | -------------- |
-| PoT platform | **v3.9.0** |
-| Controller | v3.9.0 |
-| {CLI_NAME} | v3.9.0 |
-| ioFog Operator | v3.9.0 |
-| Router (wrapper image) | v3.9.0 (Skupper **3.5.3** inside) |
-| NATS (wrapper image) | **2.15.0** (upstream NATS **2.15.0**) |
-| Edgelet | **v1.1.0** |
-| EdgeOps Console | **v1.1.0** |
-| Go SDK | v3.9.0 |
+| Platform | **v3.9.1** |
+| Controller | v3.9.1 |
+| {CLI_NAME} | v3.9.1 |
+| Operator | v3.9.1 |
+| Router (wrapper image) | v3.9.1 (Skupper **3.5.3** inside) |
+| NATS (wrapper image) | **2.15.1** (upstream NATS **2.15.1**) |
+| Edgelet | **v1.1.1** (image `1.1.1`) |
+| EdgeOps Console | **v1.1.1** |
+| Go SDK | v3.9.1 |
 
-Override tags in control plane YAML when you need a hotfix pin. Defaults and YAML keys: [Control plane](/learn/control-plane#default-image-pins-v390). Step-by-step upgrade: [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9) and [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train).
+Pins and YAML keys: [Control plane](/learn/control-plane#default-image-pins-v390). Steps: [Upgrading to v3.9.1](/release-notes/upgrading-to-v3-9).
+
+## Security patch
+
+Control plane images, <CliName />, the operator, the Router wrapper, Edgelet, and the Go SDK are rebuilt on **Go 1.26.9** for the October 2026 standard-library fixes. The Controller image also updates Express for an address-spoofing fix.
+
+No YAML keys, environment variables, or HTTP routes change in this patch. The [Controller API](/api/v3.9.0/controller) and [Edgelet API](/api/v1.1.0/edgelet) pages stay on those paths.
 
 ## AI Model and Knowledge catalogs
 
@@ -88,11 +92,13 @@ Wasm and alternate runtimes still use **`container.platform`** and **`container.
 
 [Find out more!](/learn/workloads/microservices) and [Microservice fields](/reference/yaml/microservice).
 
-## Edgelet v1.1.0
+## Edgelet v1.1.1
 
-**Edgelet v1.1.0** pairs with **Controller v3.9.0**. Upgrade fleet nodes after you roll the control plane. Default image: **`edgelet:1.1.0`** on your flavor registry.
+**Edgelet v1.1.1** pairs with **Controller v3.9.1**. Upgrade fleet nodes after you roll the control plane. Default image: **`edgelet:1.1.1`** on your flavor registry. There is no Edgelet API change in this patch.
 
-Agent YAML changes in v3.9:
+A later `install.sh --upgrade` on the host keeps the CLI flavor's Edgelet repository.
+
+Agent YAML changes when you move from v3.8.0:
 
 - Removed: **`deviceScanFrequency`**, **`bluetoothEnabled`**, **`abstractedHardwareEnabled`**
 - Use **`edgeGuardFrequency`** when you need hardware attestation ([EdgeGuard](/learn/edgelet-nodes#edgeguard))
@@ -100,16 +106,18 @@ Agent YAML changes in v3.9:
 Upgrade on a node:
 
 ```bash
-sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.0
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.1
 ```
 
 Or use **`upgrade agent`** as described in [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
 
 [Find out more!](/learn/edgelet-nodes), [Edgelet introduction](/learn/edgelet), and [Edgelet management](/get-started/edgelet-nodes/introduction).
 
-## EdgeOps Console v1.1.0
+## EdgeOps Console v1.1.1
 
-**EdgeOps Console v1.1.0** ships embedded in the Controller image (default port **8008**). v3.9 adds first-class UI for AI catalogs, registry **`type`** editing, and refreshed console flows aligned with the Learn guides.
+**EdgeOps Console v1.1.1** ships embedded in the Controller image (default port **8008**). The API tab loads **Scalar** instead of Swagger UI. The tab stays pinned, and the current bearer token is already applied.
+
+v3.9 still includes editors for AI catalogs, registry **`type`**, and cluster config flows.
 
 Open with <code>{CLI_NAME} view</code> or **`controller.consoleUrl`**.
 
@@ -117,9 +125,9 @@ Open with <code>{CLI_NAME} view</code> or **`controller.consoleUrl`**.
 
 ## NATS and Router pins
 
-**NATS** wrapper image tag **`2.15.0`** pins upstream **[NATS Server 2.15.0](https://github.com/nats-io/nats-server)**. Config volume paths and JWT provisioning match v3.8.
+**NATS** wrapper image tag **`2.15.1`** pins upstream **[NATS Server 2.15.1](https://github.com/nats-io/nats-server)**. Volume mounts, JWT provisioning, and `NATS_*` settings match v3.9.0. `max_ha_assets` is enforced when streams and consumers are placed, scaled, or moved. The old `$GR.` gateway reply prefix is gone.
 
-**Router** wrapper image tag **`3.9.0`** embeds **Skupper Router 3.5.3** (v3.8 used Skupper **3.5.1**).
+**Router** wrapper image tag **`3.9.1`** embeds **Skupper Router 3.5.3** (v3.8 used Skupper **3.5.1**). The wrapper behavior is unchanged.
 
 [Find out more!](/learn/platform-components/nats-server), [Router](/learn/platform-components/router), and [Message bus in Learn](/learn/message-bus).
 
@@ -127,23 +135,24 @@ Open with <code>{CLI_NAME} view</code> or **`controller.consoleUrl`**.
 
 | Starting version | Path |
 | ---------------- | ---- |
-| **v3.8.0** | In-place upgrade: [Upgrading to v3.9.0](/release-notes/upgrading-to-v3-9) |
+| **v3.9.0** | In-place tag bump: [Upgrading to v3.9.1](/release-notes/upgrading-to-v3-9) |
+| **v3.8.0** | In-place upgrade: [Upgrading to v3.9.1](/release-notes/upgrading-to-v3-9) |
 | **v3.7.x or v1.6.x** | Greenfield to v3.8 first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8), [Documentation archive](/reference/documentation-archive) |
-| **Greenfield v3.9** | [Quick start (local)](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction) |
+| **Greenfield v3.9.1** | [Quick start (local)](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction) |
 
 After upgrade, reconcile stalled platform microservices on Controller hosts if Router or NATS pods look stale: [Reconcile](/get-started/edgelet-nodes/reconcile).
 
 ## v3.8 foundation
 
-PoT **v3.8.0** introduced Edgelet-only nodes, embedded OIDC, EdgeOps Console in the Controller image, WebSocket exec, multi-arch **`images[]`** catalogs, and the greenfield migration from v3.7. That behavior still applies on v3.9; the [v3.8.0 docs snapshot](/v3.8.0/) keeps the full v3.8 release narrative and greenfield warnings.
+**v3.8.0** introduced Edgelet-only nodes, embedded OIDC, EdgeOps Console in the Controller image, WebSocket exec, multi-arch **`images[]`** catalogs, and the greenfield migration from v3.7. That behavior still applies on v3.9. The [v3.8.0 docs snapshot](/v3.8.0/) keeps the full v3.8 release narrative and greenfield warnings.
 
-New to the platform? Start with [Welcome](/), [Learn](/learn), and the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant) on **pot-edge-patterns v1.1.0** images.
+New to the platform? Start with [Welcome](/), [Learn](/learn), and the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant) on **pot-edge-patterns v1.1.1** images.
 
 ## CLI and Go SDK
 
-**{CLI_NAME} v3.9.0** adds catalog commands for **Model** and **Knowledge**, registry describe output with **`type`**, and deploy validation for v3.9 YAML. Config directory remains **`~/.iofog/v3`**.
+**{CLI_NAME} v3.9.1** keeps the v3.9 catalog commands for **Model** and **Knowledge**, registry describe output with **`type`**, and deploy validation for v3.9 YAML. Config directory remains **`~/.iofog/v3`**.
 
-**Go SDK v3.9.0** tracks the same Controller API and catalog kinds.
+**Go SDK v3.9.1** tracks the same Controller API and catalog kinds.
 
 [Find out more!](/get-started/cli/introduction), [{CLI_NAME} getting familiar](/get-started/cli/getting-familiar), and [Go SDK](/learn/platform-components/sdk).
 

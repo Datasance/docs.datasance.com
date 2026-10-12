@@ -1,0 +1,61 @@
+---
+title: ConfigMap fields
+description: Field reference for kind ConfigMap. Root data, immutable, and useVault.
+keywords: [config map, yaml, fields, data, immutable, useVault]
+slug: /reference/yaml/config-map
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# ConfigMap fields
+
+Reference for `kind: ConfigMap`. Deploy and consumption are on [Config maps](/learn/config/config-maps).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: ConfigMap # required, string
+metadata:
+  name: app-settings # required, string. Lowercase alphanumeric
+  namespace: my-ecn # no, string
+spec:
+  immutable: false # no, bool
+  useVault: false # no, bool
+data: # required, map of string. Document root. Not spec.data
+  log_level: info
+```
+
+</FlavorYaml>
+
+## Fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `metadata.name` | Yes | Unique name. Lowercase alphanumeric. |
+| `spec.immutable` | No | On create, stored when set. On update, an explicit value replaces the flag. Omit it to keep the current flag. |
+| `spec.useVault` | No | Toggles vault-backed storage when the value changes. If the YAML value matches the Controller, the update request omits the field. |
+| `data` | Yes | Map of string keys to string values. Root level, not `spec.data`. |
+
+## Deploy
+
+| State | CLI |
+| ----- | --- |
+| Absent | Create with `data`, `immutable`, and `useVault`. |
+| Present | Update. `data` is always sent. |
+
+The Controller can reject an immutable change. The CLI prints that HTTP error.
+
+## Consumption
+
+Environment reference format is `configmap-name/dataKey`:
+
+```yaml
+- key: LOG_LEVEL
+  valueFromConfigMap: app-settings/log_level
+```
+
+A volume mount sets `spec.configMapName` to `metadata.name`. See [VolumeMount fields](/reference/yaml/volume-mount).
+
+<EditPageAdmonition />

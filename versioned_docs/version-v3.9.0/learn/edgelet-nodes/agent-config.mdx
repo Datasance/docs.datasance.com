@@ -1,0 +1,129 @@
+---
+title: AgentConfig
+description: Deploy kind AgentConfig to create or update an Edgelet node record on the Controller without bootstrapping Edgelet on a host.
+keywords: [agentconfig, edgelet node, controller, router, nats, deploy, v3.9]
+slug: /learn/edgelet-nodes/agent-config
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# AgentConfig
+
+Use `kind: AgentConfig` to create or update an **Edgelet node** record on the Controller API. This kind does not bootstrap Edgelet on a host.
+
+## When to use
+
+| Situation | Approach |
+| --------- | -------- |
+| Install Edgelet on a host | Omit AgentConfig. <CliName /> synthesizes it from `Agent` or `LocalAgent` `spec.config`. |
+| Change config on a node that already exists | Deploy AgentConfig alone. |
+| Order upstream names in one file | Put AgentConfig documents before the nodes that depend on those names. |
+| System node on a Controller host | Control plane deploy builds that record. It is not a standalone `kind: Agent`. |
+
+A [control plane](/learn/control-plane) must already be in the namespace. How a pushed config reaches the host is in [Configuration updates](/get-started/edgelet-nodes/configuration-updates).
+
+## What `deploy -f` does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f agent-config.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
+
+1. Validate router and NATS rules for an edge node versus a system node.
+2. Resolve `upstreamRouters` and `upstreamNatsServers` from Edgelet node names to UUIDs. Set host for an interior router when that role requires it.
+3. Create the node when it is missing. Otherwise patch the configuration.
+4. Wait until the node platform is ready, except a quiet system-node path.
+
+Platform reconcile then creates the system application `system-<agentName>` with `router` and `nats` microservices, fabric CAs, and upstream links. See [Networking](/learn/edgelet-nodes/networking) and [Applications](/get-started/workloads/applications).
+
+In one file with `Agent` or `LocalAgent`, AgentConfig documents run in a batch before host bootstrap. When `metadata.name` matches, <CliName /> merges host and tags from the node spec. After bootstrap, the node path may update AgentConfig again when `spec.config` is present.
+
+<CliBlock>{`{{CLI_NAME}} describe agent-config edge-node-1 -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe`}>describe agent-config</Link> prints nested `routerConfig` and `natsConfig` aligned with Controller storage. Use that output when you round-trip YAML.
+
+## Examples
+
+Config-only record. Names in `upstreamRouters` and `upstreamNatsServers` must already exist, or be created by an earlier document in the same deploy.
+
+<FlavorYaml title="agent-config.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: AgentConfig
+metadata:
+  name: edge-node-1
+spec:
+  description: Config-only update
+  arch: amd64
+  host: 10.0.0.50
+  deploymentType: native
+  containerEngine: edgelet
+  upstreamRouters:
+    - default-router
+  routerConfig:
+    routerMode: edge
+    messagingPort: 5671
+  upstreamNatsServers:
+    - default-nats-hub
+  natsConfig:
+    natsMode: leaf
+    natsServerPort: 4222
+  memoryLimit: 4096
+  cpuLimit: 80
+  logLevel: INFO
+```
+
+</FlavorYaml>
+
+Explicit AgentConfig, then the host install, in one file. The names match, so the AgentConfig batch runs before bootstrap.
+
+<FlavorYaml title="agent-and-config.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: AgentConfig
+metadata:
+  name: edge-node-2
+spec:
+  arch: amd64
+  host: 10.0.0.60
+  upstreamRouters:
+    - default-router
+  routerConfig:
+    routerMode: edge
+  upstreamNatsServers:
+    - default-nats-hub
+  natsConfig:
+    natsMode: leaf
+---
+apiVersion: {{API_VERSION}}
+kind: Agent
+metadata:
+  name: edge-node-2
+spec:
+  host: 10.0.0.60
+  ssh:
+    user: ubuntu
+    keyFile: ~/.ssh/id_rsa
+  package:
+    version: "1.1.0"
+  config:
+    arch: amd64
+    deploymentType: native
+    containerEngine: edgelet
+```
+
+</FlavorYaml>
+
+On `Agent` and `LocalAgent`, the same configuration fields live under `spec.config`, not at the top of `spec`.
+
+## Fields
+
+[AgentConfig fields](/reference/yaml/agent-config)
+
+<EditPageAdmonition />

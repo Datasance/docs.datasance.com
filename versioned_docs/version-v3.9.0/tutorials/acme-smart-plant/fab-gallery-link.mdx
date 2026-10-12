@@ -1,0 +1,60 @@
+---
+title: Fab gallery link
+description: Optional. Copy the wafer snapshot bridge port and set SNAPSHOT_URL on alert-dashboard.
+keywords: [tutorial, acme smart plant, snapshot, SNAPSHOT_URL, gallery]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Fab gallery link
+
+## Goal
+
+This page is optional. It links the plant dashboard at the wafer gallery.
+
+The wafer example must already be deployed. [Snapshot service](/tutorials/edge-ai-wafer-defect/snapshot-service) has a `bridgePort`. This page is not part of the wafer example.
+
+## Set SNAPSHOT_URL
+
+<CliBlock>{`{{CLI_NAME}} describe service snapshot-service`}</CliBlock>
+
+Copy `bridgePort`.
+
+```text
+NAME: snapshot-service
+BRIDGE PORT: 10456
+TARGET PORT: 8083
+RESOURCE: vision-inspection/snapshot-service
+```
+
+In `deploy/steps/06-application-operations-center.yaml`, set `SNAPSHOT_URL` on alert-dashboard:
+
+```yaml
+- key: SNAPSHOT_URL
+  value: "http://router.default.svc.bridge.local:<snapshot-bridge-port>"
+```
+
+Replace `<snapshot-bridge-port>` with the value from describe. Use `bridgePort`, not target port 8083.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/06-application-operations-center.yaml`}</CliBlock>
+
+## What you should see {#verify}
+
+<CliBlock>{`{{CLI_NAME}} describe microservice alert-dashboard`}</CliBlock>
+
+`SNAPSHOT_URL` contains the snapshot `bridgePort`.
+
+Open the plant dashboard from [Alert dashboard service](/tutorials/acme-smart-plant/alert-dashboard-service). **Fab inspection** opens the wafer gallery.
+
+The dashboard does not subscribe to `vision.inspections.>`. It opens the HTTP URL served by snapshot-service.
+
+## Common mistakes
+
+The wafer snapshot service is not deployed, so there is no bridge port to copy.
+
+The YAML is edited and the Application is not deployed again. The running dashboard keeps the old `SNAPSHOT_URL`.
+
+<EditPageAdmonition />

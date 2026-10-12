@@ -826,7 +826,7 @@ export function buildReleaseNotesSidebarV39(): SidebarItem[] {
   return [
     {type: 'doc', id: 'release-notes/index', label: 'Overview'},
     {type: 'doc', label: "What's New", id: 'release-notes/whats-new'},
-    {type: 'doc', label: 'Upgrading to v3.9.0', id: 'release-notes/upgrading-to-v3-9'},
+    {type: 'doc', label: 'Upgrading to v3.9.1', id: 'release-notes/upgrading-to-v3-9'},
     {type: 'doc', label: 'Migrating to v3.8.0', id: 'release-notes/migrating-to-v3-8'},
   ];
 }

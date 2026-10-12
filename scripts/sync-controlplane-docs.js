@@ -40,7 +40,7 @@ const FILES = [
     src: 'docs/operators/controlplane/kubernetes/README.md',
     dest: 'docs/learn/control-plane/kubernetes.mdx',
     title: 'Kubernetes control plane (deploy guide)',
-    description: 'KubernetesControlPlane deploy flow, CLI vs operator CR, and prerequisites on platform train v3.9.0.',
+    description: 'KubernetesControlPlane deploy flow, CLI vs operator CR, and prerequisites on platform train v3.9.1.',
     keywords: ['kubernetes control plane', 'kubernetescontrolplane', 'operator', 'v3.9'],
     linkKind: 'kubernetes',
   },
