@@ -4,7 +4,8 @@
  *
  * The ioFog preset excludes potctl CLI docs. v3.9.0 uses reference/cli/potctl
  * and v3.8.0 uses potctl/cli. Both snapshots include iofogctl pages, so those
- * categories are retargeted. v3.7.x has no iofogctl CLI snapshot, so the CLI
+ * categories are retargeted. Get Started CLI categories keep their doc ids and
+ * take the iofogctl label. v3.7.x has no iofogctl CLI snapshot, so the CLI
  * Reference category is removed.
  *
  * Usage: DOCUSAURUS_DISTRIBUTION=iofog node scripts/flavor-version-sidebar.js patch|restore
@@ -31,6 +32,17 @@ const FILES = [
 
 function backupPath(file) {
   return path.join(SIDEBARS_DIR, `${file}.datasance.bak`);
+}
+
+function isCliGuidesCategory(item) {
+  if (!item || item.type !== 'category' || item.label !== 'potctl') {
+    return false;
+  }
+  return (item.items || []).some(
+    (child) =>
+      child.type === 'doc' &&
+      (child.id === 'get-started/cli/introduction' || child.id === 'potctl/introduction'),
+  );
 }
 
 function isPotctlCliCategory(item) {
@@ -78,6 +90,10 @@ function mapItems(items, mode) {
         continue;
       }
       out.push(retargetCliCategory(item));
+      continue;
+    }
+    if (mode === 'retarget' && isCliGuidesCategory(item)) {
+      out.push({...item, label: 'iofogctl', items: mapItems(item.items, mode)});
       continue;
     }
     if (item && Array.isArray(item.items)) {
