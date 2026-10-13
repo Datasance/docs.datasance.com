@@ -145,7 +145,7 @@ For a hands-on walkthrough, see the [Acme Smart Plant tutorial](/tutorials/acme-
 
 ## Router
 
-The **Router** enables microservices to communicate through TCP bridges created via Service YAML kinds. The platform ships a Router wrapper image (**v3.9.0**) that embeds **Skupper Router 3.5.1**. Router is deployed with TLS by default. The Controller tracks Router configuration and TLS certificate volume mounts.
+The **Router** enables microservices to communicate through TCP bridges created via Service YAML kinds. The platform ships a Router wrapper image (**v3.9.0**) that embeds **Skupper Router 3.5.3**. Router is deployed with TLS by default. The Controller tracks Router configuration and TLS certificate volume mounts.
 
 Each Controller and each Edgelet node has its own Router instance by default. The Controller hosts an **interior** Router. Each Edgelet node hosts an **edge** Router connected to the interior Router.
 
