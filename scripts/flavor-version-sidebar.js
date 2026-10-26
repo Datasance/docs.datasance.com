@@ -2,11 +2,11 @@
 /**
  * Patch versioned sidebars for ioFog builds.
  *
- * The ioFog preset excludes potctl CLI docs. v3.9.0 uses reference/cli/potctl
- * and v3.8.0 uses potctl/cli. Both snapshots include iofogctl pages, so those
- * categories are retargeted. Get Started CLI categories keep their doc ids and
- * take the iofogctl label. v3.7.x has no iofogctl CLI snapshot, so the CLI
- * Reference category is removed.
+ * The ioFog preset excludes potctl CLI docs. v3.9.1 and v3.9.0 use
+ * reference/cli/potctl, and v3.8.0 uses potctl/cli. Those snapshots include
+ * iofogctl pages, so those categories are retargeted. Get Started CLI
+ * categories keep their doc ids and take the iofogctl label. v3.7.x has no
+ * iofogctl CLI snapshot, so the CLI Reference category is removed.
  *
  * Usage: DOCUSAURUS_DISTRIBUTION=iofog node scripts/flavor-version-sidebar.js patch|restore
  */
@@ -23,6 +23,7 @@ const POTCTL_CLI_DIRS = {
 };
 
 const FILES = [
+  {file: 'version-v3.9.1-sidebars.json', mode: 'retarget'},
   {file: 'version-v3.9.0-sidebars.json', mode: 'retarget'},
   {file: 'version-v3.8.0-sidebars.json', mode: 'retarget'},
   {file: 'version-v3.7.0-sidebars.json', mode: 'strip'},
