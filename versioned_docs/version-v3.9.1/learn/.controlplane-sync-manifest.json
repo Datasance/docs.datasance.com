@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-06T09:40:58.818Z",
+  "sources": {
+    "docs/learn/control-plane/kubernetes.mdx": "1a973371a12e7f9a714b8e57fc66923b59b251d363b990455b45bbe61ee38148",
+    "docs/learn/control-plane/kubernetes-fields.mdx": "3e4f07c22db9700de114f3e3bb9c609283a8e0e36770dfffac9a7a239804c89c",
+    "docs/learn/control-plane/remote.mdx": "be2c026622edefa4b4966074d5586235da5d3854c36b8c800f9c74fce883abd6",
+    "docs/learn/control-plane/remote-fields.mdx": "0d46834520803485357aab48a9169ed78fab4096f06fd3b66a6618bca41ed407",
+    "docs/learn/control-plane/remote-ha.mdx": "245cf9b48b67ef7eaa470d8f2ced6ede985842bdbaa242b5e9f2343ad1e9175f",
+    "docs/learn/control-plane/controller-add-on.mdx": "4a30032fbbc7182281a7caea441f16ede2981c230971538b911bb2852efcc245",
+    "docs/learn/control-plane/local.mdx": "86008a78af15b2896d5246401962fc4851c06a1de1cfd6e26edfcc3ea2af4371",
+    "docs/learn/control-plane/local-fields.mdx": "6e93763149341188b68ecc8d4eed3dde3f437169d9c3e282199f46e38652016f",
+    "docs/learn/security/control-plane-kubernetes-cli.mdx": "8f8ed3661e3ff514d166331a92bfa3ac0081b00c15b00eed170c40d494500f1e",
+    "docs/learn/security/control-plane-remote.mdx": "8dc9966cef67f69e76d10857f711f4fa75135d6afa56801a3e10e3370e703fe2",
+    "docs/learn/security/control-plane-local.mdx": "bb993a89ec84fdbf4af4edce527b4db7172f9c414fe1642f99e2e69e78214356",
+    "docs/learn/control-plane/kubernetes-crd.mdx": "095c3cab00ecde97528c41ed08608c5b6809d57f4f382f652328fb3065908574",
+    "docs/learn/security/control-plane-kubernetes-operator.mdx": "d17b2f92b4b3064c4f4093b405b04922878f3868410d87a241125ffd95bbf2d4"
+  }
+}

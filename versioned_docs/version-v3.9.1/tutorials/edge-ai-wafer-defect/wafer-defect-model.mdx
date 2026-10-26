@@ -1,0 +1,68 @@
+---
+title: Wafer-defect model
+description: Deploy kind Model wafer-defect from the Datasance GHCR model repo, using the OCI registry id.
+keywords: [tutorial, edge ai, model catalog, onnx, wafer defect]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Wafer-defect model
+
+## Goal
+
+Deploy `kind: Model` named `wafer-defect` so the catalog knows the ONNX artifact. The vision inspection Application places it on **edge-c**. This page only creates the catalog row.
+
+The published model repo is `datasance/pot-edge-patterns/models/wafer-defect`, tag `1.2.0`. The manifest pins a digest for that tag.
+
+The file is `deploy/steps/13a-model-wafer-defect.yaml` in [pot-edge-patterns](https://github.com/Datasance/pot-edge-patterns).
+
+## YAML
+
+Replace `spec.registryId` with the GHCR OCI row id from [OCI registry](/tutorials/edge-ai-wafer-defect/oci-registry).
+
+<FlavorYaml title="wafer-defect">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Model
+metadata:
+  name: wafer-defect
+spec:
+  repo: datasance/pot-edge-patterns/models/wafer-defect
+  revision: sha256:735e4688b0b797224dab8da8758ac767b5cb131035e4a5c895c8d68b91f96298
+  registryId: 9
+  format: onnx
+```
+
+</FlavorYaml>
+
+`metadata.name` stays `wafer-defect`. Vision inspection names that catalog row in `spec.models`.
+
+Deploy with <CliName />. This file uses the Controller `apiVersion`. It is not an Edgelet-local model file.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/13a-model-wafer-defect.yaml`}</CliBlock>
+
+Use your edited copy if you changed `registryId`.
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} describe model wafer-defect`}</CliBlock>
+
+The row is in **Config → AI Model Catalog**. It is not on **edge-c** yet. Vision inspection attaches and pulls it.
+
+## Common mistakes
+
+A local model on the node already uses the name `wafer-defect`. Remove that local model before this catalog row is used on the same node.
+
+`registryId` still points at registry `1`, or at the sample id `9`, instead of your OCI row.
+
+## Next
+
+[Vision user rules](/tutorials/edge-ai-wafer-defect/vision-user-rules)
+
+<EditPageAdmonition />

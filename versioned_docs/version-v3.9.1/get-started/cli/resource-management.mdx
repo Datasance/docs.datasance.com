@@ -1,0 +1,66 @@
+---
+title: Resource Management
+description: Deploy and delete ECN resources with potctl or iofogctl.
+keywords: [potctl, iofogctl, deploy, delete, ecn]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# {CLI_NAME} Resource Management
+
+## Deploying New Edge Compute Networks
+
+<code>{CLI_NAME}</code> deploys an entire ECN from a single YAML file:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f ecn.yaml`}</CliBlock>
+
+You can also deploy individual components:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml
+{{CLI_NAME}} deploy -f controller.yaml
+{{CLI_NAME}} deploy -f agent.yaml
+{{CLI_NAME}} deploy -f application.yaml`}</CliBlock>
+
+Deploy commands are idempotent. If a deploy fails, run the same command again.
+
+Deploy **Model**, **Knowledge**, and **RuntimeClass** YAML the same way, then attach them to Edgelet nodes:
+
+<CliBlock>{`{{CLI_NAME}} deploy -f model.yaml
+{{CLI_NAME}} deploy -f knowledge.yaml
+{{CLI_NAME}} attach model MODEL_NAME AGENT_NAME…
+{{CLI_NAME}} attach knowledge KNOWLEDGE_NAME AGENT_NAME…`}</CliBlock>
+
+Platform YAML specs: [Control plane in Learn](/learn/control-plane), [Applications in Learn](/learn/workloads/applications), [AI model catalog](/learn/config/ai-model-catalog), [AI knowledge catalog](/learn/config/ai-knowledge-catalog).
+
+## Delete Components of Edge Compute Networks
+
+Deleting Control Planes, Controllers, and Edgelet nodes terminates daemons on remote hosts.
+
+<CliBlock>{`{{CLI_NAME}} delete controller alpaca-1
+{{CLI_NAME}} delete agent kiwi-1
+{{CLI_NAME}} delete application health-care-app
+{{CLI_NAME}} delete microservice health-case-ui
+{{CLI_NAME}} delete model wafer-defect
+{{CLI_NAME}} delete knowledge my-kb`}</CliBlock>
+
+To undo a deletion, re-run the deploy command for that resource.
+
+Wipe an entire ECN:
+
+<CliBlock>{`{{CLI_NAME}} delete all`}</CliBlock>
+
+Delete a namespace and its resources:
+
+<CliBlock>{`{{CLI_NAME}} delete namespace zoo-1 --force`}</CliBlock>
+
+:::info[Next steps?]
+  <ul>
+    <li><a href="/get-started/cli/connect-disconnect">Connecting to an existing ECN.</a></li>
+    <li><a href="/reference">Cluster resources index.</a></li>
+  </ul>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

@@ -1,0 +1,154 @@
+---
+title: Service fields
+description: Writable and assigned fields for kind Service, including resource formats, connector host, and Kubernetes Service rules.
+keywords: [service, yaml, fields, bridge port, default bridge, target port]
+slug: /reference/yaml/service
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Service fields
+
+Reference for `kind: Service`. Deploy, types, and examples are on [Services](/learn/network/services). Tag matching is on [Distribution tags](/learn/network/distribution).
+
+`metadata` and `spec` are required. Tags live under `metadata.tags`, not `spec`. The Controller does not validate `apiVersion`.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Service # required, string
+metadata:
+  name: checkout # required, string. DNS label
+  namespace: my-ecn # no, string
+  tags: # no, list of string
+    - checkout
+spec: # required, object
+  type: microservice # required, string. microservice, agent, k8s, or external. Immutable
+  resource: orders/checkout # required, string
+  targetPort: 8080 # required, int
+  defaultBridge: default-router # no, string, default default-router. Immutable
+  servicePort: 8080 # Kubernetes except type k8s, int. On a remote control plane the Controller sets this to bridgePort
+  k8sType: ClusterIP # Kubernetes except type k8s, string. LoadBalancer, ClusterIP, or NodePort
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+bridgePort: 10024 # assigned, int. Not accepted in deploy YAML
+serviceEndpoint: 192.0.2.10 # assigned, string
+provisioningStatus: pending # assigned, string. pending, ready, or failed
+provisioningError: "" # assigned, string
+```
+
+
+On a Kubernetes control plane, add `servicePort` and `k8sType` for `microservice`, `agent`, and `external`. Examples are on [Services](/learn/network/services).
+
+## Writable fields
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `metadata.name` | Yes | DNS label. Also the router `address`, and the Kubernetes Service name when one is created. |
+| `metadata.tags` | No | Distribution tokens and Kubernetes annotation tags. See [Distribution tags](/learn/network/distribution). |
+| `spec.type` | Yes | `microservice`, `agent`, `k8s`, or `external`. Immutable. |
+| `spec.resource` | Yes | Backend. Meaning depends on `type`. |
+| `spec.targetPort` | Yes | TCP port on the backend. Becomes the connector port. |
+| `spec.defaultBridge` | No | Hub router that owns the listener. Default `default-router`. Immutable. `k8s` and `external` must use `default-router`. |
+| `spec.servicePort` | Kubernetes, except `type: k8s` | Port clients use on the created Kubernetes Service. On a remote control plane the Controller sets this to `bridgePort`. |
+| `spec.k8sType` | Kubernetes, except `type: k8s` | `LoadBalancer`, `ClusterIP`, or `NodePort`. |
+
+`bridgePort` is not accepted in YAML.
+
+## Name
+
+`metadata.name` matches `^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`.
+
+These names are rejected: `controller`, `router`, `router-internal`, `docker`, `podman`, `kubernetes`, `nats`, `nats-headless`, `nats-server`.
+
+## `spec.resource`
+
+| `type` | You write | Stored as | Connector dials |
+| ------ | --------- | --------- | --------------- |
+| `microservice` | `appName/microserviceName` or a microservice UUID | Microservice UUID | See the host table |
+| `agent` | Edgelet node name or UUID | Node UUID | See the host table |
+| `k8s` | DNS name or IP of an existing Service in the cluster | That string | `resource` at `targetPort` |
+| `external` | DNS name or IP outside the cluster | That string | `resource` at `targetPort` |
+
+`type: k8s` is rejected unless the control plane is Kubernetes. The Controller does not create a Kubernetes Service for `k8s`.
+
+`microservice` and `agent` require a router on that Edgelet node. `routerMode: none` is rejected.
+
+For `microservice` and `agent`, `defaultBridge` may be `default-router` or the UUID of an upstream router that node already uses.
+
+## Connector host
+
+The connector host comes from the backend. It is not always the `resource` string.
+
+| Backend | Router on that node | Host the connector dials |
+| ------- | ------------------- | ------------------------ |
+| Microservice, edge router, bridge network | `edge` | `{applicationName}.{microserviceName}` |
+| Microservice, edge router, host network | `edge` | `edgelet.default.svc.bridge.local` |
+| Microservice, interior router | `interior` | `127.0.0.1` |
+| `agent`, edge router | `edge` | `edgelet.default.svc.bridge.local` |
+| `agent`, interior router | `interior` | `127.0.0.1` |
+| `k8s` or `external` | Connector is placed on the default router | The `resource` string |
+
+`{applicationName}.{microserviceName}` is the bridge name on that node. See [Bridge DNS](/learn/workloads/microservices#bridge-dns).
+
+| `type` | Router that receives the connector |
+| ------ | ---------------------------------- |
+| `microservice` | The Edgelet node that runs the microservice |
+| `agent` | That Edgelet node |
+| `k8s`, `external` | The default router |
+
+`processId` on the connector:
+
+| `type` | `processId` |
+| ------ | ----------- |
+| `microservice` | Microservice UUID |
+| `agent` | `{agentUuid}-local-{targetPort}` |
+| `k8s` | `{resource}-k8s-{targetPort}` |
+| `external` | `{resource}-external-{targetPort}` |
+
+The connector and the listener share `address`, which is `metadata.name`. The listener binds `bridgePort`. See [TCP bridge](/learn/network/interconnection).
+
+## Assigned fields
+
+| Field | Meaning |
+| ----- | ------- |
+| `bridgePort` | Port the listener binds. First free port in the bridge range (default 10024 to 65535). Assigned once and kept. |
+| `serviceEndpoint` | Where clients reach the hub. Remote: hub router host. Kubernetes `LoadBalancer`: ingress IP, or hostname when the provider returns one. `ClusterIP` and `NodePort` do not fill this from Kubernetes. |
+| `provisioningStatus` | `pending`, `ready`, or `failed`. |
+| `provisioningError` | Last hub error when status is `failed`. Retry with `reconcile service`. |
+
+`ready` means the hub connector, the hub listener, and, when required, the Kubernetes Service succeeded. Listeners on tagged Edgelet nodes reconcile separately.
+
+A `LoadBalancer` with no ingress after the Controller finishes polling becomes `failed`.
+
+## Kubernetes control plane
+
+| `spec.type` | `k8sType` and `servicePort` | Controller creates a Kubernetes Service |
+| ----------- | --------------------------- | --------------------------------------- |
+| `microservice`, `agent`, `external` | Required | Yes, in the controller namespace. Name is `metadata.name`. |
+| `k8s` | Not used | No |
+
+The Service selects the router pods. Clients use `servicePort`. That port forwards to `bridgePort` on the router pods.
+
+Delete removes that Kubernetes Service for every type except `k8s`.
+
+## Update and delete
+
+`type` and `defaultBridge` cannot change. Delete the Service and create it again.
+
+An update rewrites the connector and the listener. If `resource` changed, the connector is removed from the previous site first.
+
+A tag change includes both the old tags and the new tags, so an Edgelet node that lost a tag drops its listener.
+
+Delete removes the hub connector and the hub listener, deletes the Kubernetes Service when one exists, and reconciles every Edgelet node the old tags selected.
+
+<EditPageAdmonition />

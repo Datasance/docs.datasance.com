@@ -1,0 +1,130 @@
+---
+title: Plant user rules
+description: Deploy NATS user rules for sensor-simulator, smart-anomaly-detector, and alert-dashboard.
+keywords: [tutorial, acme smart plant, nats user rule, telemetry.machine, notify.alerts, journal.events]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Plant user rules
+
+## Goal
+
+Deploy the user rules for the plant microservices. The Applications on the later pages reference these names. Edgelet nodes **site-a** and **ops-b** should already exist. You can change `agent.name` when you deploy the Applications.
+
+- **sensor-publisher** publishes `telemetry.machine.>`.
+- **anomaly-processor** subscribes to telemetry and publishes alerts and journal events.
+- **ops-viewer** subscribes to imported alerts, the journal, and fleet telemetry. It runs later on **ops-b**.
+
+The file is `deploy/steps/01-nats-user-rules.yaml`.
+
+## YAML
+
+<FlavorYaml title="sensor-publisher">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: sensor-publisher
+spec:
+  description: sensor-simulator - publish multi-metric machine telemetry (in-account)
+  maxSubscriptions: -1
+  maxPayload: 1048576
+  maxData: -1
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+  pubAllow:
+    - telemetry.machine.>
+```
+
+</FlavorYaml>
+
+<FlavorYaml title="anomaly-processor">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: anomaly-processor
+spec:
+  description: smart-anomaly-detector - subscribe telemetry, publish alerts and journal events
+  maxSubscriptions: -1
+  maxPayload: 1048576
+  maxData: -1
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+  pubAllow:
+    - notify.alerts.>
+    - journal.events.>
+    - "$JS.API.>"
+  subAllow:
+    - telemetry.machine.>
+    - "_INBOX.>"
+```
+
+</FlavorYaml>
+
+`$JS.API.>` lets the detector create JetStream stream `JOURNAL_PRODUCTION`.
+
+<FlavorYaml title="ops-viewer">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: ops-viewer
+spec:
+  description: alert-dashboard - subscribe to imported alerts, journal, and fleet telemetry fan-in
+  maxSubscriptions: -1
+  maxPayload: 1048576
+  maxData: -1
+  bearerToken: false
+  allowedConnectionTypes:
+    - STANDARD
+  pubAllow:
+    - "$JS.API.>"
+    - "$JS.ACK.>"
+  subAllow:
+    - notify.alerts.>
+    - journal.events.>
+    - telemetry.machine.>
+    - "_INBOX.>"
+    - "$JS.ACK.>"
+```
+
+</FlavorYaml>
+
+| Subject | Purpose |
+| --- | --- |
+| `telemetry.machine.{machineId}` | In-account telemetry for **M001** through **M004** |
+| `notify.alerts.{machineId}` | Live alert panel |
+| `journal.events.{machineId}` | Journal kept in JetStream |
+
+Use `telemetry.machine.>`. Older demos published `telemetry.temperature`.
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f deploy/steps/01-nats-user-rules.yaml`}</CliBlock>
+
+## What you should see
+
+<CliBlock>{`{{CLI_NAME}} get nats-user-rules`}</CliBlock>
+
+`sensor-publisher`, `anomaly-processor`, and `ops-viewer` are listed. No microservices are running yet.
+
+## Common mistakes
+
+Deploying an Application before these rules exist.
+
+Skipping **ops-viewer**. The dashboard on **ops-b** uses it.
+
+## Next
+
+[Account export](/tutorials/acme-smart-plant/account-export)
+
+<EditPageAdmonition />

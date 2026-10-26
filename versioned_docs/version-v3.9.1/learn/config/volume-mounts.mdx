@@ -1,0 +1,97 @@
+---
+title: Volume mounts
+description: kind VolumeMount publishes one Secret or one ConfigMap onto Edgelet nodes. Microservices mount it with type volumeMount.
+keywords: [volume mount, secret, config map, attach, edgelet node]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Volume mounts
+
+A **volume mount** binds one Secret or one ConfigMap to a Controller object. Edgelet nodes receive the files when the mount is linked. A microservice then uses `type: volumeMount`.
+
+The short map is [Config, secrets, and volumes](/get-started/workloads/config). Fields are on [VolumeMount fields](/reference/yaml/volume-mount).
+
+A [Volume](/learn/config/volumes) copies a directory from the operator machine and lists nodes in its own spec. A VolumeMount publishes a Secret or ConfigMap. Attach applies here, and also to models, knowledge, and runtime classes.
+
+## When to use it
+
+Deploy the [Secret](/learn/config/secrets) or [ConfigMap](/learn/config/config-maps) first. Set exactly one of `secretName` or `configMapName`.
+
+Use `attach volume-mount` when the node should hold the files before any microservice references the mount, or on extra nodes. When a microservice already lists this mount, the Controller links it to that microservice's Edgelet node during microservice deploy.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f volume-mount.yaml -n my-ecn`}</CliBlock>
+
+Deploy creates the VolumeMount or updates it when the name exists. Deploy does not copy files by itself. Linking does.
+
+<FlavorYaml title="volume-mount.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: VolumeMount
+metadata:
+  name: app-config
+  namespace: my-ecn
+spec:
+  configMapName: app-settings
+```
+
+</FlavorYaml>
+
+A secret-backed mount sets `spec.secretName` instead, and leaves `configMapName` unset.
+
+## How a microservice uses it
+
+`hostDestination` is the volume mount `metadata.name`, not the Secret or ConfigMap name. `type` is `volumeMount`.
+
+<FlavorYaml title="mount.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  agent:
+    name: edge-01
+  container:
+    volumes:
+      - type: volumeMount
+        hostDestination: app-config
+        containerDestination: /etc/app
+        accessMode: ro
+```
+
+</FlavorYaml>
+
+Deploy the VolumeMount before that microservice, in an earlier file or earlier in the same file. The mapping table is on [Microservice fields](/reference/yaml/microservice).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get volume-mounts -n my-ecn
+{{CLI_NAME}} describe volume-mount app-config -n my-ecn
+{{CLI_NAME}} attach volume-mount app-config edge-01 -n my-ecn
+{{CLI_NAME}} detach volume-mount app-config edge-01 -n my-ecn
+{{CLI_NAME}} delete volume-mount app-config -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_volume-mount`}>describe volume-mount</Link> shows the backing name. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_attach_volume-mount`}>attach volume-mount</Link> and <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_detach_volume-mount`}>detach volume-mount</Link> take the mount name and Edgelet node names. Linked mounts also appear on `describe agent`.
+
+## Console
+
+**Config → Volume Mounts** creates mounts and lists linked nodes. See [Configuration](/get-started/edgeops-console/configuration).
+
+## Related
+
+- [Config maps](/learn/config/config-maps)
+- [Secrets](/learn/config/secrets)
+- [Volumes](/learn/config/volumes)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

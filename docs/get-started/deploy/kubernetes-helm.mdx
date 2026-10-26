@@ -1,7 +1,7 @@
 ---
 title: Kubernetes - Deploy Control Plane with Helm
-description: Install the ioFog operator and ControlPlane CR with Helm on platform train v3.9.1. Flavor-specific chart repo, embedded OIDC, and links to CRD and TLS docs.
-keywords: [kubernetes, helm, operator, control plane, embedded oidc, v3.9]
+description: Install the operator and ControlPlane with Helm chart 3.9.2. Flat values, embedded OIDC, and optional auth.issuerCa.
+keywords: [kubernetes, helm, operator, control plane, embedded oidc, v3.9, issuerCa]
 slug: /get-started/deploy/kubernetes-helm
 ---
 
@@ -15,7 +15,6 @@ import {
   CONTROLPLANE_CRD_RESOURCE,
   HELM_REPO_URL,
   OPERATOR_CHART_README_URL,
-  OPERATOR_CHART_VALUES_SCHEMA_URL,
   OPERATOR_CHART_VERSION,
   REGISTRY,
 } from '@site/src/config/distribution';
@@ -30,7 +29,9 @@ import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
 # Deploy the control plane on Kubernetes with Helm
 
-This guide installs **<ProductName />** on Kubernetes using the **iofog-operator** Helm chart. The chart deploys the **operator** Deployment and a **`ControlPlane`** custom resource with <code>apiVersion: {API_VERSION}</code>. The operator reconciles Controller, Router, NATS, Services, Secrets, and optional Ingress objects.
+This guide installs **<ProductName />** on Kubernetes using the **iofog-operator** Helm chart **{OPERATOR_CHART_VERSION}**. The chart deploys the **operator** Deployment and a **`ControlPlane`** custom resource with <code>apiVersion: {API_VERSION}</code>. The operator reconciles Controller, Router, NATS, Services, Secrets, and an Ingress when the Controller Service is ClusterIP.
+
+Chart **3.9.2** values are flat. `auth`, `images`, `database`, `services`, `controller`, `nats`, `vault`, and `events` sit at the top of `values.yaml`. The templates build the ControlPlane spec from those keys. The chart always installs the CRD, RBAC, and one ControlPlane.
 
 <FlavorOnly distribution="datasance">
 
@@ -46,12 +47,12 @@ Charts publish from the Eclipse ioFog mirror. Use the Helm repository index link
 
 | Reference | Where to read |
 | --------- | ------------- |
-| Every `controlplane.spec.*` field | [ControlPlane CRD](/learn/control-plane/kubernetes-crd) |
+| Every ControlPlane `spec` field | [ControlPlane CRD](/learn/control-plane/kubernetes-crd) |
 | Controller, Router, NATS TLS on cluster | [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator) |
 | CLI trust when the API uses HTTPS | [Kubernetes TLS (CLI YAML)](/learn/security/control-plane-kubernetes-cli) (`spec.ca` / `connect --ca`) |
 | Auth bootstrap | [Embedded OIDC](/get-started/deploy/embedded-oidc) |
 
-Published chart defaults (values, tarball): <a href={HELM_REPO_URL}>Helm repository index</a>.
+Published chart defaults: <a href={HELM_REPO_URL}>Helm repository index</a>. `values.yaml` is the install contract. `marketplace-values.yaml` on that index is the marketplace form. Do not pass it as a second `-f` file.
 
 ## Prerequisites
 
@@ -61,7 +62,7 @@ Published chart defaults (values, tarball): <a href={HELM_REPO_URL}>Helm reposit
 - Pull access to **{REGISTRY}** (operator, controller, router, nats)
 - For NATS JetStream with PVCs: a suitable **StorageClass**
 
-Charts are **stamped per mirror** at package time (`crdGroup`, `imageRegistry`, image tags). Do not override `crdGroup` or `imageRegistry` unless you run a custom build.
+Charts are **stamped per mirror** at package time (CRD group, default ControlPlane name, and image tags). Do not override the CRD group or image registry unless you run a custom build.
 
 ## Add the Helm repository
 
@@ -76,54 +77,49 @@ Or use the files on the index page: <code>{HELM_REPO_URL}/values.yaml</code> and
 
 ## Quick install
 
-Embedded OIDC is the default. Set a bootstrap password (≥12 characters, one uppercase, one special). Prefer a Secret in production (`passwordSecretRef` in values).
+Embedded OIDC is the default. Set a bootstrap password of at least 12 characters, with one uppercase letter and one special character. Prefer a Secret in production (`auth.bootstrap.passwordSecretRef` in values).
 
 <CliBlock title="Install release">{`helm install pot iofog-operator/iofog-operator \\
   --namespace iofog-system --create-namespace \\
   --version ${OPERATOR_CHART_VERSION} \\
-  --set controlplane.spec.auth.mode=embedded \\
-  --set controlplane.spec.auth.bootstrap.username=admin \\
-  --set controlplane.spec.auth.bootstrap.password='ReplaceMe1!'`}</CliBlock>
+  --set auth.bootstrap.password='ReplaceMe1!x'`}</CliBlock>
+
+`name` overrides the ControlPlane resource name. Leave it empty to use the flavor default (`pot` or `iofog`). The Helm release name does not set that name.
 
 See [Embedded OIDC](/get-started/deploy/embedded-oidc) for console URLs and bootstrap behavior.
 
 ## Install with a values file
 
-<FlavorYaml title="my-values.yaml (excerpt)">{`controlplane:
-  spec:
-    replicas:
-      controller: 1
-      nats: 2
-    database:
-      provider: sqlite
-      user: ""
-      host: ""
-      port: 0
-      password: ""
-      databaseName: ""
-      ssl: false
-    auth:
-      mode: embedded
-      bootstrap:
-        username: admin
-        password: "ReplaceMe1!"
-    controller:
-      publicUrl: https://controller.example.com
-      consoleUrl: https://console.example.com
-    images:
-      controller: {{REGISTRY}}/controller:3.9.1
-      router: {{REGISTRY}}/router:3.9.1
-      nats: {{REGISTRY}}/nats:2.15.1
-    services:
-      controller:
-        type: LoadBalancer
-      router:
-        type: LoadBalancer
-    nats:
-      enabled: true
-      jetStream:
-        storageSize: 10Gi
-        memoryStoreSize: 1Gi
+<FlavorYaml title="my-values.yaml (excerpt)">{`name: ""
+images:
+  controller: {{REGISTRY}}/controller:3.9.2
+  router: {{REGISTRY}}/router:3.9.2
+  nats: {{REGISTRY}}/nats:2.15.1-1
+auth:
+  mode: embedded
+  bootstrap:
+    username: admin
+    password: "ReplaceMe1!x"
+database:
+  provider: sqlite
+replicas:
+  controller: 1
+  nats: 2
+services:
+  controller:
+    type: LoadBalancer
+  router:
+    type: LoadBalancer
+  nats:
+    type: LoadBalancer
+  natsServer:
+    type: ClusterIP
+controller:
+  publicUrl: https://controller.example.com
+  consoleUrl: https://console.example.com
+nats:
+  memoryStoreSize: 1
+  storageSize: 10
 `}</FlavorYaml>
 
 <CliBlock>{`helm install pot iofog-operator/iofog-operator \\
@@ -131,47 +127,54 @@ See [Embedded OIDC](/get-started/deploy/embedded-oidc) for console URLs and boot
   --version ${OPERATOR_CHART_VERSION} \\
   -f my-values.yaml`}</CliBlock>
 
-**Database:** chart default is **SQLite** (single Controller replica). For HA, set `replicas.controller` &gt; 1 and configure **Postgres** under `controlplane.spec.database`. See [Database installation](/get-started/deploy/database).
+**Database:** chart default is **SQLite** (single Controller replica). For HA, set `replicas.controller` greater than 1 and configure **Postgres** under `database`. See [Database installation](/get-started/deploy/database).
 
-**NATS:** when `nats.enabled` is true, use at least **2** NATS replicas for JetStream.
+**NATS:** the chart always installs NATS. `replicas.nats` must be at least **2**. `nats.memoryStoreSize` and `nats.storageSize` are whole numbers of Gi (`1` becomes `1Gi` on the custom resource).
 
 ## LoadBalancer and externalTrafficPolicy
 
-Defaults use **LoadBalancer** for Controller and Router Services. When `externalTrafficPolicy` is omitted, the operator sets **Local** on LoadBalancer Services (and **Cluster** on NodePort).
+Defaults use **LoadBalancer** for Controller, Router, and the NATS TLS Service (`services.nats`). `services.natsServer` defaults to **ClusterIP**, so the non-TLS client port is not published.
+
+`externalTrafficPolicy` is `auto`, `Local`, or `Cluster`. `auto` omits the field. The operator then uses **Local** on LoadBalancer Services and **Cluster** on NodePort.
 
 - **Local** preserves client source IP on many cloud load balancers.
 - **Cluster** can help when Services stay pending or your LB controller does not support **Local** well.
 
-<FlavorYaml title="Override traffic policy">{`controlplane:
-  spec:
-    services:
-      controller:
-        type: LoadBalancer
-        externalTrafficPolicy: Cluster
-      router:
-        type: LoadBalancer
-        externalTrafficPolicy: Cluster
+<FlavorYaml title="Override traffic policy">{`services:
+  controller:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+  router:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
 `}</FlavorYaml>
 
-Use **Ingress** instead of LoadBalancer when you have an ingress controller. Field list: [ControlPlane CRD - ingresses](/learn/control-plane/kubernetes-crd).
+Leave `annotations` null when you have none. Set a map, or one `key: value` line per annotation. Quote values that YAML would read as booleans or numbers, such as `"on"` or `"443"`.
+
+Use **Ingress** instead of LoadBalancer when you have an ingress controller. Set `services.controller.type` to `ClusterIP`, set `controller.https` to true, and set `services.controller.ingress.host`. Field list: [ControlPlane CRD - ingresses](/learn/control-plane/kubernetes-crd).
 
 ## Production TLS
 
-Configure `controlplane.spec.controller.https`, `secretName`, and/or `ingresses` in values. Patterns (LoadBalancer + pod TLS, Ingress B1/B2, Router/NATS Secrets, cert-manager) are documented in [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator), not duplicated here.
+When `controller.https` is true, set `controller.tls.source` to `existing` or `create`.
 
-External database TLS uses `controlplane.spec.database.ssl` and `controlplane.spec.database.ca` on the CR ([CRD - database](/learn/control-plane/kubernetes-crd)).
+- `existing` uses `controller.tls.secretName` (for cert-manager, the Secret the issuer will create).
+- `create` takes PEM `controller.tls.crt`, `controller.tls.key`, and optional PEM `controller.tls.ca`. The chart stores them in Secret `controller-tls`.
+
+Patterns (LoadBalancer + pod TLS, Ingress, Router/NATS Secrets, cert-manager) are documented in [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator).
+
+External database TLS uses `database.ssl` and `database.ca` (`ca` is base64 PEM, written only when `ssl` is true). See [CRD - database](/learn/control-plane/kubernetes-crd).
 
 ## External auth
 
 <CliBlock title="Switch to external OIDC">{`helm upgrade pot iofog-operator/iofog-operator \\
   --namespace iofog-system \\
   --version ${OPERATOR_CHART_VERSION} \\
-  --set controlplane.spec.auth.mode=external \\
-  --set controlplane.spec.auth.issuerUrl=https://auth.example.com/realms/myrealm \\
-  --set controlplane.spec.auth.client.id=controller \\
-  --set controlplane.spec.auth.client.secret='YOUR_SECRET'`}</CliBlock>
+  --set auth.mode=external \\
+  --set auth.issuerUrl=https://auth.example.com/realms/myrealm \\
+  --set auth.client.id=controller \\
+  --set auth.client.secret='YOUR_SECRET'`}</CliBlock>
 
-See [External OIDC](/get-started/deploy/external-oidc) and [External OIDC providers](/get-started/deploy/external-oidc-providers).
+For an issuer signed by a private CA, also set `auth.issuerCa` to the base64 PEM CA or bundle. Leave it empty for a public CA. Certificate checks stay on. See [External OIDC](/get-started/deploy/external-oidc) and [External OIDC providers](/get-started/deploy/external-oidc-providers).
 
 ## Verify
 
@@ -183,14 +186,20 @@ Wait until the ControlPlane status is **Ready** and Controller, Router, and NATS
 
 ## Upgrade
 
+Rewrite a values file from chart **3.9.1** before you upgrade. Those files used `controlplane.spec`, `crds.install`, and `controlplane.create`. Chart **3.9.2** ignores that shape.
+
+If the previous release left the NATS TLS Service on ClusterIP and you want that to stay, set `services.nats.type: ClusterIP` in the new file. The chart default is LoadBalancer.
+
 <CliBlock>{`helm upgrade pot iofog-operator/iofog-operator \\
   --namespace iofog-system \\
   --version ${OPERATOR_CHART_VERSION} \\
   -f my-values.yaml`}</CliBlock>
 
-Platform train **v3.9.1** supports in-place upgrade from **v3.8.0** on the same Controller database. See [Upgrading to v3.9.1](/release-notes/upgrading-to-v3-9) and [Operator](/learn/platform-components/operator).
+Platform train **v3.9.2** supports an in-place upgrade from **v3.9.1**, **v3.9.0**, or **v3.8.0** on the same Controller database. See [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9) and [Operator](/learn/platform-components/operator).
 
-**v3.7.x** and legacy **`datasance/pot`** require a **greenfield** move to v3.8+ (uninstall old operator and CRDs first). See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+**v3.7.x** and the legacy Helm chart require a **greenfield** move to v3.8+ (uninstall the old operator and CRDs first). See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+Helm does not upgrade CRDs on `helm upgrade`. The CRD in this chart is installed with the release. Apply the chart CRDs when you need the new `auth.issuerCa` field on an existing cluster.
 
 ## Uninstall
 
@@ -210,21 +219,23 @@ After the stack is ready, connect **<CliName />** in the **same namespace** you 
 
 Sign in with the embedded bootstrap user you configured in values. If the Controller API uses HTTPS with a private CA, use `connect --ca` as described in [Kubernetes TLS (CLI YAML)](/learn/security/control-plane-kubernetes-cli).
 
-## Chart-only configuration
-
-These keys are in the chart, not on the ControlPlane CR alone:
+## Values reference
 
 | Area | Values keys |
 | ---- | ----------- |
-| Operator pod | `operator.image`, `operator.replicaCount`, `operator.resources`, scheduling |
-| CR install | `crds.install` |
-| CR metadata | `controlplane.create`, `controlplane.name`, `controlplane.namespace` |
+| ControlPlane name | `name`. Empty uses the flavor default |
+| Images | `images.operator`, `images.controller`, `images.router`, `images.nats`, `images.pullSecret` |
+| Auth | `auth.mode`, `auth.bootstrap`, `auth.issuerUrl`, `auth.issuerCa`, `auth.client` |
+| Database | `database.provider`, `database.host`, `database.ca` |
+| Services | `services.controller`, `services.router`, `services.nats`, `services.natsServer` |
+| NATS disk | `nats.memoryStoreSize`, `nats.storageSize` (whole Gi), `nats.storageClassName` |
+| Events | `events.cleanupIntervalHours` (minimum 2). The chart writes seconds on the custom resource |
 
-Full chart reference: <a href={OPERATOR_CHART_README_URL}>iofog-operator chart README</a> and <a href={OPERATOR_CHART_VALUES_SCHEMA_URL}>values.schema.json</a>.
+Full chart reference: <a href={OPERATOR_CHART_README_URL}>iofog-operator chart README</a>.
 
 :::tip[Next step]
 
-Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.1** on edge hosts.
+Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.2** on edge hosts.
 
 :::
 

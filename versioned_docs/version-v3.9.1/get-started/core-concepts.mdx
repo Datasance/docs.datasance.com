@@ -1,0 +1,130 @@
+---
+title: Core Concepts
+description: Edge orchestration concepts for v3.9. Edgelet nodes, declarative workloads, secure connectivity, EdgeOps Console, and fleet AI model and knowledge catalogs.
+keywords: [core concepts, edge computing, edgeops, microservices, edgelet, edge ai, model catalog, knowledge catalog, iofog, datasance]
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorOnly from '@site/src/components/flavor/FlavorOnly';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Core Concepts
+
+The enterprise edge has become a business-critical frontier. Today, up to 75% of enterprise data is created outside the data centers. It is generated across factories, stores, remote sites, vehicles, and infrastructure. The scale is massive.
+
+At the same time, edge environments remain resource-constrained by design. They operate in real-world conditions, with limited connectivity and tight operational margins. Yet the hardware landscape is changing fast. New generations of edge CPUs and GPUs are now powerful, affordable, and widely available. This makes real-time analytics, Edge AI, and autonomous decision-making practical at the edge.
+
+Traditional centralized cloud models cannot keep up. Latency is dictated by physics. Costs grow with every round trip. When connectivity is degraded, remote sites lose autonomy. That creates risk, complexity, and operational friction for distributed deployments.
+
+<FlavorOnly distribution="datasance">
+
+**<ProductName />** is an enterprise-grade unified edge orchestration platform designed for large-scale distributed edge environments. It enables organizations to manage, secure, and operate thousands of applications and software workloads across heterogeneous **Edgelet nodes**, from a single, consistent operating model.
+
+**<ProductName />** brings cloud-native principles to the edge without ignoring real-world constraints. It is secure, vendor-agnostic, and open by design. By reducing operational complexity and restoring local autonomy, it helps enterprises regain control of their edge strategy.
+
+## Enterprise edge challenges
+
+Edge computing runs some or all processing and storage at the wide-area **edge** instead of only in a central data center or cloud.
+
+Running IT at the enterprise edge, in standalone or hybrid mode, is fundamentally different from running it in the cloud. Edge solutions must embrace the constraints of real sites, real hardware, and unreliable networks.
+
+### Scale and diversity
+
+Enterprises rarely operate at the edge in only a few locations. They operate in tens, hundreds, or thousands of sites: factories, retail stores, energy assets, vehicles, and remote infrastructure. Edge environments combine different CPU architectures, GPUs, operating systems, and hardware generations. Point solutions and custom scripts do not scale and become fragile quickly.
+
+### Increasing applications and changing requirements
+
+Enterprise applications need more real-time or near-real-time processing. Workloads are more latency-sensitive. Unstable upstream bandwidth, high egress cost, and lack of redundancy push critical processing closer to the edge and require more autonomous operation when the WAN is down.
+
+### Security and management
+
+Edge devices are often physically exposed and untrusted. Securing them at scale is hard. Traffic between headquarters and edge sites, and between edge sites, must be encrypted. Distributed edge platforms need built-in trust, automation, and verifiable control. Lifecycle management (onboarding, updates, patching, monitoring) is costly without a unified control plane.
+
+### Cost
+
+Digitalization increases infrastructure spend. Siloed edge stacks duplicate capex. Manual operations and parallel toolchains inflate opex. A single orchestration layer reduces redundant hardware and operational toil.
+
+### Edge AI and fleet assets
+
+AI is moving to the edge, but models and retrieval corpora are large, versioned, and often subject to air-gap or strict egress policies. Teams need fleet-wide control over **which** model revision and **which** knowledge bundle runs **where**, without copying artifacts by hand on every device. Governance matters: RBAC should govern who can deploy or attach AI assets to production **Edgelet nodes**. Binding models and knowledge in microservice specs keeps application manifests portable while the platform handles distribution.
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+**<ProductName />** brings cloud-native principles to the edge without ignoring real-world constraints. It is secure, vendor-agnostic, and open by design, reducing operational complexity while preserving local autonomy at each site.
+
+</FlavorOnly>
+
+## Introducing <ProductName />
+
+**<ProductName />** onboards edge sites as **Edgelet nodes**. Edgelet is the node agent, the application runtime, and, on Linux, the container engine in one binary. The Linux OTA download is about **30 MB** and already contains the engine, so a host does not need Docker or Podman. Linux builds cover **amd64**, **arm64**, **arm** (32-bit), and **riscv64**. The same binary can run standalone from the `edgelet` CLI, then join a cluster with <CliName />.
+
+Installation and upgrades go through **<CliName />** and the [EdgeOps Console](/get-started/edgeops-console). The platform picture is on [Architecture](/get-started/architecture). The engine itself is [Get to know Edgelet](/learn/edgelet).
+
+## Key capabilities
+
+**<ProductName />** provides the capabilities required to run and operate software workloads across distributed edge environments. It focuses on the full lifecycle of **applications**, **services**, and **edge operations** with unified control at scale.
+
+### Edge environment and Edgelet nodes
+
+**<ProductName />** simplifies how edge environments are onboarded. **Edgelet nodes** use the **Edgelet** runtime to establish secure identity and connectivity to the **Control Plane**. Installation and upgrades are automated through **<CliName />** and the [EdgeOps Console](/get-started/edgeops-console), without deep per-site customization.
+
+The platform provides an open operational layer above hardware and operating systems. You manage diverse environments as one cluster while preserving local isolation.
+
+### Application and workload lifecycle orchestration
+
+**<ProductName />** orchestrates the complete lifecycle of containerized workloads at the edge. Applications are deployed, updated, versioned, and retired consistently using declarative YAML manifests.
+
+Environmental differences are abstracted so teams focus on what should run and where, not on per-site wiring. That enables repeatable deployments, controlled rollouts, and safe updates across edge clusters.
+
+### Configuration, secrets, and policy management
+
+Configuration values and secrets are defined centrally and distributed securely to edge workloads at runtime. Role-based access control (RBAC) ensures users, automation, and workloads stay within intended scope.
+
+### AI models and knowledge assets
+
+Platform train **v3.9.0** adds fleet catalogs for Edge AI assets using the same declarative model as applications and registries.
+
+- **Model catalog** (`kind: Model`): LLM and inference **weights**. Sources include [Hugging Face Hub](https://huggingface.co/) models and **OCI** artifacts (model-spec, ModelPack, ModelKit, and ORAS-compatible blobs) through registry type **`hf`** or **`oci`**.
+- **Knowledge catalog** (`kind: Knowledge`): RAG corpora, datasets, and document bundles. Hugging Face **datasets** and OCI bundles use the same registry types. Weights stay in **Model**; knowledge uses a separate namespace.
+
+Typical lifecycle:
+
+1. Define **Model** or **Knowledge** YAML and apply it to the Controller catalog.
+2. **Attach** assets to one or more **Edgelet nodes** so the platform pulls and tracks the right revision.
+3. **Bind** catalog names in microservice **`spec.models`** and **`spec.knowledge`** so running workloads use fleet-managed content, not host paths.
+
+EdgeOps Console exposes **Config → AI Model Catalog** and **Config → AI Knowledge Catalog**. Operators can also use **<CliName />** `deploy`, `attach model`, `attach knowledge`, and matching `describe` commands.
+
+Learn more: [AI Model Catalog](/learn/config/ai-model-catalog), [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog), [Microservices - models and knowledge](/learn/workloads/microservices#specmodels-and-specknowledge), and the [Edge AI wafer defect tutorial](/tutorials/edge-ai-wafer-defect).
+
+### Secure connectivity
+
+**<ProductName />** establishes trust between the **Control Plane** and edge devices. Each **Edgelet node** and workload uses verified identity with built-in certificate management.
+
+A secure service mesh (**Router**, Skupper-based) and distributed message bus (**NATS**) are provided by default. Services communicate with encryption across nodes and sites while edge networks can remain isolated from a routing perspective.
+
+### Observability and operations
+
+Teams observe workload status, connectivity, and health across sites from one operational view. **<CliName />** supports automation-first workflows. The [EdgeOps Console](/get-started/edgeops-console) supports day-two operations, including v3.9 Configure flows for AI catalogs and cluster config.
+
+<FlavorOnly distribution="datasance">
+
+### Open-source foundation with enterprise support
+
+**<ProductName />** is built on an open-source foundation shared with **Eclipse ioFog**, with transparency and extensibility. Datasance complements that foundation with enterprise-grade support for mission-critical deployments.
+
+</FlavorOnly>
+
+:::info[Ready for more?]
+
+- For component relationships and deployment topologies, see [Architecture overview](/get-started/architecture).
+- To run a lab cluster locally, follow [Quick start with local deployment](/get-started/quick-start-local).
+- For production paths, see [Platform deployment](/get-started/deploy/introduction) and [Prepare your Kubernetes cluster](/get-started/deploy/kubernetes-prepare-cluster).
+- For end-to-end scenarios, try the [Acme Smart Plant tutorial](/tutorials/acme-smart-plant) or [Edge AI wafer defect](/tutorials/edge-ai-wafer-defect).
+
+:::
+
+<EditPageAdmonition />

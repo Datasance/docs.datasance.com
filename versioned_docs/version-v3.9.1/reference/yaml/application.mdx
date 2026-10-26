@@ -1,0 +1,89 @@
+---
+title: Application fields
+description: Field reference for kind Application. Inline microservices, natsConfig, and template instantiation.
+keywords: [application, yaml, fields, natsConfig, template, v3.9]
+slug: /reference/yaml/application
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Application fields
+
+Reference for `kind: Application`. Deploy flow, examples, and when to use a template are on [Applications](/learn/workloads/applications).
+
+The Controller parses this spec in non-strict mode. After deploy, confirm the stored object with `describe application`.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Application # required, string
+metadata:
+  name: my-app # required, string
+  namespace: my-ecn # no, string. Must match -n when both are set
+spec:
+  name: my-app # no, string. Copy of metadata.name
+  microservices: # no, list. Each item uses the Microservice keys
+    - name: api # no, string
+      agent: # required on each microservice, object
+        name: edge-01 # required, string
+      images: # object. Keep catalogId or the per-arch image strings
+        registry: remote # no, int or alias
+        amd64: {{REGISTRY}}/example/api:1.0.0 # string
+  natsConfig: # no, object. A top-level natsAccess is rejected
+    natsAccess: false # no, bool
+    natsRule: orders-account # no, string. Omit when natsAccess is true to use default-account
+  template: # no, object
+    name: my-template # no, string
+    variables: # no, list or map
+      - key: agent-name
+        value: edge-01
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+spec:
+  id: 1 # describe only, int. Do not set it on create
+```
+
+
+`metadata.name` is the application name. `metadata.namespace`, when set, must match `-n`.
+
+## Spec
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `name` | string | Optional copy of `metadata.name`. |
+| `microservices` | list | Inline microservice specs. Same fields as [Microservice fields](/reference/yaml/microservice). |
+| `natsConfig` | object | Application NATS access. Use this object. A top-level `natsAccess` is rejected. |
+| `natsConfig.natsAccess` | bool | Enable NATS for this application. Required before any microservice in the app sets `natsAccess`. |
+| `natsConfig.natsRule` | string | [NATS account rule](/learn/message-bus/account-rules) `metadata.name`. Omit it when `natsAccess` is true and the Controller uses `default-account`. |
+| `template` | object | Instantiate an [application template](/learn/workloads/application-templates). |
+| `template.name` | string | Application template `metadata.name`. |
+| `template.variables` | list or map | Variable overrides. A list of `{key, value}` or a map of keys to values. |
+| `id` | int | Read-only Controller id. Present on describe. Do not set it on create. |
+
+Controller behavior after `natsConfig.natsAccess` is true is documented on [NATS access](/learn/workloads/nats-access).
+
+## Template instantiation
+
+When `spec.template` is set, the Controller merges the template `application` skeleton with the variables you supply. You may still add `microservices` for services that are not in the template.
+
+Variable placeholders inside the template are substituted at deploy. Quote them in the template YAML.
+
+## Create and update
+
+| | Create | Update |
+| --- | ------ | ------ |
+| Condition | The application name is absent. | The name already exists. |
+| CLI | `deploy -f` | Same file and same `metadata.name`. |
+
+Updating the application file does not delete microservices that disappeared from `spec.microservices`. Verify with `get microservices`.
+
+<EditPageAdmonition />

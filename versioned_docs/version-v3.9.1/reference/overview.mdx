@@ -1,0 +1,88 @@
+---
+title: Reference
+description: Index of deploy YAML, the Controller HTTP API, and the command-line references.
+keywords: [reference, yaml, cli, controller, catalog]
+slug: /reference
+---
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import Link from '@docusaurus/Link';
+import {CLI_DOCS_DIR, CLI_NAME} from '@site/src/config/distribution';
+
+# Reference
+
+Field reference for the files you pass to <CliName />. Guides for how a <ProductName /> cluster is declared and run are in [Learn](/learn). HTTP routes are in the [Controller API](/api/v3.9.0/controller).
+
+## YAML
+
+### Control plane
+
+- [Kubernetes](/reference/yaml/kubernetes-control-plane)
+- [Remote](/reference/yaml/remote-control-plane)
+- [Local](/reference/yaml/local-control-plane)
+
+### Edgelet nodes
+
+- [Agent](/reference/yaml/agent)
+- [LocalAgent](/reference/yaml/local-agent)
+- [AgentConfig](/reference/yaml/agent-config)
+
+### Workloads
+
+- [Application](/reference/yaml/application)
+- [Microservice](/reference/yaml/microservice)
+- [Application template](/reference/yaml/application-template)
+- [Microservice template](/reference/yaml/microservice-template)
+
+### Configuration
+
+- [Registry](/reference/yaml/registry)
+- [Catalog item](/reference/yaml/catalog-item)
+- [Model](/reference/yaml/model)
+- [Knowledge](/reference/yaml/knowledge)
+- [RuntimeClass](/reference/yaml/runtime-class)
+- [ConfigMap](/reference/yaml/config-map)
+- [Secret](/reference/yaml/secret)
+- [CertificateAuthority](/reference/yaml/certificate-authority)
+- [Certificate](/reference/yaml/certificate)
+- [Volume](/reference/yaml/volume)
+- [VolumeMount](/reference/yaml/volume-mount)
+- [OfflineImage](/reference/yaml/offline-image)
+
+### Network
+
+- [Service](/reference/yaml/service)
+
+### Message bus
+
+- [NatsAccountRule](/reference/yaml/nats-account-rule)
+- [NatsUserRule](/reference/yaml/nats-user-rule)
+
+### Access control
+
+- [Role](/reference/yaml/role)
+- [RoleBinding](/reference/yaml/role-binding)
+- [ServiceAccount](/reference/yaml/service-account)
+
+## Controller
+
+- [Configuration](/reference/controller/controller-config)
+- [OIDC](/reference/controller/oidc-configuration)
+- [External OIDC providers](/reference/controller/external-oidc-providers)
+- [External OIDC client](/reference/controller/external-oidc-client-setup)
+- [RBAC](/reference/controller/rbac-reference)
+- [Control plane networking](/reference/controller/networking-topology-controlplane)
+- [Messaging fabric](/reference/controller/networking-topology-messaging-fabric)
+- [Service interconnection topology](/reference/controller/networking-topology-service-interconnection)
+- [Service interconnection](/reference/controller/service-interconnection)
+- [NATS access](/reference/controller/nats-access)
+- [NATS rules](/reference/controller/nats-rules)
+
+## Command line
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}`}><CliName /></Link>
+- [Edgelet CLI](/reference/cli/edgelet)
+
+<EditPageAdmonition />

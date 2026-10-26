@@ -1,6 +1,6 @@
 ---
 title: External OIDC Authentication
-description: Register a confidential OIDC client with your enterprise IdP when embedded OIDC is not enough. Platform train v3.9.1.
+description: Register a confidential OIDC client with your enterprise IdP when embedded OIDC is not enough. Platform train v3.9.2.
 slug: /get-started/deploy/external-oidc
 keywords: [external oidc, authentication, keycloak, entra, okta, v3.9]
 ---
@@ -12,7 +12,7 @@ import CliName from '@site/src/components/flavor/CliName';
 
 :::info[Appendix - not the default path]
 
-**<ProductName /> v3.9.1** ships with [Embedded OIDC Authentication](/get-started/deploy/embedded-oidc) enabled by default. Use this page when your organization requires a dedicated identity provider (Okta, Microsoft Entra ID, Keycloak, or any OIDC-compliant IdP).
+**<ProductName /> v3.9.2** ships with [Embedded OIDC Authentication](/get-started/deploy/embedded-oidc) enabled by default. Use this page when your organization requires a dedicated identity provider (Okta, Microsoft Entra ID, Keycloak, or any OIDC-compliant IdP).
 
 :::
 
@@ -43,6 +43,7 @@ Set `auth.mode: external` and point to your IdP issuer. <CliName /> maps these f
 auth:
   mode: external
   issuerUrl: https://auth.example.com/realms/myrealm
+  issuerCa: "<base64-pem-ca>" # optional. Private CA only. Omit for a public CA
   client:
     id: pot-controller
     secret: "<confidential-client-secret>"
@@ -50,6 +51,8 @@ controller:
   publicUrl: https://controller.example.com:51121
   consoleUrl: https://console.example.com:8008
 ```
+
+`issuerCa` is the standard base64 of a PEM CA or a concatenated PEM bundle. <CliName /> and the operator pass it as `OIDC_ISSUER_TLS_BASE64_CA`. Certificate checks stay on. Embedded mode ignores the field.
 
 Local Docker installs can set `auth.insecureAllowHttp: true` when `publicUrl` uses `http://`. Production deploys should use HTTPS and valid TLS certificates.
 
@@ -63,6 +66,8 @@ Do **not** set legacy `KC_*`, `auth.realm`, or `auth.realmKey`.
 | -------- | -------- | ------- |
 | **`AUTH_MODE`** | Yes | `external` |
 | **`OIDC_ISSUER_URL`** | Yes | Full issuer URL (not the IdP homepage) |
+| **`OIDC_ISSUER_TLS_PATH_CA`** | Private CA | PEM file for the issuer CA. Wins over base64 |
+| **`OIDC_ISSUER_TLS_BASE64_CA`** | Private CA | Base64 of the issuer CA PEM. Control plane field `auth.issuerCa` |
 | **`OIDC_CLIENT_ID`** | Yes | `pot-controller` |
 | **`OIDC_CLIENT_SECRET`** | Yes | Confidential client secret |
 | **`CONTROLLER_PUBLIC_URL`** | Yes | `https://controller.example.com` |

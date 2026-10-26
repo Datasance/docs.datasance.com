@@ -324,6 +324,9 @@ const config: Config = {
           lastVersion: 'current',
           versions: {
             current: {
+              label: 'v3.9.2',
+            },
+            'v3.9.1': {
               label: 'v3.9.1',
             },
             'v3.9.0': {
@@ -502,7 +505,7 @@ const config: Config = {
         {
           type: 'docsVersionDropdown',
           position: 'right',
-          versions: ['current', 'v3.9.0', 'v3.8.0'],
+          versions: ['current', 'v3.9.1', 'v3.9.0', 'v3.8.0'],
         },
         {
           href: GITHUB_ORG_URL,

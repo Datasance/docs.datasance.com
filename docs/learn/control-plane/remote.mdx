@@ -88,7 +88,7 @@ spec:
     consoleUrl: https://203.0.113.10
     logLevel: info
     package:
-      image: {{REGISTRY}}/controller:3.9.1
+      image: {{REGISTRY}}/controller:3.9.2
   auth:
     mode: embedded
     bootstrap:
@@ -96,15 +96,15 @@ spec:
       password: "RemoteTest12!"
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.1
-      arm64: {{REGISTRY}}/router:3.9.1
-      arm: {{REGISTRY}}/router:3.9.1
-      riscv64: {{REGISTRY}}/router:3.9.1
+      amd64: {{REGISTRY}}/router:3.9.2
+      arm64: {{REGISTRY}}/router:3.9.2
+      arm: {{REGISTRY}}/router:3.9.2
+      riscv64: {{REGISTRY}}/router:3.9.2
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1
-      arm64: {{REGISTRY}}/nats:2.15.1
-      arm: {{REGISTRY}}/nats:2.15.1
-      riscv64: {{REGISTRY}}/nats:2.15.1
+      amd64: {{REGISTRY}}/nats:2.15.1-1
+      arm64: {{REGISTRY}}/nats:2.15.1-1
+      arm: {{REGISTRY}}/nats:2.15.1-1
+      riscv64: {{REGISTRY}}/nats:2.15.1-1
   nats:
     enabled: true
   events:
@@ -143,7 +143,7 @@ spec:
     consoleUrl: https://console.example.com
     logLevel: info
     package:
-      image: {{REGISTRY}}/controller:3.9.1
+      image: {{REGISTRY}}/controller:3.9.2
   auth:
     mode: embedded
     bootstrap:
@@ -159,15 +159,15 @@ spec:
     ssl: true
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.1
-      arm64: {{REGISTRY}}/router:3.9.1
-      arm: {{REGISTRY}}/router:3.9.1
-      riscv64: {{REGISTRY}}/router:3.9.1
+      amd64: {{REGISTRY}}/router:3.9.2
+      arm64: {{REGISTRY}}/router:3.9.2
+      arm: {{REGISTRY}}/router:3.9.2
+      riscv64: {{REGISTRY}}/router:3.9.2
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1
-      arm64: {{REGISTRY}}/nats:2.15.1
-      arm: {{REGISTRY}}/nats:2.15.1
-      riscv64: {{REGISTRY}}/nats:2.15.1
+      amd64: {{REGISTRY}}/nats:2.15.1-1
+      arm64: {{REGISTRY}}/nats:2.15.1-1
+      arm: {{REGISTRY}}/nats:2.15.1-1
+      riscv64: {{REGISTRY}}/nats:2.15.1-1
   nats:
     enabled: true
   controllers:

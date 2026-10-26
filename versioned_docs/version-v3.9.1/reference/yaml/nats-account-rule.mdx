@@ -1,0 +1,242 @@
+---
+title: Account rule fields
+description: Field reference for kind NatsAccountRule. Limits, JetStream, default permissions, imports, exports, and aliases.
+keywords: [nats, NatsAccountRule, yaml, fields, jetstream, imports, exports]
+slug: /reference/yaml/nats-account-rule
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Account rule fields
+
+Reference for `kind: NatsAccountRule`. Deploy, reserved names, and binding are on [Account rules](/learn/message-bus/account-rules).
+
+`metadata` and `spec` are required. Validation is server-side. `apiVersion` is not validated for this kind. Still use your flavor `apiVersion`.
+
+`metadata.name` is the policy name (1 to 255 characters). It must not be a reserved name. The NATS account name is the application name, assigned when the application enables NATS. Describe shows `id`, `isSystem`, and `name` as read-only. Those keys are not part of the deploy spec.
+
+User-level limits, connection types, and per-microservice subject lists are on [User rule fields](/reference/yaml/nats-user-rule). This kind does not set account lifetime or signing keys. The Controller issues the account when an application enables NATS.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: NatsAccountRule # required, string
+metadata:
+  name: orders-account # required, string. 1 to 255 characters
+  namespace: my-ecn # no, string
+spec: # required, object
+  description: Orders application account # no, string
+  infoUrl: https://example.com/orders # no, string. Alias info_url
+  maxConnections: -1 # no, int. Alias limits.conn
+  maxLeafNodeConnections: -1 # no, int. Alias limits.leaf
+  maxData: -1 # no, bytes. Alias limits.data
+  maxMsgPayload: 1m # no, bytes. Alias limits.payload
+  maxSubscriptions: -1 # no, int. Alias limits.subs
+  maxImports: -1 # no, int. Alias limits.imports. This is not the imports list
+  maxExports: -1 # no, int. Alias limits.exports. This is not the exports list
+  exportsAllowWildcards: true # no, bool. Alias limits.wildcards
+  disallowBearer: false # no, bool. Alias limits.disallow_bearer
+  pubAllow: # no, list of string. Alias default_permissions.pub.allow
+    - "orders.>"
+  pubDeny: [] # no, list of string. Alias default_permissions.pub.deny
+  subAllow: # no, list of string. Alias default_permissions.sub.allow
+    - "orders.>"
+  subDeny: [] # no, list of string. Alias default_permissions.sub.deny
+  respMax: 1 # no, int. Alias default_permissions.resp.max
+  respTtl: 5000000000 # no, int. Nanoseconds. Alias default_permissions.resp.ttl
+  responsePermissions: # no, object. Accepted and stored. Signing uses respMax and respTtl
+    maxMsgs: 1 # no, int
+    expires: 5000000000 # no, int
+  memStorage: -1 # no, bytes. Alias limits.mem_storage. -1 unlimited, 0 disabled
+  diskStorage: -1 # no, bytes. Alias limits.disk_storage
+  streams: -1 # no, int. Alias limits.streams
+  consumer: -1 # no, int. Alias limits.consumer
+  maxAckPending: -1 # no, int. Alias limits.max_ack_pending
+  memMaxStreamBytes: -1 # no, bytes. Alias limits.mem_max_stream_bytes
+  diskMaxStreamBytes: -1 # no, bytes. Alias limits.disk_max_stream_bytes
+  maxBytesRequired: false # no, bool. Alias limits.max_bytes_required
+  tieredLimits: {} # no, object. Tier 0 is the global tier. Alias tiered_limits
+  imports: # no, list of object
+    - name: orders-in # string
+      subject: orders.> # string
+      type: stream # string. stream or service
+      account: <account-public-key> # string
+      local_subject: local.orders.> # string
+      token: <activation-token> # string
+      share: false # bool
+  exports: # no, list of object. Wildcard subjects need exportsAllowWildcards true
+    - name: orders-out # string
+      subject: orders.> # string
+      type: service # string. stream or service
+      description: Orders export # string
+      info_url: https://example.com/orders # string
+      token_req: false # bool
+      response_type: Singleton # string. Service only. Singleton, Stream, or Chunked
+      account_token_position: 1 # int
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+id: "<id>" # describe only
+isSystem: false # describe only
+name: orders-account # describe only. Not part of the deploy spec
+```
+
+
+Strings that land in a JWT must be Latin-1. ASCII is safe. A character outside that range on `description`, a subject, a tag, an import, or an export is HTTP 400.
+
+HTTP create, update, and delete are on the [Controller API](/api/v3.9.0/controller).
+
+## Units
+
+`-1` on a numeric limit means unlimited.
+
+Byte fields accept an integer, `-1`, or a 1024-based suffix: `1k`, `100m`, `1g`, `1t`. A single letter only. `10mb` is rejected. The byte fields are `maxData`, `maxMsgPayload`, `memStorage`, `diskStorage`, `memMaxStreamBytes`, and `diskMaxStreamBytes`.
+
+`respTtl` is nanoseconds. Five seconds is `5000000000`. Prefer `respMax` and `respTtl` for reply permissions. Account JWT signing uses those two fields.
+
+`responsePermissions` (`maxMsgs`, `expires`) is accepted and stored. Signing does not use it. Put reply limits on `respMax` and `respTtl`.
+
+Setting any JetStream limit field causes the signer to copy the whole JetStream group. Set the group together. Use `-1` where you want unlimited. `0` disables that store.
+
+Do not mix camelCase and alias keys for the same value.
+
+## Limits and description
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `description` | string | Human-readable account description. JWT `description`. |
+| `infoUrl` | string | Link for more information. Alias `info_url`. JWT `info_url`. |
+| `maxConnections` | int ≥ -1 | Max client connections. Alias `limits.conn`. JWT `limits.conn`. |
+| `maxLeafNodeConnections` | int ≥ -1 | Max leaf connections. Alias `limits.leaf`. JWT `limits.leaf`. |
+| `maxData` | bytes | Max bytes the account may carry. Alias `limits.data`. JWT `limits.data`. |
+| `maxMsgPayload` | bytes | Max message payload. Alias `limits.payload`. JWT `limits.payload`. |
+| `maxSubscriptions` | int ≥ -1 | Max subscriptions. Alias `limits.subs`. JWT `limits.subs`. |
+| `maxImports` | int ≥ -1 | Max count of imports. This is not the `imports` list. Alias `limits.imports`. |
+| `maxExports` | int ≥ -1 | Max count of exports. This is not the `exports` list. Alias `limits.exports`. |
+| `exportsAllowWildcards` | bool | Export subjects may use `*` or `>`. Alias `limits.wildcards`. JWT `limits.wildcards`. |
+| `disallowBearer` | bool | Reject bearer user JWTs. Alias `limits.disallow_bearer`. |
+
+## Default permissions
+
+These lists apply to users in the account who do not set a tighter user rule. `*` is one token. `>` is the remainder of the subject. A deny match overrides an allow match.
+
+Omit `respMax` and `respTtl` together to leave reply permissions unset. When `respMax` is set, it is how many messages a client may publish to a reply subject.
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `pubAllow` | string[] | Default publish allow list. Alias `default_permissions.pub.allow`. |
+| `pubDeny` | string[] | Default publish deny list. Alias `default_permissions.pub.deny`. |
+| `subAllow` | string[] | Default subscribe allow list. Queue form is one string: the subject, a space, then the queue name. Alias `default_permissions.sub.allow`. |
+| `subDeny` | string[] | Default subscribe deny list. Alias `default_permissions.sub.deny`. |
+| `respMax` | int ≥ 0 | Max publishes to a reply subject. Alias `default_permissions.resp.max`. |
+| `respTtl` | int (nanoseconds) ≥ 0 | How long that reply permission lasts. Alias `default_permissions.resp.ttl`. |
+
+There is no single pub-and-sub key. Write the same subjects into both the publish list and the subscribe list when both should match.
+
+## JetStream
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `memStorage` | bytes | Max JetStream memory. `-1` unlimited, `0` disabled. Alias `limits.mem_storage`. |
+| `diskStorage` | bytes | Max JetStream disk. `-1` unlimited, `0` disabled. Alias `limits.disk_storage`. |
+| `streams` | int ≥ -1 | Max streams. Alias `limits.streams`. |
+| `consumer` | int ≥ -1 | Max consumers. Alias `limits.consumer`. |
+| `maxAckPending` | int ≥ -1 | Max pending acknowledgements for a consumer. Alias `limits.max_ack_pending`. |
+| `memMaxStreamBytes` | bytes | Max size of one memory stream. `-1` unlimited, `0` disabled. Alias `limits.mem_max_stream_bytes`. |
+| `diskMaxStreamBytes` | bytes | Max size of one disk stream. `-1` unlimited, `0` disabled. Alias `limits.disk_max_stream_bytes`. |
+| `maxBytesRequired` | bool | Require `max_bytes` on new streams. Alias `limits.max_bytes_required`. |
+| `tieredLimits` | object | Per-tier JetStream limits. Tier `0` is the global tier. Alias `tiered_limits`. |
+
+## Imports
+
+`imports` is a list of stream or service imports from another account.
+
+| Field | Meaning |
+| ----- | ------- |
+| `name` | Import name. |
+| `subject` | Remote subject. |
+| `type` | `stream` or `service`. |
+| `account` | Exporting account public key. |
+| `local_subject` | Local subject alias. |
+| `token` | Activation token when the export requires one. |
+| `share` | Share the connection with other accounts. |
+
+## Exports
+
+`exports` is a list of stream or service exports to other accounts. Wildcard subjects need `exportsAllowWildcards: true`.
+
+| Field | Meaning |
+| ----- | ------- |
+| `name` | Export name. |
+| `subject` | Exported subject. |
+| `type` | `stream` or `service`. |
+| `description` | Text for importers. |
+| `info_url` | Link for importers. |
+| `token_req` | Importer must present an activation token. |
+| `response_type` | Service only: `Singleton`, `Stream`, or `Chunked`. This is how a service export can return more than one message across accounts. |
+| `account_token_position` | 1-based subject token index for account-scoped monitoring exports. |
+
+## Aliases
+
+<FlavorYaml title="Alias shape">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: orders-account
+spec:
+  info_url: https://example.com/orders
+  limits:
+    conn: -1
+    leaf: -1
+    data: -1
+    payload: 1m
+    subs: -1
+    imports: -1
+    exports: -1
+    wildcards: true
+    disallow_bearer: false
+    mem_storage: -1
+    disk_storage: -1
+    streams: -1
+    consumer: -1
+    max_ack_pending: -1
+    mem_max_stream_bytes: -1
+    disk_max_stream_bytes: -1
+    max_bytes_required: false
+  default_permissions:
+    pub:
+      allow: ["orders.>"]
+      deny: ["orders.secret"]
+    sub:
+      allow: ["orders.>"]
+      deny: []
+    resp:
+      max: 1
+      ttl: 5000000000
+  tiered_limits: {}
+```
+
+</FlavorYaml>
+
+## Not on this kind
+
+The Controller does not accept these account settings on the rule. It issues lifetime and signing keys itself.
+
+- Public key, start, and expiry
+- Signing keys
+- Account tags
+- A separate JetStream enable or disable flag (set the JetStream fields above)
+- Trace context sampling and subject
+- A remove flag for permissions, signing keys, or tags (deploy the lists you want)
+
+<EditPageAdmonition />

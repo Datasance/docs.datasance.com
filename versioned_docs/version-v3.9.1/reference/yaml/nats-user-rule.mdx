@@ -1,0 +1,146 @@
+---
+title: User rule fields
+description: Field reference for kind NatsUserRule. User limits, connection types, source networks, and publish and subscribe lists.
+keywords: [nats, NatsUserRule, yaml, fields, pubAllow, bearer, connection types]
+slug: /reference/yaml/nats-user-rule
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# User rule fields
+
+Reference for `kind: NatsUserRule`. Deploy, reserved names, and binding are on [User rules](/learn/message-bus/user-rules).
+
+`metadata` and `spec` are required. Validation is server-side. `apiVersion` is not validated for this kind. Still use your flavor `apiVersion`.
+
+`metadata.name` is the policy name (1 to 255 characters). It must not be a reserved name. The NATS username comes from the microservice, or from user create on the API. It is not `metadata.name`.
+
+This kind does not carry account limits (`maxConnections`, imports, exports, or JetStream account quotas). Use `maxPayload`, not `maxMsgPayload`. Those account fields are on [Account rule fields](/reference/yaml/nats-account-rule).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: NatsUserRule # required, string
+metadata:
+  name: checkout-user # required, string. 1 to 255 characters
+  namespace: my-ecn # no, string
+spec: # required, object
+  description: Checkout service user # no, string
+  maxSubscriptions: -1 # no, int. -1 is unlimited. Alias subs
+  maxData: -1 # no, bytes. Alias is not data
+  maxPayload: 1m # no, bytes. Alias payload. Not maxMsgPayload
+  bearerToken: false # no, bool. Alias bearer_token
+  proxyRequired: false # no, bool. Alias proxy_required
+  allowedConnectionTypes: # no, list of enum. Alias allowed_connection_types. STANDARD, WEBSOCKET, LEAFNODE, LEAFNODE_WS, MQTT, MQTT_WS, IN_PROCESS
+    - STANDARD
+    - WEBSOCKET
+  src: # no, list of string
+    - 10.0.0.0/8
+  times: # no, list of object. start and end are hh:mm:ss
+    - start: "09:00:00"
+      end: "17:00:00"
+  timesLocation: UTC # no, string. Aliases times_location and locale
+  pubAllow: # no, list of string. Alias pub.allow
+    - "orders.>"
+  pubDeny: [] # no, list of string. Alias pub.deny
+  subAllow: # no, list of string. Alias sub.allow
+    - "orders.>"
+  subDeny: [] # no, list of string. Alias sub.deny
+  respMax: 1 # no, int. Alias resp.max
+  respTtl: 5000000000 # no, int. Nanoseconds. Alias resp.ttl
+  tags: # no, list of string
+    - checkout
+```
+
+</FlavorYaml>
+
+Strings that land in a JWT must be Latin-1. ASCII is safe. A character outside that range on a subject, tag, `src`, `times`, or `timesLocation` is HTTP 400.
+
+HTTP create, update, and delete are on the [Controller API](/api/v3.9.0/controller).
+
+## Units
+
+`-1` means unlimited on `maxSubscriptions`, `maxData`, and `maxPayload`.
+
+Byte fields accept an integer, `-1`, or a 1024-based suffix: `1k`, `100m`, `1g`, `1t`. A single letter only. `10mb` is rejected. The byte fields are `maxData` and `maxPayload`.
+
+`respTtl` is nanoseconds, measured from when the request was received. Five seconds is `5000000000`.
+
+`maxData` has no `data` alias. Use `maxData`.
+
+Do not mix camelCase and alias keys for the same value.
+
+## Fields
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `description` | string | Controller-only note. Not a user JWT claim. |
+| `maxSubscriptions` | int ≥ -1 | Max subscriptions. Alias `subs`. JWT `subs`. |
+| `maxData` | bytes | Max data in bytes. JWT `data`. |
+| `maxPayload` | bytes | Max message payload. Alias `payload`. JWT `payload`. |
+| `bearerToken` | bool | The JWT is the credential. No connect challenge. Used for the MQTT bearer pattern (`default-mqtt-user`). Alias `bearer_token`. |
+| `proxyRequired` | bool | This user must connect with a PROXY protocol header. Alias `proxy_required`. JWT `proxy_required`. |
+| `allowedConnectionTypes` | enum[] | Allowed connection types. Alias `allowed_connection_types`. |
+| `src` | string[] | Allowed client IP addresses or CIDRs. |
+| `times` | object[] | Daily connect windows. Each item has `start` and `end` as `hh:mm:ss`. |
+| `timesLocation` | string | IANA time zone for `times`, for example `UTC`. Aliases `times_location` and `locale`. |
+| `pubAllow` | string[] | Publish allow list. Alias `pub.allow`. |
+| `pubDeny` | string[] | Publish deny list. Alias `pub.deny`. |
+| `subAllow` | string[] | Subscribe allow list. Queue form is one string: the subject, a space, then the queue name. Alias `sub.allow`. |
+| `subDeny` | string[] | Subscribe deny list. Alias `sub.deny`. |
+| `respMax` | int ≥ 0 | Max publishes to a reply subject. Alias `resp.max`. |
+| `respTtl` | int (nanoseconds) ≥ 0 | Lifetime of that reply permission. Alias `resp.ttl`. |
+| `tags` | string[] | Tags stored on the user JWT. |
+
+`allowedConnectionTypes` tokens are `STANDARD`, `WEBSOCKET`, `LEAFNODE`, `LEAFNODE_WS`, `MQTT`, `MQTT_WS`, and `IN_PROCESS`.
+
+`*` is one token. `>` is the remainder of the subject. A deny match overrides an allow match, including when the same subject is also allowed.
+
+Omit `pubAllow` and `subAllow` to leave those permissions unset. A present allow list restricts the user to those subjects, minus denies.
+
+There is no single pub-and-sub key. Write the same subjects into both lists when both should match.
+
+## Aliases
+
+<FlavorYaml title="Alias shape">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: checkout-user
+spec:
+  subs: -1
+  payload: 1m
+  bearer_token: false
+  proxy_required: false
+  allowed_connection_types:
+    - STANDARD
+    - WEBSOCKET
+  times_location: UTC
+  pub:
+    allow: ["orders.>"]
+    deny: []
+  sub:
+    allow: ["orders.>"]
+    deny: []
+  resp:
+    max: 100
+    ttl: 5000000000
+```
+
+</FlavorYaml>
+
+## Not on this kind
+
+The user is placed in the application account automatically. To clear a permission, deploy the new lists. There is no remove flag.
+
+- Which account the user belongs to
+- Public key, start, and expiry
+- Removing connection types, source networks, tags, time windows, or reply permissions with a delete flag
+
+User expiry is set when the user is created (`expiresIn`, such as `7d`, `12h`, or `30m`). It is not a field on this rule. See the [Controller API](/api/v3.9.0/controller).
+
+<EditPageAdmonition />

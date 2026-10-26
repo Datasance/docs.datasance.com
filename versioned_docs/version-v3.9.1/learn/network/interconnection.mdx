@@ -1,0 +1,74 @@
+---
+title: TCP bridge
+description: How a Service becomes a tcpConnector and a tcpListener that share the service name as the router address.
+keywords: [tcp connector, tcp listener, bridge port, router, service]
+---
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# TCP bridge
+
+The Controller writes two router objects for a Service. `tcpConnector` dials the backend `targetPort`. `tcpListener` binds `bridgePort`. They share the Service name as `address`. The router joins a listener and a connector that use the same address.
+
+This path is TCP. Application messaging is [NATS access](/learn/workloads/nats-access) and [NATS fabric](/learn/edgelet-nodes/nats-fabric).
+
+Which node receives the connector, and which host it dials, is on [Service fields](/reference/yaml/service). Which nodes receive a listener is on [Distribution tags](/learn/network/distribution). The controller objects, connector hosts, and Kubernetes Service are on [Service interconnection](/reference/controller/service-interconnection).
+
+## Worked pair
+
+Service `checkout` publishes microservice `orders/checkout` at target port `8080`. The Controller assigned bridge port `10024`. The microservice runs on an edge router and uses the bridge network, so the connector host is the bridge name `orders.checkout`. See [Bridge DNS](/learn/workloads/microservices#bridge-dns).
+
+| Object | Name | Address | Port | Host |
+| ------ | ---- | ------- | ---- | ---- |
+| `tcpConnector` | `checkout-connector` | `checkout` | `8080` (`targetPort`) | `orders.checkout` |
+| `tcpListener` | `checkout-listener` | `checkout` | `10024` (`bridgePort`) | Binds on the router |
+
+The hub listener uses that same listener row on the router named by `defaultBridge`. A `microservice` or `agent` connector is written on the backend Edgelet node, including when that node's tags do not select the Service. A `k8s` or `external` connector is written on the default router. A tagged Edgelet node receives the listener only.
+
+A microservice on the bridge network of a node that received the listener dials `router.default.svc.bridge.local` and `bridgePort`. For this example that is `router.default.svc.bridge.local:10024`. See [Distribution tags](/learn/network/distribution).
+
+## Connector host
+
+The host on `tcpConnector` comes from the backend, not from `resource` alone.
+
+| Backend | Host the connector dials |
+| ------- | ------------------------ |
+| Microservice, edge router, bridge network | `{application}.{microservice}` |
+| Microservice, edge router, host network | `edgelet.default.svc.bridge.local` |
+| Microservice, interior router | `127.0.0.1` |
+| `type: agent`, edge router | `edgelet.default.svc.bridge.local` |
+| `type: agent`, interior router | `127.0.0.1` |
+| `k8s` or `external` | The `resource` string |
+
+`microservice` and `agent` need a router on that Edgelet node. `routerMode: none` is rejected. `k8s` and `external` place the connector on the default router. For those two types, `defaultBridge` must be `default-router`.
+
+## Where each object is written
+
+The hub always receives the listener. The listener binds `bridgePort`. The connector dials the host and `targetPort`. Both use the Service name as `address`.
+
+| Object | Router |
+| ------ | ------ |
+| Hub listener | The router named by `defaultBridge` |
+| `microservice` or `agent` connector | The Edgelet node that owns the backend |
+| `k8s` or `external` connector | The default router |
+| Listener on a tagged Edgelet node | That node. The listener only. |
+
+On Kubernetes, the hub listener is stored with the platform router. A `microservice` or `agent` connector is still written on the backend node. On a remote control plane, the hub listener is in the default router's config, or in the router for `defaultBridge` when that value is a node UUID.
+
+After that config is written, the Edgelet node pulls it and applies it.
+
+On a Kubernetes control plane, `microservice`, `agent`, and `external` also get a Kubernetes Service. Clients use `servicePort`. That port forwards to `bridgePort` on the router pods. `type: k8s` does not create that object. `LoadBalancer` stores the ingress address in `serviceEndpoint`. ClusterIP and NodePort do not. See [Services](/learn/network/services).
+
+Create returns `provisioningStatus: pending`. `ready` means the hub connector, the hub listener, and, when required, the Kubernetes Service succeeded. Listeners on tagged nodes reconcile separately.
+
+## Update and delete
+
+An update writes the connector and the listener again. If `resource` changed, the connector is removed from the previous router first. A tag edit reconciles nodes from the old tags and the new tags. A node that lost the tag drops the listener.
+
+Delete removes the connector and the listener from the hub. It deletes the Kubernetes Service when one was created. It reconciles nodes the tags had selected so those listeners drop.
+
+`type` and `defaultBridge` cannot be changed. Delete the Service and create it again. `bridgePort` is assigned once and kept. It is not a field in the YAML you deploy.
+
+The shapes written into router config are on [Service interconnection](/reference/controller/service-interconnection). The HTTP API is [Controller API](/api/v3.9.0/controller).
+
+<EditPageAdmonition />

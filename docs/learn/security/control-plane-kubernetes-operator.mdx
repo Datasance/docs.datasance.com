@@ -84,7 +84,7 @@ kubectl create secret tls controller-api-tls \
   -n <namespace>
 ```
 
-The certificate SANs must include the hostname or IP that clients use.
+The certificate SANs must include the hostname or IP that clients use. That same host is what the operator verifies. It still dials `controller.<namespace>.svc.cluster.local` (or the LoadBalancer address for the reachability check), and sets TLS `ServerName` to the resolved `publicUrl` host. A DNS name and a LoadBalancer IP both work when the certificate contains that name. Optional `ca.crt` in `controller.secretName` is appended to the system trust store for this check. A public CA keeps working when `ca.crt` is absent or is only an intermediate. Do not rely on certificate verification being skipped.
 
 If `publicUrl` is empty, the operator waits for the load balancer address. It then sets `CONTROLLER_PUBLIC_URL` to `https://<lb>:51121` and `CONSOLE_URL` to `https://<lb>`. The console Service is port 80, forwarded to the pod `consolePort`. Full rules: [URL resolution](/learn/control-plane/kubernetes-crd#url-resolution-publicurl-and-consoleurl).
 

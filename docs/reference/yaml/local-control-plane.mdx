@@ -1,6 +1,6 @@
 ---
 title: LocalControlPlane fields
-description: Field reference for LocalControlPlane deploy YAML. CLI-only fields, system Edgelet node, and Edgelet translation on v3.9.1.
+description: Field reference for LocalControlPlane deploy YAML. CLI-only fields, system Edgelet node, and Edgelet translation on v3.9.2.
 keywords: [localcontrolplane, yaml, fields, edgelet, v3.9]
 slug: /reference/yaml/local-control-plane
 ---
@@ -67,7 +67,7 @@ spec:
     consolePort: 8008 # no, int, default 8008
     logLevel: info # no, string
     package:
-      image: {{REGISTRY}}/controller:3.9.1 # no, string
+      image: {{REGISTRY}}/controller:3.9.2 # no, string
       registry: registry.example.com # no, string
       username: pull-user # no, string
       password: pull-token # no, string
@@ -80,6 +80,7 @@ spec:
       username: bootstrap-user # required if embedded, string
       password: "ChangeMe!12345" # required if embedded, string
     issuerUrl: https://idp.example.com # required if external, string. Remove when mode is embedded
+    issuerCa: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. External mode only. Base64 PEM CA or bundle. Omit for a public CA
     client:
       id: cli # required if external, string
       secret: client-secret # required if external, string
@@ -110,15 +111,15 @@ spec:
     ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. Base64 PEM
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.1
-      arm64: {{REGISTRY}}/router:3.9.1
-      arm: {{REGISTRY}}/router:3.9.1
-      riscv64: {{REGISTRY}}/router:3.9.1
+      amd64: {{REGISTRY}}/router:3.9.2
+      arm64: {{REGISTRY}}/router:3.9.2
+      arm: {{REGISTRY}}/router:3.9.2
+      riscv64: {{REGISTRY}}/router:3.9.2
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1
-      arm64: {{REGISTRY}}/nats:2.15.1
-      arm: {{REGISTRY}}/nats:2.15.1
-      riscv64: {{REGISTRY}}/nats:2.15.1
+      amd64: {{REGISTRY}}/nats:2.15.1-1
+      arm64: {{REGISTRY}}/nats:2.15.1-1
+      arm: {{REGISTRY}}/nats:2.15.1-1
+      riscv64: {{REGISTRY}}/nats:2.15.1-1
   nats:
     enabled: true # no, bool
   events:
@@ -193,7 +194,7 @@ Invalid `arch` values are rejected. WASM and Podman combinations follow Edgelet 
 | `consoleUrl` | string | Console URL. Edgelet does not copy this from `publicUrl` on its own. |
 | `consolePort` | int | Default 8008 |
 | `logLevel` | string | |
-| `package.image` | string | Controller image when you are not using the CLI default (`controller:3.9.1`). See [Default image pins](/learn/control-plane#default-image-pins-v390). |
+| `package.image` | string | Controller image when you are not using the CLI default (`controller:3.9.2`). See [Default image pins](/learn/control-plane#default-image-pins-v390). |
 | `package.registry` | string | Registry hostname for a private pull |
 | `package.username` | string | Required with registry and password |
 | `package.password` | string | |
@@ -213,6 +214,7 @@ Translated to Edgelet `spec.controller.image` and an optional registry id.
 | `bootstrap.username` | string | Yes if embedded | |
 | `bootstrap.password` | string | Yes if embedded | Required in YAML at deploy. At least 12 characters, one uppercase letter, one special character. |
 | `issuerUrl` | string | Yes if external | |
+| `issuerCa` | string | No | External mode. Base64 PEM CA or bundle for a private issuer. Edgelet sets `OIDC_ISSUER_TLS_BASE64_CA`. Ignored when mode is embedded |
 | `client.id` | string | Yes if external | |
 | `client.secret` | string | Yes if external | |
 | `rateLimit.*` | object | No | |
@@ -256,15 +258,15 @@ Per-architecture images for the Router and NATS system microservices. Keys are `
 ```yaml
 systemMicroservices:
   router:
-    amd64: {{REGISTRY}}/router:3.9.1
-    arm64: {{REGISTRY}}/router:3.9.1
-    arm: {{REGISTRY}}/router:3.9.1
-    riscv64: {{REGISTRY}}/router:3.9.1
+    amd64: {{REGISTRY}}/router:3.9.2
+    arm64: {{REGISTRY}}/router:3.9.2
+    arm: {{REGISTRY}}/router:3.9.2
+    riscv64: {{REGISTRY}}/router:3.9.2
   nats:
-    amd64: {{REGISTRY}}/nats:2.15.1
-    arm64: {{REGISTRY}}/nats:2.15.1
-    arm: {{REGISTRY}}/nats:2.15.1
-    riscv64: {{REGISTRY}}/nats:2.15.1
+    amd64: {{REGISTRY}}/nats:2.15.1-1
+    arm64: {{REGISTRY}}/nats:2.15.1-1
+    arm: {{REGISTRY}}/nats:2.15.1-1
+    riscv64: {{REGISTRY}}/nats:2.15.1-1
 ```
 
 </FlavorYaml>

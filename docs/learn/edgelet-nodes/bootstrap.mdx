@@ -13,7 +13,7 @@ import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
 <CliName /> installs Edgelet with embedded shell layers. The layers are staged under a transient directory and run in a fixed order. Go-side configuration and provisioning follow the scripts. <CliName /> does not call an upstream monolith `install.sh` as the whole install.
 
-Both site flavors use the same layers. `apiVersion`, image registry, and banner strings follow the flavor. Align tags with control plane **v3.9.1** and Edgelet **v1.1.1**. See [Edgelet nodes](/learn/edgelet-nodes).
+Both site flavors use the same layers. `apiVersion`, image registry, and banner strings follow the flavor. Align tags with control plane **v3.9.2** and Edgelet **v1.1.2**. See [Edgelet nodes](/learn/edgelet-nodes).
 
 This page covers remote `Agent`, `LocalAgent`, and the system Edgelet node prepared during control plane deploy. Scripts on a node live at `spec.scripts`. Control plane hosts use `controllers[].systemAgent.scripts` or `spec.systemAgent.scripts`.
 
@@ -218,7 +218,7 @@ scripts:
   install:
     entrypoint: install.sh
     args:
-      - "--version=1.1.1"
+      - "--version=1.1.2"
       - "--skip-config"
       - "--skip-start"
   uninstall:
@@ -257,7 +257,7 @@ spec:
     user: ubuntu
     keyFile: ~/.ssh/id_rsa
   package:
-    version: "1.1.1"
+    version: "1.1.2"
   config:
     arch: amd64
     deploymentType: native
@@ -267,7 +267,7 @@ spec:
     install:
       entrypoint: install.sh
       args:
-        - "--version=1.1.1"
+        - "--version=1.1.2"
         - "--skip-config"
         - "--skip-start"
 ```
@@ -417,7 +417,7 @@ scripts:
   install:
     entrypoint: my_install.sh
     args:
-      - "--version=1.1.1"
+      - "--version=1.1.2"
       - "--airgap"
       - "--bin-path=/opt/airgap/edgelet-linux-amd64"
 ```
@@ -437,7 +437,7 @@ scripts:
     entrypoint: install_deps.sh
   install:
     entrypoint: install.sh
-    args: ["1.1.1"]
+    args: ["1.1.2"]
   uninstall:
     entrypoint: uninstall.sh
 ```
@@ -483,7 +483,7 @@ scripts:
     args:
       - "--airgap"
       - "--bin-path=/tmp/edgelet-linux-amd64"
-      - "--version=1.1.1"
+      - "--version=1.1.2"
       - "--skip-config"
       - "--skip-start"
 ```
@@ -503,7 +503,7 @@ spec:
     containerEngine: docker
   package:
     container:
-      image: {{REGISTRY}}/edgelet:1.1.1
+      image: {{REGISTRY}}/edgelet:1.1.2
 ```
 
 </FlavorYaml>

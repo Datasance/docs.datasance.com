@@ -1,6 +1,6 @@
 ---
 title: Remote ControlPlane fields
-description: Field reference for remote kind ControlPlane YAML. Global settings and the controllers list on platform train v3.9.1.
+description: Field reference for remote kind ControlPlane YAML. Global settings and the controllers list on platform train v3.9.2.
 keywords: [remote control plane, yaml, fields, ssh, v3.9]
 slug: /reference/yaml/remote-control-plane
 ---
@@ -35,7 +35,7 @@ spec:
     logLevel: info # no, string
     pidBaseDir: /home/runner # no, string
     package:
-      image: {{REGISTRY}}/controller:3.9.1 # no, string. Default controller:3.9.1 on the flavor registry
+      image: {{REGISTRY}}/controller:3.9.2 # no, string. Default controller:3.9.2 on the flavor registry
       registry: registry.example.com # no, string. Set with username and password
       username: pull-user # no, string
       password: pull-token # no, string
@@ -48,6 +48,7 @@ spec:
       username: bootstrap-user # required if embedded, string
       password: "ChangeMe!12345" # required if embedded, string
     issuerUrl: https://idp.example.com # required if external, string. Remove when mode is embedded
+    issuerCa: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. External mode only. Base64 PEM CA or bundle. Omit for a public CA
     client:
       id: cli # required if external, string
       secret: client-secret # required if external, string
@@ -94,15 +95,15 @@ spec:
     key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ # string. Base64 PEM
   systemMicroservices: # no, object. Keys amd64, arm64, arm, riscv64
     router:
-      amd64: {{REGISTRY}}/router:3.9.1
-      arm64: {{REGISTRY}}/router:3.9.1
-      arm: {{REGISTRY}}/router:3.9.1
-      riscv64: {{REGISTRY}}/router:3.9.1
+      amd64: {{REGISTRY}}/router:3.9.2
+      arm64: {{REGISTRY}}/router:3.9.2
+      arm: {{REGISTRY}}/router:3.9.2
+      riscv64: {{REGISTRY}}/router:3.9.2
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1
-      arm64: {{REGISTRY}}/nats:2.15.1
-      arm: {{REGISTRY}}/nats:2.15.1
-      riscv64: {{REGISTRY}}/nats:2.15.1
+      amd64: {{REGISTRY}}/nats:2.15.1-1
+      arm64: {{REGISTRY}}/nats:2.15.1-1
+      arm: {{REGISTRY}}/nats:2.15.1-1
+      riscv64: {{REGISTRY}}/nats:2.15.1-1
   nats:
     enabled: true # no, bool
   events:
@@ -209,7 +210,7 @@ The stored control plane must include this block before a [Controller add-on](/l
 | `consolePort` | Default 8008 |
 | `logLevel` | |
 | `pidBaseDir` | |
-| `package.image` | Controller image. Default for this train is `controller:3.9.1` on the flavor registry. See [Default image pins](/learn/control-plane#default-image-pins-v390). |
+| `package.image` | Controller image. Default for this train is `controller:3.9.2` on the flavor registry. See [Default image pins](/learn/control-plane#default-image-pins-v390). |
 | `package.registry` | Registry hostname for a private pull |
 | `package.username` | Required together with registry and password |
 | `package.password` | |
@@ -229,6 +230,7 @@ Global auth for every host. The same block is copied into each translated Edgele
 | `bootstrap.username` | string | Yes if embedded | |
 | `bootstrap.password` | string | Yes if embedded | Required in YAML at deploy. At least 12 characters, one uppercase letter, one special character. |
 | `issuerUrl` | string | Yes if external | |
+| `issuerCa` | string | No | External mode. Base64 PEM CA or bundle for a private issuer. Copied into each Edgelet manifest as `spec.auth.issuerCa`. Ignored when mode is embedded |
 | `client.id` | string | Yes if external | |
 | `client.secret` | string | Yes if external | |
 | `rateLimit.*` | object | No | |
@@ -291,7 +293,7 @@ Default Controller listener TLS for every host, unless a controller row override
 
 ### `spec.systemMicroservices`
 
-Architecture to image map for `router` and `nats`. Keys: `amd64`, `arm64`, `arm`, `riscv64`. <CliName /> fills missing entries from the build-time router and NATS images (`router:3.9.1`, `nats:2.15.1`).
+Architecture to image map for `router` and `nats`. Keys: `amd64`, `arm64`, `arm`, `riscv64`. <CliName /> fills missing entries from the build-time router and NATS images (`router:3.9.2`, `nats:2.15.1-1`).
 
 ### `spec.nats`
 

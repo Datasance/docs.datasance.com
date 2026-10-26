@@ -14,8 +14,8 @@ const PRODUCT_NAME = FLAVOR === 'datasance' ? 'Datasance PoT' : 'Eclipse ioFog';
 const REGISTRY = `ghcr.io/${FLAVOR === 'datasance' ? 'datasance' : 'eclipse-iofog'}`;
 const API_VERSION = FLAVOR === 'datasance' ? 'datasance.com/v3' : 'iofog.org/v3';
 /** Keep in step with src/config/distribution.ts. Current docs only; snapshots stay literal. */
-const PLATFORM_TRAIN = '3.9.1';
-const EDGELET_VERSION = '1.1.1';
+const PLATFORM_TRAIN = '3.9.2';
+const EDGELET_VERSION = '1.1.2';
 const GITHUB_ORG_URL =
   FLAVOR === 'datasance'
     ? 'https://github.com/Datasance'

@@ -1,0 +1,67 @@
+---
+title: Securing the cluster
+description: Who owns control plane TLS on Kubernetes, remote, and local deploy, and where access control, workload certificates, and sign-in are documented.
+keywords: [security, tls, certificates, jwt, control plane, router, nats, v3.9]
+slug: /learn/security/securing-cluster
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import ProductName from '@site/src/components/flavor/ProductName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Securing the cluster
+
+<ProductName /> trust for the control plane depends on the deploy path. This page names who owns each TLS layer, then links the page for that path.
+
+## Who owns TLS
+
+| Layer | Kubernetes | Local | Remote |
+| ----- | ---------- | ----- | ------ |
+| Controller HTTPS | Operator: pod TLS and/or Ingress | <CliName /> writes `spec.tls` to Edgelet `spec.tls.base64` | Same as local. A host may override with `controllers[].tls` |
+| Router and NATS CAs | Operator creates or reuses namespace Secrets, then imports the CAs into the Controller | YAML blocks are validated. They are not uploaded | <CliName /> uploads `routerSiteCA`, `routerLocalCA`, `natsSiteCA`, and `natsLocalCA` once after the API is up |
+| CLI trust of the Controller API | `spec.ca` in `~/.iofog/v3/trust/<namespace>/` | Same | Same |
+| `connect --ca` | Connect-time override | Same | Same |
+
+`~/.iofog/v3` is the CLI config directory for both flavors.
+
+Listener TLS is `spec.tls` or `controllers[].tls`. Legacy `controllers[].https` is retired. Edgelet listener fields (`spec.tls.path` and `spec.tls.base64`) are documented at [spec.tls](/learn/edgelet/control-plane#spec-tls).
+
+Local bring-your-own messaging CAs are validated and not uploaded. Production bring-your-own CAs use a [remote control plane](/learn/security/control-plane-remote), or a manual Controller API import, until local deploy gains that upload.
+
+A remote upload runs once, after the Controller API is up. A [Controller add-on](/learn/control-plane/controller-add-on) deploy does not upload those CAs again.
+
+## Control plane TLS
+
+| Deploy path | TLS | Fields |
+| ----------- | --- | ------ |
+| Kubernetes (`KubernetesControlPlane`) | [CLI YAML](/learn/security/control-plane-kubernetes-cli), [operator](/learn/security/control-plane-kubernetes-operator) | [KubernetesControlPlane fields](/reference/yaml/kubernetes-control-plane), [ControlPlane CRD](/learn/control-plane/kubernetes-crd) |
+| Remote (`ControlPlane`) | [Remote](/learn/security/control-plane-remote) | [Remote ControlPlane fields](/reference/yaml/remote-control-plane) |
+| Local (`LocalControlPlane`) | [Local](/learn/security/control-plane-local) | [LocalControlPlane fields](/reference/yaml/local-control-plane) |
+
+## Access, certificates, and sign-in
+
+[Access control](/learn/access-control) is who may call the Controller API.
+
+Workload certificates are separate from Router and NATS site CAs:
+
+- [Certificate authorities](/learn/config/certificate-authorities)
+- [Certificates](/learn/config/certificates)
+
+Message bus authorization:
+
+- [NATS account rules](/learn/message-bus/account-rules)
+- [NATS user rules](/learn/message-bus/user-rules)
+- [NATS JWT authentication](/security/nats-jwt-authentication)
+
+[Certificates manager](/security/certificates-manager) is the x509 lifecycle for microservices.
+
+Sign-in:
+
+- [Embedded OIDC](/get-started/deploy/embedded-oidc)
+- [External OIDC](/get-started/deploy/external-oidc)
+
+## Edgelet node JWT
+
+After provision, the Controller stores the Edgelet node's public key. The node signs a short-lived JWT. Agent routes under `/api/v3/agent/*` use that token. User routes use an OIDC bearer token. See [Access control](/learn/access-control).
+
+<EditPageAdmonition />

@@ -1,0 +1,32 @@
+---
+title: Network
+description: How bridge DNS, a Service, the router fabric, and NATS differ, and where each one is documented.
+keywords: [network, service, router, bridge dns, nats, tcp bridge]
+slug: /learn/network
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Network
+
+A `kind: Service` publishes a TCP port through the router. A microservice is a container. A Kubernetes Service is a cluster object. On a Kubernetes control plane, the Controller may create a Kubernetes Service that forwards to the router. That path is on [Services](/learn/network/services).
+
+Two containers on the **same** Edgelet node reach each other by name on the bridge. That is [DNS](/learn/edgelet/dns) and [Bridge DNS](/learn/workloads/microservices#bridge-dns).
+
+Deploy a Service with <CliName /> `deploy -f`. There is no `apply`.
+
+## What connects to what
+
+| Mechanism | What it connects | Detail |
+| --------- | ---------------- | ------ |
+| Bridge DNS | Two containers on the **same** Edgelet node | [DNS](/learn/edgelet/dns), [Bridge DNS](/learn/workloads/microservices#bridge-dns) |
+| `kind: Service` | A TCP port across the router fabric, including other nodes | [Services](/learn/network/services), [Service fields](/reference/yaml/service), [Distribution tags](/learn/network/distribution), [TCP bridge](/learn/network/interconnection), [Service interconnection](/reference/controller/service-interconnection) |
+| Router fabric | How nodes join the router (`edge`, `interior`, `none`) and where `default-router` comes from | [Router topology](/learn/network/router-topology). The system microservice on the node is [Router fabric](/learn/edgelet-nodes/router-fabric). |
+| NATS | Application messaging | [Message bus](/learn/message-bus), [NATS access](/learn/workloads/nats-access), [NATS fabric](/learn/edgelet-nodes/nats-fabric) |
+
+## Console
+
+The Services list and the service detail panel are [Network](/get-started/edgeops-console/network).
+
+<EditPageAdmonition />

@@ -1,0 +1,160 @@
+---
+title: Securing remote control plane
+description: Remote ControlPlane listener TLS, CLI trust, and the one-time upload of Router and NATS certificate authorities.
+keywords: [tls, remote control plane, spec.tls, router site ca, nats, v3.9]
+slug: /learn/security/control-plane-remote
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Securing a remote control plane
+
+A remote `kind: ControlPlane` has three trust layers: CLI trust of the Controller API, listener TLS on each host, and Router and NATS certificate authorities uploaded to the Controller API. Secret names match the ones the operator uses on Kubernetes. See [Kubernetes (operator)](/learn/security/control-plane-kubernetes-operator).
+
+Edgelet listener fields are [spec.tls](/learn/edgelet/control-plane#spec-tls). Field tables are [Remote ControlPlane fields](/reference/yaml/remote-control-plane).
+
+## Layers
+
+| Layer | Where you set it | What deploy does |
+| ----- | ---------------- | ---------------- |
+| CLI trust of the Controller API | `spec.ca` | Stored in the namespace trust directory |
+| Controller HTTPS listener | `spec.tls` or `controllers[].tls` | Written to Edgelet `spec.tls.base64` on that host |
+| Router and NATS CAs | `routerSiteCA`, `routerLocalCA`, `natsSiteCA`, `natsLocalCA` | Uploaded once after the API is up |
+| Edgelet node trust | Controller CA catalog and provision `caCert` | Standard provision |
+
+## CLI trust: `spec.ca`
+
+`spec.ca` is a base64 PEM. <CliName /> stores it under `~/.iofog/v3/trust/<namespace>/`. Commands use it when they call `spec.endpoint` or `controller.publicUrl` over HTTPS.
+
+`connect --ca` overrides trust for that connect only.
+
+## Listener TLS: `spec.tls`
+
+`spec.tls` is the default for every host. Legacy `controllers[].https` is retired.
+
+| Field | Required | Notes |
+| ----- | -------- | ----- |
+| `cert` | Yes, with `key` | Server certificate, base64 PEM |
+| `key` | Yes, with `cert` | Private key, base64 PEM |
+| `ca` | No | Intermediate or root for the chain |
+
+`controllers[].tls` uses the same shape and replaces the global block for that host only. The host uses its own `tls` when set, and the global `spec.tls` otherwise.
+
+<CliName /> writes the effective block to Edgelet `spec.tls.base64`. It does not set `spec.tls.path`. See [spec.tls](/learn/edgelet/control-plane#spec-tls).
+
+Align `controller.publicUrl`, `endpoint`, and the certificate SANs with the hostname or IP that Edgelet nodes and operators use.
+
+<FlavorYaml title="remote-listener-tls.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: edge
+spec:
+  endpoint: https://203.0.113.10:51121
+  ca: <base64-pem>
+  tls:
+    cert: <base64-pem>
+    key: <base64-pem>
+    ca: <base64-pem>
+  controller:
+    publicUrl: https://203.0.113.10:51121
+  controllers:
+    - name: ctrl-1
+      host: 203.0.113.10
+      tls:
+        cert: <base64-pem>
+        key: <base64-pem>
+```
+
+</FlavorYaml>
+
+The `controllers[].tls` block in that example applies only to `ctrl-1`. Omit it when every host should use `spec.tls`.
+
+## Bring-your-own Router and NATS CAs
+
+Each block is a site certificate: `tlsCert` and `tlsKey`, both base64 PEM.
+
+| YAML block | Secret name | CA catalog name |
+| ---------- | ----------- | --------------- |
+| `routerSiteCA` | `router-site-ca` | `router-site-ca` |
+| `routerLocalCA` | `default-router-local-ca` | `default-router-local-ca` |
+| `natsSiteCA` | `nats-site-ca` | `nats-site-ca` |
+| `natsLocalCA` | `default-nats-local-ca` | `default-nats-local-ca` |
+
+<FlavorYaml title="remote-messaging-cas.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: edge
+spec:
+  routerSiteCA:
+    tlsCert: <base64-pem>
+    tlsKey: <base64-pem>
+  routerLocalCA:
+    tlsCert: <base64-pem>
+    tlsKey: <base64-pem>
+  natsSiteCA:
+    tlsCert: <base64-pem>
+    tlsKey: <base64-pem>
+  natsLocalCA:
+    tlsCert: <base64-pem>
+    tlsKey: <base64-pem>
+```
+
+</FlavorYaml>
+
+A full file is [with-global-cas.yaml](/examples/controlplane/remote/with-global-cas.yaml).
+
+### Upload runs once
+
+After the Controller API is up, and before serial system Edgelet nodes, <CliName /> uploads any block that is set:
+
+1. If the Controller has no matching secret, create a TLS secret with `tls.crt`, `tls.key`, and `ca.crt`. CA material comes from `tlsCert`.
+2. If the CA catalog entry is missing, create a `type: direct` CA that points at that secret.
+3. If the secret and the CA already exist, skip that block.
+
+A [Controller add-on](/learn/control-plane/controller-add-on) deploy does not upload these CAs again. Put them on the first `ControlPlane` deploy, or import them with the Controller API later.
+
+These blocks are not copied into the Edgelet ControlPlane manifest. Edgelet rejects legacy inline site and local CA fields.
+
+On Kubernetes the operator creates or reuses Secrets with the same names and imports the CAs. On a remote host you put the CA key material in YAML, and <CliName /> registers it with the Controller API.
+
+Server certificates for Router and NATS are still issued from those CAs when the system microservices deploy.
+
+## Database TLS
+
+`spec.database.ssl` and `spec.database.ca` (base64 PEM) are the Controller connection to the database on every controller host. They are separate from `spec.tls` and from the messaging CA blocks. See [Remote ControlPlane fields](/reference/yaml/remote-control-plane).
+
+## Provision
+
+When a system Edgelet node is provisioned, the Controller may return `caCert` in the provision key response. <CliName /> then runs `edgelet config cert` on that host with that value.
+
+Messaging clients use CAs from the Controller catalog, including the site and local CAs you uploaded.
+
+Register `default-router` and `default-nats-hub` on the first host before interior Edgelet nodes connect. See [Multi-controller HA](/learn/control-plane/remote-ha).
+
+## Checks
+
+- Set `spec.ca` when the Controller API uses a private CA.
+- Set global `spec.tls`, or `controllers[].tls` on a host that needs its own listener certificate.
+- Match URLs in the file to certificate SANs.
+- Use the four CA blocks when you bring your own messaging CAs. The first system microservice deploy can also generate them when you leave the blocks empty.
+- Run a full `ControlPlane` deploy when you introduce new global CAs. An add-on deploy does not upload them.
+- Keep private keys out of Git. Restrict SSH and sudo on controller hosts.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| ------- | ------------ |
+| System Edgelet node TLS to the Router fails | The CA is not in the catalog. The upload was skipped or it failed |
+| An add-on host cannot use messaging | The interior upstream is in use before the first host Router is ready |
+| TLS works on host 1 and fails on host 2 | `controllers[].tls` on host 2 is missing or wrong |
+| Duplicate CA errors | The blocks were applied again after a partial create. Inspect secrets and CAs with the Controller API |
+
+<EditPageAdmonition />

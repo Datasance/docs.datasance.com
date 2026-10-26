@@ -1,0 +1,57 @@
+---
+title: Diagnostic bridge port
+description: Copy bridgePort from the diagnostic service into DIAGNOSTIC_URL.
+keywords: [tutorial, acme smart plant, router, bridge port, diagnostic]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Diagnostic bridge port
+
+## Goal
+
+Copy `bridgePort` from the diagnostic service. The operations center Application sets `DIAGNOSTIC_URL` to that port. The diagnostic service is already deployed.
+
+## Copy the port
+
+<CliBlock>{`{{CLI_NAME}} describe service diagnostic-service`}</CliBlock>
+
+Write down `bridgePort`. Your port will differ.
+
+```text
+NAME: diagnostic-service
+BRIDGE PORT: 10234
+TARGET PORT: 8081
+RESOURCE: production-monitoring/diagnostic-service
+```
+
+The dashboard calls:
+
+```text
+http://router.default.svc.bridge.local:<diagnostic-bridge-port>
+```
+
+Use `bridgePort`. Do not put target port 8081 in `DIAGNOSTIC_URL`.
+
+## What you should see
+
+You have a numeric `bridgePort`. `resource` is `production-monitoring/diagnostic-service`.
+
+Optional check from a shell that can reach the Router bridge:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" "http://router.default.svc.bridge.local:<diagnostic-bridge-port>/health"
+```
+
+`200` means the bridge is up before you deploy the dashboard.
+
+## Common mistakes
+
+`DIAGNOSTIC_URL` uses 8081 or a guessed port. Diagnose then returns 502 until you redeploy operations center with the real `bridgePort`.
+
+## Next
+
+[Operations center](/tutorials/acme-smart-plant/operations-center)
+
+<EditPageAdmonition />

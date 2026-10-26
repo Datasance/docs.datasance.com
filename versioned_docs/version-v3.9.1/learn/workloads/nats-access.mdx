@@ -1,0 +1,139 @@
+---
+title: NATS access
+description: How the Controller turns natsConfig on an application and a microservice into an account, a user, and mounted credentials.
+keywords: [nats, natsConfig, natsAccess, natsRule, application, microservice, v3.9]
+slug: /learn/workloads/nats-access
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# NATS access
+
+Turn on messaging by setting `natsConfig` on the application and on each microservice that should connect. The Controller creates the account, signs JWTs, stores credentials, mounts them into the container, and pushes account JWTs to the NATS servers that must accept the connection.
+
+This page is what happens after a rule is bound. It does not define the rule objects. Limits, publish and subscribe permissions, and imports live on [NATS account rules](/learn/message-bus/account-rules) and [NATS user rules](/learn/message-bus/user-rules).
+
+| Page | Contents |
+| ---- | -------- |
+| [NATS runtime](/learn/workloads/nats-access-runtime) | Signing, credential mount, environment variables, resolver. |
+| [NATS lifecycle](/learn/workloads/nats-access-lifecycle) | Create, update, disable, delete, and users that are not containers. |
+
+Field placement is on [Application fields](/reference/yaml/application) and [Microservice fields](/reference/yaml/microservice).
+
+## Declare access
+
+`natsAccess` and `natsRule` sit under `natsConfig`. A top-level `natsAccess` is rejected.
+
+A microservice can turn NATS on only when its application already has `natsConfig.natsAccess: true`.
+
+Omit `natsRule` and the Controller uses the default account or the default user.
+
+| Workload | Field | Rule kind | Default when `natsRule` is omitted |
+| -------- | ----- | --------- | ---------------------------------- |
+| Application | `spec.natsConfig.natsRule` | NATS account rule | `default-account` |
+| Microservice | `spec.natsConfig.natsRule` | NATS user rule | `default-user` |
+
+Microservice YAML may use `natsEnabled` as an alias of `natsConfig.natsAccess`.
+
+Deploy the account rule and the user rule before the application and microservice that name them. In one file, the CLI sorts kinds into that order.
+
+A standalone `kind: Microservice` uses the same `natsConfig` block. The application must already exist with NATS enabled.
+
+JWT limits come from the bound rule. Editing a rule document re-signs JWTs for every workload bound to that rule. See [NATS lifecycle](/learn/workloads/nats-access-lifecycle).
+
+## Example
+
+<FlavorYaml title="orders-with-nats.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: NatsAccountRule
+metadata:
+  name: orders-account
+  namespace: my-ecn
+spec:
+  description: Orders application account
+  maxConnections: -1
+  maxMsgPayload: 1m
+  pubAllow:
+    - "orders.>"
+  subAllow:
+    - "orders.>"
+---
+apiVersion: {{API_VERSION}}
+kind: NatsUserRule
+metadata:
+  name: checkout-user
+  namespace: my-ecn
+spec:
+  description: Checkout microservice user
+  maxPayload: 1m
+  allowedConnectionTypes:
+    - STANDARD
+    - WEBSOCKET
+  pubAllow:
+    - "orders.>"
+  subAllow:
+    - "orders.>"
+---
+apiVersion: {{API_VERSION}}
+kind: Application
+metadata:
+  name: orders
+  namespace: my-ecn
+spec:
+  name: orders
+  natsConfig:
+    natsAccess: true
+    natsRule: orders-account
+  microservices:
+    - name: checkout
+      agent:
+        name: plant-a
+      images:
+        registry: remote
+        amd64: {{REGISTRY}}/example/checkout:1.0.0
+        arm64: {{REGISTRY}}/example/checkout:1.0.0
+      container:
+        ports:
+          - internal: 8080
+            external: 8080
+            protocol: tcp
+      natsConfig:
+        natsAccess: true
+        natsRule: checkout-user
+```
+
+</FlavorYaml>
+
+## What the Controller does
+
+| Step | Controller |
+| ---- | ---------- |
+| Operator and servers | Created with the control plane. The operator seed stays in Controller secrets. |
+| Account for the application | `natsConfig.natsAccess` on the application. |
+| User, creds file, mount, `NATS_CREDS_PATH`, `NATS_SERVER_URL` | `natsConfig.natsAccess` on the microservice. |
+| Policy change | Change `natsRule` or edit the rule. The Controller re-signs and overwrites creds. A user-policy change revokes the old user key. |
+| Access removed | Delete the microservice, turn `natsAccess` off, or delete extra users with `nats users delete`. |
+
+Details are on the [runtime](/learn/workloads/nats-access-runtime) and [lifecycle](/learn/workloads/nats-access-lifecycle) pages.
+
+## Commands
+
+<CliBlock>{`{{CLI_NAME}} deploy -f orders-with-nats.yaml -n my-ecn
+{{CLI_NAME}} get nats-users -n my-ecn
+{{CLI_NAME}} describe nats-user orders checkout -n my-ecn`}</CliBlock>
+
+A laptop or CI user that is not a container is created with `nats users create`. See [Users that are not containers](/learn/workloads/nats-access-lifecycle#users-that-are-not-microservices). Fetch a creds file with `nats users creds`. Operator and account inspection: `nats operator describe` and `nats accounts ensure`.
+
+## Related
+
+- [NATS runtime](/learn/workloads/nats-access-runtime)
+- [NATS lifecycle](/learn/workloads/nats-access-lifecycle)
+- [NATS account rules](/learn/message-bus/account-rules)
+- [NATS user rules](/learn/message-bus/user-rules)
+- [Applications](/learn/workloads/applications#nats-at-application-and-microservice-level)
+
+<EditPageAdmonition />

@@ -1,0 +1,91 @@
+---
+title: NATS runtime
+description: Signing chain, credential mount, NATS_CREDS_PATH, NATS_SERVER_URL, and resolver bundles after natsAccess is enabled.
+keywords: [nats, credentials, jwt, resolver, volume mount, nats server url, v3.9]
+slug: /learn/workloads/nats-access-runtime
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# NATS runtime
+
+What the Controller materializes when `natsConfig.natsAccess` is true. Policy content comes from the bound [NATS account rule](/learn/message-bus/account-rules) and [NATS user rule](/learn/message-bus/user-rules). Updates, revoke, and delete are on [NATS lifecycle](/learn/workloads/nats-access-lifecycle).
+
+## Who signs what
+
+The Controller keeps one operator for the deployment. Each application with NATS gets one account. Each microservice, or extra user, with NATS gets one user inside that account.
+
+| Object | Name | Who signs the JWT | Where the secret lives |
+| ------ | ---- | ----------------- | ---------------------- |
+| Operator | `{controllerName}-operator` | The operator signs its own JWT. | Seed secret `nats-operator-seed`. Not mounted into workloads. |
+| Account | Application name, such as `orders`. | The operator. | Seed secret `nats-account-seed-{application}`. Not mounted into workloads. |
+| User | Microservice name, such as `checkout`, or an extra user name. | The account. | Creds secret `nats-creds-{application}-{user}`. Mounted into the container for microservice users. |
+
+Account and user names are slugified in secret names and creds file paths. JWT `name` claims stay the application or microservice name.
+
+A creds file is the user JWT plus the user seed. The secret data key is `{account}/{user}.creds`, for example `orders/checkout.creds`.
+
+When no rule name is set, the application uses `default-account` and the microservice uses `default-user`.
+
+Inspect accounts with <CliName /> `get nats-accounts` and `describe nats-account APP`.
+
+## What the microservice receives
+
+Enabling `natsConfig.natsAccess` on a microservice runs these steps in one transaction:
+
+1. Verify the application account exists. Application `natsAccess` must be true.
+2. Create the user, sign the user JWT with the account seed, and write the creds secret.
+3. Create a VolumeMount for that secret and link it to the Edgelet node running the microservice.
+4. Add a read-only volume mapping on the microservice. The Controller writes this mapping. Leave it out of deploy YAML when `natsAccess` is true.
+
+| Mapping field | Value |
+| ------------- | ----- |
+| `type` | `volumeMount` |
+| `hostDestination` | Creds secret name. |
+| `containerDestination` | `/etc/nats/creds` |
+| `accessMode` | `ro` |
+
+5. Set environment variables:
+
+| Variable | Value |
+| -------- | ----- |
+| `NATS_CREDS_PATH` | `/etc/nats/creds/{account}/{user}.creds` |
+| `NATS_SERVER_URL` | Where this container should connect. See below. |
+
+The Edgelet node pulls the microservice spec and the linked volume mount. The workload connects with `NATS_CREDS_PATH`. It does not receive the account seed or the operator seed.
+
+Microservice users are not bearer tokens. Their JWTs have no expiry.
+
+## `NATS_SERVER_URL`
+
+| Edgelet node has local NATS | Container network | URL |
+| --------------------------- | ----------------- | --- |
+| Yes | Host network | `nats://localhost:{serverPort}` |
+| Yes | Bridge network | `nats://nats.default.svc.bridge.local:{serverPort}` |
+| No | Either | `nats://{hubHost}:{hubServerPort}` |
+
+The default port is `4222`. If the node has no local NATS and no hub exists, enabling NATS fails validation.
+
+`nats.default.svc.bridge.local` is a reserved bridge name. See [Bridge DNS](/learn/workloads/microservices#bridge-dns) and [DNS](/learn/edgelet/dns).
+
+When a microservice moves to another Edgelet node, the Controller recomputes `NATS_SERVER_URL` for the new placement.
+
+## How account JWTs reach NATS servers
+
+Clients present a user JWT. The server must already hold the account JWT signed by the trusted operator. The Controller maintains a full resolver directory of `{accountPublicKey}.jwt` files.
+
+| NATS role | Bundle contents | Delivery |
+| --------- | --------------- | -------- |
+| Server (hub) | System account, every application with `natsAccess`, and the controller relay account when NATS is enabled. | ConfigMap `iofog-nats-jwt-bundle` on the NATS microservice, for example under `/tmp/nats/jwt`. |
+| Leaf | Leaf system account, plus application accounts that have a microservice on that node. | Per-node ConfigMap, same mount pattern. |
+
+Leaf nodes also get creds for `leaf-{fogName}` users (`default-leaf-user`) for upstream authentication. Those are not workload users.
+
+After an account JWT changes, the Controller enqueues NATS reconcile and refreshes bundles on every NATS server (non-leaf) and on every Edgelet node that runs a microservice of the affected application.
+
+NATS rereads the resolver directory on its configured interval. User creds are not in the bundle. They are only on the workload, via the secret mount.
+
+How NATS servers and leaves are provisioned is on [NATS fabric](/learn/edgelet-nodes/nats-fabric) and [Networking](/learn/edgelet-nodes/networking).
+
+<EditPageAdmonition />

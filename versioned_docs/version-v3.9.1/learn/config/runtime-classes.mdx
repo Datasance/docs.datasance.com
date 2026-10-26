@@ -1,0 +1,85 @@
+---
+title: Runtime classes
+description: kind RuntimeClass registers a WASM or alternate runtime handler. Attach it, then set container.runtime on the microservice.
+keywords: [runtime class, wasm, handler, attach, microservice, edgelet node]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Runtime classes
+
+A **runtime class** registers a handler name on the Controller, such as a WASM shim. Attach it to Edgelet nodes. A microservice then sets `container.runtime` to that handler.
+
+Fields are on [RuntimeClass fields](/reference/yaml/runtime-class). Installing shim binaries is host setup. See [Container engines](/learn/edgelet/container-engines).
+
+This object uses the fleet `apiVersion`. An Edgelet install manifest uses `edgelet.iofog.org/v1` and `edgelet deploy`. Those are different documents.
+
+## When to use it
+
+Use a runtime class when a microservice must run on a handler other than the default OCI runtime. The handler string must match a runtime already installed on the Edgelet node. Deploying the class does not copy shim binaries.
+
+Attach works on Edgelet nodes. A non-Edgelet target returns 400. The CLI prefixes that error with `cannot attach runtimeclass: RuntimeClass can only be linked to edgelet agents`.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f runtimeclass.yaml -n my-ecn`}</CliBlock>
+
+`handler` sits at the document root, beside `metadata`. Deploy upserts by `metadata.name`. The same name updates the handler string. A handler change on a linked node can affect running microservices.
+
+<FlavorYaml title="runtimeclass.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: RuntimeClass
+metadata:
+  name: wasmtime
+  namespace: my-ecn
+handler: wasmtime
+```
+
+</FlavorYaml>
+
+## How a microservice uses it
+
+Attach the runtime class, then set `container.runtime` to the handler. `container.platform` is the OCI platform, such as `wasi/wasm`. See [Microservice fields](/reference/yaml/microservice).
+
+<FlavorYaml title="bind.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  container:
+    runtime: wasmtime
+```
+
+</FlavorYaml>
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get runtimeclass -n my-ecn
+{{CLI_NAME}} describe runtimeclass wasmtime -n my-ecn
+{{CLI_NAME}} attach runtimeclass wasmtime edge-01 -n my-ecn
+{{CLI_NAME}} detach runtimeclass wasmtime edge-01 -n my-ecn
+{{CLI_NAME}} delete runtimeclass wasmtime -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_runtimeclass`}>describe runtimeclass</Link> lists `status.linkedAgents`. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_attach_runtimeclass`}>attach runtimeclass</Link> and <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_detach_runtimeclass`}>detach runtimeclass</Link> take the class name and Edgelet node names. Confirm `availableRuntimes`, `runtimeClasses`, and `runtimeAgentPhase` with `describe agent`. Detach before delete when the Controller still has links. A 409 body can list blocking microservice UUIDs.
+
+## Console
+
+**Config → Runtime Classes** manages fleet handlers. See [Configuration](/get-started/edgeops-console/configuration).
+
+## Related
+
+- [Container engines](/learn/edgelet/container-engines)
+- [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

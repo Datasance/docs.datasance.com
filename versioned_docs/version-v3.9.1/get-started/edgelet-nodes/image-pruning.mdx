@@ -1,0 +1,60 @@
+---
+title: Image and Disk Pruning on Edgelet Nodes
+description: Reclaim disk on Edgelet nodes with potctl prune agent, pruningFrequency in AgentConfig, and edgelet system prune on the device.
+keywords: [pruning, edgelet node, potctl prune, pruningFrequency, disk, images]
+slug: /get-started/edgelet-nodes/image-pruning
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Image and disk pruning
+
+Disk space on edge hardware is limited. Edgelet supports scheduled and on-demand pruning of unused images and orphaned volume data.
+
+## Prune from the orchestrator
+
+Trigger an immediate image prune on one Edgelet node:
+
+<CliBlock>{`{{CLI_NAME}} prune agent zebra-1`}</CliBlock>
+
+Prune using a **detached** agent record:
+
+<CliBlock>{`{{CLI_NAME}} prune agent zebra-1 --detached`}</CliBlock>
+
+See [{CLI_NAME} prune agent](/reference/cli/potctl/potctl_prune_agent) for flags.
+
+## Scheduled prune via AgentConfig
+
+Set **`pruningFrequency`** in **`AgentConfig`** (hours between cycles). v3.8 uses **`pruningFrequency`**, not legacy `dockerPruningFrequency`.
+
+```yaml
+spec:
+  pruningFrequency: 24
+  availableDiskThreshold: 20
+  watchdogEnabled: true
+```
+
+The Edgelet pruning manager runs containers → volumes → images on the embedded engine. See [Configuration updates](/get-started/edgelet-nodes/configuration-updates).
+
+## On-device prune (break-glass)
+
+When SSH access is available and you need local cleanup without the orchestrator:
+
+```bash
+edgelet system prune images
+edgelet system prune volumes
+edgelet system prune all
+```
+
+Orphaned **`VOLUME`** data under `/var/lib/edgelet/volumes/data/` is not removed on microservice delete. Use volume prune or see [Edgelet volumes](/learn/edgelet/volumes).
+
+## See also
+
+- [AgentConfig fields](/reference/yaml/agent-config) - `pruningFrequency`, `availableDiskThreshold`
+- [Edgelet configuration reference](/learn/edgelet/configuration) - `pruningFrequency`, `watchdogEnabled`
+- [Troubleshooting](/learn/edgelet/troubleshooting) - disk growth after deletes
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />
