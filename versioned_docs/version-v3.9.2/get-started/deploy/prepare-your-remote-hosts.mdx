@@ -1,0 +1,67 @@
+---
+title: Prepare Remote Hosts
+description: SSH keys and passwordless sudo on remote hosts before potctl or iofogctl deploys the control plane and Edgelet nodes.
+keywords: [remote hosts, ssh, sudo, edgelet, deploy, v3.9]
+slug: /get-started/deploy/prepare-your-remote-hosts
+---
+
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Prepare remote hosts
+
+An Edge Compute Network (ECN) has a Controller and one or more **Edgelet nodes**. Production setups usually run each component on a different host.
+
+{CLI_NAME} connects over SSH to install the remote control plane and fleet Edgelet nodes. Complete the steps below on **every** remote host you plan to use.
+
+## Add an SSH public key
+
+{CLI_NAME} uses the private key you reference in deploy YAML (`ssh.keyFile`). Install the matching public key on the remote user account:
+
+```bash
+ssh-copy-id -i ~/.ssh/id_rsa.pub <username>@<controller-or-edgelet-hostname>
+```
+
+Do this for:
+
+- The **Controller host** when you deploy a remote **`ControlPlane`** (not when the Controller runs only on Kubernetes).
+- Every **Edgelet node** host you list under **`kind: Agent`**.
+
+Keep the private key path. You will use the same key in **`ssh.keyFile`**.
+
+## Add the SSH user to the sudo group
+
+{CLI_NAME} runs bootstrap scripts with sudo on remote Linux hosts:
+
+```bash
+usermod -aG sudo $USER
+```
+
+Log out and back in so group membership applies.
+
+## Allow passwordless sudo
+
+{CLI_NAME} cannot answer sudo password prompts over SSH. On each host, ensure sudoers allows NOPASSWD for your deploy user. With `visudo`, confirm a line like:
+
+```text
+%sudo ALL=(ALL) NOPASSWD:ALL
+```
+
+The embedded **`check_prereqs.sh`** layer verifies passwordless sudo before install proceeds.
+
+## Airgap and container engines
+
+| Deploy path | Host preparation |
+| ----------- | ---------------- |
+| **Native Edgelet** (default) | Sudo and SSH only. Edge hosts do not need outbound registry access when you use **`airgap: true`** and **`package.version`**. |
+| **Container Edgelet** (`deploymentType: container`) | Install **docker** or **podman** on the host before deploy, or supply a custom **`scripts.deps`** layer. Required for [airgap container](/get-started/deploy/airgap-deployment) flows. |
+
+The machine that runs {CLI_NAME} needs registry access to pull images or stage Edgelet binaries. Edge hosts receive artifacts over SSH.
+
+:::tip[Where to go from here?]
+<p>Deploy the control plane: <a href="/get-started/deploy/remote-control-plane">Remote control plane</a> or <a href="/get-started/deploy/kubernetes-prepare-cluster">Kubernetes - prepare a cluster</a>.</p>
+<p>After the Controller is running, enroll fleet nodes at <a href="/get-started/deploy/setup-edgelet-nodes">Setup Edgelet nodes</a>.</p>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

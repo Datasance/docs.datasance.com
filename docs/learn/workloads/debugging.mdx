@@ -77,6 +77,8 @@ Requirements:
 4. Attach the local terminal to that session.
 5. Closing the session prints a success message.
 
+The CLI forwards stdin to the remote PTY. Ctrl+C, Ctrl+D, `exit`, and `logout` go to the remote shell. The local session ends when the remote side closes, or when local stdin reaches EOF. The CLI sends the terminal size when the session starts. On Unix it sends a new size when the window changes. Windows sends the size once.
+
 Up to 3 concurrent exec sessions are allowed per microservice. A fourth session returns HTTP 409.
 
 <CliBlock>{`{{CLI_NAME}} exec microservice myapp/api -n my-ecn

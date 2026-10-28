@@ -35,10 +35,10 @@ spec:
     consoleUrl: https://controller.example.com
     logLevel: info
   images:
-    operator: {{REGISTRY}}/operator:3.9.2
-    controller: {{REGISTRY}}/controller:3.9.2
-    router: {{REGISTRY}}/router:3.9.2
-    nats: {{REGISTRY}}/nats:2.15.1-1
+    operator: {{REGISTRY}}/operator:3.9.3
+    controller: {{REGISTRY}}/controller:3.9.3
+    router: {{REGISTRY}}/router:3.9.3
+    nats: {{REGISTRY}}/nats:2.15.2
   services:
     controller:
       type: ClusterIP

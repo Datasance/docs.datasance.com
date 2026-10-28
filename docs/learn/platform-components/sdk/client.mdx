@@ -77,7 +77,7 @@ Embedded auth users (`/users`) are separate from `Login`.
 | `CreateAuthUser(AuthUserCreateRequest)` | `POST /users` |
 | `GetAuthUser(id)` | `GET /users/{id}` |
 | `UpdateAuthUser(id, AuthUserUpdateRequest)` | `PATCH /users/{id}` |
-| `DeleteAuthUser(id)` | `DELETE /users/{id}` (soft delete) |
+| `DeleteAuthUser(id)` | `DELETE /users/{id}` removes the account so the same email can be created again |
 | `ResetAuthUserPassword(id) (AuthUserResetPasswordResponse, error)` | `POST /users/{id}/reset-password` |
 | `ResetAuthUserToken(id) (AuthUserResetTokenResponse, error)` | `POST /users/{id}/reset-token` |
 
@@ -202,7 +202,7 @@ Calls run `HEAD /capabilities/applicationTemplates` first. HTTP 404 becomes `*No
 
 Deprecated, all return `ErrRoutesNotSupported`: `CreateMicroserviceRoute`, `DeleteMicroserviceRoute`, `UpdateMicroserviceRoutes`.
 
-`MicroserviceInfo.Commands` is JSON `cmd`. `commands` wins when both keys are present (`UnmarshalJSON`). Container limits: `cpus` (float), `memoryLimit`, `memoryReservation`, `memorySwap`, `shmSize` (int64), `cpuSetCpus`, `sysctls`, `ulimits`, `devices`, `tmpfs`, `entrypoint`, `workingDir`, `runAsUser`, `runAsGroup`, `readOnlyRootFilesystem`, `cdiDevices`, `runtime`, `pidMode`, `ipcMode`. `serviceAccount.roleRef` binds a Role.
+`MicroserviceInfo.Commands` is JSON `cmd`. `commands` wins when both keys are present (`UnmarshalJSON`). Container limits: `cpus` (float), `memoryLimit`, `memoryReservation`, `memorySwap`, `shmSize` (int64), `cpuSetCpus`, `sysctls`, `ulimits`, `devices`, `tmpfs`, `entrypoint`, `workingDir`, `runAsUser`, `runAsGroup`, `supplementalGroups`, `readOnlyRootFilesystem`, `cdiDevices`, `runtime`, `pidMode`, `ipcMode`. `supplementalGroups` is an array of host group IDs. GET returns `[]` when there are none. `serviceAccount.roleRef` binds a Role.
 
 `MicroserviceVolumeMappingInfo.Scope` is `private` or `shared`, and only meaningful when `type` is `volume`. Omit on create and the Controller stores `private`. GET always returns the key.
 

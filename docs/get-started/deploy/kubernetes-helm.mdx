@@ -1,6 +1,6 @@
 ---
 title: Kubernetes - Deploy Control Plane with Helm
-description: Install the operator and ControlPlane with Helm chart 3.9.2. Flat values, embedded OIDC, and optional auth.issuerCa.
+description: Install the operator and ControlPlane with Helm chart 3.9.3. Flat values, embedded OIDC, and optional auth.issuerCa.
 keywords: [kubernetes, helm, operator, control plane, embedded oidc, v3.9, issuerCa]
 slug: /get-started/deploy/kubernetes-helm
 ---
@@ -31,7 +31,7 @@ import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 
 This guide installs **<ProductName />** on Kubernetes using the **iofog-operator** Helm chart **{OPERATOR_CHART_VERSION}**. The chart deploys the **operator** Deployment and a **`ControlPlane`** custom resource with <code>apiVersion: {API_VERSION}</code>. The operator reconciles Controller, Router, NATS, Services, Secrets, and an Ingress when the Controller Service is ClusterIP.
 
-Chart **3.9.2** values are flat. `auth`, `images`, `database`, `services`, `controller`, `nats`, `vault`, and `events` sit at the top of `values.yaml`. The templates build the ControlPlane spec from those keys. The chart always installs the CRD, RBAC, and one ControlPlane.
+Chart **3.9.3** values are flat. `auth`, `images`, `database`, `services`, `controller`, `nats`, `vault`, and `events` sit at the top of `values.yaml`. The templates build the ControlPlane spec from those keys. The chart always installs the CRD, RBAC, and one ControlPlane.
 
 <FlavorOnly distribution="datasance">
 
@@ -92,9 +92,9 @@ See [Embedded OIDC](/get-started/deploy/embedded-oidc) for console URLs and boot
 
 <FlavorYaml title="my-values.yaml (excerpt)">{`name: ""
 images:
-  controller: {{REGISTRY}}/controller:3.9.2
-  router: {{REGISTRY}}/router:3.9.2
-  nats: {{REGISTRY}}/nats:2.15.1-1
+  controller: {{REGISTRY}}/controller:3.9.3
+  router: {{REGISTRY}}/router:3.9.3
+  nats: {{REGISTRY}}/nats:2.15.2
 auth:
   mode: embedded
   bootstrap:
@@ -186,7 +186,7 @@ Wait until the ControlPlane status is **Ready** and Controller, Router, and NATS
 
 ## Upgrade
 
-Rewrite a values file from chart **3.9.1** before you upgrade. Those files used `controlplane.spec`, `crds.install`, and `controlplane.create`. Chart **3.9.2** ignores that shape.
+Rewrite a values file from chart **3.9.1** before you upgrade. Those files used `controlplane.spec`, `crds.install`, and `controlplane.create`. Chart **3.9.3** ignores that shape.
 
 If the previous release left the NATS TLS Service on ClusterIP and you want that to stay, set `services.nats.type: ClusterIP` in the new file. The chart default is LoadBalancer.
 
@@ -195,7 +195,7 @@ If the previous release left the NATS TLS Service on ClusterIP and you want that
   --version ${OPERATOR_CHART_VERSION} \\
   -f my-values.yaml`}</CliBlock>
 
-Platform train **v3.9.2** supports an in-place upgrade from **v3.9.1**, **v3.9.0**, or **v3.8.0** on the same Controller database. See [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9) and [Operator](/learn/platform-components/operator).
+Platform train **v3.9.3** supports an in-place upgrade from **v3.9.1**, **v3.9.0**, or **v3.8.0** on the same Controller database. See [Upgrading to v3.9.3](/release-notes/upgrading-to-v3-9) and [Operator](/learn/platform-components/operator).
 
 **v3.7.x** and the legacy Helm chart require a **greenfield** move to v3.8+ (uninstall the old operator and CRDs first). See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
 
@@ -235,7 +235,7 @@ Full chart reference: <a href={OPERATOR_CHART_README_URL}>iofog-operator chart R
 
 :::tip[Next step]
 
-Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.2** on edge hosts.
+Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.3** on edge hosts.
 
 :::
 

@@ -1320,7 +1320,7 @@ paths:
       summary: Register ControlPlane controller microservice
       description: >-
         Agent-only endpoint (fog token). Edgelet registers the controller workload on system fogs.
-        Not available via user RBAC - do not add to rbac-resources.yaml user resources.
+        Not available via user RBAC — do not add to rbac-resources.yaml user resources.
       operationId: registerControllerMicroservice
       security:
         - authToken: []
@@ -1343,11 +1343,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ControllerRegisterResponse"
         "400":
-          description: Bad Request - invalid body or name other than controller
+          description: Bad Request — invalid body or name other than controller
         "401":
           description: Not Authorized
         "403":
-          description: Forbidden - authenticated fog is not a system fog
+          description: Forbidden — authenticated fog is not a system fog
         "500":
           description: Internal Server Error
   /agent/microservices:
@@ -2916,7 +2916,7 @@ paths:
         - authToken: []
       responses:
         "101":
-          description: Switching Protocols - WebSocket established
+          description: Switching Protocols — WebSocket established
         "401":
           description: Not Authorized
         "403":
@@ -2954,7 +2954,7 @@ paths:
 
         **RBAC:** `logs`. Max **5** concurrent user log WS per microservice.
 
-        Query params control tail behaviour (see parameters). Live relay only - no log persistence.
+        Query params control tail behaviour (see parameters). Live relay only — no log persistence.
       operationId: userMicroserviceLogsWebSocket
       parameters:
         - in: path
@@ -2982,13 +2982,13 @@ paths:
             default: true
         - in: query
           name: since
-          description: ISO 8601 timestamp - include lines after this time
+          description: ISO 8601 timestamp — include lines after this time
           schema:
             type: string
             format: date-time
         - in: query
           name: until
-          description: ISO 8601 timestamp - include lines before this time
+          description: ISO 8601 timestamp — include lines before this time
           schema:
             type: string
             format: date-time
@@ -3044,7 +3044,9 @@ paths:
       tags:
         - WebSocketSessions
       summary: User fog (node) log streaming WebSocket
-      description: Node-level logs; **RBAC** `systemLogs`. Max **5** concurrent sessions per fog.
+      description: |
+        Node-level logs; **RBAC** `systemLogs`. Max **5** concurrent sessions per fog.
+        Allowed while the fog `daemonStatus` is `RUNNING` or `WARNING`.
       operationId: userFogLogsWebSocket
       parameters:
         - in: path
@@ -3724,7 +3726,7 @@ paths:
       operationId: interactionStatus
       description: >
         **Embedded auth mode only.** Returns the next interaction step for the OAuth BFF flow.
-        Unauthenticated - the interaction uid comes from the Viewer redirect query string
+        Unauthenticated — the interaction uid comes from the Viewer redirect query string
         (`?interaction=<uid>`). Steps: `login`, `mfa`, `enroll`, `confirm-enroll`,
         `change-password`, `complete`.
       parameters:
@@ -3926,7 +3928,7 @@ paths:
       operationId: interactionComplete
       description: >
         **Embedded auth mode only.** Completes the oidc-provider interaction after all required
-        steps are satisfied. Returns `{ redirectTo }` - Viewer should navigate the browser to
+        steps are satisfied. Returns `{ redirectTo }` — Viewer should navigate the browser to
         this URL to resume the OAuth authorize flow and reach `/user/oauth/callback`.
       parameters:
         - name: uid
@@ -4111,7 +4113,10 @@ paths:
     delete:
       tags:
         - Auth Users
-      summary: Soft-delete embedded auth user
+      summary: Delete embedded auth user
+      description: >
+        Removes the user and frees the email for a new account. The bootstrap admin
+        and the signed-in account cannot be deleted.
       operationId: deleteAuthUser
       security:
         - authToken: []
@@ -8742,6 +8747,8 @@ tags:
     description: Manage your applications
   - name: Application Template
     description: Manage your application templates
+  - name: Microservice Templates
+    description: Manage your microservice templates
   - name: Catalog
     description: Manage your catalog
   - name: Registries
@@ -8757,7 +8764,7 @@ tags:
   - name: WebSocketSessions
     description: |
       Interactive exec and log streaming WebSocket endpoints (MessagePack binary).
-      Multi-replica HA requires a relay backend per **`nats.enabled`** (AMQP when `false`, NATS Core when `true`) - see operations/ws-sessions.md.
+      Multi-replica HA requires a relay backend per **`nats.enabled`** (AMQP when `false`, NATS Core when `true`) — see operations/ws-sessions.md.
   - name: User
     description: Manage your users
   - name: Secrets
@@ -10108,6 +10115,19 @@ components:
             type: string
         runAsGroup:
           type: string
+        supplementalGroups:
+          type: array
+          maxItems: 16
+          uniqueItems: true
+          description: >-
+            Always present and flat on the microservice object, including when
+            empty. Empty is []. Numeric host group IDs, separate from
+            runAsGroup. At most 16 unique whole numbers from 0 through
+            4294967295, sorted ascending.
+          items:
+            type: integer
+            minimum: 0
+            maximum: 4294967295
         readOnlyRootFilesystem:
           type: boolean
         workingDir:
@@ -10197,6 +10217,20 @@ components:
           type: string
         runAsUser:
           type: string
+        supplementalGroups:
+          type: array
+          nullable: true
+          maxItems: 16
+          uniqueItems: true
+          description: >-
+            Extra host group IDs for the controller workload, separate from
+            runAsGroup. Omit leaves the stored list on a later register. null
+            or [] clears it. At most 16 unique whole numbers from 0 through
+            4294967295, stored sorted ascending.
+          items:
+            type: integer
+            minimum: 0
+            maximum: 4294967295
         platform:
           type: string
         cpuSetCpus:
@@ -10654,6 +10688,18 @@ components:
           type: string
         runAsGroup:
           type: string
+        supplementalGroups:
+          type: array
+          maxItems: 16
+          uniqueItems: true
+          description: >-
+            Host group IDs for this microservice, separate from runAsGroup.
+            Always an array. Empty is [] when there are none. At most 16 unique
+            whole numbers from 0 through 4294967295, sorted ascending.
+          items:
+            type: integer
+            minimum: 0
+            maximum: 4294967295
         readOnlyRootFilesystem:
           type: boolean
         platform:
@@ -10914,6 +10960,19 @@ components:
           type: string
         runAsGroup:
           type: string
+        supplementalGroups:
+          type: array
+          nullable: true
+          maxItems: 16
+          uniqueItems: true
+          description: >-
+            Extra host group IDs, separate from runAsGroup. Omit, null, or []
+            means no extra groups. At most 16 unique whole numbers from 0
+            through 4294967295. Stored sorted ascending.
+          items:
+            type: integer
+            minimum: 0
+            maximum: 4294967295
         readOnlyRootFilesystem:
           type: boolean
         platform:
@@ -11050,6 +11109,19 @@ components:
           type: string
         runAsGroup:
           type: string
+        supplementalGroups:
+          type: array
+          nullable: true
+          maxItems: 16
+          uniqueItems: true
+          description: >-
+            Extra host group IDs, separate from runAsGroup. Omit leaves the
+            stored list. null or [] clears it. At most 16 unique whole numbers
+            from 0 through 4294967295. Stored sorted ascending.
+          items:
+            type: integer
+            minimum: 0
+            maximum: 4294967295
         readOnlyRootFilesystem:
           type: boolean
         platform:
@@ -11698,7 +11770,7 @@ components:
           description: Present when JWT claim `password_change_required` is true
         mfaEnabled:
           type: boolean
-          description: Embedded auth only - whether the user has enrolled TOTP MFA (login requires TOTP when true, except bootstrap)
+          description: Embedded auth only — whether the user has enrolled TOTP MFA (login requires TOTP when true, except bootstrap)
     ChangePasswordRequest:
       type: object
       required:

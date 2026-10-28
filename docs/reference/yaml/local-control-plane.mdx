@@ -1,6 +1,6 @@
 ---
 title: LocalControlPlane fields
-description: Field reference for LocalControlPlane deploy YAML. CLI-only fields, system Edgelet node, and Edgelet translation on v3.9.2.
+description: Field reference for LocalControlPlane deploy YAML. CLI-only fields, system Edgelet node, and Edgelet translation on v3.9.3.
 keywords: [localcontrolplane, yaml, fields, edgelet, v3.9]
 slug: /reference/yaml/local-control-plane
 ---
@@ -67,7 +67,7 @@ spec:
     consolePort: 8008 # no, int, default 8008
     logLevel: info # no, string
     package:
-      image: {{REGISTRY}}/controller:3.9.2 # no, string
+      image: {{REGISTRY}}/controller:3.9.3 # no, string
       registry: registry.example.com # no, string
       username: pull-user # no, string
       password: pull-token # no, string
@@ -111,15 +111,15 @@ spec:
     ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. Base64 PEM
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.2
-      arm64: {{REGISTRY}}/router:3.9.2
-      arm: {{REGISTRY}}/router:3.9.2
-      riscv64: {{REGISTRY}}/router:3.9.2
+      amd64: {{REGISTRY}}/router:3.9.3
+      arm64: {{REGISTRY}}/router:3.9.3
+      arm: {{REGISTRY}}/router:3.9.3
+      riscv64: {{REGISTRY}}/router:3.9.3
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1-1
-      arm64: {{REGISTRY}}/nats:2.15.1-1
-      arm: {{REGISTRY}}/nats:2.15.1-1
-      riscv64: {{REGISTRY}}/nats:2.15.1-1
+      amd64: {{REGISTRY}}/nats:2.15.2
+      arm64: {{REGISTRY}}/nats:2.15.2
+      arm: {{REGISTRY}}/nats:2.15.2
+      riscv64: {{REGISTRY}}/nats:2.15.2
   nats:
     enabled: true # no, bool
   events:
@@ -194,7 +194,7 @@ Invalid `arch` values are rejected. WASM and Podman combinations follow Edgelet 
 | `consoleUrl` | string | Console URL. Edgelet does not copy this from `publicUrl` on its own. |
 | `consolePort` | int | Default 8008 |
 | `logLevel` | string | |
-| `package.image` | string | Controller image when you are not using the CLI default (`controller:3.9.2`). See [Default image pins](/learn/control-plane#default-image-pins-v390). |
+| `package.image` | string | Controller image when you are not using the CLI default (`controller:3.9.3`). See [Default image pins](/learn/control-plane#default-image-pins-v390). |
 | `package.registry` | string | Registry hostname for a private pull |
 | `package.username` | string | Required with registry and password |
 | `package.password` | string | |
@@ -258,15 +258,15 @@ Per-architecture images for the Router and NATS system microservices. Keys are `
 ```yaml
 systemMicroservices:
   router:
-    amd64: {{REGISTRY}}/router:3.9.2
-    arm64: {{REGISTRY}}/router:3.9.2
-    arm: {{REGISTRY}}/router:3.9.2
-    riscv64: {{REGISTRY}}/router:3.9.2
+    amd64: {{REGISTRY}}/router:3.9.3
+    arm64: {{REGISTRY}}/router:3.9.3
+    arm: {{REGISTRY}}/router:3.9.3
+    riscv64: {{REGISTRY}}/router:3.9.3
   nats:
-    amd64: {{REGISTRY}}/nats:2.15.1-1
-    arm64: {{REGISTRY}}/nats:2.15.1-1
-    arm: {{REGISTRY}}/nats:2.15.1-1
-    riscv64: {{REGISTRY}}/nats:2.15.1-1
+    amd64: {{REGISTRY}}/nats:2.15.2
+    arm64: {{REGISTRY}}/nats:2.15.2
+    arm: {{REGISTRY}}/nats:2.15.2
+    riscv64: {{REGISTRY}}/nats:2.15.2
 ```
 
 </FlavorYaml>

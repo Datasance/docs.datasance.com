@@ -23,6 +23,7 @@ const POTCTL_CLI_DIRS = {
 };
 
 const FILES = [
+  {file: 'version-v3.9.2-sidebars.json', mode: 'retarget'},
   {file: 'version-v3.9.1-sidebars.json', mode: 'retarget'},
   {file: 'version-v3.9.0-sidebars.json', mode: 'retarget'},
   {file: 'version-v3.8.0-sidebars.json', mode: 'retarget'},

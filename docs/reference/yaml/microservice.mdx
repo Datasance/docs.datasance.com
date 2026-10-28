@@ -58,6 +58,7 @@ spec:
     isPrivileged: false # no, bool
     runAsUser: "1000" # no, string
     runAsGroup: "1000" # no, string
+    supplementalGroups: [44] # no, list of int. Omit to keep the stored list. [] clears it
     readOnlyRootFilesystem: false # no, bool
     capAdd: [] # no, list of string
     capDrop: [] # no, list of string
@@ -285,7 +286,7 @@ Deploy the fleet objects and attach them to the Edgelet node before you expect R
 
 | Group | Fields | Purpose |
 | ----- | ------ | ------- |
-| Security | `isPrivileged`, `runAsUser`, `runAsGroup`, `readOnlyRootFilesystem`, `capAdd`, `capDrop` | Linux security. |
+| Security | `isPrivileged`, `runAsUser`, `runAsGroup`, `supplementalGroups`, `readOnlyRootFilesystem`, `capAdd`, `capDrop` | Linux security. |
 | Network | `hostNetworkMode`, `ports`, `extraHosts` | Exposure and extra host entries. Bridge names are on [Bridge DNS](/learn/workloads/microservices#bridge-dns). |
 | Runtime | `platform`, `runtime` | For example `wasi/wasm` plus a [runtime class](/learn/config/runtime-classes) handler name. |
 | Resources | `cpus`, `memoryLimit`, `memoryReservation`, `memorySwap`, `shmSize`, `cpuSetCpus`, `ulimits` | CPU and memory. |
@@ -293,6 +294,20 @@ Deploy the fleet objects and attach them to the Edgelet node before you expect R
 | Process | `workingDir`, `entrypoint`, `commands`, `env` | Process and environment. |
 | Health | `healthCheck` | Docker-style health check. |
 | Devices | `devices`, `cdiDevices`, `annotations`, `sysctls` | Hardware, CDI, and allowlisted sysctls. |
+
+### Supplemental groups {#supplemental-groups}
+
+`container.supplementalGroups` is a list of numeric host group IDs. `runAsGroup` stays the primary GID string. A non-root process can join the group that owns a device node without `isPrivileged: true`.
+
+| Rule | Behavior |
+| ---- | -------- |
+| Shape | At most 16 unique whole numbers from 0 through 4294967295. Names, duplicates, negatives, and non-integers are rejected. |
+| Stored order | The Controller sorts the ids ascending and returns them in that order. |
+| Key omitted on update | The stored list stays. |
+| `[]` | Clears the stored list. |
+| List changes | That workload is recreated. |
+
+`describe` prints the key, including an empty list, so the next apply matches the Controller. The agent microservice list always includes `supplementalGroups`. `[]` means none.
 
 ### CPU and memory
 
@@ -605,6 +620,7 @@ spec:
 | `isPrivileged` | bool | Privileged container. |
 | `runAsUser` | string | UID. |
 | `runAsGroup` | string | GID. |
+| `supplementalGroups` | list of int | Extra host group IDs. See [Supplemental groups](#supplemental-groups). |
 | `readOnlyRootFilesystem` | bool | Read-only root filesystem. |
 | `ipcMode` | string | IPC mode. |
 | `pidMode` | string | PID namespace mode. |

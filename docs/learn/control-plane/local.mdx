@@ -70,7 +70,7 @@ spec:
     consoleUrl: http://127.0.0.1:80
     logLevel: info
     package:
-      image: {{REGISTRY}}/controller:3.9.2
+      image: {{REGISTRY}}/controller:3.9.3
   auth:
     mode: embedded
     insecureAllowHttp: true
@@ -79,15 +79,15 @@ spec:
       password: "LocalTest12!"
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.2
-      arm64: {{REGISTRY}}/router:3.9.2
-      arm: {{REGISTRY}}/router:3.9.2
-      riscv64: {{REGISTRY}}/router:3.9.2
+      amd64: {{REGISTRY}}/router:3.9.3
+      arm64: {{REGISTRY}}/router:3.9.3
+      arm: {{REGISTRY}}/router:3.9.3
+      riscv64: {{REGISTRY}}/router:3.9.3
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1-1
-      arm64: {{REGISTRY}}/nats:2.15.1-1
-      arm: {{REGISTRY}}/nats:2.15.1-1
-      riscv64: {{REGISTRY}}/nats:2.15.1-1
+      amd64: {{REGISTRY}}/nats:2.15.2
+      arm64: {{REGISTRY}}/nats:2.15.2
+      arm: {{REGISTRY}}/nats:2.15.2
+      riscv64: {{REGISTRY}}/nats:2.15.2
   nats:
     enabled: true
   systemAgent:
@@ -118,7 +118,7 @@ spec:
     consoleUrl: https://127.0.0.1
     logLevel: info
     package:
-      image: {{REGISTRY}}/controller:3.9.2
+      image: {{REGISTRY}}/controller:3.9.3
   auth:
     mode: embedded
     bootstrap:
@@ -133,15 +133,15 @@ spec:
     databaseName: controller
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.2
-      arm64: {{REGISTRY}}/router:3.9.2
-      arm: {{REGISTRY}}/router:3.9.2
-      riscv64: {{REGISTRY}}/router:3.9.2
+      amd64: {{REGISTRY}}/router:3.9.3
+      arm64: {{REGISTRY}}/router:3.9.3
+      arm: {{REGISTRY}}/router:3.9.3
+      riscv64: {{REGISTRY}}/router:3.9.3
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1-1
-      arm64: {{REGISTRY}}/nats:2.15.1-1
-      arm: {{REGISTRY}}/nats:2.15.1-1
-      riscv64: {{REGISTRY}}/nats:2.15.1-1
+      amd64: {{REGISTRY}}/nats:2.15.2
+      arm64: {{REGISTRY}}/nats:2.15.2
+      arm: {{REGISTRY}}/nats:2.15.2
+      riscv64: {{REGISTRY}}/nats:2.15.2
   nats:
     enabled: true
   systemAgent:

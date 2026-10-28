@@ -1,0 +1,135 @@
+---
+title: NATS lifecycle
+description: Create, update, disable, and delete NATS access on applications and microservices, plus users that are not containers.
+keywords: [nats, lifecycle, natsAccess, revoke, creds, mqtt, v3.9]
+slug: /learn/workloads/nats-access-lifecycle
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# NATS lifecycle
+
+What the Controller does when you create, update, disable, or delete applications and microservices that use `natsConfig`. How creds and the resolver are built is on [NATS runtime](/learn/workloads/nats-access-runtime).
+
+## Application
+
+### Create with `natsAccess: true`
+
+After the application is stored with `natsAccess` and the resolved rule id, the Controller:
+
+1. Creates the account if it is missing. The operator signs the account JWT.
+2. Re-signs the account JWT with the current NATS account rule. Existing user revocations stay.
+3. For each microservice in the application with `natsAccess`, ensures the user and the creds mount.
+4. Enqueues resolver distribution for NATS servers and for Edgelet nodes running this application's microservices.
+
+The same YAML with inline `microservices` still requires application `natsAccess: true` before any microservice `natsAccess`. Microservice create fails if the application flag is off.
+
+### Change `natsRule`
+
+Account keys do not change. The Controller re-signs the account JWT with the new rule and keeps revocations. Then, for each microservice in the application:
+
+- `natsAccess: true`: re-issue the user JWT if that user's rule binding changed, and keep the creds mount.
+- `natsAccess` false, but a user or mount is still present: revoke the user and detach the mount.
+
+Servers and the Edgelet nodes that host the app receive the updated account JWT through the resolver bundle.
+
+### Turn `natsAccess` on
+
+Same path as create: ensure the account, sign it, attach creds for microservices that already requested NATS, and push the account JWT.
+
+### Turn `natsAccess` off
+
+Revoke every microservice user in the application and remove creds mounts. Delete the account row, the account seed secret, and remaining user creds secrets. Resolver reconcile drops that account JWT from bundles.
+
+### Delete the application
+
+Microservices delete first. Each user is revoked (public key on the account JWT, then the user and creds secret are removed). Remaining account users (MQTT and extra users) are removed, the account seed is deleted, and the account is deleted. The resolver removes the account from servers.
+
+System applications cannot be deleted through the user application API.
+
+YAML reference: [Application fields](/reference/yaml/application).
+
+## Microservice
+
+### Create or enable `natsAccess`
+
+Requires application `natsConfig.natsAccess: true`. Runs the [runtime](/learn/workloads/nats-access-runtime) mount steps. The user JWT is signed by the account seed.
+
+The Controller stores `natsAccountId`, `natsUserId`, and `natsCredsSecretName` on the microservice row.
+
+### Change `natsRule`
+
+The account stays. The old user key is not reused:
+
+1. The current user public key is added to account JWT `revocations`. The account JWT is re-signed.
+2. A new user key pair is created. The new user JWT uses the new NATS user rule.
+3. The same creds secret is overwritten with the new creds file.
+4. Resolver reconcile pushes the updated account JWT.
+
+`NATS_CREDS_PATH` stays the same. The file contents change. The Edgelet node receives the updated secret and microservice spec.
+
+If the rule id did not change, the Controller does not mint a new user key. Editing the NATS user rule document itself reissues every user bound to that rule, including microservices on `default-user` when that rule was edited. That is the same revoke and new-creds path.
+
+### Turn `natsAccess` off
+
+Remove the volume mapping and `NATS_CREDS_PATH` / `NATS_SERVER_URL`. Unlink the volume mount from the Edgelet node. Revoke the user (public key on the account JWT), and delete the creds secret and the user row. The account remains for other microservices in the application.
+
+### Delete the microservice
+
+Clear the NATS foreign keys and revoke the user the same way as turning `natsAccess` off. The application account is not deleted.
+
+### Move to another Edgelet node
+
+The creds volume mount links to the new node when NATS is ensured again. `NATS_SERVER_URL` is recomputed.
+
+YAML reference: [Microservice fields](/reference/yaml/microservice).
+
+## Users that are not containers {#users-that-are-not-microservices}
+
+Clients that are not a Controller-deployed container (a laptop, CI, or an MQTT device) get users on the application account through the API. The Controller signs JWTs and stores creds secrets. It does not mount them into a microservice.
+
+The application must have an account (`natsAccess: true`, or ensure the account through the API). Fetch the creds and give them to the client. Delete the user when access should stop.
+
+### Standard NATS user
+
+| Field | Meaning |
+| ----- | ------- |
+| `name` | User name inside the application account. |
+| `natsRule` | NATS user rule name. Omit it and the Controller uses `default-user`. |
+| `expiresIn` | Optional lifetime. Omit it and the JWT has no `exp`. Microservice users have no expiry. |
+
+The user is not a bearer user. Connection types and subjects come from the rule.
+
+<CliBlock>{`{{CLI_NAME}} nats users create orders laptop --nats-rule checkout-user --expires-in 604800 -n my-ecn
+{{CLI_NAME}} nats users creds orders laptop -o ./laptop.creds -n my-ecn
+{{CLI_NAME}} describe nats-user orders laptop -n my-ecn
+{{CLI_NAME}} nats users delete orders laptop -n my-ecn`}</CliBlock>
+
+`--expires-in` on <CliName /> is seconds. `604800` is 7 days. `get nats-users` lists microservice-linked users (`microserviceUuid` set) and extra users (`microserviceUuid` null).
+
+Delete is rejected while the user name is still linked to a microservice with NATS enabled. Turn microservice `natsAccess` off, or delete the microservice, first. System-account and leaf-system users cannot be deleted here.
+
+### MQTT bearer user
+
+The default rule is `default-mqtt-user` (bearer, MQTT and STANDARD). The JWT sets bearer authentication without a connect challenge.
+
+<CliBlock>{`{{CLI_NAME}} nats users create-mqtt-bearer orders sensor-7 --expires-in 2592000 -n my-ecn
+{{CLI_NAME}} nats users creds orders sensor-7 -o ./sensor-7.creds -n my-ecn
+{{CLI_NAME}} nats users delete-mqtt-bearer orders sensor-7 -n my-ecn`}</CliBlock>
+
+Creating the same name again returns the existing user. Keys are not rotated. Delete and create again to rotate.
+
+Rule fields for MQTT and bearer are on [NATS user rules](/learn/message-bus/user-rules).
+
+## Advanced commands
+
+| Command | Use |
+| ------- | --- |
+| `nats operator describe` | Operator metadata and JWT. |
+| `nats accounts ensure APP --nats-rule RULE` | Ensure the account without a full application redeploy. |
+
+The path for edge workloads remains `deploy -f` with `natsConfig` on the application and the microservice.
+
+<EditPageAdmonition />

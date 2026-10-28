@@ -1,6 +1,6 @@
 ---
 title: Kubernetes
-description: Deploy a KubernetesControlPlane with the CLI. How the operator ControlPlane custom resource, networking, and day-2 upgrades work on v3.9.2.
+description: Deploy a KubernetesControlPlane with the CLI. How the operator ControlPlane custom resource, networking, and day-2 upgrades work on v3.9.3.
 keywords: [kubernetes control plane, kubernetescontrolplane, operator, deploy, v3.9]
 slug: /learn/control-plane/kubernetes
 ---
@@ -120,10 +120,10 @@ spec:
     https: true
     secretName: controller-tls
   images:
-    operator: {{REGISTRY}}/operator:3.9.2
-    controller: {{REGISTRY}}/controller:3.9.2
-    router: {{REGISTRY}}/router:3.9.2
-    nats: {{REGISTRY}}/nats:2.15.1-1
+    operator: {{REGISTRY}}/operator:3.9.3
+    controller: {{REGISTRY}}/controller:3.9.3
+    router: {{REGISTRY}}/router:3.9.3
+    nats: {{REGISTRY}}/nats:2.15.2
   services:
     controller:
       type: LoadBalancer
@@ -173,10 +173,10 @@ spec:
     consoleUrl: https://controller.example.com
     logLevel: info
   images:
-    operator: {{REGISTRY}}/operator:3.9.2
-    controller: {{REGISTRY}}/controller:3.9.2
-    router: {{REGISTRY}}/router:3.9.2
-    nats: {{REGISTRY}}/nats:2.15.1-1
+    operator: {{REGISTRY}}/operator:3.9.3
+    controller: {{REGISTRY}}/controller:3.9.3
+    router: {{REGISTRY}}/router:3.9.3
+    nats: {{REGISTRY}}/nats:2.15.2
   services:
     controller:
       type: ClusterIP
@@ -457,7 +457,7 @@ On this kind, set `spec.images` (`operator`, `controller`, `router`, `nats`) and
 
 <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link>
 
-If you installed with Helm, upgrade the chart on the **3.9.2** train, then apply the updated file. See [Helm](/get-started/deploy/kubernetes-helm).
+If you installed with Helm, upgrade the chart on the **3.9.3** train, then apply the updated file. See [Helm](/get-started/deploy/kubernetes-helm).
 
 Fleet Edgelet nodes use <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_upgrade`}>upgrade</Link>. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
 

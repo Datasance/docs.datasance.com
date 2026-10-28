@@ -31,9 +31,9 @@ spec:
   controllerEndpoint: https://controller.example.com:51121 # no, string
   airgap: false # no, bool
   package: # no, object
-    version: "1.1.2" # no, string
+    version: "1.1.3" # no, string
     container:
-      image: {{REGISTRY}}/edgelet:1.1.2 # no, string. Used when deploymentType is container
+      image: {{REGISTRY}}/edgelet:1.1.3 # no, string. Used when deploymentType is container
       registry: registry.example.com # no, string
       username: pull-user # no, string. Set with registry and password
       password: pull-token # no, string
@@ -143,7 +143,7 @@ Optional Edgelet binary, container image, and WASM shims for bootstrap.
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| `version` | string | Edgelet version passed to the native install layer. Use `1.1.2` on this train. |
+| `version` | string | Edgelet version passed to the native install layer. Use `1.1.3` on this train. |
 | `container.image` | string | Image when `deploymentType` is `container` |
 | `container.registry` | string | Registry hostname for a private pull |
 | `container.username` | string | With registry and password |

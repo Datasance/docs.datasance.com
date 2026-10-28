@@ -1,0 +1,141 @@
+---
+title: Services
+description: Publish a TCP port through the router with kind Service. Microservice, Edgelet node, Kubernetes, and external backends.
+keywords: [service, tcp, router, bridge port, microservice, external, kubernetes]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Services
+
+A Service publishes a TCP port through the router. It is a Controller object. It is separate from a [microservice](/learn/workloads/microservices). On a Kubernetes control plane, the Controller may also create a Kubernetes Service that forwards to the router pods.
+
+Containers on the same Edgelet node still use bridge names. See [DNS](/learn/edgelet/dns) and [Bridge DNS](/learn/workloads/microservices#bridge-dns).
+
+Field tables are on [Service fields](/reference/yaml/service). Which nodes open the port is on [Distribution tags](/learn/network/distribution). The connector and listener are on [TCP bridge](/learn/network/interconnection).
+
+The list and the detail panel are [Network](/get-started/edgeops-console/network).
+
+## Types
+
+| `spec.type` | Backend | Connector runs on |
+| ----------- | ------- | ----------------- |
+| `microservice` | `application/microservice` or a microservice UUID | The Edgelet node that runs that microservice |
+| `agent` | Edgelet node name or UUID | That node |
+| `k8s` | A DNS name or IP already in the Kubernetes cluster | Default router. Allowed only on a Kubernetes control plane. No extra Kubernetes Service is created. |
+| `external` | A DNS name or IP outside the cluster | Default router |
+
+`microservice` and `agent` need a router on the backend node. `routerMode: none` is rejected.
+
+`k8s` and `external` require `spec.defaultBridge: default-router`. Omitting `defaultBridge` selects that default. For `microservice` and `agent`, `defaultBridge` may instead be the UUID of an upstream router that node already uses.
+
+Tags live on `metadata.tags`, not under `spec`.
+
+## Remote control plane
+
+Omit `servicePort` and `k8sType`. The Controller sets `servicePort` to the assigned `bridgePort`. `serviceEndpoint` is the hub router host.
+
+<FlavorYaml title="service-remote.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: checkout
+  namespace: my-ecn
+  tags:
+    - checkout
+spec:
+  type: microservice
+  resource: orders/checkout
+  targetPort: 8080
+  defaultBridge: default-router
+```
+
+</FlavorYaml>
+
+## Kubernetes control plane
+
+`servicePort` and `k8sType` are required for `microservice`, `agent`, and `external`. The Controller creates a Kubernetes Service that forwards `servicePort` to `bridgePort` on the router pods.
+
+`type: k8s` does not create that Kubernetes Service. `type: external` uses the same `servicePort` and `k8sType` as the example below. Set `resource` to a DNS name or IP outside the cluster.
+
+<FlavorYaml title="service-kubernetes.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Service
+metadata:
+  name: checkout
+  namespace: my-ecn
+  tags:
+    - checkout
+spec:
+  type: microservice
+  resource: orders/checkout
+  targetPort: 8080
+  servicePort: 80
+  k8sType: LoadBalancer
+  defaultBridge: default-router
+```
+
+</FlavorYaml>
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} deploy -f service.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> `-f`. There is no `apply`.
+
+Create returns `provisioningStatus: pending`. <CliName /> waits until the hub is `ready` or `failed`. `ready` means the hub connector, hub listener, and, when required, the Kubernetes Service succeeded. Listeners on tagged Edgelet nodes reconcile separately. After a successful deploy, those listeners may still be converging.
+
+`get services` shows type, resource, target port, bridge port, and status.
+
+`type` and `defaultBridge` cannot be changed. Delete and recreate. `bridgePort` is assigned once and kept. It is not a field you set in YAML.
+
+Redeploy the same file to change other fields, including `metadata.tags`. `describe service -o yaml` adds `bridgePort` and `serviceEndpoint`. Remove `bridgePort` before you deploy that export again.
+
+A microservice on the bridge network of a node that received the listener dials `router.default.svc.bridge.local` and `bridgePort`. See [Distribution tags](/learn/network/distribution).
+
+Put the microservice in the file before the Service that names it. <CliName /> also sorts kinds and deploys Service after Microservice. Set distribution tags on the Edgelet node when that node should listen. See [Distribution tags](/learn/network/distribution).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get services -n my-ecn
+{{CLI_NAME}} describe service checkout -n my-ecn
+{{CLI_NAME}} reconcile service checkout -n my-ecn
+{{CLI_NAME}} delete service checkout -n my-ecn`}</CliBlock>
+
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_get`}>get services</Link> shows live status.
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_service`}>describe service</Link> exports YAML.
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_reconcile_service`}>reconcile service</Link> retries a failed hub.
+- <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_service`}>delete service</Link> removes the Service.
+
+Delete removes the hub connector and the hub listener. It removes the Kubernetes Service when one was created. It reconciles Edgelet nodes that matched the old tags so those listeners drop.
+
+| Symptom | What to check |
+| ------- | ------------- |
+| No bridge port, or status `failed` | Run `reconcile service`. Read `provisioningError`. Confirm the backend node has a router. |
+| Connection refused | Use the bridge port from `get services`, on a node whose tags selected the Service. |
+| Listener on the wrong nodes | Service `metadata.tags` against the prefixed tags on each Edgelet node. |
+
+## Console
+
+Open **Network** for the list, the bridge port, and hub status. Edit YAML in the detail panel after the first <CliName /> deploy. See [Network](/get-started/edgeops-console/network).
+
+## Related
+
+- [Service fields](/reference/yaml/service)
+- [Distribution tags](/learn/network/distribution)
+- [TCP bridge](/learn/network/interconnection)
+- [Service interconnection](/reference/controller/service-interconnection)
+- [Router topology](/learn/network/router-topology)
+- [Edgelet nodes](/learn/edgelet-nodes)
+- Tutorial: [Diagnostic service](/tutorials/acme-smart-plant/diagnostic-service)
+
+<EditPageAdmonition />

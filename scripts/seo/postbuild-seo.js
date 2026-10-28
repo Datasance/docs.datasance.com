@@ -226,11 +226,11 @@ function generateLlmsTxt() {
   const lines = [
     `# ${PRODUCT_NAME} Documentation`,
     '',
-    '> Official docs for platform train v3.9.2. In-place upgrade from v3.9.0 and v3.8.0. A move from v3.7 field deployments is greenfield.',
+    '> Official docs for platform train v3.9.3. In-place upgrade from v3.9.0 and v3.8.0. A move from v3.7 field deployments is greenfield.',
     '',
     'Deploy a Control Plane on Kubernetes or remote hosts, connect Edgelet nodes, and run containerized microservices.',
     '',
-    `v3.9.2 upgrades in place from v3.9.0 and v3.8.0. A move from v3.7 needs a new Controller database, Edgelet v1.1.2 on every node, and ${CLI_NAME} v3.9.2. Legacy Java iofog-agent and v3.7 field agents are not supported on this Controller.`,
+    `v3.9.3 upgrades in place from v3.9.0 and v3.8.0. A move from v3.7 needs a new Controller database, Edgelet v1.1.3 on every node, and ${CLI_NAME} v3.9.3. Legacy Java iofog-agent and v3.7 field agents are not supported on this Controller.`,
     '',
     'The web UI is EdgeOps Console, embedded in the Controller image. Authentication defaults to embedded OIDC.',
     '',
@@ -257,7 +257,7 @@ function generateLlmsFullTxt() {
   const blocks = [
     `# ${PRODUCT_NAME} Documentation (full corpus)`,
     '',
-    '> Full text of the current v3.9.2 guides. Generated at build time. CLI command pages and OpenAPI specs are linked from llms.txt.',
+    '> Full text of the current v3.9.3 guides. Generated at build time. CLI command pages and OpenAPI specs are linked from llms.txt.',
     '',
   ];
 

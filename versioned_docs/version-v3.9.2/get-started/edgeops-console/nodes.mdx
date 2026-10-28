@@ -1,0 +1,326 @@
+---
+title: Nodes
+description: EdgeOps Console pages for Edgelet nodes, including the list, map, mesh graph, and the shared detail panel.
+keywords: [edgeops console, nodes, edgelet node, map, mesh, provision key]
+slug: /get-started/edgeops-console/nodes
+---
+
+import {REGISTRY} from '@site/src/config/distribution';
+import ConsoleIcon from '@site/src/components/console/ConsoleIcon';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Nodes
+
+The Nodes group is how you see Edgelet nodes and how they connect. Declare a node as `kind: Agent`. See [Edgelet node management](/get-started/edgelet-nodes/introduction).
+
+| Page | Address | Use it to |
+| --- | --- | --- |
+| Edgelet List | `/#/nodes/list` | Scan every Edgelet node and open its detail panel |
+| Edgelet Map | `/#/nodes/Map` | See Edgelet nodes that reported a location |
+| Mesh Graph | `/#/nodes/mesh-graph` | See router and NATS links |
+
+The detail panel is the same on the list, the map, and the mesh graph. It is documented once, after the three pages. The panel title is the Edgelet node name, or **Agent Details**.
+
+## Edgelet List
+
+![Edgelet List](/images/docs/edgeops-console/nodes-list.png)
+
+The page title is **Edgelet List**. The table lists every Edgelet node. System Edgelet nodes sort first, then names alphabetically. The list refreshes on the main polling interval.
+
+### Toolbar
+
+Search, plus the YAML dropzone. An uploaded `Agent` document updates that Edgelet node, and the list picks it up on the next poll. There is no Create button on this page. New Edgelet nodes join by provisioning. Existing ones are edited from the detail panel or by YAML.
+
+### Table
+
+| Column | What it shows |
+| --- | --- |
+| Name | Edgelet node name. This is the link that opens the detail panel. |
+| Status | Daemon status pill. An amber triangle means a CPU, memory, or disk limit violation. Hover the triangle for `Limit violation: …`. |
+| Host | Host name, or the IP address when the host name is empty |
+| Host OS | Operating system |
+| OS Version | OS version |
+| Host CPUs | Logical CPU count, as `{n} core` or `{n} cores` |
+| Architecture | Architecture label (auto, amd64, arm64, riscv64, arm) |
+| Edgelet CPU Usage | Edgelet CPU usage against its limit |
+| Edgelet Memory Usage | Edgelet memory usage against its limit |
+| Data Directory | Edgelet data-directory usage against its limit |
+| Host CPU Usage | Host CPU bar |
+| Host Memory | Host memory bar |
+| Host Disk (FS) | Host filesystem disk bar |
+| Version | Edgelet version string |
+
+![Name link](/images/docs/edgeops-console/nodes-list-name-link.png)
+
+Click **Name**. A link from another page that uses `?agentId=` opens the same panel when that Edgelet node is in the list.
+
+Host metric bars are inventory. They are not an Edge Guard attestation. The detail panel says this in a footnote.
+
+## Edgelet Map
+
+![Edgelet Map](/images/docs/edgeops-console/nodes-map.png)
+
+**Edgelet Map** plots Edgelet nodes that have latitude and longitude. Edgelet nodes without coordinates are absent from the map and from the selector.
+
+### What you can do
+
+- **Select an agent...** chooses an Edgelet node, flies the map to it, and opens the detail panel. Clear the selector to dismiss that choice.
+- Scroll to zoom. Drag to pan. The map opens framed on all markers, or on the Controller location when no markers have coordinates.
+- Click a marker to select it and zoom in. A card at the bottom shows the name, ID, and location.
+- **Detail** on that card opens the detail panel. Clicking the marker alone does not.
+- **Reset map view** (bottom-right) frames the markers again.
+
+![Marker card](/images/docs/edgeops-console/nodes-map-marker-card.png)
+
+Marker color:
+
+| Color | Meaning |
+| --- | --- |
+| Orange | Platform reconcile warning |
+| Green | Daemon is Running and healthy |
+| Amber | Running, with a warning that is not a healthy state |
+| Red | Not running |
+
+There is no YAML dropzone on the map.
+
+## Mesh Graph
+
+![Mesh Graph, Router](/images/docs/edgeops-console/nodes-mesh-router.png)
+
+![Mesh Graph, Message Fabric](/images/docs/edgeops-console/nodes-mesh-nats.png)
+
+**Mesh Graph** draws how nodes connect. It has two layers:
+
+- **Router.** Interior routers, edge routers, and hubs.
+- **Message Fabric.** NATS servers, leaves, and hubs.
+
+The subtitle shows `{n} nodes · {n} connections`, and the control-plane name when the summary includes one. **Refresh** reloads the summary and the active layer. A layer that is reloading shows **Refreshing…**.
+
+The graph does not use the main list poll. Use **Refresh**, or leave and come back, to pick up topology changes.
+
+### Filters
+
+![Mesh filters](/images/docs/edgeops-console/nodes-mesh-filters.png)
+
+Each layer keeps its own filters.
+
+- Role counts, from the full layer, sit on the first row.
+- `{n} degraded` counts topology nodes tied to an Edgelet node whose daemon is not Running. Otherwise the line says **All agents running**.
+- **Neighborhood focus** means a node is selected and the graph highlights its neighborhood. **Survey mode · select a node to focus** means nothing is selected.
+- The legend names link colors:
+  - Router: **Interior ↔ Interior**, **Edge → Interior**, **Interior → Hub**, **Edge → Hub**
+  - Message Fabric: **Leaf ↔ Server**, **Server ↔ Server**, **Server ↔ Hub**, **Leaf → Hub**
+- Role chips toggle which roles stay visible. Router roles are **default**, **edge**, and **interior**. Message Fabric roles are **hub**, **leaf**, and **server**.
+- **Type fog name, press Space or Enter…** adds a fog-name badge. Matching is a case-insensitive prefix of the fog name or the display name.
+- **Focus** (crosshair) centers the graph on the fog-name matches.
+- **Reset view** clears the selection and the filters.
+- **Clear filters** clears filters and leaves the selection behavior to reset separately when you use that control.
+- The count line reads **Showing `{visible}` / `{total}` nodes · `{connections}` connections**.
+
+If nothing matches, the canvas says **No nodes match the current filters.** A failed load shows the error and **Retry**.
+
+### The canvas
+
+Nodes show an icon, a title, and a role badge. A node tied to an Edgelet node also has a health dot: green when Running, amber for any other daemon status, gray when status is unknown. Zoomed in far enough, the host line appears under the title. The zoom label in the corner reads **Free drag · overview**, **standard**, or **detail**.
+
+Spoke nodes can collapse into a group (a users icon, **Click to expand**, and the upstream name). Click the group to expand it and focus that upstream node.
+
+Edges are bundled and colored by the legend. When you select or hover a node, the path toward the hub animates.
+
+You can:
+
+- Pan and zoom, including the minimap and the zoom controls.
+- Drag nodes. Positions stay until you click **Reset layout**.
+- Click a node to highlight its neighborhood and trace the path to the hub. That click also opens a detail panel (below).
+- Hover a node to preview the neighborhood when nothing is selected.
+- Click empty canvas to clear the selection and close both detail panels.
+
+### Which panel opens
+
+| The node has an Edgelet node id | Panel |
+| --- | --- |
+| Yes | The full Edgelet node detail panel |
+| No | The topology node panel |
+
+#### Topology node panel
+
+![Topology node panel](/images/docs/edgeops-console/nodes-mesh-topology-slideover.png)
+
+Title is the display name, or **Topology Node**. While the detail is loading, the title is **Loading…**. The header has <ConsoleIcon name="close" label="Close" /> and no other actions.
+
+| Field | Meaning |
+| --- | --- |
+| Display Name | Name drawn on the node |
+| Role | Router or NATS role |
+| Mode | Node mode |
+| Deployment | Where this node is deployed |
+| Host | Host, or **N/A** |
+| Connections | `{n} upstream · {n} downstream` |
+| Agent | When the node is tied to an Edgelet node: a link to Edgelet List that opens that node. The label is the fog name, or the id. |
+
+Router nodes can also show **Messaging port**, **Edge router port**, and **Inter-router port**.
+
+Message Fabric nodes can also show **Server port**, **Leaf port**, **Cluster port**, **MQTT port**, **HTTP port**, **JS storage**, and **JS memory store**.
+
+![Neighborhood focus](/images/docs/edgeops-console/nodes-mesh-focus.png)
+
+## Edgelet node detail panel
+
+Opened from Edgelet List, Edgelet Map (**Detail** or the selector), and Mesh Graph (a node that has an Edgelet node). The panel loads the full record when it opens, then keeps refreshing.
+
+![Edgelet node detail panel](/images/docs/edgeops-console/nodes-agent-slideover.png)
+
+Title is the Edgelet node name, or **Agent Details**.
+
+### Header icons
+
+<table>
+  <thead>
+    <tr>
+      <th>Icon</th>
+      <th>Name</th>
+      <th>What happens</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><ConsoleIcon name="terminal" label="Terminal" /></td>
+      <td>Terminal</td>
+      <td>If the daemon is not running, an error toast appears and nothing opens. If it is running, <strong>Configure Exec Session</strong> opens.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="logs" label="Logs" /></td>
+      <td>Logs</td>
+      <td><strong>Configure Log Viewing</strong>, then a log stream for this Edgelet node.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="provisionKey" label="Provision Key" /></td>
+      <td>Provision Key</td>
+      <td><strong>Provision Key</strong> for this Edgelet node.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="clean" label="Clean" /></td>
+      <td>Clean</td>
+      <td>Confirm prune.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="edit" label="Edit" /></td>
+      <td>Edit</td>
+      <td>YAML tab titled <code>AgentConfig YAML:</code> plus the node name. Save updates the Edgelet node.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="versionChange" label="Version change" /></td>
+      <td>Version change</td>
+      <td><strong>Version Change</strong>.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="restart" label="Restart" /></td>
+      <td>Restart</td>
+      <td>Confirm, then reboot the Edgelet node.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="delete" label="Delete" /></td>
+      <td>Delete</td>
+      <td>Confirm, then delete the Edgelet node.</td>
+    </tr>
+    <tr>
+      <td><ConsoleIcon name="close" label="Close" /></td>
+      <td>Close</td>
+      <td>Closes the panel.</td>
+    </tr>
+  </tbody>
+</table>
+
+These icons stay available on system and controller Edgelet nodes. Delete and version change add a stronger warning for those nodes. Attach, Detach, Publish, Start, and Stop are not on this panel.
+
+### Fields
+
+Sections, in order:
+
+1. Identity and health: uuid, **Status**, **Manual sync**, **Setup status**, **Last Error**, **Generation**, **Last Transition**, **Conditions**, **Security Status**, **Security Violation Info**, **Warning Message**, **Last Active**, **Description**, **Up Time**
+2. **Platform infrastructure** continues those platform fields where the layout groups them
+3. **Agent Details**: **Host**, **Version**, **Mode** (`System` or `Node`), **Deployment Type**, **Container Engine**, **Architecture**, **IP Address**, **IP Address External**, **Tags**, **Created**
+4. **Host**: **Logical CPUs**, **Host OS**, **OS version**, **Kernel** (Linux only; otherwise **N/A**), **Host CPU usage**, **Host memory**, **Host disk (FS)**. Footnote: *Host fields are informational inventory, not Edge Guard attestation.*
+5. **Edgelet stack**: **Edgelet CPU usage**, **CPU violation**, **Edgelet memory usage**, **Memory violation**, **Data directory**, **Data directory path**, **Disk violation**. Footnote: *Data directory usage is Edgelet policy storage, not the host filesystem totals above.*
+6. **Volume Mounts**
+7. **Applied Runtime Classes**
+8. **AI model status**
+9. **AI Knowledge status**
+10. **Status** (runtime): **Available Runtimes**, **Available CDI devices**, **Runtime Agent Phase**, **Control Plane Quiesced**, **GPS Status**, **Is Ready To Rollback**, **Is Ready To Upgrade**, **Last Status Time**
+11. **Applications**
+12. **Microservices**
+13. **System Applications**
+14. **System Microservices**
+
+**Manual sync** is the button **Sync now**. Its tooltip is *Re-applies router and NATS platform configuration for this node.* **Generation** shows observed generation over desired generation, and `(in progress)` while they differ. **Conditions** lists `type: status (reason)`. Violations are **Yes** or **No**.
+
+### Linked tables
+
+![Linked resources](/images/docs/edgeops-console/nodes-agent-slideover-links.png)
+
+Empty sections say **No volume mounts…**, **No microservices available.**, or **No resource found for this Edgelet node.**
+
+| Section | Columns | Blue links open |
+| --- | --- | --- |
+| Volume Mounts | Name, Version, Config Map Name, Secret Name | Volume Mounts, Config Maps, Secrets |
+| Applied Runtime Classes | Name, Handler, Source | Runtime Classes |
+| AI model status | Name, Source, State, Digest, Resolved Revision, Revision Floating, Total Bytes, Last Error | AI Model Catalog, when source is managed |
+| AI Knowledge status | Same shape as models | AI Knowledge Catalog, when source is managed |
+| Applications | Application Name, Status (`ACTIVE` / `INACTIVE`) | Application list, that application |
+| Microservices | Name, Status, Agent, Ports | Microservices list, that microservice |
+| System Applications | Application Name, Status | System Application list |
+| System Microservices | Name, Status, Agent, Ports | System Microservices list |
+
+Ports in the microservice tables render as `internal:external/protocol`.
+
+Models and knowledge are declared in [Models and knowledge](/get-started/workloads/models-and-knowledge). Volume mounts, config maps, and secrets are declared in [Config, secrets, and volumes](/get-started/workloads/config). Runtime classes are declared in [Runtime classes](/learn/config/runtime-classes).
+
+### Dialogs
+
+![Provision key](/images/docs/edgeops-console/nodes-provision-key.png)
+
+**Provision Key** for the Edgelet node loads the key, then shows:
+
+- **Expiration Time**
+- **Provision Key** with copy
+- **CA Certificate (Base64)** with copy, masked until revealed
+- **Provision Commands**, hidden until you reveal them. The commands configure the Edgelet node and run provision.
+
+Close dismisses the dialog.
+
+![Version change](/images/docs/edgeops-console/nodes-version-change.png)
+
+**Version Change** shows the current version. A critical Edgelet node (system, or one hosting the controller microservice) shows an extra warning. If neither upgrade nor rollback is ready, the dialog says so and both choices stay disabled with `(not ready)`.
+
+- **Command:** Upgrade or Rollback
+- **Target version (optional)**, placeholder `e.g. v1.0.0`
+- **Continue** opens a second confirm titled **Confirm version change**, with **Upgrade** or **Rollback**
+
+![Exec session](/images/docs/edgeops-console/nodes-exec-config.png)
+
+**Configure Exec Session**
+
+- **Action:** Enable Exec Session or Disable Exec Session
+- **Debugger Image (optional)** when enabling, placeholder <code>e.g., {REGISTRY}/debugger:latest</code>
+
+Enable starts a bottom-drawer tab **Agent Shell:** plus the node name. Disable ends the exec session. The drawer is described in [Console shell](/get-started/edgeops-console#bottom-drawer).
+
+![Log config](/images/docs/edgeops-console/nodes-log-config.png)
+
+**Configure Log Viewing**
+
+- **Tail Lines (1-10000)**
+- **Follow logs (stream new lines)**
+- **Advanced Options:** **Since (optional)**, **Until (optional)**
+- Presets: **Last 100 lines**, **Last 1000 lines**, **Last hour**, **All logs**
+- **View Logs** opens the stream in the bottom drawer
+
+**Restart** for the node uses the message *This action will restart the agent node.* Confirm with **Restart**.
+
+**Pruning Agent** confirms removal of unused images and local AI models and knowledge on that node. Fleet-managed copies are not removed. Confirm with **Prune**.
+
+**Deleting Agent** warns that the Edgelet node and the microservices and applications on it will be removed. A system or controller Edgelet node adds: *Warning: This is a system or controller agent…* Confirm with **Delete**.
+
+**Sync now** does not use that confirm dialog. It re-applies platform configuration and then refreshes the panel.
+
+<EditPageAdmonition />

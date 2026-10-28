@@ -1,0 +1,45 @@
+---
+title: Config, secrets, and volumes
+description: Config maps hold plain config, secrets hold sensitive values, volume mounts attach them to a node, and volumes stage a host directory.
+keywords: [config map, secret, volume mount, volume, valueFromConfigMap, valueFromSecret, edgelet node]
+slug: /get-started/workloads/config
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Config, secrets, and volumes
+
+Workloads read settings from a few small objects. Deploy those objects before the microservice that names them. Use <CliName /> `deploy -f`.
+
+A **config map** is plain config: feature flags, log levels, endpoints, and other values you can treat as non-secret. A **secret** is sensitive values: passwords, tokens, and key material. Both are stored on the <ProductName /> control plane under a name. The bytes live in a `data` block next to `metadata`, not under `spec`.
+
+A microservice reads them with `valueFromConfigMap` and `valueFromSecret` on `container.env`. The value is `name/key`, the object name and the key inside `data`.
+
+<FlavorYaml title="reader">{`---
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  container:
+    env:
+      - key: LOG_LEVEL
+        valueFromConfigMap: app-settings/log_level
+`}</FlavorYaml>
+
+`valueFromSecret` uses the same `name/key` shape when the value comes from a secret. Put secrets and config maps in the file before any microservice that references them.
+
+A **volume mount** attaches one secret or one config map onto the Edgelet node. Use one backing object on the mount. The microservice then mounts that name into the container as files. Deploy the secret or config map first, then the volume mount, then the microservice. The mount follows the microservice onto that Edgelet node.
+
+A **volume** is a different object. It stages a host directory from the machine where you run the CLI onto Edgelet nodes. A microservice can mount that directory by name. Volume mounts and volumes are different objects: a volume mount publishes a secret or config map, and a volume copies a directory you already have on disk. Directory staging is described in [Volume distribution](/get-started/edgelet-nodes/volume-distribution).
+
+## Go deeper
+
+- [Config maps](/learn/config/config-maps)
+- [Secrets](/learn/config/secrets)
+- [Volume mounts](/learn/config/volume-mounts)
+
+<EditPageAdmonition />

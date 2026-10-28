@@ -1,0 +1,82 @@
+---
+title: Registry fields
+description: Field reference for kind Registry. URL, type, credentials, private CA, and the id used on update.
+keywords: [registry, yaml, fields, oci, hf, ca, insecure]
+slug: /reference/yaml/registry
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Registry fields
+
+Reference for `kind: Registry`. Deploy and the built-in aliases are on [Registries](/learn/config/registries).
+
+Unknown keys fail at deploy. Retired keys `requiresCert`, `isSecure`, and `certificate` fail the same way.
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Registry # required, string
+metadata:
+  namespace: my-ecn # no, string. Must match -n when both are set
+spec:
+  url: https://registry.example.com # required, string
+  private: false # no, bool, default false
+  type: oci # no, string, default oci. oci or hf
+  username: pull-user # conditional, string. Required with password for private oci
+  password: pull-token # conditional, string. Required for private oci and private hf
+  email: ops@example.com # no, string
+  ca: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t # no, string. Base64 PEM. A file path is rejected
+  insecure: false # no, bool
+  id: 0 # update, int. Omit or 0 on create. Greater than 0 on update
+```
+
+</FlavorYaml>
+
+`metadata.namespace` must match `-n` when both are set. Describe output has no `metadata.name`.
+
+## Fields
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `url` | string | Yes | Registry host or URL. |
+| `private` | bool | No | Default `false`. `true` stores a private registry and applies the credential rules below. |
+| `type` | string | No | Default `oci`. Allowed: `oci`, `hf`. Compared after lowercasing. |
+| `username` | string | Conditional | Private `oci`: required with `password`. Private `hf`: optional. |
+| `password` | string | Conditional | Private `oci`: required with `username`. Private `hf`: required token. |
+| `email` | string | No | Optional for both types. |
+| `ca` | string | No | Private CA as one base64 string of the PEM. A file path is rejected. |
+| `insecure` | bool | No | Skip TLS verification when `true`. |
+| `id` | int | Update | Create: omit or `0`. Update: the Controller id, greater than `0`. |
+
+## Validation
+
+| Condition | Error |
+| --------- | ----- |
+| Empty `url` | URL cannot be empty. |
+| `type` other than `oci` or `hf` | type must be oci or hf. |
+| Private `oci` without username and password | Username and password are required. |
+| Private `hf` without password | Password cannot be empty for private hf registry. |
+| `requiresCert`, `isSecure`, or `certificate` | Strict unmarshal failure. |
+
+The Controller can also return 400 or 409. The CLI prints that body.
+
+## Create and update
+
+On create, omit `spec.id`. Run `get registries` and copy the assigned id.
+
+On update, set `spec.id` and send the full intent for `url`, `type`, `private`, credentials, `ca`, and `insecure`. Omitted pointer fields can be sent as null.
+
+Describe includes `id`, `url`, `private`, `type`, `username`, `email`, `ca`, `insecure`, and `password`.
+
+## Retired keys
+
+| Removed key | Use instead |
+| ----------- | ----------- |
+| `isSecure` | `type`, `ca`, `insecure` |
+| `requiresCert` | `ca` |
+| `certificate` | `ca` |
+
+<EditPageAdmonition />

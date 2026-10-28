@@ -1,7 +1,7 @@
 ---
 title: What's New
-description: Platform train v3.9.2 security patch. In-place upgrade from v3.9.1, v3.9.0, or v3.8.0. Optional auth.issuerCa. Edgelet 1.1.2. NATS wrapper 2.15.1-1. EdgeOps Console stays 1.1.1.
-keywords: [pot v3.9, release notes, whats new, v3.9.2, edgelet 1.1.2, nats 2.15.1, issuerCa, upgrade]
+description: Platform train v3.9.3. Supplemental groups on microservices, Edgelet v1.1.3, NATS 2.15.2, EdgeOps Console v1.1.2, and interactive exec.
+keywords: [pot v3.9, release notes, whats new, v3.9.3, supplementalGroups, edgelet 1.1.3, nats 2.15.2, edgeops console 1.1.2]
 ---
 
 import ProductName from '@site/src/components/flavor/ProductName';
@@ -11,85 +11,129 @@ import { CLI_NAME } from '@site/src/config/distribution';
 
 # What's New in <ProductName />
 
-:::info[Upgrade from v3.9.1, v3.9.0, or v3.8.0]
+:::info[Upgrade from v3.9.2, v3.9.1, v3.9.0, or v3.8.0]
 
-**v3.9.2** stays on the same Controller database. There is no schema or API change. No Control Plane YAML key was removed.
+**v3.9.3** stays on the same Controller database. Startup adds the microservice supplemental groups column. No Control Plane YAML key was removed.
 
-From **v3.9.1** or **v3.9.0**, bump image tags and roll **Edgelet v1.1.2**. From **v3.8.0**, use the same tags and move straight to **v3.9.2**. You also pick up the v3.9 catalogs and registry fields.
+From **v3.9.2**, **v3.9.1**, or **v3.9.0**, bump image tags and roll **Edgelet v1.1.3**. From **v3.8.0**, use the same tags and move straight to **v3.9.3**. You also pick up the v3.9 catalogs and registry fields.
 
-If your external issuer certificate is signed by a private CA, set **`auth.issuerCa`** before you roll the operator. A public CA needs no new field. On Kubernetes, rewrite a saved Helm values file to the flat **3.9.2** keys before `helm upgrade`.
+If you skipped **v3.9.2** and the external issuer uses a private CA, set **`auth.issuerCa`** before you roll the operator. A public CA needs no new field. On Kubernetes, a Helm values file from chart **3.9.1** still needs the flat keys before `helm upgrade`. Chart **3.9.2** values stay valid.
 
-See [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9). **v3.7.x and older** still move to **v3.8.0** first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+If a NATS leaf relied on an implicit allow for `$MQTT.>`, add an explicit MQTT permission before you roll the **2.15.2** image.
+
+See [Upgrading to v3.9.3](/release-notes/upgrading-to-v3-9). **v3.7.x and older** still move to **v3.8.0** first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
 
 :::
 
-**v3.9.2** is a security patch on the v3.9 train. Pair **Controller v3.9.2**, **{CLI_NAME} v3.9.2**, **Edgelet v1.1.2**, **Operator v3.9.2**, **Router v3.9.2**, and **NATS wrapper 2.15.1-1**. **EdgeOps Console** stays **v1.1.1**.
+**v3.9.3** adds host group IDs on microservices and refreshes the component pins. Pair **Controller v3.9.3**, **{CLI_NAME} v3.9.3**, **Edgelet v1.1.3**, **Operator v3.9.3**, **Router v3.9.3**, **NATS 2.15.2**, **EdgeOps Console v1.1.2**, and **Go SDK v3.9.3**.
 
-- [**Platform train v3.9.2**](#platform-train-v392) lists the pins.
-- [**Security rebuild**](#security-patch) rebuilds Go components on Go 1.26.10 and tightens Controller and operator checks.
-- [**Private issuer CA**](#private-issuer-ca) adds optional **`auth.issuerCa`**. Certificate checks stay on.
-- [**Helm values**](#helm-values) are a flat install form. `values.schema.json` is gone.
-- [**NATS 2.15.1-1**](#nats-and-router-pins) rebuilds the wrapper. Embedded NATS Server stays 2.15.1.
-- [**Edgelet v1.1.2**](#edgelet-v112) passes **`issuerCa`** into the Controller. No Edgelet API change.
-- [**EdgeOps Console**](#edgeops-console) stays **v1.1.1**.
+- [**Platform train v3.9.3**](#platform-train-v393) lists the pins.
+- [**Supplemental groups**](#supplemental-groups) let a non-root process join the group that owns a device node.
+- [**Interactive exec**](#interactive-exec) uses the remote PTY for stdin and window size.
+- [**Embedded auth users**](#embedded-auth-users) can be created again with the same email after delete.
+- [**NATS 2.15.2**](#nats-2152) embeds upstream NATS Server 2.15.2. Leaf ACLs no longer imply `$MQTT.>`.
+- [**Edgelet v1.1.3**](#edgelet-v113) applies the group list and the exec session fixes.
+- [**EdgeOps Console v1.1.2**](#edgeops-console) edits supplemental groups and resizes shell tabs.
 - [**v3.9 features**](#ai-model-and-knowledge-catalogs) (Model and Knowledge catalogs, registry `type`, container fields) still apply when you come from v3.8.0.
 - [**Upgrade and migration paths**](#upgrade-and-migration-paths) summarize who can move in place.
-- [**v3.8 foundation**](#v38-foundation) (Edgelet-only nodes, embedded OIDC, WebSocket exec) remains documented in the [v3.8.0 snapshot](/v3.8.0/).
 
-## Platform train v3.9.2
+## Platform train v3.9.3
 
-| Component | v3.9.2 default |
+| Component | v3.9.3 default |
 | --------- | -------------- |
-| Platform | **v3.9.2** |
-| Controller | v3.9.2 |
-| {CLI_NAME} | v3.9.2 |
-| Operator | v3.9.2 (Helm chart `3.9.2`) |
-| Router (wrapper image) | v3.9.2 (Skupper **3.5.3** inside) |
-| NATS (wrapper image) | **2.15.1-1** (upstream NATS **2.15.1**) |
-| Edgelet | **v1.1.2** (image `1.1.2`) |
-| EdgeOps Console | **v1.1.1** (unchanged) |
-| Go SDK | v3.9.2 |
+| Platform | **v3.9.3** |
+| Controller | v3.9.3 |
+| {CLI_NAME} | v3.9.3 |
+| Operator | v3.9.3 (Helm chart `3.9.3`) |
+| Router (wrapper image) | v3.9.3 (Skupper **3.5.3** inside) |
+| NATS (wrapper image) | **2.15.2** (upstream NATS Server **2.15.2**) |
+| Edgelet | **v1.1.3** (image `1.1.3`) |
+| EdgeOps Console | **v1.1.2** (embedded in the Controller image) |
+| Go SDK | v3.9.3 |
 
-Pins and YAML keys: [Control plane](/learn/control-plane#default-image-pins-v390). Steps: [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9).
+Pins and YAML keys: [Control plane](/learn/control-plane#default-image-pins-v390). Steps: [Upgrading to v3.9.3](/release-notes/upgrading-to-v3-9).
 
-## Security patch
+## Supplemental groups
 
-Control plane images, <CliName />, the operator, the Router wrapper, Edgelet, the Go SDK, and the NATS wrapper are rebuilt on **Go 1.26.10**. That toolchain clears [GO-2026-6809](https://pkg.go.dev/vuln/GO-2026-6809) (`crypto/x509` distrust of compromised intermediate certificates).
+`container.supplementalGroups` is a list of numeric host group IDs on a microservice. It is separate from `runAsGroup`, which stays the primary GID. A non-root process can join the group that owns a device node without `isPrivileged: true`.
 
-The Controller image is Node.js. This patch does two checks there:
+```yaml
+container:
+  runAsUser: "1000"
+  runAsGroup: "1000"
+  supplementalGroups:
+    - 44
+```
 
-- User exec and log WebSocket upgrades verify the access token (signature, issuer, audience, and expiry) before RBAC. Agent sockets still use the fog token.
-- Liquid substitution on `POST`, `PUT`, and `PATCH` runs only after RBAC. The engine refuses template file reads, and it rejects a `range` wider than 10,000 or a render that passes 100,000 `for` iterations.
+| Rule | Behavior |
+| ---- | -------- |
+| Shape | At most 16 unique whole numbers from 0 through 4294967295. Names, duplicates, negatives, and non-integers are rejected. |
+| Stored order | The Controller sorts the ids ascending and returns them in that order. |
+| Key omitted on update | The stored list stays. |
+| `[]` | Clears the stored list. |
+| List changes | That workload is recreated. |
 
-The operator verifies TLS on Controller API calls and on external issuer login. The minimum version is TLS 1.2. When `controller.https` is set, the certificate must match the `publicUrl` host. The operator still dials the in-cluster Service.
+`describe` prints the key, including an empty list, so the next apply matches the Controller. The agent microservice list always includes `supplementalGroups`. `[]` means none.
 
-No YAML keys were removed. The new field is optional. The [Controller API](/api/v3.9.0/controller) and [Edgelet API](/api/v1.1.0/edgelet) pages stay on those paths.
+The Controller adds column `supplemental_groups` on sqlite, mysql, and postgres during startup. Existing microservices start with no extra groups.
 
-## Private issuer CA
+See [Microservices](/learn/workloads/microservices#supplemental-groups) and [Microservice fields](/reference/yaml/microservice#supplemental-groups).
 
-External mode can trust an HTTPS issuer signed by a private CA without turning certificate checks off.
+## Interactive exec
 
-Set **`auth.issuerCa`** to the standard base64 of a PEM CA, or of a concatenated PEM bundle. Leave it empty for a public CA. Embedded mode ignores the field.
+<CliName /> **v3.9.3** forwards stdin to the remote PTY. Ctrl+C, Ctrl+D, `exit`, and `logout` go to the remote shell. The local session ends when the remote side closes, or when local stdin reaches EOF.
 
-| Surface | Field | Controller setting |
-| ------- | ----- | ------------------ |
-| ControlPlane custom resource, Helm `auth.issuerCa`, and <CliName /> YAML | `auth.issuerCa` | `OIDC_ISSUER_TLS_BASE64_CA` |
-| Edgelet control-plane manifest | `spec.auth.issuerCa` | `OIDC_ISSUER_TLS_BASE64_CA` |
-| Controller config file | `auth.issuer.tls.path.ca` or `auth.issuer.tls.base64.ca` | `OIDC_ISSUER_TLS_PATH_CA` or `OIDC_ISSUER_TLS_BASE64_CA`. Path wins when both are set |
+The CLI sends the terminal size when the session starts. On Unix it sends a new size when the window changes. Windows sends the size once.
 
-<CliName /> **v3.9.2** passes `issuerCa` on Kubernetes, local, and remote control plane YAML. There are no new CLI commands.
+Edgelet accepts a resize frame after the shell has started: `{"type":"resize","cols":N,"rows":M}`. Columns run from 2 through 4096. Rows run from 1 through 4096. When the shell finishes, remaining output is sent before the close frame.
 
-[Find out more!](/get-started/deploy/external-oidc), [Controller configuration](/reference/controller/controller-config), and [Control plane YAML](/reference/yaml/kubernetes-control-plane).
+See [Logs and exec](/learn/workloads/debugging) and [Exec sessions](/learn/edgelet/exec-sessions).
 
-## Helm values
+## Embedded auth users
 
-Helm chart **3.9.2** takes a flat values file. `auth`, `images`, `database`, `services`, `controller`, `nats`, `vault`, and `events` are top-level keys. The chart always installs the CRD, RBAC, and one ControlPlane.
+Deleting a built-in user removes the account. You can create a user with that email again. A row left by an earlier soft delete is removed when that email is claimed. The bootstrap admin and the signed-in account cannot be deleted.
 
-`values.schema.json` is removed. `marketplace-values.yaml` is the marketplace form. Do not pass it as a second `-f` file.
+See [Identity and sign-in](/get-started/edgeops-console/identity).
 
-A values file from chart 3.9.1 uses `controlplane.spec`. Rewrite it before `helm upgrade`. `services.nats.type` now defaults to **LoadBalancer**. `services.natsServer.type` defaults to **ClusterIP**, so the non-TLS client port is not published. `nats.memoryStoreSize` and `nats.storageSize` are whole numbers of Gi.
+## NATS 2.15.2
 
-[Find out more!](/get-started/deploy/kubernetes-helm).
+**NATS** image tag **`2.15.2`** embeds upstream **[NATS Server 2.15.2](https://github.com/nats-io/nats-server/releases/tag/v2.15.2)**. Wrapper `NATS_*` settings are unchanged. Go stays **1.26.10**.
+
+This upstream release fixes auth-callout allowed connection types, a queue-subscription weight amplification, OCSP responses bound to the wrong certificate serial, leafnode ACLs that implicitly allowed `$MQTT.>`, and MQTT OCSP ignoring `ocsp_peer`.
+
+Leafnode ACLs no longer add an implicit allow for `$MQTT.>`. If a leaf relied on that allow, add an explicit MQTT permission before you roll the image.
+
+**Router** image tag **`3.9.3`** still embeds **Skupper Router 3.5.3**. The wrapper behavior is unchanged. The operator image and Helm chart move to **3.9.3** with the same flat values file as chart **3.9.2**.
+
+See [NATS Server](/learn/platform-components/nats-server), [Router](/learn/platform-components/router), and [Kubernetes with Helm](/get-started/deploy/kubernetes-helm).
+
+## Edgelet v1.1.3
+
+**Edgelet v1.1.3** pairs with **Controller v3.9.3**. Upgrade fleet nodes after you roll the control plane. Default image: **`edgelet:1.1.3`** on your flavor registry.
+
+Local deploy and Controller-managed workloads accept `supplementalGroups`. Omitting the field leaves an existing workload unchanged. Changing the list recreates that container. Docker and Podman receive the ids as extra groups. The primary user and group stay as written.
+
+Each published binary ships a CycloneDX file and an SPDX file next to the binary.
+
+Upgrade on a node:
+
+```bash
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.3
+```
+
+Or use **`upgrade agent`** as described in [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
+
+See [Edgelet nodes](/learn/edgelet-nodes), [Edgelet introduction](/learn/edgelet), and [Edgelet management](/get-started/edgelet-nodes/introduction).
+
+## EdgeOps Console
+
+**EdgeOps Console v1.1.2** ships embedded in the Controller image (default port **8008**). The YAML editor and the microservice detail panel keep **Supplemental Groups** separate from **Run As Group**.
+
+Shell tabs use the remote terminal size. The visible tab owns that size, and a resize updates the session.
+
+Open with <code>{CLI_NAME} view</code> or **`controller.consoleUrl`**.
+
+See [EdgeOps Console](/get-started/edgeops-console), [Console features](/get-started/edgeops-console/overview), and [Workloads](/get-started/edgeops-console/workloads).
 
 ## AI Model and Knowledge catalogs
 
@@ -104,82 +148,39 @@ Console path: **Config → AI Model Catalog** and **Config → AI Knowledge Cata
 
 Edgelet nodes can also hold local **`edgelet.iofog.org/v1`** models for lab workflows. Fleet operators usually use the Controller catalog.
 
-[Find out more!](/learn/config/ai-model-catalog), [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog), and [Microservices - models and knowledge](/learn/workloads/microservices#v39-container-models-and-knowledge).
+See [AI Model Catalog](/learn/config/ai-model-catalog), [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog), and [Microservices](/learn/workloads/microservices#v39-container-models-and-knowledge).
 
 ## Registries (OCI and Hugging Face)
 
-Registry rows now declare a backend with **`spec.type`**: **`oci`** (container registries) or **`hf`** (Hugging Face Hub). Private Hub pulls use a token in **`password`**.
+Registry rows declare a backend with **`spec.type`**: **`oci`** (container registries) or **`hf`** (Hugging Face Hub). Private Hub pulls use a token in **`password`**.
 
 v3.9 removes **`requiresCert`**, **`certificate`**, and **`isSecure`**. Use optional **`ca`** (PEM or base64) and **`insecure`** for lab TLS instead.
 
 Microservices and catalog items reference registries by numeric ID or aliases **`remote`** / **`local`**.
 
-[Find out more!](/learn/config/registries) and [Catalog microservices](/learn/config/catalog-microservices).
+See [Registries](/learn/config/registries) and [Catalog microservices](/learn/config/catalog-microservices).
 
 ## Microservice container fields
 
-**`spec.container`** on microservices expands for parity with OCI runtime options:
+**`spec.container`** on microservices includes OCI runtime options:
 
 - Resource limits: **`cpus`**, **`memoryReservation`**, **`memorySwap`**, **`shmSize`**
-- Security: **`runAsGroup`**, **`readOnlyRootFilesystem`**, **`capAdd`** / **`capDrop`**
+- Security: **`runAsGroup`**, **`supplementalGroups`**, **`readOnlyRootFilesystem`**, **`capAdd`** / **`capDrop`**
 - Devices and mounts: **`devices`**, **`tmpfs`**, **`cdiDevices`**, volume **`scope`** for named volumes
 - Process: **`workingDir`**, **`entrypoint`**, **`commands`**, **`ulimits`**, **`sysctls`**
 
 Wasm and alternate runtimes still use **`container.platform`** and **`container.runtime`** with [runtime classes](/learn/config/runtime-classes).
 
-[Find out more!](/learn/workloads/microservices) and [Microservice fields](/reference/yaml/microservice).
-
-## Edgelet v1.1.2
-
-**Edgelet v1.1.2** pairs with **Controller v3.9.2**. Upgrade fleet nodes after you roll the control plane. Default image: **`edgelet:1.1.2`** on your flavor registry. There is no Edgelet API change in this patch.
-
-On an Edgelet control-plane manifest, optional **`spec.auth.issuerCa`** sets **`OIDC_ISSUER_TLS_BASE64_CA`** on the Controller container. The field is redacted in `edgelet controlplane get --manifest`.
-
-A later `install.sh --upgrade` on the host keeps the CLI flavor's Edgelet repository.
-
-Agent YAML changes when you move from v3.8.0:
-
-- Removed: **`deviceScanFrequency`**, **`bluetoothEnabled`**, **`abstractedHardwareEnabled`**
-- Use **`edgeGuardFrequency`** when you need hardware attestation ([EdgeGuard](/learn/edgelet-nodes#edgeguard))
-
-Upgrade on a node:
-
-```bash
-sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.2
-```
-
-Or use **`upgrade agent`** as described in [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
-
-[Find out more!](/learn/edgelet-nodes), [Edgelet introduction](/learn/edgelet), and [Edgelet management](/get-started/edgelet-nodes/introduction).
-
-## EdgeOps Console
-
-**EdgeOps Console v1.1.1** is unchanged in this patch. It still ships embedded in the Controller image (default port **8008**). The API tab loads **Scalar**.
-
-v3.9 still includes editors for AI catalogs, registry **`type`**, and cluster config flows.
-
-Open with <code>{CLI_NAME} view</code> or **`controller.consoleUrl`**.
-
-[Find out more!](/get-started/edgeops-console), [Console features](/get-started/edgeops-console/overview), and [Operate overview](/learn/operate).
-
-## NATS and Router pins
-
-**NATS** wrapper image tag **`2.15.1-1`** rebuilds the wrapper and embedded **[NATS Server 2.15.1](https://github.com/nats-io/nats-server)** with Go 1.26.10. The embedded server version is unchanged. Volume mounts, JWT provisioning, and `NATS_*` settings match v3.9.1.
-
-On Kubernetes, an empty **`services.natsServer.type`** is **ClusterIP**. The non-TLS client port is not published when you omit the type.
-
-**Router** wrapper image tag **`3.9.2`** embeds **Skupper Router 3.5.3** (unchanged from v3.9.1). The wrapper behavior is unchanged.
-
-[Find out more!](/learn/platform-components/nats-server), [Router](/learn/platform-components/router), and [Message bus in Learn](/learn/message-bus).
+See [Microservices](/learn/workloads/microservices) and [Microservice fields](/reference/yaml/microservice).
 
 ## Upgrade and migration paths
 
 | Starting version | Path |
 | ---------------- | ---- |
-| **v3.9.1** or **v3.9.0** | In-place tag bump: [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9) |
-| **v3.8.0** | In-place upgrade: [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9) |
+| **v3.9.2**, **v3.9.1**, or **v3.9.0** | In-place tag bump: [Upgrading to v3.9.3](/release-notes/upgrading-to-v3-9) |
+| **v3.8.0** | In-place upgrade: [Upgrading to v3.9.3](/release-notes/upgrading-to-v3-9) |
 | **v3.7.x or v1.6.x** | Greenfield to v3.8 first: [Migrating to v3.8.0](/release-notes/migrating-to-v3-8), [Documentation archive](/reference/documentation-archive) |
-| **Greenfield v3.9.2** | [Quick start (local)](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction) |
+| **Greenfield v3.9.3** | [Quick start (local)](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction) |
 
 After upgrade, reconcile stalled platform microservices on Controller hosts if Router or NATS pods look stale: [Reconcile](/get-started/edgelet-nodes/reconcile).
 
@@ -191,11 +192,11 @@ New to the platform? Start with [Welcome](/), [Learn](/learn), and the [Acme Sma
 
 ## CLI and Go SDK
 
-**{CLI_NAME} v3.9.2** is the same CLI as v3.9.1, rebuilt for the Go 1.26.10 security fixes. It passes **`auth.issuerCa`** through on control plane deploy YAML. Catalog commands for **Model** and **Knowledge**, registry describe output with **`type`**, and deploy validation for v3.9 YAML are unchanged. Config directory remains **`~/.iofog/v3`**.
+**{CLI_NAME} v3.9.3** passes `container.supplementalGroups` through on deploy and describe for Application, Microservice, and MicroserviceTemplate YAML. Interactive exec uses the remote PTY, as described above. Config directory remains **`~/.iofog/v3`**.
 
-**Go SDK v3.9.2** tracks the same Controller API and catalog kinds. The module rebuild picks up the same Go 1.26.10 fix.
+**Go SDK v3.9.3** adds `supplementalGroups` on the microservice container. GET returns an array (`[]` when there are none). On YAML, omit the key to leave the stored list unchanged. An empty list clears it.
 
-[Find out more!](/get-started/cli/introduction), [{CLI_NAME} getting familiar](/get-started/cli/getting-familiar), and [Go SDK](/learn/platform-components/sdk).
+See [CLI introduction](/get-started/cli/introduction), [{CLI_NAME} getting familiar](/get-started/cli/getting-familiar), and [Go SDK](/learn/platform-components/sdk).
 
 import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
 

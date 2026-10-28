@@ -1,0 +1,60 @@
+---
+title: Verify
+description: Confirm wafer-defect is linked on edge-c, inspections arrive, and the snapshot gallery opens.
+keywords: [tutorial, edge ai, verify, wafer-defect, snapshot gallery]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Verify
+
+## Goal
+
+Confirm the example is working. The snapshot service is already deployed.
+
+## Model on edge-c
+
+<CliBlock>{`{{CLI_NAME}} describe model wafer-defect`}</CliBlock>
+
+The model is linked to **edge-c**. That link was created when vision inspection deployed object-detector with `spec.models` set to `wafer-defect`.
+
+## object-detector
+
+<CliBlock>{`{{CLI_NAME}} describe microservice object-detector`}</CliBlock>
+
+The microservice is running. `MODEL_PATH` is `/models/wafer-defect/wafer-defect.onnx`.
+
+Logs show ONNX load success, then a defect class and confidence on `vision.inspections.fab-01`.
+
+## Gallery
+
+<CliBlock>{`{{CLI_NAME}} describe service snapshot-service`}</CliBlock>
+
+Open `http://router.default.svc.bridge.local:<snapshot-bridge-port>/` with the `bridgePort` from that command.
+
+You should see the latest inspection. An empty gallery usually means object-detector has not published yet.
+
+```bash
+curl -s "http://router.default.svc.bridge.local:<snapshot-bridge-port>/inspections/latest"
+```
+
+### Open Snapshot Service Dashboard unavailable
+![UI-1](/images/docs/tutorials/edge-ai-snapshot.png)
+
+![UI-2](/images/docs/tutorials/edge-ai-snapshot-2.png)
+
+The JSON body includes a defect class and a confidence value.
+
+## If something is missing
+
+| What you see | What to check |
+| --- | --- |
+| Model is not linked to **edge-c** | Catalog row, OCI registry id, and `agent.name` on object-detector |
+| object-detector is not running | `MODEL_PATH` is `/models/wafer-defect/wafer-defect.onnx`, and the node can reach GHCR |
+| No inspections | frame-generator and object-detector use the same `LINE_ID` (`fab-01`) |
+| Gallery URL fails | `bridgePort` from `describe service snapshot-service`, and `targetPort` **8083** |
+
+The plant dashboard can open this gallery after both examples are deployed. That optional page is [Fab gallery link](/tutorials/acme-smart-plant/fab-gallery-link). It is part of the plant example.
+
+<EditPageAdmonition />

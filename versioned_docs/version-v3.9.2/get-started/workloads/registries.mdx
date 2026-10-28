@@ -1,0 +1,42 @@
+---
+title: Registries and catalog
+description: A registry is where images and artifacts are pulled from. A catalog item is the multi-arch image set a microservice runs.
+keywords: [registry, catalog item, oci, huggingface, multi-arch, microservice image]
+slug: /get-started/workloads/registries
+---
+
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Registries and catalog
+
+A **registry** is where <ProductName /> pulls images and artifacts from. The type is `oci` for a container registry, or `hf` for a Hugging Face hub. The control plane stores the URL and, when the registry is private, the credentials. Catalog items, models, and knowledge artifacts refer to that registry. They do not each store a copy of the login.
+
+Create the registry before any catalog item that uses it. If the registry is new, deploy it first, then note the id the control plane assigns. A later file can use that id. Built-in aliases `remote` and `local` already exist for the default public pull path and for images loaded on the node.
+
+A **catalog item** is the multi-arch image set a microservice runs. You record the image once for each architecture you care about (`amd64`, `arm64`, and others). Many microservices can share that item. The Edgelet node pulls the tag that matches its architecture.
+
+A microservice points at the catalog item instead of pinning a registry image by hand. Set `images.catalogId` to the catalog item. The service definition stays free of per-arch tags and registry ids.
+
+<FlavorYaml title="reader">{`---
+apiVersion: {{API_VERSION}}
+kind: CatalogItem
+metadata:
+  name: reader
+spec:
+  registry: remote
+  amd64: {{REGISTRY}}/reader:1.0.0
+`}</FlavorYaml>
+
+`spec.registry` is the pull source for this image set. The catalog item is identified by `metadata.name`. Deploy it before any microservice that names it, with <CliName /> `deploy -f`.
+
+The platform also ships catalog items for its own router, NATS, and debug containers. Leave those in place. Add your own items for the applications you deploy.
+
+## Go deeper
+
+- [Registries](/learn/config/registries)
+- [Catalog microservices](/learn/config/catalog-microservices)
+
+<EditPageAdmonition />

@@ -1,0 +1,79 @@
+---
+title: Knowledge fields
+description: Field reference for kind Knowledge. Repo, registry, revision, files, and format.
+keywords: [knowledge, yaml, fields, registry, repo, revision]
+slug: /reference/yaml/knowledge
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Knowledge fields
+
+Reference for `kind: Knowledge`. The field shape matches [Model fields](/reference/yaml/model). Attach and microservice binding are on [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: Knowledge # required, string
+metadata:
+  name: product-docs # required, string. Lowercase alphanumeric
+  namespace: my-ecn # no, string
+spec:
+  repo: org/product-docs # required, string
+  registry: remote # one of, string. Keep one of registry or registryId, or set both to the same id
+  registryId: 1 # one of, int
+  revision: main # no, string
+  files: # no, list of string
+    - docs/*.md
+  format: jsonl # no, string
+```
+
+</FlavorYaml>
+
+## Not deployed
+
+These fields come back from describe. Leave them out of the file you pass to deploy.
+
+```yaml
+spec:
+  uuid: "<uuid>" # describe only, string
+status:
+  linkedAgents: [] # describe only
+```
+
+
+`metadata.name` is required. Use a lowercase alphanumeric name.
+
+## Fields
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `repo` | string | Yes | Repository path for documents or datasets. |
+| `registry` | string | One of | `remote` (id 1), `local` (id 2), or a numeric id as a string. |
+| `registryId` | int | One of | Numeric Controller registry id. |
+| `revision` | string | No | Tag, digest, or content pin. |
+| `files` | string list | No | File paths or globs inside the repo. |
+| `format` | string | No | Format hint, such as `jsonl`. The Controller validates it. |
+| `uuid` | string | Describe only | Omit on deploy. |
+
+When both `registry` and `registryId` are set, they must be the same id. Alias rules match the model object.
+
+## Validation
+
+| Condition | Error |
+| --------- | ----- |
+| Missing `metadata.name` | Name must be specified. |
+| Invalid name | Lowercase alphanumeric. |
+| Missing `repo` | repo must be specified. |
+| Missing registry | spec.registry or spec.registryId must be specified. |
+| Conflicting registry fields | The two fields must refer to the same registry. |
+
+## Describe
+
+`describe knowledge NAME` returns `spec` (`uuid`, `repo`, `revision`, `registryId`, `files`, `format`) and `status.linkedAgents`.
+
+After attach, `describe agent` reports `knowledgeStatus`, `activeKnowledge`, and `knowledgeLastUpdate` (Unix milliseconds on the wire; describe may print RFC3339). `activeKnowledge` is a managed count.
+
+<EditPageAdmonition />

@@ -1,0 +1,94 @@
+---
+title: Registries
+description: kind Registry stores an OCI or Hugging Face pull endpoint. Catalog items, models, and knowledge refer to it by id.
+keywords: [registry, oci, hugging face, remote, local, image pull, yaml]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Registries
+
+A **registry** is a pull endpoint stored on the Controller. The type is `oci` for a container registry, or `hf` for a Hugging Face hub. Catalog items, models, knowledge artifacts, and microservice images refer to that row by numeric id.
+
+The short map is [Registries and catalog](/get-started/workloads/registries). Fields are on [Registry fields](/reference/yaml/registry).
+
+Built-in aliases already exist:
+
+| Alias | Id | Use |
+| ----- | -- | --- |
+| `remote` | 1 | Default online pulls. |
+| `local` | 2 | Images loaded on the node, including [offline images](/learn/config/offline-images). |
+
+A Controller `kind: Registry` is the fleet pull record. The Edgelet host registry (`edgelet.iofog.org/v1`) is the engine manifest. See [Manifests](/learn/edgelet/manifests).
+
+## When to use it
+
+Add a registry when images or artifacts come from a host other than the built-in `remote` row, or when a private registry needs credentials. Public pulls can keep using `remote`.
+
+Deploy the registry before any catalog item, model, or knowledge object that uses a new id. A later file can use that id after `get registries`. Aliases `remote` and `local` are valid in the same file.
+
+A private control plane package can also create a registry row during control plane deploy. Skip a second `kind: Registry` for that same URL unless you intend to manage the row yourself.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f registry.yaml -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_deploy`}>deploy</Link> sends JSON to the Controller. There is no `apply`.
+
+| `spec.id` | Result |
+| --------- | ------ |
+| Omitted or `0` | Create. The Controller assigns the id. |
+| Greater than `0` | Update that id. |
+
+`metadata.name` is optional. The Controller key is the id plus the URL.
+
+<FlavorYaml title="registry.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Registry
+metadata:
+  namespace: my-ecn
+spec:
+  url: https://registry.example.com
+  type: oci
+  private: false
+```
+
+</FlavorYaml>
+
+To change a row, run `get registries`, set `spec.id` to that id, and deploy the file again. Keep the URL and credentials you still want. A URL change can fail when catalog items or fleet artifacts still use that id.
+
+A new registry and a model in one session need two steps. Deploy the registry, read the id, then set `spec.registryId` or `spec.registry` on the model. The id is unknown until `get registries` returns.
+
+## How a microservice uses it
+
+A microservice sets `images.registry` to `remote`, `local`, or a numeric id. A [catalog item](/learn/config/catalog-microservices) sets `spec.registry` the same way, and the microservice then uses `images.catalogId`. Image field shapes are on [Microservice fields](/reference/yaml/microservice).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get registries -n my-ecn
+{{CLI_NAME}} describe registry 3 -n my-ecn
+{{CLI_NAME}} delete registry 3 -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_registry`}>describe registry</Link> and <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_delete_registry`}>delete registry</Link> take the numeric id. Describe prints `password`. Treat that file as a secret. There is no `attach` for a registry.
+
+Delete can fail while microservices or catalog rows still reference the id.
+
+## Console
+
+**Config → Registries** lists rows and edits credentials. See [Catalog and templates](/get-started/edgeops-console/catalog-and-templates).
+
+## Related
+
+- [Catalog microservices](/learn/config/catalog-microservices)
+- [AI Model Catalog](/learn/config/ai-model-catalog)
+- [Offline images](/learn/config/offline-images)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

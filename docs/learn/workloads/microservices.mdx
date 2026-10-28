@@ -1,7 +1,7 @@
 ---
 title: Microservices
 description: kind Microservice is one container on one Edgelet node. Naming, deploy, bridge DNS, and model and knowledge binds.
-keywords: [microservice, yaml, deploy, bridge dns, models, knowledge, edgelet node, v3.9]
+keywords: [microservice, yaml, deploy, bridge dns, models, knowledge, supplemental groups, edgelet node, v3.9]
 slug: /learn/workloads/microservices
 ---
 
@@ -117,6 +117,28 @@ spec:
 Catalog item changes may or may not rebuild the container. The Controller decides.
 
 Node limits, the engine URL, and NATS leaf settings belong on `Agent` or `AgentConfig`. On a microservice, `agent` is the name only.
+
+## Supplemental groups {#supplemental-groups}
+
+`container.supplementalGroups` lists extra host group IDs. `runAsGroup` stays the primary GID. A non-root process can join the group that owns a device node without `isPrivileged: true`.
+
+The list holds at most 16 unique whole numbers from 0 through 4294967295. Names, duplicates, negatives, and non-integers are rejected. The Controller stores the ids sorted ascending.
+
+On an update, leave the key out to keep the stored list. Set `[]` to clear it. `describe` prints the key, including an empty list, so the next apply matches the Controller. A changed list recreates that container.
+
+<FlavorYaml title="device-group.yaml">
+
+```yaml
+container:
+  runAsUser: "1000"
+  runAsGroup: "1000"
+  supplementalGroups:
+    - 44
+```
+
+</FlavorYaml>
+
+The field table is on [Microservice fields](/reference/yaml/microservice#supplemental-groups). EdgeOps Console **v1.1.2** edits this list in the microservice YAML tab and shows **Supplemental Groups** on the detail panel, separate from **Run As Group**.
 
 ## Bridge DNS {#bridge-dns}
 

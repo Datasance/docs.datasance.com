@@ -1,0 +1,182 @@
+---
+title: AgentConfig fields
+description: Field reference for kind AgentConfig. Identity, runtime, limits, EdgeGuard, router, and NATS fields at spec.
+keywords: [agentconfig, yaml, fields, router, nats, edgelet node, v3.9]
+slug: /reference/yaml/agent-config
+---
+
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# AgentConfig fields
+
+Reference for `kind: AgentConfig`. Fields below live at `spec.*`. On `Agent` and `LocalAgent`, use the same fields under `spec.config.*`. See [Agent fields](/reference/yaml/agent) and [LocalAgent fields](/reference/yaml/local-agent). Deploy flow is on [AgentConfig](/learn/edgelet-nodes/agent-config).
+
+<FlavorYaml title="Deploy">
+
+```yaml
+apiVersion: {{API_VERSION}} # required, string
+kind: AgentConfig # required, string
+metadata:
+  name: my-edge # required, string
+spec:
+  name: my-edge # no, string. Defaults to metadata.name when empty
+  description: Edge node # no, string
+  location: plant-a # no, string
+  latitude: 0.0 # no, float
+  longitude: 0.0 # no, float
+  arch: amd64 # recommended, string. amd64, arm64, arm, or riscv64
+  host: 10.0.0.5 # no, string. Interior router mode may require host
+  deploymentType: native # no, string, default native. native or container
+  containerEngine: edgelet # no, string, default edgelet. edgelet, docker, or podman
+  containerEngineUrl: unix:///run/edgelet/containerd.sock # no, string
+  networkInterface: eth0 # no, string
+  diskLimit: 10 # no, int64. GiB
+  diskDirectory: /var/lib/edgelet # no, string
+  memoryLimit: 1024 # no, int64. MiB
+  cpuLimit: 100 # no, int64. 100 is one core
+  logLimit: 100 # no, int64
+  logDirectory: /var/log/edgelet # no, string
+  logFileCount: 5 # no, int64
+  statusFrequency: 10 # no, float
+  changeFrequency: 10 # no, float
+  watchdogEnabled: true # no, bool
+  logLevel: info # no, string
+  pruningFrequency: 60 # no, float
+  availableDiskThreshold: 80 # no, float. Percent
+  timeZone: UTC # no, string
+  gpsMode: off # no, string. For example auto or off
+  gpsScanFrequency: 0 # no, float
+  gpsDevice: /dev/ttyUSB0 # no, string
+  edgeGuardFrequency: 0 # no, float. Seconds. 0 disables
+  upstreamRouters: # no, list of string. Edgelet node names
+    - default-router
+  routerConfig:
+    routerMode: edge # no, string, default edge. edge, interior, or none
+    messagingPort: 5671 # no, int, default 5671
+    edgeRouterPort: 45671 # no, int. Interior mode only
+    interRouterPort: 55671 # no, int. Interior mode only
+  upstreamNatsServers: # no, list of string
+    - default-nats-hub
+  natsConfig:
+    natsMode: leaf # no, string, default leaf. leaf, server, or none
+    natsServerPort: 4222 # no, int, default 4222
+    natsLeafPort: 7422 # no, int, default 7422
+    natsClusterPort: 6222 # no, int. Server mode only
+    natsMqttPort: 8883 # no, int, default 8883
+    natsHttpPort: 8222 # no, int, default 8222
+    jsStorageSize: 10G # no, string, default 10G
+    jsMemoryStoreSize: 1G # no, string, default 1G
+```
+
+</FlavorYaml>
+
+## Identity
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `name` | string | No | Display name. Defaults to `metadata.name` when empty. |
+| `description` | string | No | Free text |
+| `location` | string | No | Location label |
+| `latitude` | float | No | Geo latitude |
+| `longitude` | float | No | Geo longitude |
+| `arch` | string | Recommended | `amd64`, `arm64`, `arm`, `riscv64`. Mapped to Controller `archId` at deploy. |
+
+`archId` is normally derived from `arch`. Do not set both inconsistently. An invalid `arch` string may map to `0` or auto behavior, depending on Controller validation.
+
+## Runtime
+
+| Field | Type | Default (edge) | Description |
+| ----- | ---- | -------------- | ----------- |
+| `host` | string | From the node spec | Controller host. Interior router mode may require host. |
+| `deploymentType` | string | `native` | `native` or `container` |
+| `containerEngine` | string | `edgelet` | `edgelet`, `docker`, or `podman` |
+| `containerEngineUrl` | string | Engine default | For example `unix:///run/edgelet/containerd.sock` |
+| `networkInterface` | string | | Bind interface |
+
+`isSystem` is not settable in YAML. System nodes are created by control plane deploy.
+
+## Resource limits and logging
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `diskLimit` | int64 | Disk quota (GiB) |
+| `diskDirectory` | string | Data directory on the host |
+| `memoryLimit` | int64 | Memory limit (MiB) |
+| `cpuLimit` | int64 | CPU limit. 100 is one core. |
+| `logLimit` | int64 | Log size limit |
+| `logDirectory` | string | Log directory |
+| `logFileCount` | int64 | Rotated log files |
+| `statusFrequency` | float | Status report interval |
+| `changeFrequency` | float | Change detection interval |
+| `watchdogEnabled` | bool | Watchdog |
+| `logLevel` | string | For example `INFO` or `info` |
+| `pruningFrequency` | float | Prune interval. See [Image pruning](/get-started/edgelet-nodes/image-pruning). |
+| `availableDiskThreshold` | float | Disk pressure threshold (%) |
+| `timeZone` | string | Host timezone |
+
+## GPS and EdgeGuard
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `gpsMode` | string | For example `auto` or `off` |
+| `gpsScanFrequency` | float | Scan interval |
+| `gpsDevice` | string | Device path or selector |
+| `edgeGuardFrequency` | float | EdgeGuard interval in seconds. `0` disables. See [EdgeGuard](/get-started/edgelet-nodes/edgeguard). |
+
+HAL and Bluetooth fields from older releases are retired in v3.9.
+
+## Router
+
+Listeners, TLS, connectors, and Service bridges are on [Router fabric](/learn/edgelet-nodes/router-fabric).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `upstreamRouters` | []string | Edgelet node names in YAML. Resolved to UUIDs at deploy. |
+
+| Field | Type | Default (edge) | Description |
+| ----- | ---- | -------------- | ----------- |
+| `routerConfig.routerMode` | string | `edge` | `edge`, `interior`, or `none` |
+| `routerConfig.messagingPort` | int | `5671` | Messaging AMQP port |
+| `routerConfig.edgeRouterPort` | int | | Interior mode only |
+| `routerConfig.interRouterPort` | int | | Interior mode only |
+
+System node defaults use router mode `interior` and fill the ports.
+
+Validation:
+
+- `edge` cannot set `edgeRouterPort` or `interRouterPort`.
+
+## NATS
+
+Server, leaf, JetStream, and resolver bundles are on [NATS fabric](/learn/edgelet-nodes/nats-fabric). Workload credentials use application `natsAccess`. See [Applications](/learn/workloads/applications) and [NATS user rules](/learn/message-bus/user-rules).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `upstreamNatsServers` | []string | Edgelet node names of NATS servers. Resolved to UUIDs at deploy. |
+
+| Field | Type | Default (edge) | Description |
+| ----- | ---- | -------------- | ----------- |
+| `natsConfig.natsMode` | string | `leaf` | `leaf`, `server`, or `none` |
+| `natsConfig.natsServerPort` | int | `4222` | Client port |
+| `natsConfig.natsLeafPort` | int | `7422` | Leaf port |
+| `natsConfig.natsClusterPort` | int | | Server mode only |
+| `natsConfig.natsMqttPort` | int | `8883` | MQTT |
+| `natsConfig.natsHttpPort` | int | `8222` | Monitoring HTTP |
+| `natsConfig.jsStorageSize` | string | `10G` | JetStream storage |
+| `natsConfig.jsMemoryStoreSize` | string | `1G` | JetStream memory |
+
+System node defaults use NATS mode `server`, plus a cluster port and JetStream sizes.
+
+## Deploy-time processing
+
+| Step | Behavior |
+| ---- | -------- |
+| Prepare | Edge versus system defaults. `arch` becomes `archId`. |
+| Process | Names become UUIDs for upstream lists. Host rules for an interior router. |
+| Validate | Router and NATS mode matrix |
+| Create or update | Controller stores the config. Platform reconcile runs asynchronously. |
+
+Read-only on `describe agent-config` (not in the deploy spec): daemon status, CPU, memory, and disk usage, platform phase, runtime classes, `modelStatus`, `activeModels`, `knowledgeStatus`, and `activeKnowledge`.
+
+<EditPageAdmonition />

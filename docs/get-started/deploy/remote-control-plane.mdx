@@ -1,6 +1,6 @@
 ---
 title: Remote Control Plane
-description: Deploy a remote SSH control plane on platform train v3.9.2 with embedded OIDC and optional TLS.
+description: Deploy a remote SSH control plane on platform train v3.9.3 with embedded OIDC and optional TLS.
 keywords: [remote control plane, ssh deploy, controller, embedded oidc, tls, v3.9]
 slug: /get-started/deploy/remote-control-plane
 ---
@@ -68,7 +68,7 @@ spec:
     consoleUrl: http://203.0.113.10:80
     logLevel: info
     package:
-      image: {{REGISTRY}}/controller:3.9.2
+      image: {{REGISTRY}}/controller:3.9.3
   auth:
     mode: embedded
     bootstrap:
@@ -76,15 +76,15 @@ spec:
       password: RemoteTest12!
   systemMicroservices:
     router:
-      amd64: {{REGISTRY}}/router:3.9.2
-      arm64: {{REGISTRY}}/router:3.9.2
-      arm: {{REGISTRY}}/router:3.9.2
-      riscv64: {{REGISTRY}}/router:3.9.2
+      amd64: {{REGISTRY}}/router:3.9.3
+      arm64: {{REGISTRY}}/router:3.9.3
+      arm: {{REGISTRY}}/router:3.9.3
+      riscv64: {{REGISTRY}}/router:3.9.3
     nats:
-      amd64: {{REGISTRY}}/nats:2.15.1-1
-      arm64: {{REGISTRY}}/nats:2.15.1-1
-      arm: {{REGISTRY}}/nats:2.15.1-1
-      riscv64: {{REGISTRY}}/nats:2.15.1-1
+      amd64: {{REGISTRY}}/nats:2.15.2
+      arm64: {{REGISTRY}}/nats:2.15.2
+      arm: {{REGISTRY}}/nats:2.15.2
+      riscv64: {{REGISTRY}}/nats:2.15.2
   nats:
     enabled: true
   events:
@@ -125,7 +125,7 @@ You need a **full** remote ControlPlane record in namespace config (includes `au
 
 :::tip[Next step]
 
-With the control plane running, go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.2** on your edge hosts.
+With the control plane running, go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.3** on your edge hosts.
 
 :::
 

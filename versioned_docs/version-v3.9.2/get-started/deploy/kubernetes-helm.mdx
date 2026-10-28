@@ -1,0 +1,242 @@
+---
+title: Kubernetes - Deploy Control Plane with Helm
+description: Install the operator and ControlPlane with Helm chart 3.9.2. Flat values, embedded OIDC, and optional auth.issuerCa.
+keywords: [kubernetes, helm, operator, control plane, embedded oidc, v3.9, issuerCa]
+slug: /get-started/deploy/kubernetes-helm
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import ProductName from '@site/src/components/flavor/ProductName';
+import CliName from '@site/src/components/flavor/CliName';
+import FlavorOnly from '@site/src/components/flavor/FlavorOnly';
+import {
+  API_VERSION,
+  CONTROLPLANE_CRD_RESOURCE,
+  HELM_REPO_URL,
+  OPERATOR_CHART_README_URL,
+  OPERATOR_CHART_VERSION,
+  REGISTRY,
+} from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+:::tip[Other deploy paths]
+
+- **CLI instead of Helm:** [Kubernetes with <CliName />](/get-started/deploy/kubernetes-cli) (`KubernetesControlPlane` YAML).
+- **Linux hosts over SSH:** [Remote control plane](/get-started/deploy/remote-control-plane).
+
+:::
+
+# Deploy the control plane on Kubernetes with Helm
+
+This guide installs **<ProductName />** on Kubernetes using the **iofog-operator** Helm chart **{OPERATOR_CHART_VERSION}**. The chart deploys the **operator** Deployment and a **`ControlPlane`** custom resource with <code>apiVersion: {API_VERSION}</code>. The operator reconciles Controller, Router, NATS, Services, Secrets, and an Ingress when the Controller Service is ClusterIP.
+
+Chart **3.9.2** values are flat. `auth`, `images`, `database`, `services`, `controller`, `nats`, `vault`, and `events` sit at the top of `values.yaml`. The templates build the ControlPlane spec from those keys. The chart always installs the CRD, RBAC, and one ControlPlane.
+
+<FlavorOnly distribution="datasance">
+
+The legacy repo [Datasance/helm](https://github.com/Datasance/helm) (chart `pot`, `https://datasance.github.io/helm`) is **deprecated**. Use the Helm repository index linked below.
+
+</FlavorOnly>
+
+<FlavorOnly distribution="iofog">
+
+Charts publish from the Eclipse ioFog mirror. Use the Helm repository index linked below.
+
+</FlavorOnly>
+
+| Reference | Where to read |
+| --------- | ------------- |
+| Every ControlPlane `spec` field | [ControlPlane CRD](/learn/control-plane/kubernetes-crd) |
+| Controller, Router, NATS TLS on cluster | [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator) |
+| CLI trust when the API uses HTTPS | [Kubernetes TLS (CLI YAML)](/learn/security/control-plane-kubernetes-cli) (`spec.ca` / `connect --ca`) |
+| Auth bootstrap | [Embedded OIDC](/get-started/deploy/embedded-oidc) |
+
+Published chart defaults: <a href={HELM_REPO_URL}>Helm repository index</a>. `values.yaml` is the install contract. `marketplace-values.yaml` on that index is the marketplace form. Do not pass it as a second `-f` file.
+
+## Prerequisites
+
+- [Helm 3](https://helm.sh/docs/intro/install/)
+- Kubernetes **1.22+**
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- Pull access to **{REGISTRY}** (operator, controller, router, nats)
+- For NATS JetStream with PVCs: a suitable **StorageClass**
+
+Charts are **stamped per mirror** at package time (CRD group, default ControlPlane name, and image tags). Do not override the CRD group or image registry unless you run a custom build.
+
+## Add the Helm repository
+
+<CliBlock title="Add repo">{`helm repo add iofog-operator ${HELM_REPO_URL}
+helm repo update`}</CliBlock>
+
+Download defaults for editing:
+
+<CliBlock>{`helm show values iofog-operator/iofog-operator --version ${OPERATOR_CHART_VERSION} > my-values.yaml`}</CliBlock>
+
+Or use the files on the index page: <code>{HELM_REPO_URL}/values.yaml</code> and <code>values-{OPERATOR_CHART_VERSION}.yaml</code>.
+
+## Quick install
+
+Embedded OIDC is the default. Set a bootstrap password of at least 12 characters, with one uppercase letter and one special character. Prefer a Secret in production (`auth.bootstrap.passwordSecretRef` in values).
+
+<CliBlock title="Install release">{`helm install pot iofog-operator/iofog-operator \\
+  --namespace iofog-system --create-namespace \\
+  --version ${OPERATOR_CHART_VERSION} \\
+  --set auth.bootstrap.password='ReplaceMe1!x'`}</CliBlock>
+
+`name` overrides the ControlPlane resource name. Leave it empty to use the flavor default (`pot` or `iofog`). The Helm release name does not set that name.
+
+See [Embedded OIDC](/get-started/deploy/embedded-oidc) for console URLs and bootstrap behavior.
+
+## Install with a values file
+
+<FlavorYaml title="my-values.yaml (excerpt)">{`name: ""
+images:
+  controller: {{REGISTRY}}/controller:3.9.2
+  router: {{REGISTRY}}/router:3.9.2
+  nats: {{REGISTRY}}/nats:2.15.1-1
+auth:
+  mode: embedded
+  bootstrap:
+    username: admin
+    password: "ReplaceMe1!x"
+database:
+  provider: sqlite
+replicas:
+  controller: 1
+  nats: 2
+services:
+  controller:
+    type: LoadBalancer
+  router:
+    type: LoadBalancer
+  nats:
+    type: LoadBalancer
+  natsServer:
+    type: ClusterIP
+controller:
+  publicUrl: https://controller.example.com
+  consoleUrl: https://console.example.com
+nats:
+  memoryStoreSize: 1
+  storageSize: 10
+`}</FlavorYaml>
+
+<CliBlock>{`helm install pot iofog-operator/iofog-operator \\
+  --namespace iofog-system --create-namespace \\
+  --version ${OPERATOR_CHART_VERSION} \\
+  -f my-values.yaml`}</CliBlock>
+
+**Database:** chart default is **SQLite** (single Controller replica). For HA, set `replicas.controller` greater than 1 and configure **Postgres** under `database`. See [Database installation](/get-started/deploy/database).
+
+**NATS:** the chart always installs NATS. `replicas.nats` must be at least **2**. `nats.memoryStoreSize` and `nats.storageSize` are whole numbers of Gi (`1` becomes `1Gi` on the custom resource).
+
+## LoadBalancer and externalTrafficPolicy
+
+Defaults use **LoadBalancer** for Controller, Router, and the NATS TLS Service (`services.nats`). `services.natsServer` defaults to **ClusterIP**, so the non-TLS client port is not published.
+
+`externalTrafficPolicy` is `auto`, `Local`, or `Cluster`. `auto` omits the field. The operator then uses **Local** on LoadBalancer Services and **Cluster** on NodePort.
+
+- **Local** preserves client source IP on many cloud load balancers.
+- **Cluster** can help when Services stay pending or your LB controller does not support **Local** well.
+
+<FlavorYaml title="Override traffic policy">{`services:
+  controller:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+  router:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+`}</FlavorYaml>
+
+Leave `annotations` null when you have none. Set a map, or one `key: value` line per annotation. Quote values that YAML would read as booleans or numbers, such as `"on"` or `"443"`.
+
+Use **Ingress** instead of LoadBalancer when you have an ingress controller. Set `services.controller.type` to `ClusterIP`, set `controller.https` to true, and set `services.controller.ingress.host`. Field list: [ControlPlane CRD - ingresses](/learn/control-plane/kubernetes-crd).
+
+## Production TLS
+
+When `controller.https` is true, set `controller.tls.source` to `existing` or `create`.
+
+- `existing` uses `controller.tls.secretName` (for cert-manager, the Secret the issuer will create).
+- `create` takes PEM `controller.tls.crt`, `controller.tls.key`, and optional PEM `controller.tls.ca`. The chart stores them in Secret `controller-tls`.
+
+Patterns (LoadBalancer + pod TLS, Ingress, Router/NATS Secrets, cert-manager) are documented in [Securing Kubernetes cluster (operator)](/learn/security/control-plane-kubernetes-operator).
+
+External database TLS uses `database.ssl` and `database.ca` (`ca` is base64 PEM, written only when `ssl` is true). See [CRD - database](/learn/control-plane/kubernetes-crd).
+
+## External auth
+
+<CliBlock title="Switch to external OIDC">{`helm upgrade pot iofog-operator/iofog-operator \\
+  --namespace iofog-system \\
+  --version ${OPERATOR_CHART_VERSION} \\
+  --set auth.mode=external \\
+  --set auth.issuerUrl=https://auth.example.com/realms/myrealm \\
+  --set auth.client.id=controller \\
+  --set auth.client.secret='YOUR_SECRET'`}</CliBlock>
+
+For an issuer signed by a private CA, also set `auth.issuerCa` to the base64 PEM CA or bundle. Leave it empty for a public CA. Certificate checks stay on. See [External OIDC](/get-started/deploy/external-oidc) and [External OIDC providers](/get-started/deploy/external-oidc-providers).
+
+## Verify
+
+<CliBlock>{`kubectl get pods -n iofog-system
+kubectl get svc -n iofog-system
+kubectl get ${CONTROLPLANE_CRD_RESOURCE} -n iofog-system`}</CliBlock>
+
+Wait until the ControlPlane status is **Ready** and Controller, Router, and NATS workloads are available.
+
+## Upgrade
+
+Rewrite a values file from chart **3.9.1** before you upgrade. Those files used `controlplane.spec`, `crds.install`, and `controlplane.create`. Chart **3.9.2** ignores that shape.
+
+If the previous release left the NATS TLS Service on ClusterIP and you want that to stay, set `services.nats.type: ClusterIP` in the new file. The chart default is LoadBalancer.
+
+<CliBlock>{`helm upgrade pot iofog-operator/iofog-operator \\
+  --namespace iofog-system \\
+  --version ${OPERATOR_CHART_VERSION} \\
+  -f my-values.yaml`}</CliBlock>
+
+Platform train **v3.9.2** supports an in-place upgrade from **v3.9.1**, **v3.9.0**, or **v3.8.0** on the same Controller database. See [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9) and [Operator](/learn/platform-components/operator).
+
+**v3.7.x** and the legacy Helm chart require a **greenfield** move to v3.8+ (uninstall the old operator and CRDs first). See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8).
+
+Helm does not upgrade CRDs on `helm upgrade`. The CRD in this chart is installed with the release. Apply the chart CRDs when you need the new `auth.issuerCa` field on an existing cluster.
+
+## Uninstall
+
+<CliBlock>{`helm uninstall pot -n iofog-system
+kubectl delete ${CONTROLPLANE_CRD_RESOURCE} --all -n iofog-system`}</CliBlock>
+
+CRDs remain unless you remove them cluster-wide (only when no ControlPlane instances exist):
+
+<CliBlock>{`kubectl delete crd ${CONTROLPLANE_CRD_RESOURCE}`}</CliBlock>
+
+## Connect with <CliName />
+
+After the stack is ready, connect **<CliName />** in the **same namespace** you used for Helm (`iofog-system` in the examples above):
+
+<CliBlock>{`{{CLI_NAME}} create namespace iofog-system
+{{CLI_NAME}} connect --email ops@example.com --kube ~/.kube/config --namespace iofog-system`}</CliBlock>
+
+Sign in with the embedded bootstrap user you configured in values. If the Controller API uses HTTPS with a private CA, use `connect --ca` as described in [Kubernetes TLS (CLI YAML)](/learn/security/control-plane-kubernetes-cli).
+
+## Values reference
+
+| Area | Values keys |
+| ---- | ----------- |
+| ControlPlane name | `name`. Empty uses the flavor default |
+| Images | `images.operator`, `images.controller`, `images.router`, `images.nats`, `images.pullSecret` |
+| Auth | `auth.mode`, `auth.bootstrap`, `auth.issuerUrl`, `auth.issuerCa`, `auth.client` |
+| Database | `database.provider`, `database.host`, `database.ca` |
+| Services | `services.controller`, `services.router`, `services.nats`, `services.natsServer` |
+| NATS disk | `nats.memoryStoreSize`, `nats.storageSize` (whole Gi), `nats.storageClassName` |
+| Events | `events.cleanupIntervalHours` (minimum 2). The chart writes seconds on the custom resource |
+
+Full chart reference: <a href={OPERATOR_CHART_README_URL}>iofog-operator chart README</a>.
+
+:::tip[Next step]
+
+Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.2** on edge hosts.
+
+:::
+
+<EditPageAdmonition />

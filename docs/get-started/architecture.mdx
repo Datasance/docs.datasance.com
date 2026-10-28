@@ -59,7 +59,7 @@ Supported node architectures include **amd64**, **arm64**, **riscv64**, and **ar
 
 ## Controller
 
-The **Controller** (**v3.9.2**) is the heart of each ECN. It orchestrates Edgelet nodes, microservices, Router and NATS instances, RBAC, secrets, certificates, fleet **Model** and **Knowledge** catalogs, and more.
+The **Controller** (**v3.9.3**) is the heart of each ECN. It orchestrates Edgelet nodes, microservices, Router and NATS instances, RBAC, secrets, certificates, fleet **Model** and **Knowledge** catalogs, and more.
 
 The Controller can run on bare-metal, virtual hardware, or Kubernetes. Every Edgelet node must reach it over the network. That usually means a static IP address or DNS records.
 
@@ -67,13 +67,13 @@ You can also place the Controller behind an HTTP ingress. The Controller is full
 
 The Controller image embeds **EdgeOps Console** (**v1.1.2**) on port **8008**. Default installs use [embedded OIDC](/get-started/deploy/embedded-oidc) for authentication.
 
-On **v3.9.2**, the Controller catalog pulls AI **weights** and **knowledge** artifacts from **`type: oci`** and **`type: hf`** [registries](/learn/config/registries), tracks attach state per **Edgelet node**, and prepares mounts for microservices that bind **`spec.models`** and **`spec.knowledge`**. See [AI Model Catalog](/learn/config/ai-model-catalog) and [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog).
+On **v3.9.3**, the Controller catalog pulls AI **weights** and **knowledge** artifacts from **`type: oci`** and **`type: hf`** [registries](/learn/config/registries), tracks attach state per **Edgelet node**, and prepares mounts for microservices that bind **`spec.models`** and **`spec.knowledge`**. See [AI Model Catalog](/learn/config/ai-model-catalog) and [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog).
 
 <ArchitectureDiagram
   train="3.9"
   name="Controller"
   alt="Controller architecture diagram with EdgeOps Console, API, Edgelet orchestration, and fleet catalogs"
-  caption={<>Controller and EdgeOps Console (platform train v3.9.2). Click the image to view full size.</>}
+  caption={<>Controller and EdgeOps Console (platform train v3.9.3). Click the image to view full size.</>}
 />
 
 :::tip[Want to know more about the Controller?]
@@ -133,7 +133,7 @@ Source code: <GitHubRepoLink repo="edgelet">edgelet</GitHubRepoLink>.
 
 Microservices are the workloads that run on Edgelet nodes. Each microservice is a Linux or Wasm container. Many microservices can run on one Edgelet node. This is similar to Kubernetes pods, except **<ProductName />** gives you granular control over which nodes run which microservices.
 
-On **v3.9.2**, microservices can bind fleet **Model** and **Knowledge** catalog entries through **`spec.models`** and **`spec.knowledge`**, and use expanded **`container`** fields for production hardening. See [Microservices in Learn](/learn/workloads/microservices#specmodels-and-specknowledge).
+On **v3.9.3**, microservices can bind fleet **Model** and **Knowledge** catalog entries through **`spec.models`** and **`spec.knowledge`**, and use expanded **`container`** fields for production hardening. See [Microservices in Learn](/learn/workloads/microservices#specmodels-and-specknowledge).
 
 :::tip[Want to know more about microservices?]
 
@@ -145,7 +145,7 @@ For a hands-on walkthrough, see the [Acme Smart Plant tutorial](/tutorials/acme-
 
 ## Router
 
-The **Router** enables microservices to communicate through TCP bridges created via Service YAML kinds. The platform ships a Router wrapper image (**v3.9.2**) that embeds **Skupper Router 3.5.3**. Router is deployed with TLS by default. The Controller tracks Router configuration and TLS certificate volume mounts.
+The **Router** enables microservices to communicate through TCP bridges created via Service YAML kinds. The platform ships a Router wrapper image (**v3.9.3**) that embeds **Skupper Router 3.5.3**. Router is deployed with TLS by default. The Controller tracks Router configuration and TLS certificate volume mounts.
 
 Each Controller and each Edgelet node has its own Router instance by default. The Controller hosts an **interior** Router. Each Edgelet node hosts an **edge** Router connected to the interior Router.
 
@@ -212,7 +212,7 @@ Source code: <GitHubRepoLink repo="Router">Router</GitHubRepoLink>.
 
 ## NATS
 
-**NATS** is the default messaging infrastructure for **<ProductName />**. It provides pub/sub, request/reply, key-value storage, and JetStream. The platform ships a NATS wrapper image that pins upstream **NATS Server 2.15.1**. When enabled, NATS instances deploy with TLS by default.
+**NATS** is the default messaging infrastructure for **<ProductName />**. It provides pub/sub, request/reply, key-value storage, and JetStream. The platform ships a NATS wrapper image that pins upstream **NATS Server 2.15.2**. When enabled, NATS instances deploy with TLS by default.
 
 The Controller tracks NATS configuration, TLS certificates, account JWTs, and creds. Applications and microservices get NATS access through **NATS Account Rules** (application level) and **NATS User Rules** (microservice level). The Controller provisions credentials so you do not manage JWTs and cred files manually.
 
@@ -315,7 +315,7 @@ Next, we show how the Control Plane looks when part of the ECN runs on Kubernete
 
 ## Operator
 
-The **Operator** (ioFog Operator **v3.9.2**) manages Kubernetes Custom Resources for **<ProductName />**. It reconciles Control Plane and related CRDs.
+The **Operator** (ioFog Operator **v3.9.3**) manages Kubernetes Custom Resources for **<ProductName />**. It reconciles Control Plane and related CRDs.
 
 When you deploy **<ProductName />** on Kubernetes with **<CliName />** or Helm, the Operator is the first component installed in the namespace. When you create a Control Plane custom resource, the Operator deploys the ECN components in that namespace.
 
@@ -364,7 +364,7 @@ Source code: <CliGitHubRepoLink />.
 
 - Deploy locally: [Quick start with local deployment](/get-started/quick-start-local).
 - Production remote or Kubernetes deployment: [Platform deployment](/get-started/deploy/introduction).
-- Upgrade from v3.8: [Upgrading to v3.9.2](/release-notes/upgrading-to-v3-9).
+- Upgrade from v3.8: [Upgrading to v3.9.3](/release-notes/upgrading-to-v3-9).
 - Developer walkthrough: [Acme Smart Plant tutorial](/tutorials/acme-smart-plant).
 
 :::

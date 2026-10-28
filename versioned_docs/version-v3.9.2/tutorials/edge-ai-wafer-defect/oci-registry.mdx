@@ -1,0 +1,71 @@
+---
+title: OCI registry
+description: Add a Registry row with type oci for ghcr.io so the wafer-defect model can be pulled.
+keywords: [tutorial, edge ai, registry, oci, ghcr, wafer defect]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# OCI registry
+
+## Goal
+
+Create a Registry row for **ghcr.io** with `type: oci`. The wafer-defect ONNX artifact is an OCI blob. Built-in registry `1` (`docker.io`) cannot pull it.
+
+You need an Edgelet node you will call **edge-c**. You can change `agent.name` later if the node has another name.
+
+## YAML
+
+Use a public endpoint when the package is world-readable. Save this as `ghcr-registry.yaml`.
+
+<FlavorYaml title="ghcr-oci">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Registry
+metadata:
+  name: ghcr-oci
+spec:
+  url: ghcr.io
+  type: oci
+  private: false
+```
+
+</FlavorYaml>
+
+For a private package, set `private: true` and add a robot `username` and `password`. See [Registries](/learn/config/registries).
+
+## Deploy
+
+<CliBlock>{`{{CLI_NAME}} configure current-namespace <replace-me!>
+✔ Successfully configured current-namespace
+
+{{CLI_NAME}} deploy -f ghcr-registry.yaml
+{{CLI_NAME}} get registries
+
+ID  URL                     USERNAME       PRIVATE  TYPE  INSECURE  
+1   docker.io                              false    oci   false     
+2   from_cache                             false    oci   false     
+3   https://huggingface.co                 false    hf    false     
+...   
+9   ghcr.io                                false    oci   false 
+
+`}</CliBlock>
+
+## What you should see
+
+A row with `type: oci` and `url: ghcr.io`. Write down the numeric id. The model page uses it as `spec.registryId`.
+
+## Common mistakes
+
+Using registry `1` on the model. That row does not serve this GHCR artifact.
+
+Leaving out `type: oci`. The catalog expects an OCI layout for this model.
+
+## Next
+
+[Wafer-defect model](/tutorials/edge-ai-wafer-defect/wafer-defect-model)
+
+<EditPageAdmonition />

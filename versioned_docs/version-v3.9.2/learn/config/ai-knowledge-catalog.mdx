@@ -1,0 +1,93 @@
+---
+title: AI Knowledge Catalog
+description: kind Knowledge is a fleet document or dataset artifact. Attach it to Edgelet nodes, then bind spec.knowledge.
+keywords: [ai knowledge catalog, knowledge, fleet knowledge, attach, registry]
+---
+
+import Link from '@docusaurus/Link';
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import CliName from '@site/src/components/flavor/CliName';
+import { CLI_DOCS_DIR, CLI_NAME } from '@site/src/config/distribution';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# AI Knowledge Catalog
+
+Fleet **knowledge** is a document, dataset, or index stored in a registry-backed repo. It uses the same deploy and attach path as a [model](/learn/config/ai-model-catalog). The artifact role is different: knowledge is what a service retrieves, and a model is the weights it runs.
+
+The short map is [Models and knowledge](/get-started/workloads/models-and-knowledge). Fields are on [Knowledge fields](/reference/yaml/knowledge).
+
+A Knowledge object and a Model may share a name. They are separate lists.
+
+## When to use it
+
+Use `kind: Knowledge` when the Edgelet node should hold a document bundle from a registry. The [registry](/learn/config/registries) row must exist. `remote` and `local` are valid aliases.
+
+## What deploy does
+
+<CliBlock>{`{{CLI_NAME}} deploy -f knowledge.yaml -n my-ecn`}</CliBlock>
+
+Deploy upserts by `metadata.name`. The same name updates the repo, revision, files, format, or registry reference. Omit `spec.uuid`.
+
+<FlavorYaml title="knowledge.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Knowledge
+metadata:
+  name: product-docs
+  namespace: my-ecn
+spec:
+  repo: org/product-docs
+  registry: remote
+  format: jsonl
+```
+
+</FlavorYaml>
+
+## How a microservice uses it
+
+Attach the knowledge object to the Edgelet node first. Then set `spec.knowledge` on the microservice. The field shape is on [Microservice fields](/reference/yaml/microservice).
+
+<FlavorYaml title="bind.yaml">
+
+```yaml
+apiVersion: {{API_VERSION}}
+kind: Microservice
+metadata:
+  name: line-monitor/reader
+spec:
+  knowledge:
+    items:
+      - name: product-docs
+```
+
+</FlavorYaml>
+
+A knowledge-only change can use `deploy -f --patch-knowledge`. It can be combined with `--patch-model` on a microservice-only file. See [Microservices](/learn/workloads/microservices#fleet-models-knowledge-and-runtime-classes).
+
+## CLI
+
+<CliBlock>{`{{CLI_NAME}} get knowledge -n my-ecn
+{{CLI_NAME}} describe knowledge product-docs -n my-ecn
+{{CLI_NAME}} attach knowledge product-docs edge-01 -n my-ecn
+{{CLI_NAME}} detach knowledge product-docs edge-01 -n my-ecn
+{{CLI_NAME}} delete knowledge product-docs -n my-ecn`}</CliBlock>
+
+<Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_describe_knowledge`}>describe knowledge</Link> includes `status.linkedAgents`. <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_attach_knowledge`}>attach knowledge</Link> and <Link to={`/${CLI_DOCS_DIR}/${CLI_NAME}_detach_knowledge`}>detach knowledge</Link> take the knowledge name and Edgelet node names. On the node, `describe agent` shows `knowledgeStatus`, `activeKnowledge`, and `knowledgeLastUpdate`. `activeKnowledge` is a managed count.
+
+## Edgelet-local knowledge {#edgelet-local-knowledge}
+
+On-node knowledge files use `edgelet deploy`. That path has no Controller catalog row and no `attach knowledge`. See [Knowledge](/learn/edgelet/knowledge).
+
+## Console
+
+**Config → AI Knowledge Catalog** lists rows, edits YAML, and attaches nodes. See [Catalog and templates](/get-started/edgeops-console/catalog-and-templates).
+
+## Related
+
+- [AI Model Catalog](/learn/config/ai-model-catalog)
+- [Registries](/learn/config/registries)
+- [Configuration](/learn/config)
+
+<EditPageAdmonition />

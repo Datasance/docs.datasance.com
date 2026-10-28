@@ -1,0 +1,48 @@
+---
+title: "Go SDK"
+description: "This directory is the production documentation for module github.com/eclipse-iofog/iofog-go-sdk/v3. It describes the public API in the current source tree (Controller REST v3.9 cli"
+keywords: ["go sdk", "iofog-go-sdk", "v3.9"]
+slug: /learn/platform-components/sdk
+---
+
+import CliName from '@site/src/components/flavor/CliName';
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+# Go SDK
+
+This is the documentation for module `github.com/eclipse-iofog/iofog-go-sdk/v3`. It describes the public API in the current source tree (Controller REST **v3.9** client, EdgeletAPI **v1**, YAML `apiVersion` default **`iofog.org/v3`**). Release notes live in the [module repository](https://github.com/eclipse-iofog/iofog-go-sdk).
+
+The SDK is a library. It does not ship a CLI. <CliName /> and the operator call these packages.
+
+## Start here
+
+| If you want to | Read |
+| --- | --- |
+| Install the module and call the Controller once | [Getting started](/learn/platform-components/sdk/getting-started) |
+| Understand which package to import | [Packages](/learn/platform-components/sdk/packages) |
+| Authenticate, TLS, and token handling | [Security model](/learn/platform-components/sdk/security) |
+| See why routes were removed | [Messaging](/learn/platform-components/sdk/messaging) |
+
+## How-to guides
+
+| Task | Guide |
+| --- | --- |
+| Log in and call Controller REST | [Use the Controller client](/learn/platform-components/sdk/controller-client) |
+| Deploy Application or Microservice YAML | [Deploy YAML](/learn/platform-components/sdk/deploy-yaml) |
+| Read config inside an edge container | [Write an edge microservice](/learn/platform-components/sdk/edge-microservice) |
+| Exec into a container or tail logs | [Exec and logs](/learn/platform-components/sdk/exec-and-logs) |
+| Manage models, Knowledge, and RuntimeClasses | [Fleet resources](/learn/platform-components/sdk/fleet-resources) |
+
+## Reference
+
+| Package | Import path | Reference |
+| --- | --- | --- |
+| Controller REST client | `.../pkg/client` | [Client](/learn/platform-components/sdk/client) |
+| YAML deploy executors | `.../pkg/apps` | [Apps](/learn/platform-components/sdk/apps) |
+| EdgeletAPI v1 | `.../pkg/microservices` | [Microservices](/learn/platform-components/sdk/microservices) |
+| NATS control plane | methods on `client.Client` | [NATS](/learn/platform-components/sdk/nats) |
+| Kubernetes helpers | `.../pkg/k8s`, `.../pkg/k8s/operator` | [Kubernetes](/learn/platform-components/sdk/kubernetes) |
+| Architecture codes and registry ids | `.../pkg/arch`, `client` maps | [Codes](/learn/platform-components/sdk/codes) |
+| Errors, retries, HTTP status | `client`, `apps`, `microservices` | [Errors](/learn/platform-components/sdk/errors) |
+
+<EditPageAdmonition />

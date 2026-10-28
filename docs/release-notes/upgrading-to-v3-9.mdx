@@ -1,7 +1,7 @@
 ---
-title: Upgrading to v3.9.2
-description: In-place upgrade to platform train v3.9.2 from v3.9.1, v3.9.0, or v3.8.0. Same Controller database. Security patch pins, optional auth.issuerCa, and flat Helm values.
-keywords: [upgrade, v3.9.2, v3.9.1, v3.9.0, v3.8, edgelet, control plane, issuerCa, in-place]
+title: Upgrading to v3.9.3
+description: In-place upgrade to platform train v3.9.3 from v3.9.2, v3.9.1, v3.9.0, or v3.8.0. Same Controller database. Supplemental groups column, Edgelet v1.1.3, and NATS 2.15.2.
+keywords: [upgrade, v3.9.3, v3.9.2, v3.9.1, v3.9.0, v3.8, edgelet, supplementalGroups, nats, in-place]
 slug: /release-notes/upgrading-to-v3-9
 ---
 
@@ -9,17 +9,21 @@ import CliBlock from '@site/src/components/CliBlock';
 
 import { CLI_NAME, PRODUCT_NAME } from '@site/src/config/distribution';
 
-# Upgrading to v3.9.2
+# Upgrading to v3.9.3
 
-Platform train **v3.9.2** supports an **in-place upgrade** from **v3.9.1**, **v3.9.0**, and **v3.8.0**. You keep the same Controller database.
+Platform train **v3.9.3** supports an **in-place upgrade** from **v3.9.2**, **v3.9.1**, **v3.9.0**, and **v3.8.0**. You keep the same Controller database. Startup adds the microservice supplemental groups column on sqlite, mysql, and postgres.
 
-From **v3.9.1** or **v3.9.0** this patch is a tag bump. There is no schema or API change. No Control Plane YAML key was removed. From **v3.8.0** you use the same **v3.9.2** tags, and you also apply the v3.9 registry and catalog changes below.
+From **v3.9.2** this release is a tag bump plus that column. No Control Plane YAML key was removed. `container.supplementalGroups` is optional. Existing microservices keep an empty group list until you set it.
 
-If the external issuer uses a private CA, set **`auth.issuerCa`** before you roll the operator. Certificate checks are on in this release. A public CA needs no new field. On Kubernetes, rewrite a Helm values file from chart 3.9.1 to the flat keys before `helm upgrade`. See [Kubernetes with Helm](/get-started/deploy/kubernetes-helm).
+From **v3.9.1** or **v3.9.0** you use the same **v3.9.3** tags. If the external issuer uses a private CA, set **`auth.issuerCa`** before you roll the operator. A public CA needs no new field. On Kubernetes, rewrite a Helm values file from chart **3.9.1** to the flat keys before `helm upgrade`. Chart **3.9.2** values stay valid. See [Kubernetes with Helm](/get-started/deploy/kubernetes-helm).
 
-:::info[Not supported: v3.7 or older → v3.9.2]
+From **v3.8.0** you use the same tags, and you also apply the v3.9 registry and catalog changes below.
 
-There is no direct upgrade from **v3.7.x**, **v1.6.x**, or legacy Java Agent deployments to **v3.9.2**. Move to **v3.8.0** first with a greenfield Control Plane and Edgelet-only nodes. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8) and the [Documentation archive](/reference/documentation-archive).
+If a NATS leaf relied on an implicit allow for `$MQTT.>`, add an explicit MQTT permission before you roll image **`2.15.2`**.
+
+:::info[Not supported: v3.7 or older → v3.9.3]
+
+There is no direct upgrade from **v3.7.x**, **v1.6.x**, or legacy Java Agent deployments to **v3.9.3**. Move to **v3.8.0** first with a greenfield Control Plane and Edgelet-only nodes. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8) and the [Documentation archive](/reference/documentation-archive).
 
 :::
 
@@ -29,18 +33,20 @@ There is no direct upgrade from **v3.7.x**, **v1.6.x**, or legacy Java Agent dep
 2. Export or commit your control plane YAML, `Agent` manifests, and application YAML.
 3. Plan a maintenance window. Upgrade the control plane first, then fleet Edgelet nodes.
 4. Air-gapped sites: stage wrapper images before you bump tags. See [Airgap deployment](/get-started/deploy/airgap-deployment) and [Offline images](/learn/config/offline-images).
+5. If leafnode ACLs depended on an implicit `$MQTT.>` allow, add an explicit MQTT permission first.
 
 Default pins are on [Control plane](/learn/control-plane#default-image-pins-v390).
 
-| Component | v3.9.2 pin |
+| Component | v3.9.3 pin |
 | --------- | ---------- |
-| {CLI_NAME} | v3.9.2 |
-| Controller | image `3.9.2` |
-| Operator (Kubernetes) | image `3.9.2` (Helm chart `3.9.2`) |
-| Router | image `3.9.2` |
-| NATS | wrapper image `2.15.1-1` (embedded NATS Server 2.15.1) |
-| Edgelet | v1.1.2 (image `1.1.2`) |
-| EdgeOps Console | v1.1.1, embedded in the Controller image (unchanged) |
+| {CLI_NAME} | v3.9.3 |
+| Controller | image `3.9.3` |
+| Operator (Kubernetes) | image `3.9.3` (Helm chart `3.9.3`) |
+| Router | image `3.9.3` |
+| NATS | image `2.15.2` (embedded NATS Server 2.15.2) |
+| Edgelet | v1.1.3 (image `1.1.3`) |
+| EdgeOps Console | v1.1.2, embedded in the Controller image |
+| Go SDK | v3.9.3 |
 
 Container image tags omit the `v` prefix. The CLI binary and the Edgelet binary keep the `v`.
 
@@ -48,34 +54,37 @@ Container image tags omit the `v` prefix. The CLI binary and the Edgelet binary 
 
 | You are on | Action |
 | ---------- | ------ |
-| **v3.9.1** or **v3.9.0** | Tag bump below. Skip the v3.8 workload review. |
+| **v3.9.2** | Tag bump below. Skip the v3.8 workload review. |
+| **v3.9.1** or **v3.9.0** | Same tag bump. Set `auth.issuerCa` only when the issuer uses a private CA. Rewrite Helm values if they still use chart 3.9.1. |
 | **v3.8.0** | Same tag bump, then the [v3.8 review](#if-you-are-on-v380). |
 | **v3.7.x or older** | Greenfield to **v3.8.0** first. See [Migrating to v3.8.0](/release-notes/migrating-to-v3-8). |
-| **New install** | Deploy **v3.9.2** directly. See [Getting started](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction). |
+| **New install** | Deploy **v3.9.3** directly. See [Getting started](/get-started/quick-start-local) or [Platform deployment](/get-started/deploy/introduction). |
 
 ## Recommended order
 
-Keep **Controller**, **Operator** (Kubernetes), **Router**, **NATS**, system **Edgelet** on Controller hosts, fleet **Edgelet** nodes, and **{CLI_NAME}** on **v3.9.2**.
+Keep **Controller**, **Operator** (Kubernetes), **Router**, **NATS**, system **Edgelet** on Controller hosts, fleet **Edgelet** nodes, and **{CLI_NAME}** on **v3.9.3**.
 
-1. **Upgrade {CLI_NAME}** on your workstation to **v3.9.2**.
-2. **Bump image tags and the Edgelet pin** in control plane YAML (`Controller`, `Router`, `NATS`, `spec.systemAgent`). Use the table above.
+1. **Upgrade {CLI_NAME}** on your workstation to **v3.9.3**.
+2. **Bump image tags and the Edgelet pin** in control plane YAML (`Controller`, `Router`, `NATS`, `spec.systemAgent`). Use the table above. Replace a NATS tag of `2.15.1-1` with `2.15.2`.
 3. **Re-apply control plane YAML**:
 
 <CliBlock>{`{{CLI_NAME}} deploy -f controlplane.yaml`}</CliBlock>
 
-On Kubernetes, upgrade the operator or Helm chart to **3.9.2**, then apply the updated `KubernetesControlPlane` manifest. A Helm values file from chart 3.9.1 will not apply. Rewrite it to the flat keys in [Kubernetes with Helm](/get-started/deploy/kubernetes-helm) first. If you want the old chart's private NATS Service, set `services.nats.type: ClusterIP` in the new file.
+On Kubernetes, upgrade the operator or Helm chart to **3.9.3**, then apply the updated `KubernetesControlPlane` manifest. A Helm values file from chart 3.9.1 will not apply. Rewrite it to the flat keys in [Kubernetes with Helm](/get-started/deploy/kubernetes-helm) first. If you want the old chart's private NATS Service, set `services.nats.type: ClusterIP` in the new file.
 
 If external OIDC uses a private CA, set `auth.issuerCa` in that manifest or values file in this step.
 
-4. **Upgrade fleet Edgelet nodes** to **v1.1.2** after the control plane is healthy. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
+4. **Upgrade fleet Edgelet nodes** to **v1.1.3** after the control plane is healthy. See [Upgrade and rollback Edgelet](/learn/edgelet-nodes#upgrade-and-rollback-edgelet).
 
 ```bash
-sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.2
+sudo sh /usr/share/edgelet/install.sh --upgrade --version=v1.1.3
 ```
 
 That host upgrade stays on the CLI flavor's Edgelet repository. Controller hosts pick up the system Edgelet pin in step 3.
 
-5. If you started on **v3.8.0**, do the review in the next section. If you started on **v3.9.1** or **v3.9.0**, skip it.
+5. If you started on **v3.8.0**, do the review in the next section. If you started on **v3.9.2**, **v3.9.1**, or **v3.9.0**, skip it.
+
+`container.supplementalGroups` is optional on every path. Leave the key out and the stored list stays empty for services that never set it. Set `[]` when you want a later apply to clear a list you already stored. A changed list recreates that container. See [Supplemental groups](/learn/workloads/microservices#supplemental-groups).
 
 ## If you are on v3.8.0
 
@@ -83,7 +92,7 @@ v3.9 removed registry fields **`requiresCert`**, **`certificate`**, and **`isSec
 
 Agent YAML no longer has **`deviceScanFrequency`**, **`bluetoothEnabled`**, or **`abstractedHardwareEnabled`**. Use **`edgeGuardFrequency`** when you need attestation.
 
-Deploy **Model** and **Knowledge** catalog rows before you bind them in microservices. New **`spec.container`** fields are optional.
+Deploy **Model** and **Knowledge** catalog rows before you bind them in microservices. New **`spec.container`** fields, including **`supplementalGroups`**, are optional.
 
 Details: [What's New](/release-notes/whats-new), [Registries](/learn/config/registries), [Microservices](/learn/workloads/microservices).
 
@@ -93,17 +102,18 @@ Details: [What's New](/release-notes/whats-new), [Registries](/learn/config/regi
 {{CLI_NAME}} describe controller CONTROLLER_NAME
 {{CLI_NAME}} get agents`}</CliBlock>
 
-The console Overview shows control plane status. The API tab loads **Scalar** for the Controller API.
+The console Overview shows control plane status. The API tab loads **Scalar** for the Controller API. Microservice describe includes `container.supplementalGroups`, including an empty list.
 
 ## Rollback
 
-Redeploy the previous control plane tags and Edgelet pin, then downgrade fleet nodes with [upgrade agent](/learn/edgelet-nodes#upgrade-and-rollback-edgelet) aimed at the prior Edgelet version. From **v3.9.2** that prior pin is **v1.1.1** if you came from **v3.9.1**, **v1.1.0** if you came from **v3.9.0**, or **v1.0.0** if you came from **v3.8.0**. Test rollback in a lab ECN before you change production.
+Redeploy the previous control plane tags and Edgelet pin, then downgrade fleet nodes with [upgrade agent](/learn/edgelet-nodes#upgrade-and-rollback-edgelet) aimed at the prior Edgelet version. From **v3.9.3** that prior pin is **v1.1.2** if you came from **v3.9.2**, **v1.1.1** if you came from **v3.9.1**, **v1.1.0** if you came from **v3.9.0**, or **v1.0.0** if you came from **v3.8.0**. Test rollback in a lab ECN before you change production.
 
 ## Related guides
 
 - [What's New in {PRODUCT_NAME}](/release-notes/whats-new)
 - [Upgrade the platform train](/learn/control-plane#upgrade-the-platform-train)
 - [Edgelet nodes](/learn/edgelet-nodes)
+- [Microservices](/learn/workloads/microservices#supplemental-groups)
 - [Registries](/learn/config/registries)
 - [AI Model Catalog](/learn/config/ai-model-catalog)
 - [AI Knowledge Catalog](/learn/config/ai-knowledge-catalog)

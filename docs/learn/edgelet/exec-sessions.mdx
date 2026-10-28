@@ -71,6 +71,20 @@ Agent status includes controller attachment session ids per microservice:
 
 Values are **controller session ids** for attachments this agent holds. Not containerd exec process names and not local CLI sessions.
 
+## Resize and close
+
+Controller exec sessions accept a resize control frame after the shell has started:
+
+```json
+{"type":"resize","cols":120,"rows":40}
+```
+
+Columns run from 2 through 4096. Rows run from 1 through 4096. A later size replaces one that is still in progress. The `close` control command is unchanged.
+
+When the shell finishes or errors, remaining output is sent before the close frame. The close frame is not written into the shell.
+
+The CLI sends the local terminal size when the session starts. On Unix it sends a new size when the window changes. Windows sends the size once. Interactive exec forwards stdin to the remote PTY, including Ctrl+C, Ctrl+D, `exit`, and `logout`. The local session ends when the remote side closes it, or when local stdin reaches EOF.
+
 ## `execEnabled` (deprecated)
 
 Edgelet **no longer** uses the microservice `execEnabled` flag to open or keep exec sessions. Controller multi-exec session poll (`execSessions: true`) drives attach and teardown.

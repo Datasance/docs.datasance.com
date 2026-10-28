@@ -70,7 +70,7 @@ Also published: `SHA256SUMS`, `edgelet-config.yaml.sample`, `edgelet-controller-
 
 The binary name is `edgelet-<os>-<arch>` (`edgelet-windows-amd64.exe` on Windows).
 
-Build locally: `make release-binaries VERSION=v1.1.2`. Output lands in `dist/`.
+Build locally: `make release-binaries VERSION=v1.1.3`. Output lands in `dist/`.
 
 The fat runtime inside the linux zstd embed is **statically linked by default** (`STATIC_BUILD=true`), so one artifact runs on glibc and musl (Alpine, OpenWrt). CI runs `scripts/check-embed-static.sh` after packaging.
 

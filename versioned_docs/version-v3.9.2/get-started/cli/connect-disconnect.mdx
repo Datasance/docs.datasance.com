@@ -1,0 +1,71 @@
+---
+title: Connect and Disconnect
+description: Connect potctl or iofogctl to remote or Kubernetes Control Planes.
+keywords: [potctl, iofogctl, connect, disconnect, control plane]
+---
+
+import CliBlock from '@site/src/components/CliBlock';
+import FlavorYaml from '@site/src/components/FlavorYaml';
+import { CLI_NAME } from '@site/src/config/distribution';
+
+# Connecting To Existing Edge Compute Networks
+
+Connect to an existing ECN instead of deploying a new one.
+
+Use an empty or non-existent namespace for `connect`. Each cluster should live in its own namespace. When you omit `-n`, <code>{CLI_NAME}</code> uses `default`.
+
+<FlavorYaml title="remote-controlplane.yaml">{`apiVersion: {{API_VERSION}}
+kind: ControlPlane
+metadata:
+  name: albatros
+spec:
+  iofogUser:
+    email: user@domain.com
+    password: h9g84q
+  controllers:
+  - name: alpaca-1
+    host: 30.40.50.1`}</FlavorYaml>
+
+<CliBlock>{`{{CLI_NAME}} connect -f /tmp/remote-controlplane.yaml`}</CliBlock>
+
+For Kubernetes Control Planes, the `--namespace` flag must match the Kubernetes namespace where the Control Plane runs.
+
+<FlavorYaml title="k8s-controlplane.yaml">{`apiVersion: {{API_VERSION}}
+kind: KubernetesControlPlane
+metadata:
+  name: albatros
+spec:
+  iofogUser:
+    email: user@domain.com
+    password: h9g84q
+  config: ~/.kube/config`}</FlavorYaml>
+
+<CliBlock>{`{{CLI_NAME}} connect -f /tmp/k8s-controlplane.yaml`}</CliBlock>
+
+Connect without a YAML file:
+
+<CliBlock>{`{{CLI_NAME}} connect --ecn-addr 40.50.60.70 --name albatros --email user@domain.com --pass h9g84q
+{{CLI_NAME}} connect --kube ~/.kube/config --email user@domain.com --pass h9g84q`}</CliBlock>
+
+Add SSH details manually with `configure`:
+
+<CliBlock>{`{{CLI_NAME}} configure controlplane --kube KUBECONFIG
+{{CLI_NAME}} configure controller NAME --user USER --key KEYFILE --port PORTNUM
+{{CLI_NAME}} configure agent NAME --user USER --key KEYFILE --port PORTNUM
+{{CLI_NAME}} configure current-namespace NAMESPACE
+{{CLI_NAME}} configure controllers --user USER --key KEYFILE --port PORTNUM
+{{CLI_NAME}} configure agents --user USER --key KEYFILE --port PORTNUM`}</CliBlock>
+
+## Disconnect From Edge Compute Network
+
+<CliBlock>{`{{CLI_NAME}} disconnect`}</CliBlock>
+
+:::info[Next steps?]
+  <ul>
+    <li><a href="/reference">Cluster resources index.</a></li>
+  </ul>
+:::
+
+import EditPageAdmonition from '@site/src/components/EditPageAdmonition';
+
+<EditPageAdmonition />

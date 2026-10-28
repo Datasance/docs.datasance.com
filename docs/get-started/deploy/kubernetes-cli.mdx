@@ -1,6 +1,6 @@
 ---
 title: Kubernetes - Deploy Control Plane
-description: Deploy KubernetesControlPlane with the CLI on platform train v3.9.2. Operator install, ControlPlane CR, and embedded OIDC.
+description: Deploy KubernetesControlPlane with the CLI on platform train v3.9.3. Operator install, ControlPlane CR, and embedded OIDC.
 keywords: [kubernetes control plane, kubernetescontrolplane, operator, deploy, v3.9]
 slug: /get-started/deploy/kubernetes-cli
 ---
@@ -87,10 +87,10 @@ spec:
     https: true
     secretName: controller-tls
   images:
-    operator: {{REGISTRY}}/operator:3.9.2
-    controller: {{REGISTRY}}/controller:3.9.2
-    router: {{REGISTRY}}/router:3.9.2
-    nats: {{REGISTRY}}/nats:2.15.1-1
+    operator: {{REGISTRY}}/operator:3.9.3
+    controller: {{REGISTRY}}/controller:3.9.3
+    router: {{REGISTRY}}/router:3.9.3
+    nats: {{REGISTRY}}/nats:2.15.2
   services:
     controller:
       type: LoadBalancer
@@ -124,7 +124,7 @@ For ingress patterns (B1/B2), vault, and service overrides, see [Kubernetes sche
 
 :::tip[Next step]
 
-Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.2** on edge hosts.
+Go to [Set up Edgelet nodes](/get-started/deploy/setup-edgelet-nodes) to provision **Edgelet v1.1.3** on edge hosts.
 
 :::
 

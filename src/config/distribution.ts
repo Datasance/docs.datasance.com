@@ -22,7 +22,7 @@ export const OPERATOR_CHART_README_URL =
     : 'https://github.com/eclipse-iofog/iofog-operator/blob/develop/charts/iofog-operator/README.md';
 
 /**
- * Chart 3.9.1 published values.schema.json. Chart 3.9.2 removed that file.
+ * Chart 3.9.1 published values.schema.json. Chart 3.9.3 removed that file.
  * Kept so older versioned Helm pages that still link it can compile.
  */
 export const OPERATOR_CHART_VALUES_SCHEMA_URL = OPERATOR_CHART_README_URL.replace(
@@ -34,13 +34,13 @@ export const CONTROLPLANE_CRD_RESOURCE =
   FLAVOR === 'datasance' ? 'controlplanes.datasance.com' : 'controlplanes.iofog.org';
 
 /** Helm chart version aligned with platform train v3.9.0 operator release. */
-export const OPERATOR_CHART_VERSION = '3.9.2';
+export const OPERATOR_CHART_VERSION = '3.9.3';
 
 /** Platform train version (Controller, Router, CLI). */
-export const PLATFORM_TRAIN = '3.9.2';
+export const PLATFORM_TRAIN = '3.9.3';
 
 /** Edgelet binary and container image tag for the current platform train. */
-export const EDGELET_VERSION = '1.1.2';
+export const EDGELET_VERSION = '1.1.3';
 
 export const CLI_NAME = FLAVOR === 'datasance' ? 'potctl' : 'iofogctl';
 
